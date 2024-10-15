@@ -91,12 +91,22 @@ public:
 	constexpr void ClearColor() { string += LOGGER_COLOR_CLEAR; }
 
 	template<typename T>
-	constexpr void LogList(const std::string &label, const std::string &value_label, Span<T> span) {
+	constexpr void LogList(const std::string &label, const std::string &value_label, const Span<T> span) {
 		for (u32 i = 0; i < span.size(); ++i) {
 			SetColor(172 + i * 3);
 			string += std::format(LOGGER_PREFIX_NONE "{} [{}]\t{} {}\n", label, i, value_label, span[i]);
 		}
 		ClearColor();
+	}
+	template<typename T>
+	constexpr void LogListOneLne(const std::string &label, const std::string &value_label, const Span<T> span) {
+		string += std::format(LOGGER_PREFIX_NONE "{} {}\t", label, value_label);
+		for (u32 i = 0; i < span.size(); ++i) {
+			SetColor(172 + i * 3);
+			string += std::format("[{:2}] {:10}\t", i, span[i]);
+		}
+		ClearColor();
+		string += "\n";
 	}
 
 	void LogVectorStats(const List<f32> &v) {
@@ -118,6 +128,5 @@ public:
 	}
 private:
 	std::string string;
-	constexpr void Add(std::string &s) { string += s + "\n"; }
 };
 };

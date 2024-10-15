@@ -32,7 +32,6 @@ namespace game {
         transportation::MoveGoods();
         factory::BankruptFactories();
         markets::RecalculateMarkets();
-        
         player::DoAction();
         player::Tax(100);
     }

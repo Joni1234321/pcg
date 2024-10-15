@@ -16,16 +16,16 @@ i32 main() {
 		for (; i < newLimit; i++) {
 			logger.Log("Turn {:4}", i);
 			pcg::game::Tick(i);
+			logger.LogListOneLne("Player", "Money", pce::Span<f32>(pcg::player::moneys));
 		}
 
 		logger.LogVectorStats(pcg::factory::moneys);
+		//pcg::PrintFactory(0);
+		//std::cin.ignore();
+		pcg::PrintStates(logger);
 		logger.LogList("Player", "Money", pce::Span<f32>(pcg::player::moneys));
 		logger.LogLine();
 		logger.Print();
-		//pcg::PrintFactory(0);
-		//std::cin.ignore();
-		pcg::PrintStates();
-		logger.LogLine();
 		std::cin.ignore();
 	}
 

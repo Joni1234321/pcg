@@ -5,6 +5,7 @@
 #include "util.hpp"
 
 #include <vector>
+#include <memory>
 
 namespace pcg {
 void PrintFactory(u32 i) {
@@ -16,8 +17,7 @@ void PrintFactory(u32 i) {
 	for (u32 t : factory::transporters[i])
 		logger.Log(std::string(t, '#') + std::string(TRAVEL_COST - t, 'O'));
 }
-void PrintStates() {
-	pce::Logger logger;
+void PrintStates(pce::Logger &logger) {
 	// i would like a syntax for this (factory -> market) -> player
 	pce::Array<pce::List<Entity>> factories_in_market_list = pce::split(factory::markets, markets::n);
 	pce::Array<u32> player_total_factory(player::n);

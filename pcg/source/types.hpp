@@ -25,6 +25,5 @@ struct Entity {
     u32 index;
     constexpr Entity() : index(-1) {}
     constexpr Entity(u32 v) : index(v) {}
-    //constexpr operator u32() const { return index; };
 };
 

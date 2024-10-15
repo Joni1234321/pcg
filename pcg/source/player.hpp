@@ -25,16 +25,16 @@ namespace player {
     void Stick() {
         
     }
-    void DoAction(const i32& owner, f32& money)
+    void DoAction(const Entity &player, f32& money)
     {
         if (money > 600) {
-            factory::AddFactory(owner, rand() % markets::n, 600, 10);
+            factory::AddFactory(player, rand() % markets::n, 600, 10);
             money -= 600;
         }
     }
     void DoAction()
     {
-        for (i32 i = 0; i < n; i++)
+        for (u32 i = 0; i < n; i++)
             DoAction(i, moneys[i]);
     }
     }

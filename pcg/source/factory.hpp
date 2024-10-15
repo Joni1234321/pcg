@@ -25,7 +25,7 @@ namespace markets {
     }
 }
 namespace factory {
-    void AddFactory(const Entity owner, const Entity state, const i32 money, const i32 transports)
+    void AddFactory(const Entity player, const Entity state, const i32 money, const i32 transports)
     {
         n++;
         moneys.emplace_back(rand() % money);
@@ -33,7 +33,7 @@ namespace factory {
         goods.emplace_back(0);
         transporters.emplace_back(rand() % transports, 0);
         markets.emplace_back(state);
-        owners.emplace_back(owner);
+        owners.emplace_back(player);
     }
     void RemoveFactories(const std::vector<Entity>& i)
     {
