@@ -32,12 +32,14 @@ pce::Component<Market> markets;
 }
 struct Archetype {
 	u32 n = 0;
-	virtual bool Remove(const Entity) = 0;
+	virtual bool Add () { n++; }
+	virtual bool Remove(const Entity) { n--; };
 };
 struct Market : Archetype {
 	pce::Parent players;
 
 	bool Add(const Entity);
+	bool Remove(const Entity);
 };
 struct Sector : Archetype {
 	pce::Parent markets;
@@ -54,8 +56,18 @@ struct Factory : public Sector {
 struct Mine : public Sector {};
 struct Farm : public Sector {};
 
-Factory factoryArchetype;
+struct Wine : Farm {};
+struct Wheat : Farm {};
 
+
+struct Transportation {};
+
+struct Rail : Transportation {};
+struct Road : Transportation {};
+struct Water : Transportation {};
+
+Factory factoryArchetype;
+Market marketArchetype;
 //namespace mine {
 //u32 n;
 //pce::Parent markets;

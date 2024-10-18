@@ -9,7 +9,7 @@
 namespace pcg {
 namespace markets {
 void AddState(const u32 pop, const u32 supply) {
-	n++;
+	marketArchetype.n++;
 	markets.push_back(Market{ rand() % pop, rand() % supply });
 }
 f32 GetPrice(const Market &market) {
@@ -25,8 +25,13 @@ void RecalculateMarkets() {
 }
 }
 
+
+bool Market::Add(const Entity entity) {
+	Archetype::Add();
+}
+
 bool Factory::Add(const Entity state, const u32 money, const u32 transports) {
-	n++;
+	Archetype::Add();
 	moneys.emplace_back(rand() % money);
 
 	goods.emplace_back(0);
