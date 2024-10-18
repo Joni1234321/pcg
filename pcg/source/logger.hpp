@@ -9,26 +9,26 @@
 #include <vector>
 
 #define LOG(s) pce::logger::Log(s)
-#define LOG_LINE_STRING "======================================="
+constexpr auto LOG_LINE_STRING = "=======================================";
 #define LOG_LINE pce::logger::Log(LOG_LINE_STRING)
 
-#define DISABLE_PREFIX 0
+#define DISABLE_PREFIX 1
 #if DISABLE_PREFIX == 1
-#define LOGGER_PREFIX_NONE "        | "
-#define LOGGER_PREFIX_TIMER "TIMER   | "
-#define LOGGER_PREFIX_LOG "LOG     | "
-#define LOGGER_PREFIX_WARNING "WARNING | "
-#define LOGGER_PREFIX_ERROR "ERROR   | "
+constexpr auto LOGGER_PREFIX_NONE = "        | ";
+constexpr auto LOGGER_PREFIX_TIMER = "TIMER   | ";
+constexpr auto LOGGER_PREFIX_LOG = "LOG     | ";
+constexpr auto LOGGER_PREFIX_WARNING = "WARNING | ";
+constexpr auto LOGGER_PREFIX_ERROR = "ERROR   | ";
 #else
-#define LOGGER_PREFIX_NONE ""
-#define LOGGER_PREFIX_TIMER ""
-#define LOGGER_PREFIX_LOG ""
-#define LOGGER_PREFIX_WARNING ""
-#define LOGGER_PREFIX_ERROR ""
+constexpr auto LOGGER_PREFIX_NONE = "";
+constexpr auto LOGGER_PREFIX_TIMER = "";
+constexpr auto LOGGER_PREFIX_LOG = "";
+constexpr auto LOGGER_PREFIX_WARNING = "";
+constexpr auto LOGGER_PREFIX_ERROR = "";
 #endif
 
-#define LOGGER_COLOR_SET(COLOR) "\033[38;5;" #COLOR "m"
-#define LOGGER_COLOR_CLEAR "\033[m"
+constexpr auto LOGGER_COLOR_SET(u32 COLOR) { return "\033[38;5;" + std::to_string(COLOR) + "m"; }
+constexpr auto LOGGER_COLOR_CLEAR = "\033[m";
 
 #define LOGGER_COLOR_SET_ORANGE LOGGER_COLOR_SET(202)
 #define LOGGER_COLOR_SET_YELLOW LOGGER_COLOR_SET(220)
@@ -43,29 +43,29 @@ enum PREFIX {
 	WARNING,
 	ERROR
 };
-template <typename... Args>
-constexpr void Log(std::string &s, Args... args) {
-	std::printf(LOGGER_COLOR_SET_WHITE LOGGER_PREFIX_LOG + s, std::forward(args)...);
-}
-template <typename... Args>
-constexpr void Print(const std::string &s, Args... args) {
-	std::printf((s + LOGGER_COLOR_CLEAR "\n").c_str(), args...);
-}
-template <typename... Args>
-constexpr void Log(const std::string &format, Args... args) {
-	Print(LOGGER_COLOR_SET_WHITE LOGGER_PREFIX_LOG + format, std::forward<Args>(args)...);
-}
-template <typename... Args>
-constexpr void LogWarning(const std::string &format, Args... args) {
-	Print(LOGGER_COLOR_SET_YELLOW LOGGER_PREFIX_WARNING + format, std::forward<Args>(args)...);
-}
-template <typename... Args>
-constexpr void LogError(const std::string &format, Args... args) {
-	Print(LOGGER_COLOR_SET_ORANGE LOGGER_PREFIX_ERROR + format, std::forward<Args>(args)...);
-}
-void LogTiming(const std::string &name, f32 ms) {
-	Print(LOGGER_COLOR_SET_PINK LOGGER_PREFIX_TIMER "%.2f ms \t%s", ms, name.c_str());
-}
+//template <typename... Args>
+//constexpr void Log(std::string &s, Args... args) {
+//	std::printf(LOGGER_COLOR_SET_WHITE LOGGER_PREFIX_LOG + s, std::forward(args)...);
+//}
+//template <typename... Args>
+//constexpr void Print(const std::string &s, Args... args) {
+//	std::printf((s + LOGGER_COLOR_CLEAR "\n").c_str(), args...);
+//}
+//template <typename... Args>
+//constexpr void Log(const std::string &format, Args... args) {
+//	Print(LOGGER_COLOR_SET_WHITE LOGGER_PREFIX_LOG + format, std::forward<Args>(args)...);
+//}
+//template <typename... Args>
+//constexpr void LogWarning(const std::string &format, Args... args) {
+//	Print(LOGGER_COLOR_SET_YELLOW LOGGER_PREFIX_WARNING + format, std::forward<Args>(args)...);
+//}
+//template <typename... Args>
+//constexpr void LogError(const std::string &format, Args... args) {
+//	Print(LOGGER_COLOR_SET_ORANGE LOGGER_PREFIX_ERROR + format, std::forward<Args>(args)...);
+//}
+//void LogTiming(const std::string &name, f32 ms) {
+//	Print(LOGGER_COLOR_SET_PINK LOGGER_PREFIX_TIMER "%.2f ms \t%s", ms, name.c_str());
+//}
 // used to debug colors
 void dbg_print_256_colours_txt() {
 	for (u32 i = 0; i < 256; i++) {
@@ -77,15 +77,16 @@ void dbg_print_256_colours_txt() {
 }
 struct Logger {
 public:
-	constexpr void Print() { string.pop_back(); logger::Print(string); string.clear(); }
-	constexpr ~Logger() { if (string.length() > 0) Print(); }
+	void Print() { string.pop_back(); std::printf(string.c_str()); string.clear(); }
+	~Logger() { if (string.length() > 0) Print(); }
+
 
 	template <typename... Args>
-	void Log(const std::string &s, Args... args) {
+	constexpr void Log(const std::string &s, Args... args) {
 		string += std::vformat(LOGGER_PREFIX_LOG + s + "\n", std::make_format_args(args...));
 	}
 
-	constexpr void LogLine() { string += LOG_LINE_STRING "\n"; }
+	constexpr void LogLine() { string += LOG_LINE_STRING; string += "\n"; }
 
 	constexpr void SetColor(u8 i) { string += std::format("\033[38;5;{}m", i); }
 	constexpr void ClearColor() { string += LOGGER_COLOR_CLEAR; }
@@ -94,22 +95,23 @@ public:
 	constexpr void LogList(const std::string &label, const std::string &value_label, const Span<T> span) {
 		for (u32 i = 0; i < span.size(); ++i) {
 			SetColor(172 + i * 3);
-			string += std::format(LOGGER_PREFIX_NONE "{} [{}]\t{} {}\n", label, i, value_label, span[i]);
+			string += std::format("{}{} [{}]\t{} {}\n", LOGGER_PREFIX_NONE, label, i, value_label, span[i]);
 		}
 		ClearColor();
 	}
 	template<typename T>
-	constexpr void LogListOneLne(const std::string &label, const std::string &value_label, const Span<T> span) {
-		string += std::format(LOGGER_PREFIX_NONE "{} {}\t", label, value_label);
+	constexpr void LogListOneLine(const std::string &label, const std::string &value_label, const Span<T> span) {
+		string += std::format("{}{} {}\t", LOGGER_PREFIX_NONE, label, value_label);
 		for (u32 i = 0; i < span.size(); ++i) {
 			SetColor(172 + i * 3);
+			//Add("[{:2}] {:10}\t", i, span[i]);
 			string += std::format("[{:2}] {:10}\t", i, span[i]);
 		}
 		ClearColor();
 		string += "\n";
 	}
 
-	void LogVectorStats(const List<f32> &v) {
+	constexpr void LogVectorStats(const List<f32> &v) {
 		auto len = v.size();
 		if (len == 0)
 			return;
@@ -120,7 +122,7 @@ public:
 		const int w = 10;
 		LogLine();
 		Log("TOT {:{}.0f}", tot, w);
-		Log("LEN {:{}}",    len, w);
+		Log("LEN {:{}}", len, w);
 		Log("MAX {:{}.0f}", max, w);
 		Log("MIN {:{}.0f}", min, w);
 		Log("AVG {:{}.0f}", avg, w);
@@ -130,3 +132,6 @@ private:
 	std::string string;
 };
 };
+
+
+

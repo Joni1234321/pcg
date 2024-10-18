@@ -1,12 +1,14 @@
 #pragma once
 
 #include "factory.hpp"
+#include "logger.hpp"
 #include "player.hpp"
-#include "timer.hpp"
+#include "systems.hpp"
 #include "transportation.hpp"
 
-#include <algorithm>
-#include <numeric>
+#include "components.hpp"
+#include "types.hpp"
+#include <cstdlib>
 
 
 namespace pcg {
@@ -24,16 +26,17 @@ namespace game {
             markets::AddState(100, 100);
 
         for (u32 i = 0; i < factories; i++)
-            factory::AddFactory(rand() % players, rand() % markets, 1000, 30);
+            factoryArchetype.Add(rand() % markets, 1000, 30);
     }
     void Tick(u32 i)
     {
+        // phases buy phase, sell phase
         factory::BuyGoods();
         transportation::MoveGoods();
         factory::BankruptFactories();
         markets::RecalculateMarkets();
         player::DoAction();
-        player::Tax(100);
+        //player::Tax(100);
     }
 }
 }

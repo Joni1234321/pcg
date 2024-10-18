@@ -47,8 +47,8 @@ struct Array : private std::span<T> {
 
 };
 
-struct Parents : private List<Entity> {
-	Parents() : List<Entity>() {}
+struct Parent : private List<Entity> {
+	Parent() : List<Entity>() {}
 	using List<Entity>::operator[];
 	using List<Entity>::emplace_back;
 	using List<Entity>::begin;
@@ -65,25 +65,25 @@ struct Entities : private List<Entity> {
 };
 
 
-constexpr void split(Array<List<Entity>> &re, const List<Entity> &entities, const Parents &parents) {
+constexpr void split(Array<List<Entity>> &re, const List<Entity> &entities, const Parent &parents) {
 	for (const Entity &entity : entities) {
 		const Entity &parent = parents[entity.index];
 		re[parent.index].emplace_back(entity);
 	}
 }
-inline Array<List<Entity>> split(const List<Entity> &entities, const Parents &parents, const u32 n) {
+inline Array<List<Entity>> split(const List<Entity> &entities, const Parent &parents, const u32 n) {
 	Array<List<Entity>> re(n);
 	split(re, entities, parents);
 	return re;
 }
 // assumes all entities are tightly packed and linked to parents
-constexpr void split(Array<List<Entity>> &re, const Parents &parents) {
+constexpr void split(Array<List<Entity>> &re, const Parent &parents) {
 	for (Entity ent = 0; ent.index < parents.size(); ent.index++) {
 		const Entity &parent = parents[ent.index];
 		re[parent.index].emplace_back(ent);
 	}
 }
-inline Array<List<Entity>> split(const Parents &parents, const u32 n) {
+inline Array<List<Entity>> split(const Parent &parents, const u32 n) {
 	Array<List<Entity>> re(n);
 	split(re, parents);
 	return re;

@@ -16,6 +16,9 @@
     <Filter Include="Header Files\engine">
       <UniqueIdentifier>{f453f54d-e83b-41f2-95be-7f8536ced7c1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\systems">
+      <UniqueIdentifier>{4a383855-0682-4e34-b188-5a60dc9a8350}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\components.hpp">
@@ -50,6 +53,9 @@
     </ClInclude>
     <ClInclude Include="source\util.hpp">
       <Filter>Header Files\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="source\systems.hpp">
+      <Filter>Header Files\systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

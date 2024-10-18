@@ -1,6 +1,6 @@
 #pragma once
 
-#include "logger.hpp"
+#include "types.hpp"
 #include <chrono>
 #include <string>
 
@@ -25,7 +25,7 @@ namespace timer {
 #ifdef PCE_TIMER_ENABLE 
             const std::chrono::duration<f32> duration = std::chrono::high_resolution_clock::now() - start_;
             const f32 duration_ms = duration.count() * 1000;
-            logger::LogTiming(name_, duration_ms);
+            //logger::LogTiming(name_, duration_ms);
 #endif
         }
 
