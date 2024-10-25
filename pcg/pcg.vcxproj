@@ -21,18 +21,15 @@
   <ItemGroup>
     <ClInclude Include="source\collections.hpp" />
     <ClInclude Include="source\components.hpp" />
-    <ClInclude Include="source\factory.hpp" />
     <ClInclude Include="source\game.hpp" />
     <ClInclude Include="source\logger.hpp" />
-    <ClInclude Include="source\player.hpp" />
-    <ClInclude Include="source\prints.hpp" />
     <ClInclude Include="source\timer.hpp" />
-    <ClInclude Include="source\transportation.hpp" />
     <ClInclude Include="source\types.hpp" />
     <ClInclude Include="source\util.hpp" />
-    <ClInclude Include="source\systems.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\game.cpp" />
+    <ClCompile Include="source\factory.cpp" />
     <ClCompile Include="source\main.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

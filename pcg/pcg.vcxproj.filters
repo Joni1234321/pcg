@@ -16,24 +16,12 @@
     <Filter Include="Header Files\engine">
       <UniqueIdentifier>{f453f54d-e83b-41f2-95be-7f8536ced7c1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\systems">
-      <UniqueIdentifier>{4a383855-0682-4e34-b188-5a60dc9a8350}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\components.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="source\factory.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="source\game.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="source\player.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="source\transportation.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="source\collections.hpp">
@@ -45,21 +33,21 @@
     <ClInclude Include="source\timer.hpp">
       <Filter>Header Files\engine</Filter>
     </ClInclude>
-    <ClInclude Include="source\prints.hpp">
-      <Filter>Header Files\engine</Filter>
-    </ClInclude>
     <ClInclude Include="source\types.hpp">
       <Filter>Header Files\engine</Filter>
     </ClInclude>
     <ClInclude Include="source\util.hpp">
       <Filter>Header Files\engine</Filter>
     </ClInclude>
-    <ClInclude Include="source\systems.hpp">
-      <Filter>Header Files\systems</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\factory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\game.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

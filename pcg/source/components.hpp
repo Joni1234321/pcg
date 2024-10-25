@@ -16,100 +16,82 @@ struct C1 {
 	C1 &operator+=(const C1 &other) { Value += other.Value;  return *this; }
 	C1 &operator*=(const C1 &other) { Value *= other.Value;  return *this; }
 	C1 &operator/=(const C1 &other) { Value /= other.Value;  return *this; }
-
 };
+
+enum FarmTypes { Wine, Wheat, Fish, Cows };
+enum ResourceBuildings { Wood, Fe, Ag, Au };
+
+// Structs
 struct Money : C1<f32> { using C1::C1; };
+struct Production : C1<u32> { using C1::C1; };
 struct Good : C1<u32> { using C1::C1; };
-struct Transporter : C1<u32> { using C1::C1; };
-namespace markets {
 struct Market {
 	u32 Population;
 	u32 Demand;
 	u32 Sold = 0;
 	i32 PriceFactor = 0;
+
+	f32 GetPrice() { return 100.0f * PriceFactor; }
+	void RecalculateMarkets() { PriceFactor += Sold < Demand ? 1 : -1; Sold = 0; }
 };
-pce::Component<Market> markets;
-}
+
+// Archetypes
 struct Archetype {
 	u32 n = 0;
-	virtual bool Add () { n++; }
-	virtual bool Remove(const Entity) { n--; };
-};
-struct Market : Archetype {
-	pce::Parent players;
+	virtual bool Add() { n++; return true; }
+	virtual bool Remove(const Entity) { if (n == 0) return false; n--; return true; };
+  
+	constexpr Entity begin() const noexcept { return Entity(0); }
+  constexpr Entity end() const noexcept { return Entity(n); }
 
+};
+
+struct State : Archetype {
+	pce::Parent players;
+	pce::Component<Market> markets;
+	
 	bool Add(const Entity);
 	bool Remove(const Entity);
 };
+
 struct Sector : Archetype {
-	pce::Parent markets;
-
-	pce::Component<Money> moneys;
-};
-struct Factory : public Sector {
-	pce::Component<Good> goods;
-	pce::Component<pce::List<Transporter>> transporters;
-
-	bool Add(const Entity, const u32, const u32);
-	bool Remove(const Entity);
+	pce::Parent player;
 };
 struct Mine : public Sector {};
-struct Farm : public Sector {};
+struct Farm : public Sector {
+  pce::Component<FarmTypes> buildings;
+  bool Add(const Entity, FarmTypes farmType);
+  bool Remove(const Entity);
+};
 
 struct Wine : Farm {};
 struct Wheat : Farm {};
 
 
-struct Transportation {};
+// Declare
+inline Farm farmArchetype;
+inline State stateArchetype;
 
-struct Rail : Transportation {};
-struct Road : Transportation {};
-struct Water : Transportation {};
+struct Player : Archetype {
+  pce::Component<Money> moneys;
 
-Factory factoryArchetype;
-Market marketArchetype;
-//namespace mine {
-//u32 n;
-//pce::Parent markets;
-//
-//pce::Component<Money> moneys;
-//pce::Component<u32> goods;
-//pce::Component<pce::List<u32>> transporters;
-//};
-//namespace farm {
-//u32 n;
-//pce::Parent markets;
-//
-//pce::Component<Money> moneys;
-//pce::Component<u32> goods;
-//pce::Component<pce::List<u32>> transporters;
-//};
-//
-//namespace energy {
-//u32 n;
-//pce::Parent owners;
-//pce::Parent markets;
-//
-//pce::Component<Money> moneys;
-//pce::Component<u32> goods;
-//pce::Component<pce::List<u32>> transporters;
-//};
-namespace player {
-u32 n;
-pce::Component<Money> moneys;
+  bool Add(u32);
+  bool Remove(const Entity);
 };
+inline Player playerArchetype;
+
 const u32 TRAVEL_COST = 10;
-};
+};  // namespace pcg
 
 template <>
 struct std::formatter<pcg::Money> : std::formatter<f32> {
-	auto format(const pcg::Money &data, std::format_context &ctx) const {
-		return formatter<f32>::format(data.Value, ctx);
-	}
+  auto format(const pcg::Money &data, std::format_context &ctx) const {
+    return formatter<f32>::format(data.Value, ctx);
+  }
 };
 template <typename T>
 struct std::formatter<pcg::C1<T>> : formatter<T> {
-	auto format(const pcg::C1<T> &data, format_context &ctx) const {
-		return formatter<T>::format(data.Value, ctx);
-	}
+  auto format(const pcg::C1<T> &data, format_context &ctx) const {
+    return formatter<T>::format(data.Value, ctx);
+  }
 };
