@@ -41,12 +41,11 @@ bool State::Remove(const Entity entity) {
   return true;
 }
 
-bool Farm::Add(const Entity player, const FarmTypes farmType) {
+bool Farm::Add(const Entity player, const FarmType farmType) {
   if (!Archetype::Add()) return false;
 
-  const u32 POP = 1000;
   players.emplace_back(player);
-  buildings.push_back(farmType);
+  buildings.emplace_back(farmType);
 
   return true;
 }
@@ -54,7 +53,7 @@ bool Farm::Remove(const Entity entity) {
   if (!Archetype::Remove(entity)) return false;
 
   pce::util::SwapPop(players, entity.index);
-  pce::util::SwapPop(markets, entity.index);
+  pce::util::SwapPop(buildings, entity.index);
 
   return true;
 }

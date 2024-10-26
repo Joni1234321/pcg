@@ -18,7 +18,7 @@ struct C1 {
 	C1 &operator/=(const C1 &other) { Value /= other.Value;  return *this; }
 };
 
-enum FarmTypes { Wine, Wheat, Fish, Cows };
+enum FarmType { Wine, Wheat, Fish, Cows };
 enum ResourceBuildings { Wood, Fe, Ag, Au };
 
 // Structs
@@ -40,28 +40,28 @@ struct Archetype {
 	u32 n = 0;
 	virtual bool Add() { n++; return true; }
 	virtual bool Remove(const Entity) { if (n == 0) return false; n--; return true; };
-  
+
 	constexpr Entity begin() const noexcept { return Entity(0); }
-  constexpr Entity end() const noexcept { return Entity(n); }
+	constexpr Entity end() const noexcept { return Entity(n); }
 
 };
 
 struct State : Archetype {
 	pce::Parent players;
 	pce::Component<Market> markets;
-	
+
 	bool Add(const Entity);
 	bool Remove(const Entity);
 };
 
 struct Sector : Archetype {
-	pce::Parent player;
+	pce::Parent players;
 };
 struct Mine : public Sector {};
 struct Farm : public Sector {
-  pce::Component<FarmTypes> buildings;
-  bool Add(const Entity, FarmTypes farmType);
-  bool Remove(const Entity);
+	pce::Component<FarmType> buildings;
+	bool Add(const Entity, const FarmType farmType);
+	bool Remove(const Entity);
 };
 
 struct Wine : Farm {};
@@ -73,10 +73,10 @@ inline Farm farmArchetype;
 inline State stateArchetype;
 
 struct Player : Archetype {
-  pce::Component<Money> moneys;
+	pce::Component<Money> moneys;
 
-  bool Add(u32);
-  bool Remove(const Entity);
+	bool Add(u32);
+	bool Remove(const Entity);
 };
 inline Player playerArchetype;
 
@@ -85,13 +85,13 @@ const u32 TRAVEL_COST = 10;
 
 template <>
 struct std::formatter<pcg::Money> : std::formatter<f32> {
-  auto format(const pcg::Money &data, std::format_context &ctx) const {
-    return formatter<f32>::format(data.Value, ctx);
-  }
+	auto format(const pcg::Money &data, std::format_context &ctx) const {
+		return formatter<f32>::format(data.Value, ctx);
+	}
 };
 template <typename T>
 struct std::formatter<pcg::C1<T>> : formatter<T> {
-  auto format(const pcg::C1<T> &data, format_context &ctx) const {
-    return formatter<T>::format(data.Value, ctx);
-  }
+	auto format(const pcg::C1<T> &data, format_context &ctx) const {
+		return formatter<T>::format(data.Value, ctx);
+	}
 };

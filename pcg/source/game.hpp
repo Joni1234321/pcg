@@ -9,20 +9,16 @@
 
 namespace pcg {
 
-struct FarmTemplate {
-  u32 in, out;
+struct FarmStats {
+	u32 in, out;
 };
 
-struct Settings {
-  std::unordered_map<FarmTypes, FarmTemplate> farmTypes;
-};
-
+typedef struct _Data {
+	std::unordered_map<FarmType, FarmStats> farmTypes;
+}; _Data Data;
 struct Game {
-  Game(u32 players = 2, u32 markets = 10, u32 factories = 100);
-  void Tick(u32 i);
-
- private:
-  Settings settings;
+	Game(u32 players = 2, u32 markets = 10, u32 factories = 100);
+	void Tick(u32 i) const;
 };
 
 
