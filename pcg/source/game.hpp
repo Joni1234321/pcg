@@ -13,14 +13,20 @@ struct FarmStats {
 	u32 in, out;
 };
 
-typedef struct _Data {
+struct _Data {
 	std::unordered_map<FarmType, FarmStats> farmTypes;
-}; _Data Data;
-struct Game {
-	Game(u32 players = 2, u32 markets = 10, u32 factories = 100);
-	void Tick(u32 i) const;
+};
+struct _Game {
+	pce::Logger logger;
+	_Game(u32 players = 2, u32 markets = 10, u32 factories = 100);
+	void Tick(u32 i);
+
+private:
+	void LogMoney(const std::string& label, const pce::List<Money>& money);
 };
 
+inline _Data Data;
+inline _Game Game;
 
 // map power
 // isolated small island homogen culture

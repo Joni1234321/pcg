@@ -19,6 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\formatting.hpp" />
+    <ClInclude Include="source\ecs.hpp" />
+    <ClInclude Include="source\algorithm.hpp" />
     <ClInclude Include="source\collections.hpp" />
     <ClInclude Include="source\components.hpp" />
     <ClInclude Include="source\game.hpp" />
@@ -31,6 +34,9 @@
     <ClCompile Include="source\game.cpp" />
     <ClCompile Include="source\factory.cpp" />
     <ClCompile Include="source\main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -118,7 +124,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

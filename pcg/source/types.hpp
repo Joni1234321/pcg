@@ -19,11 +19,12 @@ using c32 = char32_t;
 using b8 = bool;
 
 struct Entity {
-  u32 index;
-  constexpr Entity() : index(static_cast<u32>(-1)) {}
-  constexpr Entity(u32 v) : index(v) {}
+	constexpr Entity() : index(static_cast<u32>(-1)) {}
+	constexpr Entity(u32 v) : index(v) {}
 
-  bool operator!=(const Entity other) { return index != other.index; }
-  Entity &operator++() { index++; return *this; }
-  Entity operator*() { return *this; }
+	u32 index;
+	
+	bool operator!=(const Entity other) { return index != other.index; }
+	Entity& operator++() { index++; return *this; }
+	Entity operator*() { return *this; }
 };
