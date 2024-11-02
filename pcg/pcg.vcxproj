@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="source\formatting.hpp" />
     <ClInclude Include="source\ecs.hpp" />
     <ClInclude Include="source\algorithm.hpp" />
     <ClInclude Include="source\collections.hpp" />
@@ -29,6 +28,7 @@
     <ClInclude Include="source\timer.hpp" />
     <ClInclude Include="source\types.hpp" />
     <ClInclude Include="source\util.hpp" />
+    <ClInclude Include="source\utilx.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\game.cpp" />
@@ -37,6 +37,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

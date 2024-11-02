@@ -5,7 +5,6 @@
 
 #include "components.hpp"
 #include "types.hpp"
-#include "util.hpp"
 
 namespace pcg {
 	bool Player::Add(u32 money) {
@@ -19,7 +18,7 @@ namespace pcg {
 	bool Player::Remove(Entity entity) {
 		if (!Archetype::Remove(entity)) return false;
 
-		pce::util::SwapPop(moneys, entity.index);
+		moneys.swap_back(entity.index);
 
 		return true;
 	}
@@ -36,8 +35,9 @@ namespace pcg {
 	bool State::Remove(Entity entity) {
 		if (!Archetype::Remove(entity)) return false;
 
-		pce::util::SwapPop(players, entity.index);
-		pce::util::SwapPop(markets, entity.index);
+
+		players.swap_back(entity.index);
+		markets.swap_back(entity.index);
 
 		return true;
 	}
@@ -53,8 +53,8 @@ namespace pcg {
 	bool Farm::Remove(Entity entity) {
 		if (!Archetype::Remove(entity)) return false;
 
-		pce::util::SwapPop(players, entity.index);
-		pce::util::SwapPop(type, entity.index);
+		players.swap_back(entity.index);
+		type.swap_back(entity.index);
 
 		return true;
 	}

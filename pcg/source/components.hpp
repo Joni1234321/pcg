@@ -1,8 +1,8 @@
 #pragma once
 
 #include "collections.hpp"
-#include "types.hpp"
 #include "ecs.hpp"
+#include "types.hpp"
 
 namespace pcg {
 	enum FarmType { Construction, Wine, Wheat, Fish, Cows };
@@ -15,7 +15,7 @@ namespace pcg {
 		FarmType type; u16 progress; u16 required;
 		BuildingUnderConstruction(FarmType type, u16 required) : type(type), required(required), progress(0)  {}
 	};
-	struct ConstructionQueue : public pce::Queue<BuildingUnderConstruction> { using type = BuildingUnderConstruction; using value_type = BuildingUnderConstruction; };
+	struct ConstructionQueue : public pce::Queue<BuildingUnderConstruction> {  };
 	struct Market {
 		u32 Population; u32 Demand; u32 Sold = 0; i32 PriceFactor = 0;
 		f32 GetPrice() { return 100.0f * PriceFactor; }
@@ -37,4 +37,38 @@ namespace pcg {
 	inline Player playerArchetype;
 	inline State stateArchetype;
 	inline Farm farmArchetype;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#include "format"
+// Logging
+template <>
+struct std::formatter<pcg::Money> : std::formatter<f32> {
+	auto format(const pcg::Money &data, std::format_context &ctx) const {
+		return formatter<f32>::format(data.Value, ctx);
+	}
+};
+template <typename EnumType> requires std::is_enum_v<EnumType>
+struct std::formatter<EnumType> : std::formatter<std::underlying_type_t<EnumType>> {
+	auto format(const EnumType &enumValue, format_context &ctx) const {
+		return std::formatter<std::underlying_type_t<EnumType>>::format(
+			static_cast<std::underlying_type_t<EnumType>>(enumValue), ctx);
+	}
 };

@@ -40,44 +40,7 @@ constexpr auto LOGGER_COLOR_CLEAR = "\033[m";
 #define LOGGER_COLOR_SET_PINK LOGGER_COLOR_SET(189)
 
 namespace pce {
-	namespace logger {
-		enum PREFIX { NONE, LOG, WARNING, ERROR };
-		// template <typename... Args>
-		// constexpr void Log(std::string &s, Args... args) {
-		//	std::printf(LOGGER_COLOR_SET_WHITE LOGGER_PREFIX_LOG + s,
-		//std::forward(args)...);
-		// }
-		// template <typename... Args>
-		// constexpr void Print(const std::string &s, Args... args) {
-		//	std::printf((s + LOGGER_COLOR_CLEAR "\n").c_str(), args...);
-		// }
-		// template <typename... Args>
-		// constexpr void Log(const std::string &format, Args... args) {
-		//	Print(LOGGER_COLOR_SET_WHITE LOGGER_PREFIX_LOG + format,
-		//std::forward<Args>(args)...);
-		// }
-		// template <typename... Args>
-		// constexpr void LogWarning(const std::string &format, Args... args) {
-		//	Print(LOGGER_COLOR_SET_YELLOW LOGGER_PREFIX_WARNING + format,
-		//std::forward<Args>(args)...);
-		// }
-		// template <typename... Args>
-		// constexpr void LogError(const std::string &format, Args... args) {
-		//	Print(LOGGER_COLOR_SET_ORANGE LOGGER_PREFIX_ERROR + format,
-		//std::forward<Args>(args)...);
-		// }
-		// void LogTiming(const std::string &name, f32 ms) {
-		//	Print(LOGGER_COLOR_SET_PINK LOGGER_PREFIX_TIMER "%.2f ms \t%s", ms,
-		//name.c_str());
-		// }
-		//  used to debug colors
-		//void dbg_print_256_colours_txt() {
-		//  for (u32 i = 0; i < 256; i++) {
-		//    if (i % 16 == 0 && i != 0) std::printf("\n");
-		//    std::printf("\033[38;5;%dm %3d\033[m", i, i);
-		//  }
-		//}
-	}  // namespace logger
+
 	struct Logger {
 	public:
 		void Print() {
@@ -154,16 +117,23 @@ namespace pce {
 		Table(const char* name, u32 n) : rows(n + 1) { 
 			std::vector<u32> idx(n);
 			std::iota(idx.begin(), idx.end(), 0);
-			AddColumn(name, idx);
-		}
-		template <typename T> void AddColumn(std::string title, std::vector<T>& values) { 
-			AddColumnFixed(title, values, title.size() + 1);
+			AddColumn(name, Span<u32>(idx));
 		}
 
-		template <typename T> void AddColumnFixed(std::string title, std::vector<T>& values, u32 w = 12) {
+		template <typename T> void AddColumnFixed(std::string title, Span<T> values, u32 w = 12) {
 			rows[0] += std::format("{:>{}} |", title, w);
 			for (u32 i = 0; i < values.size(); i++) rows[i + 1] += std::format("{:>{}} |", values[i], w);
 		}
+		template <typename T> void AddColumn(std::string title, Span<T> values) {
+			AddColumnFixed(title, values, title.size() + 1);
+		}
+		template <typename T> void AddColumn(std::string title, std::vector<T> values) {
+			AddColumnFixed(title, Span<T>(values), title.size() + 1);
+		}
+		template <typename T> void AddColumn(std::string title, List<T> values) {
+			AddColumnFixed(title, Span<T>(values), title.size() + 1);
+		}
+
 		void Print(Logger& logger) { 
 			std::string line = std::string(rows[0].size() + 1, '-');
 			logger.Write("{}", line);
@@ -180,5 +150,44 @@ namespace pce {
 	private:
 		std::vector<std::string> rows;
 	};
+
+	namespace logger {
+	enum PREFIX { NONE, LOG, WARNING, ERROR };
+	// template <typename... Args>
+	// constexpr void Log(std::string &s, Args... args) {
+	//	std::printf(LOGGER_COLOR_SET_WHITE LOGGER_PREFIX_LOG + s,
+	//std::forward(args)...);
+	// }
+	// template <typename... Args>
+	// constexpr void Print(const std::string &s, Args... args) {
+	//	std::printf((s + LOGGER_COLOR_CLEAR "\n").c_str(), args...);
+	// }
+	// template <typename... Args>
+	// constexpr void Log(const std::string &format, Args... args) {
+	//	Print(LOGGER_COLOR_SET_WHITE LOGGER_PREFIX_LOG + format,
+	//std::forward<Args>(args)...);
+	// }
+	// template <typename... Args>
+	// constexpr void LogWarning(const std::string &format, Args... args) {
+	//	Print(LOGGER_COLOR_SET_YELLOW LOGGER_PREFIX_WARNING + format,
+	//std::forward<Args>(args)...);
+	// }
+	// template <typename... Args>
+	// constexpr void LogError(const std::string &format, Args... args) {
+	//	Print(LOGGER_COLOR_SET_ORANGE LOGGER_PREFIX_ERROR + format,
+	//std::forward<Args>(args)...);
+	// }
+	// void LogTiming(const std::string &name, f32 ms) {
+	//	Print(LOGGER_COLOR_SET_PINK LOGGER_PREFIX_TIMER "%.2f ms \t%s", ms,
+	//name.c_str());
+	// }
+	//  used to debug colors
+	//void dbg_print_256_colours_txt() {
+	//  for (u32 i = 0; i < 256; i++) {
+	//    if (i % 16 == 0 && i != 0) std::printf("\n");
+	//    std::printf("\033[38;5;%dm %3d\033[m", i, i);
+	//  }
+	//}
+	}  // namespace logger
 
 };  // namespace pce

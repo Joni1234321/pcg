@@ -1,11 +1,10 @@
-#include "components.hpp"
 #include "algorithm.hpp"
+#include "components.hpp"
 #include "game.hpp"
 
 #include "logger.hpp"
 #include "types.hpp"
 #include "util.hpp"
-#include "formatting.hpp"
 
 using namespace pcg;
 using namespace pce;
@@ -26,7 +25,7 @@ struct FarmEntity : Entity {
 };
 
 static bool BuildFarm(PlayerEntity player, FarmType type);
-static void AddIncome(FarmEntity farm) { farm.Player().Money() += farm.FarmStats().out; }
+static void AddIncome(FarmEntity farm) { farm.Player().Money() += static_cast<f32>(farm.FarmStats().out); }
 static void Construct(PlayerEntity player);
 
 void _Game::Tick(u32 i) {
@@ -43,7 +42,6 @@ void _Game::Tick(u32 i) {
 	for (Market& market : stateArchetype.markets) market.RecalculateMarkets();
 	
 	List<u32> constructing = select(playerArchetype.construction, util::size<ConstructionQueue>());
-
 	Table table("Player", playerArchetype.n);
 	table.AddColumn("Revenue", revenue);
 	table.AddColumn("Expenses", expenses);
@@ -51,11 +49,12 @@ void _Game::Tick(u32 i) {
 	table.AddColumn("Constructing", constructing);
 	table.Print(logger);
 
-	const u32 N = 5;
-	Table cqueue("ConstructionQueue", N);
-	// FarmType
-	List<u32> types = select(playerArchetype.construction[0], [](BuildingUnderConstruction& c) { return c.progress; });
-	cqueue.AddColumn("Type", types);
+	List<BuildingUnderConstruction> displayConstruction = playerArchetype.construction[0];//.Limit(10);
+	Table cQueue("ConstructionQueue", displayConstruction.size());
+	cQueue.AddColumn("Type", select(displayConstruction, [](const BuildingUnderConstruction &c) { return c.type; }));
+	cQueue.AddColumn("Progress", select(displayConstruction, [](const BuildingUnderConstruction &c) { return c.progress; }));
+	cQueue.AddColumn("Required", select(displayConstruction, [](const BuildingUnderConstruction &c) { return c.required; }));
+	cQueue.Print(logger);
 }
 
 void _Game::LogMoney(const std::string& label, const List<Money>& money) {

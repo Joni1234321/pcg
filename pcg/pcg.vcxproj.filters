@@ -45,7 +45,7 @@
     <ClInclude Include="source\ecs.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="source\formatting.hpp">
+    <ClInclude Include="source\utilx.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -62,5 +62,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
   </ItemGroup>
 </Project>

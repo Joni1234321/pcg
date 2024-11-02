@@ -1,10 +1,7 @@
 #pragma once
 
 #include <vector>
-
-#include "collections.hpp"
 #include "types.hpp"
-#include "unordered_map"
 #include <memory>
 #include <stdexcept>
 
@@ -19,37 +16,12 @@ namespace pce {
 				v.pop_back();
 			}
 		}
+
 		template <typename T>
 		constexpr void SwapPop(std::vector<T>& v, u32 i) {
 			std::swap(v[i], v.back());
 			v.pop_back();
 		}
-		constexpr void SwapPop(Parent v, u32 i) {
-			std::swap(v[i], v.back());
-			v.pop_back();
-		}
-
-		template <typename T>
-		constexpr Array<u32> get_inner_sizes(const List<List<T>>& v) {
-			Array<u32> sizes(v.size());
-			for (int i = 0; i < sizes.length; i++) sizes[i] = v[i].size();
-			return sizes;
-		}
-		template <typename T>
-		constexpr Array<u32> get_inner_sizes(const Array<List<T>>& v) {
-			Array<u32> sizes(v.size());
-			for (int i = 0; i < sizes.size(); i++) sizes[i] = v[i].size();
-			return sizes;
-		}
-		template <typename T>
-		constexpr void clear_inner(List<List<T>>& v) {
-			for (List<T>& vi : v) vi.clear();
-		}
-		template <typename T>
-		constexpr void clear_inner(Array<List<T>>& v) {
-			for (List<T>& vi : v) vi.clear();
-		}
-		constexpr u32 sub_safe(u32 a, u32 b) { return (b < a) * (a - b); }
 
 		template <typename Collection>
 		const typename Collection::key_type RandomKey(const Collection& collection) {
@@ -67,9 +39,11 @@ namespace pce {
 
 		template <typename T = void> struct minus { using type = T; T operator()(const T& l, const T& r) const { return l - r; } };
 		template <typename T = void> struct plus { using type = T; T operator()(const T& l, const T& r) const { return l + r; } };
-		template <typename T = void> struct size { using type = T; u32 operator()(const T& t) const { return std::size(t); } };
+		template <typename T = void> struct size { using type = T; u32 operator()(const T& t) const { return t.size(); } };
 
-
+		template <typename T> T inline max(T a, T b) { return a > b ? a : b; }
+		template <typename T> T inline min(T a, T b) { return a < b ? a : b; }
+		inline u32 sub_safe(u32 a, u32 b) { return (b < a) * (a - b); }
 
 		//template <typename Container>
 		//const typename Container::value_type& Random(const Container& collection) {
