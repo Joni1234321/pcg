@@ -109,7 +109,7 @@ struct Table { // NOLINT(*-struct-pack-align)
     Table(const String& name, const u32 row_count) : rows(row_count + 1U) {
         List<u32> idx(row_count);
         std::iota(idx.begin(), idx.end(), 0U);
-        AddColumn(name, Span<u32>(idx));
+        AddColumn(name, idx);
     }
     template <typename T> void AddColumn(String title, Span<T> values) { AddColumnFixed(title, values, title.size() + 1U); }
     template <typename T> void AddColumn(String title, List<T> values) { AddColumnFixed(title, Span<T>(values), title.size() + 1U); }

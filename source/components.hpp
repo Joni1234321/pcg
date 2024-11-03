@@ -17,9 +17,7 @@ struct Production : C1<u32, Production> {
 };
 struct BuildingUnderConstruction {
     FARM_TYPE type;
-    u16 progress { 0 };
-    u16 required;
-    BuildingUnderConstruction(const FARM_TYPE type, const u16 required) : type(type), required(required) { }
+    u16 progress;
 };
 struct ConstructionQueue : pce::Queue<BuildingUnderConstruction> { };
 struct Market {
@@ -70,7 +68,6 @@ template <typename EnumType> requires std::is_enum_v<EnumType>
 struct std::formatter<EnumType> : std::formatter<std::underlying_type_t<EnumType>> {
     auto format(const EnumType& enum_value, format_context& ctx) const { return std::formatter<std::underlying_type_t<EnumType>>::format(static_cast<std::underlying_type_t<EnumType>>(enum_value), ctx); }
 };
-#include "format"
 template < > struct std::formatter<pce::String> : std::formatter<const char*> {
     auto format(const pce::String& data, std::format_context& ctx) const { return formatter<const char*>::format(data.CString(), ctx); }
 };

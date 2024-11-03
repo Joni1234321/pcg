@@ -9,8 +9,8 @@ namespace pcg {
 template <typename T, typename Derived> struct C1 {
     T value;
     operator T() const { return static_cast<T>(value); } // NOLINT(*-explicit-constructor, *-explicit-conversions)
-     constexpr C1() = default;
-     constexpr C1(T val) : value(val) { } // NOLINT(*-explicit-constructor, *-explicit-conversions)
+    constexpr C1() = default;
+    constexpr C1(T val) : value(val) { } // NOLINT(*-explicit-constructor, *-explicit-conversions)
 
     Derived operator+(const Derived& other) const { return Derived(this->value + other.value); }
 
@@ -32,14 +32,13 @@ template <typename T, typename Derived> struct C1 {
     }
 };
 struct Archetype {
-    virtual ~Archetype() = default;
-    u32 Count = 0;
+    u32 Count { 0U };
     virtual bool Add() {
         Count++;
         return true;
     }
     virtual bool Remove(Entity entity) {
-        if (Count == 0) return false;
+        if (Count == 0U) { return false; }
         Count--;
         return true;
     };

@@ -96,8 +96,8 @@ template <typename T> struct List {
 
     [[nodiscard]] constexpr CIter begin() const { return data.begin(); }
     [[nodiscard]] constexpr CIter end() const { return data.end(); }
-    [[nodiscard]] constexpr const T& front() const { return data.front(); }
-    [[nodiscard]] constexpr const T& back() const { return data.back(); }
+    [[nodiscard]] constexpr const T& Front() const { return data.front(); }
+    [[nodiscard]] constexpr const T& Back() const { return data.back(); }
 
     constexpr void PopBack() { data.pop_back(); }
     constexpr void Resize(u32 size) { data.resize(size); }

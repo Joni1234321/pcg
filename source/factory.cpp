@@ -12,7 +12,7 @@ bool PlayerArchetype::Add(f32 money) {
 
     return true;
 }
-bool PlayerArchetype::Remove(Entity entity) {
+bool PlayerArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
     moneys.swap_back(entity);
@@ -28,7 +28,7 @@ bool StateArchetype::Add(Entity player) {
 
     return true;
 }
-bool StateArchetype::Remove(Entity entity) {
+bool StateArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
     players.swap_back(entity);
@@ -44,7 +44,7 @@ bool FarmSectorArchetype::Add(Entity player, FARM_TYPE farm_type) {
 
     return true;
 }
-bool FarmSectorArchetype::Remove(Entity entity) {
+bool FarmSectorArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
     players.swap_back(entity);
