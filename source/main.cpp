@@ -28,6 +28,6 @@ using pce::List;
         (void)std::cin.ignore();
     }
 }
-}
+} // namespace pce
 
 i32 main() { pce::RunGame(); }

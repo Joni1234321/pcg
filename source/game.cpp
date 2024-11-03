@@ -34,15 +34,15 @@ void Game::Tick(u32 tick) {
 
     const Component<Money> before_revenue = player_archetype.moneys;
     for (const FarmEntity farm : farm_archetype) { AddIncome(farm); }
-    const Component<Money> revenue = select(player_archetype.moneys, before_revenue, Minus<Money>());
+    const Component<Money> revenue = Select(player_archetype.moneys, before_revenue, Minus<Money>());
 
     const Component<Money> before_expenses = player_archetype.moneys;
     for (const PlayerEntity player : player_archetype) { BuildFarm(player, util::RandomKey(data.farm_types)); }
-    const Component<Money> expenses = select(player_archetype.moneys, before_expenses, Minus<Money>());
+    const Component<Money> expenses = Select(player_archetype.moneys, before_expenses, Minus<Money>());
 
     for (Market& market : state_archetype.markets) { market.RecalculateMarkets(); }
 
-    const List<u32> constructing = select(player_archetype.construction, Size<ConstructionQueue>());
+    const List<u32> constructing = Select(player_archetype.construction, Size<ConstructionQueue>());
     Table table("Player", player_archetype.Count);
     table.AddColumn("Revenue", revenue);
     table.AddColumn("Expenses", expenses);
@@ -52,9 +52,9 @@ void Game::Tick(u32 tick) {
 
     const List<BuildingUnderConstruction> display_construction = player_archetype.construction[0]; //.Limit(10);
     Table cQueue("ConstructionQueue", display_construction.size());
-    cQueue.AddColumn("Type", select(display_construction, [] (const BuildingUnderConstruction& building) -> FARM_TYPE { return building.type; }));
-    cQueue.AddColumn("Progress", select(display_construction, [] (const BuildingUnderConstruction& building) -> u16 { return building.progress; }));
-    cQueue.AddColumn("Required", select(display_construction, [] (const BuildingUnderConstruction& building) -> u16 { return building.required; }));
+    cQueue.AddColumn("Type", Select(display_construction, [] (const BuildingUnderConstruction& building) -> FARM_TYPE { return building.type; }));
+    cQueue.AddColumn("Progress", Select(display_construction, [] (const BuildingUnderConstruction& building) -> u16 { return building.progress; }));
+    cQueue.AddColumn("Required", Select(display_construction, [] (const BuildingUnderConstruction& building) -> u16 { return building.required; }));
     cQueue.Print(logger, COLOR_DISABLED);
 }
 
