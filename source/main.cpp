@@ -23,7 +23,8 @@ using pce::List;
             game.Tick(turn);
             turn++;
         }
-        game.logger.LogVectorStats(reinterpret<List<f32>>(player_archetype.moneys));
+        PrintListStats(game.logger, reinterpret<List<f32>>(player_archetype.moneys));
+        //game.logger.LogVectorStats(reinterpret<List<f32>>(player_archetype.moneys));
         game.logger.Print();
         (void)std::cin.ignore();
     }

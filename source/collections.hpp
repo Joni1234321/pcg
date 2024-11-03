@@ -63,27 +63,26 @@ template <typename T> struct Array : private std::span<T> {
 };
 
 template <typename T> struct List {
-    std::vector<T> data;
-
     using Iter = typename std::vector<T>::iterator;
     using CIter = typename std::vector<T>::const_iterator;
     using value_type = typename std::vector<T>::value_type;
 
     constexpr List() : data() { }
+    constexpr List(std::initializer_list<T> init_list) : data(init_list) { }
     explicit constexpr List(u32 size) : data(size, std::allocator<T>()) { }
     constexpr ~List() = default;
 
     template <class Iter> constexpr List(Iter first, Iter last) : data(first, last) { }
 
-    [[nodiscard]] constexpr u32 size() const { return data.size(); }
+    [[nodiscard]] constexpr u32 Size() const { return data.size(); }
 
     operator Span<T>() { return Span<T>(*this); }
 
     // Generic collection converter  CREDIT goes the bot for this madness
-    template <typename Container> List(const Container& container) requires std::is_constructible_v<std::vector<T>, typename Container::iterator, typename
-                                                                                                    Container::iterator> : data(container.begin(), container.end()) { }
-    template <typename Container> List(Container&& container) requires std::is_constructible_v<std::vector<T>, typename Container::iterator, typename
-                                                                                               Container::iterator> : data(std::make_move_iterator(container.begin()), std::make_move_iterator(container.end())) { }
+    template <typename Container> explicit List(const Container& container) requires std::is_constructible_v<
+        std::vector<T>, typename Container::iterator, typename Container::iterator> : data(container.begin(), container.end()) { }
+    template <typename Container> explicit List(Container&& container) requires std::is_constructible_v<
+        std::vector<T>, typename Container::iterator, typename Container::iterator> : data(std::make_move_iterator(container.begin()), std::make_move_iterator(container.end())) { }
 
     constexpr const T& operator[](u32 pos) const { return data[pos]; }
     constexpr T& operator[](u32 pos) { return data[pos]; }
@@ -112,12 +111,15 @@ template <typename T> struct List {
         data.pop_back();
     }
 
-    [[nodiscard]] List<T> Limit(u32 n) const {
-        if (Empty()) return List<T>();
+    [[nodiscard]] List<T> Limit(const u32 limit) const {
+        if (Empty()) { return List<T>(); }
         auto first = begin();
-        auto last = begin() + Min(n, size());
+        auto last = begin() + Min(limit, Size());
         return List<T>(first, last);
     }
+
+protected:
+    std::vector<T> data;
 };
 
 template <typename T> struct Queue : public List<T> {
@@ -137,7 +139,7 @@ struct Entities : private List<Entity> {
     using List<Entity>::EmplaceBack;
     using List<Entity>::begin;
     using List<Entity>::end;
-    using List<Entity>::size;
+    using List<Entity>::Size;
     using List<Entity>::PopBack;
     using List<Entity>::swap_back;
     using List<Entity>::value_type;
@@ -155,7 +157,7 @@ struct Parent : private List<Entity> {
     using List<Entity>::begin;
     using List<Entity>::Back;
     using List<Entity>::end;
-    using List<Entity>::size;
+    using List<Entity>::Size;
     using List<Entity>::PopBack;
     using List<Entity>::swap_back;
     using List<Entity>::value_type;
@@ -164,7 +166,7 @@ struct Parent : private List<Entity> {
 constexpr void split(Array<List<Entity>>& ret, const List<Entity>& entities, const Parent& parents) {
     for (const Entity& entity : entities) {
         const Entity& parent = parents[entity];
-        ret[parent].EmplaceBack(entity);
+        (void)ret[parent].EmplaceBack(entity);
     }
 }
 inline Array<List<Entity>> split(const List<Entity>& entities, const Parent& parents, const u32 n) {
@@ -176,7 +178,7 @@ inline Array<List<Entity>> split(const List<Entity>& entities, const Parent& par
 constexpr void split(Array<List<Entity>>& ret, const Parent& parents) {
     for (Entity entity : parents) {
         const Entity& parent = parents[entity];
-        ret[parent].EmplaceBack(entity);
+        (void)ret[parent].EmplaceBack(entity);
     }
 }
 inline Array<List<Entity>> split(const Parent& parents, const u32 n) {
