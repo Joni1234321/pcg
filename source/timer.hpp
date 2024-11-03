@@ -21,7 +21,7 @@ class Timer {
   ~Timer() {
 #ifdef PCE_TIMER_ENABLE
     const std::chrono::duration<f32> duration = std::chrono::high_resolution_clock::now() - start_;
-    const f32 duration_ms = duration.count() * 1000;
+    const f32 duration_ms = duration.count() * 1000.0F;
     // logger::LogTiming(name_, duration_ms);
 #endif
   }

@@ -1,58 +1,55 @@
 #pragma once
 #include <random>
 
+#include "types.hpp"
 #include <memory>
 #include <stdexcept>
 #include <vector>
-#include "types.hpp"
 
 namespace pce {
-template <typename To, typename From> constexpr To& reinterpret(From& from) { return *reinterpret_cast<To*>(&from); }
-inline u32 rand() {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    static std::uniform_int_distribution distribution(0U, UINT_MAX);
+template <typename To, typename From> constexpr To& reinterpret(From& from) { return *reinterpret_cast<To*>(&from); } // NOLINT(*-pro-type-reinterpret-cast)
+inline u32 Rand() {
+    static std::random_device random_device;
+    static std::mt19937 gen(random_device());
+    static std::uniform_int_distribution distribution(0U, U32_MAX);
     return distribution(gen);
 }
-template <typename T = void> struct minus {
-    using type = T;
-    T operator()(const T& l, const T& r) const { return l - r; }
+template <typename T = void> struct Minus {
+    T operator()(const T& left, const T& right) const { return left - right; } // NOLINT(*-overloaded-operator)
 };
-template <typename T = void> struct plus {
-    using type = T;
-    T operator()(const T& l, const T& r) const { return l + r; }
+template <typename T = void> struct Plus {
+    T operator()(const T& left, const T& right) const { return left + right; } // NOLINT(*-overloaded-operator)
 };
-template <typename T = void> struct size {
-    using type = T;
-    u32 operator()(const T& t) const { return t.size(); }
+template <typename T = void> struct Size {
+    u32 operator()(const T& container) const { return container.size(); } // NOLINT(*-overloaded-operator)
 };
 
-template <typename T> T inline max(T a, T b) { return a > b ? a : b; }
-template <typename T> T inline min(T a, T b) { return a < b ? a : b; }
-inline u32 sub_safe(const u32 a, const u32 b) { return (b < a) * (a - b); }
-}
+
+template <typename T> T Max(T left, T right) { return left > right ? left : right; }
+template <typename T> T Min(T left, T right) { return left < right ? left : right; }
+inline u32 SubSafe(const u32 left, const u32 right) { return static_cast<u32>(right < left) * (left - right); }
+} // namespace pce
 
 namespace pce::util {
-template <typename T> constexpr void SwapPop(std::vector<T>& v, const std::vector<Entity>& entities) {
-    const size_t n = entities.size();
-    for (u32 i = 0; i < n; i++) {
-        const u32 idx = entities[n - i - 1].index;
-        std::swap(v[idx], v.back());
-        v.pop_back();
+template <typename T> constexpr void SwapPop(std::vector<T>& vector, const std::vector<Entity>& entities) {
+    for (u32 i = 0U; i < entities.size(); i++) {
+        const Entity entity = entities[entities.size() - i - 1U];
+        std::swap(vector[entity], vector.back());
+        vector.pop_back();
     }
 }
-template <typename T> constexpr void SwapPop(std::vector<T>& v, u32 i) {
-    std::swap(v[i], v.back());
-    v.pop_back();
+template <typename T> constexpr void SwapPop(std::vector<T>& vector, u32 pos) {
+    std::swap(vector[pos], vector.back());
+    vector.pop_back();
 }
 template <typename Collection> typename Collection::key_type RandomKey(const Collection& collection) {
-    if (std::empty(collection)) throw std::runtime_error("Collection is empty!");
-    auto it = std::next(std::begin(collection), rand() % std::size(collection));
-    return it->first;
+    if (std::empty(collection)) { throw std::runtime_error("Collection is empty!"); }
+    auto iterator = std::next(std::begin(collection), Rand() % std::size(collection));
+    return iterator->first;
 }
 template <typename Collection> const typename Collection::value_type& RandomValue(const Collection& collection) {
-    if (std::empty(collection)) throw std::runtime_error("Collection is empty!");
-    auto it = std::next(std::begin(collection), rand() % std::size(collection));
-    return it->second;
+    if (std::empty(collection)) { throw std::runtime_error("Collection is empty!"); }
+    auto iterator = std::next(std::begin(collection), Rand() % std::size(collection));
+    return iterator->second;
 }
-}
+} // namespace pce::util

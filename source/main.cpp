@@ -8,23 +8,26 @@
 #include "logger.hpp"
 #include "types.hpp"
 
-using namespace pcg;
-using namespace pce;
-
-inline bool end_game = false;
-u32 main() {
-    u32 i = 0U;
-    while (!end_game) {
-        for (const u32 new_limit = i + 10U; i < new_limit; i++) {
-            Game.logger.LogLine();
-            Game.logger.Log("Turn {:4}", i);
-            Game.Tick(i);
+namespace pce {
+using pcg::game;
+using pcg::player_archetype;
+using pce::reinterpret;
+using pce::List;
+[[noreturn]] void RunGame() {
+    u32 turn = 0U;
+    while (true) {
+        constexpr u32 skip = 10U;
+        for (u32 i = 0U; i < skip; i++) {
+            game.logger.LogLine();
+            game.logger.Log("Turn {:4}", turn);
+            game.Tick(turn);
+            turn++;
         }
-
-        Game.logger.LogVectorStats(reinterpret<List<f32>>(player_archetype.moneys));
-        Game.logger.Print();
+        game.logger.LogVectorStats(reinterpret<List<f32>>(player_archetype.moneys));
+        game.logger.Print();
         (void)std::cin.ignore();
     }
-
-    return 0;
 }
+}
+
+i32 main() { pce::RunGame(); }

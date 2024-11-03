@@ -8,25 +8,21 @@
 #include "types.hpp"
 
 namespace pcg {
-
 struct FarmStats {
-	u32 in, out;
+    u32 cost, production;
 };
 
-struct _Data {
-	std::unordered_map<FARM_TYPE, FarmStats> farmTypes;
+struct Data {
+    std::unordered_map<FARM_TYPE, FarmStats> farm_types;
 };
-struct _Game {
-	pce::Logger logger;
-	_Game(u32 players = 2, u32 markets = 10, u32 factories = 100);
-	void Tick(u32 i);
-
-private:
-	void LogMoney(const std::string& label, const pce::List<Money>& money);
+struct Game {
+    pce::Logger logger;
+    explicit Game(u32 players = 2U);
+    void Tick(u32 tick);
 };
 
-inline _Data Data;
-inline _Game Game;
+inline Data data; // NOLINT(*-err58-cpp, *-avoid-non-const-global-variables)
+inline Game game; // NOLINT(*-err58-cpp, *-avoid-non-const-global-variables)
 
 // map power
 // isolated small island homogen culture
@@ -69,4 +65,4 @@ inline _Game Game;
 // Uses goods to sell them more expensive
 
 // Resource list
-}  // namespace pcg
+} // namespace pcg

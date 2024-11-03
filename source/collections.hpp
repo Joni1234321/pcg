@@ -43,6 +43,7 @@ template <typename T> struct List {
     using value_type = typename std::vector<T>::value_type;
 
     constexpr List() : data() { }
+    explicit constexpr List(u32 size) : data(size, std::allocator<T>()) { }
     constexpr ~List() = default;
 
     template <class Iter> constexpr List(Iter first, Iter last) : data(first, last) { }
@@ -98,23 +99,7 @@ template <typename T> struct Queue : public List<T> {
 
 template <typename T> using Component = List<T>;
 
-struct Parent : private List<Entity> {
-    constexpr Parent() = default;
-    constexpr ~Parent() { List<Entity>::~List(); }
-    Parent(const Parent&) = delete;
-    Parent& operator=(const Parent&) = delete;
-    Parent(Parent&&) = delete;
-    Parent& operator=(Parent&&) = delete;
-    using List<Entity>::operator[];
-    using List<Entity>::EmplaceBack;
-    using List<Entity>::begin;
-    using List<Entity>::Back;
-    using List<Entity>::end;
-    using List<Entity>::size;
-    using List<Entity>::PopBack;
-    using List<Entity>::swap_back;
-    using List<Entity>::value_type;
-};
+
 struct Entities : private List<Entity> {
     constexpr Entities() = default;
     constexpr ~Entities() { List<Entity>::~List(); }
@@ -132,10 +117,28 @@ struct Entities : private List<Entity> {
     using List<Entity>::value_type;
 };
 
+struct Parent : private List<Entity> {
+    constexpr Parent() = default;
+    constexpr ~Parent() { List<Entity>::~List(); }
+    Parent(const Parent&) = delete;
+    Parent& operator=(const Parent&) = delete;
+    Parent(Parent&&) = delete;
+    Parent& operator=(Parent&&) = delete;
+    using List<Entity>::operator[];
+    using List<Entity>::EmplaceBack;
+    using List<Entity>::begin;
+    using List<Entity>::Back;
+    using List<Entity>::end;
+    using List<Entity>::size;
+    using List<Entity>::PopBack;
+    using List<Entity>::swap_back;
+    using List<Entity>::value_type;
+};
+
 constexpr void split(Array<List<Entity>>& ret, const List<Entity>& entities, const Parent& parents) {
     for (const Entity& entity : entities) {
-        const Entity& parent = parents[entity.index];
-        ret[parent.index].EmplaceBack(entity);
+        const Entity& parent = parents[entity];
+        ret[parent].EmplaceBack(entity);
     }
 }
 inline Array<List<Entity>> split(const List<Entity>& entities, const Parent& parents, const u32 n) {
@@ -146,8 +149,8 @@ inline Array<List<Entity>> split(const List<Entity>& entities, const Parent& par
 // assumes all entities are tightly packed and linked to parents
 constexpr void split(Array<List<Entity>>& ret, const Parent& parents) {
     for (Entity entity : parents) {
-        const Entity& parent = parents[entity.index];
-        ret[parent.index].EmplaceBack(entity);
+        const Entity& parent = parents[entity];
+        ret[parent].EmplaceBack(entity);
     }
 }
 inline Array<List<Entity>> split(const Parent& parents, const u32 n) {
