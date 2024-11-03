@@ -7,7 +7,8 @@
 #include "types.hpp"
 #include "util.hpp"
 
-using namespace pcg; // NOLINT(*-build-using-namespace)
+namespace pcg {
+
 using namespace pce; // NOLINT(*-build-using-namespace)
 
 struct PlayerEntity : Entity {
@@ -48,14 +49,14 @@ void Game::Tick(u32 tick) {
     table.AddColumn("Expenses", expenses);
     table.AddColumn("Balance", player_archetype.moneys);
     table.AddColumn("Constructing", constructing);
-    table.Print(logger, COLOR_ENABLED);
+    table.Print(logger, Table::COLOR_ENABLED);
 
     const List<BuildingUnderConstruction> display_construction = player_archetype.construction[0]; //.Limit(10);
     Table cQueue("ConstructionQueue", display_construction.size());
     cQueue.AddColumn("Type", Select(display_construction, [] (const BuildingUnderConstruction& building) -> FARM_TYPE { return building.type; }));
     cQueue.AddColumn("Progress", Select(display_construction, [] (const BuildingUnderConstruction& building) -> u16 { return building.progress; }));
     cQueue.AddColumn("Required", Select(display_construction, [] (const BuildingUnderConstruction& building) -> u16 { return building.required; }));
-    cQueue.Print(logger, COLOR_DISABLED);
+    cQueue.Print(logger, Table::COLOR_DISABLED);
 }
 
 Game::Game(const u32 players) {
@@ -66,9 +67,9 @@ Game::Game(const u32 players) {
     data.farm_types[FARM_TYPE::COWS] = FarmStats(300, 50);
 
     for (u32 i = 0; i < players; i++) {
-        constexpr u32 player_money_start = 100;
-        player_archetype.Add(player_money_start);
-        farm_archetype.Add(i, FARM_TYPE::CONSTRUCTION);
+        constexpr Money player_money_start = 100.0F;
+        (void)player_archetype.Add(player_money_start);
+        (void)farm_archetype.Add(i, FARM_TYPE::CONSTRUCTION);
     }
 }
 
@@ -93,3 +94,4 @@ static void Construct(const PlayerEntity player) {
         farm_archetype.Add(player, building_under_construction.type);
     }
 }
+} // namespace pcg

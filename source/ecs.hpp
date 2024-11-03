@@ -9,8 +9,8 @@ namespace pcg {
 template <typename T, typename Derived> struct C1 {
     T value;
     operator T() const { return static_cast<T>(value); } // NOLINT(*-explicit-constructor, *-explicit-conversions)
-    C1() = default;
-    C1(T val) : value(val) { } // NOLINT(*-explicit-constructor, *-explicit-conversions)
+     constexpr C1() = default;
+     constexpr C1(T val) : value(val) { } // NOLINT(*-explicit-constructor, *-explicit-conversions)
 
     Derived operator+(const Derived& other) const { return Derived(this->value + other.value); }
 

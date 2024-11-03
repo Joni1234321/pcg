@@ -1,6 +1,7 @@
 #pragma once
 
 #include <span>
+#include <utility>
 #include <vector>
 
 #include "types.hpp"
@@ -9,12 +10,38 @@
 namespace pce {
 template <typename T> using Span = std::span<T>;
 
+struct String {
+    constexpr String() = default;
+    constexpr String(const char character, const u32 count) : data(count, character, std::allocator<char>()) { }
+    constexpr String(std::string&& text) : data(std::move(text)) { }            // NOLINT(*-explicit-constructor, *-explicit-conversions)
+    constexpr String(const char* text) : data(text, std::allocator<char>()) { } // NOLINT(*-explicit-constructor, *-explicit-conversions)
+
+    operator const char*() const { return data.c_str(); }
+    constexpr String& operator +=(const String& other) {
+        data += other.data;
+        return *this;
+    }
+    constexpr String& operator +=(const String&& other) {
+        data += other.data;
+        return *this;
+    }
+
+    constexpr void Add(const String& other) { data += other.data; }
+    constexpr void Add(const String&& other) { data += other.data; }
+    [[nodiscard]] constexpr bool Empty() const { return data.empty(); }
+    [[nodiscard]] constexpr const char *CString() const { return data.c_str(); }
+    [[nodiscard]] u32 size() const { return static_cast<u32>(data.size()); }
+    constexpr void Clear() { data.clear(); }
+
+private:
+    std::string data;
+};
 template <typename T> struct Array : private std::span<T> {
-    explicit Array(u32 n) : std::span<T>(new T[n](), n) { std::printf("CONSTRUCTING %s \n", typeid(T).name()); }
+    explicit Array(u32 n) : std::span<T>(new T[n](), n) { (void)std::printf("CONSTRUCTING %s \n", typeid(T).name()); }
     Array(const Array<T>& other) = delete;
-    Array(Array<T>&& other) noexcept { std::printf("MOVING %s\n", typeid(T).name()); }
+    Array(Array<T>&& other) noexcept { (void)std::printf("MOVING %s\n", typeid(T).name()); }
     ~Array() {
-        std::printf("DELETING %s\n", typeid(T).name());
+        (void)std::printf("DELETING %s\n", typeid(T).name());
         delete[] this->data();
     }
     Array<T>& operator=(Array<T>&& other) noexcept {
@@ -23,7 +50,7 @@ template <typename T> struct Array : private std::span<T> {
 
             std::span<T>::operator=(std::span<T>(other.data(), other.size()));
 
-            std::printf("MOVE ASSIGNING %s\n", typeid(T).name());
+            (void)std::printf("MOVE ASSIGNING %s\n", typeid(T).name());
             other.reset();
         }
         return *this;
@@ -88,7 +115,7 @@ template <typename T> struct List {
     [[nodiscard]] List<T> Limit(u32 n) const {
         if (Empty()) return List<T>();
         auto first = begin();
-        auto last = begin() + min(n, size());
+        auto last = begin() + Min(n, size());
         return List<T>(first, last);
     }
 };
@@ -98,7 +125,6 @@ template <typename T> struct Queue : public List<T> {
 };
 
 template <typename T> using Component = List<T>;
-
 
 struct Entities : private List<Entity> {
     constexpr Entities() = default;

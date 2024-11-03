@@ -7,8 +7,8 @@ using pce::Rand;
 bool PlayerArchetype::Add(f32 money) {
     if (!Archetype::Add()) { return false; }
 
-    moneys.EmplaceBack(money);
-    construction.EmplaceBack();
+    (void)moneys.EmplaceBack(money);
+    (void)construction.EmplaceBack();
 
     return true;
 }
@@ -22,7 +22,7 @@ bool PlayerArchetype::Remove(Entity entity) {
 bool StateArchetype::Add(Entity player) {
     if (!Archetype::Add()) { return false; }
 
-    constexpr u32 population = 1000;
+    constexpr u32 population = 1000U;
     (void)players.EmplaceBack(player);
     markets.PushBack(Market { .population = Rand() % population });
 
