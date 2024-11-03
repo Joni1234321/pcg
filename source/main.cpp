@@ -11,22 +11,20 @@
 using namespace pcg;
 using namespace pce;
 
-template<typename TO, typename FROM>
-constexpr TO& Reinterpret(FROM& from) { return *reinterpret_cast<TO*>(&from); }
-
+inline bool end_game = false;
 u32 main() {
-	u32 i = 0;
-	while (true) {
-		for (u32 newLimit = i + 10; i < newLimit; i++) {
-			Game.logger.LogLine();
-			Game.logger.Log("Turn {:4}", i);
-			Game.Tick(i);
-		}
+    u32 i = 0U;
+    while (!end_game) {
+        for (const u32 new_limit = i + 10U; i < new_limit; i++) {
+            Game.logger.LogLine();
+            Game.logger.Log("Turn {:4}", i);
+            Game.Tick(i);
+        }
 
-		Game.logger.LogVectorStats(Reinterpret<List<f32>>(playerArchetype.moneys));
-		Game.logger.Print();
-		std::cin.ignore();
-	}
+        Game.logger.LogVectorStats(reinterpret<List<f32>>(player_archetype.moneys));
+        Game.logger.Print();
+        (void)std::cin.ignore();
+    }
 
-	return 0;
+    return 0;
 }

@@ -14,7 +14,7 @@ struct FarmStats {
 };
 
 struct _Data {
-	std::unordered_map<FarmType, FarmStats> farmTypes;
+	std::unordered_map<FARM_TYPE, FarmStats> farmTypes;
 };
 struct _Game {
 	pce::Logger logger;

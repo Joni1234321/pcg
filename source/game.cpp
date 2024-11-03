@@ -1,6 +1,6 @@
+#include "game.hpp"
 #include "algorithm.hpp"
 #include "components.hpp"
-#include "game.hpp"
 
 #include "logger.hpp"
 #include "types.hpp"
@@ -10,90 +10,89 @@ using namespace pcg;
 using namespace pce;
 
 struct PlayerEntity : Entity {
-	constexpr PlayerEntity(Entity e) : Entity(e) {}
-	constexpr Money& Money() { return playerArchetype.moneys[index]; }
-	constexpr ConstructionQueue& Construction() { return playerArchetype.construction[index]; }
+    constexpr PlayerEntity(Entity e) : Entity(e) { }
+    constexpr Money& Money() const { return player_archetype.moneys[index]; }
+    constexpr ConstructionQueue& Construction() const { return player_archetype.construction[index]; }
 };
 
 struct FarmEntity : Entity {
-	constexpr FarmEntity(Entity e) : Entity(e) {}
+    constexpr FarmEntity(Entity e) : Entity(e) { }
 
-	constexpr PlayerEntity Player() { return farmArchetype.players[index]; }
+    constexpr PlayerEntity Player() { return farm_archetype.players[index]; }
 
-	constexpr FarmType FarmType() { return farmArchetype.type[index]; }
-	const FarmStats FarmStats() { return Data.farmTypes[FarmType()]; }
+    constexpr FARM_TYPE FarmType() { return farm_archetype.type[index]; }
+    FarmStats FarmStats() { return Data.farmTypes[FarmType()]; }
 };
 
-static bool BuildFarm(PlayerEntity player, FarmType type);
+static bool BuildFarm(PlayerEntity player, FARM_TYPE type);
 static void AddIncome(FarmEntity farm) { farm.Player().Money() += static_cast<f32>(farm.FarmStats().out); }
 static void Construct(PlayerEntity player);
 
 void _Game::Tick(u32 i) {
-	for (PlayerEntity player : playerArchetype) Construct(player);
+    for (const PlayerEntity player : player_archetype) Construct(player);
 
-	Component<Money> beforeRevenue = playerArchetype.moneys;
-	for (FarmEntity farm : farmArchetype) AddIncome(farm);
-	Component<Money> revenue = select(playerArchetype.moneys, beforeRevenue, util::minus<Money>());
+    const Component<Money> before_revenue = player_archetype.moneys;
+    for (const FarmEntity farm : farm_archetype) AddIncome(farm);
+    const Component<Money> revenue = select(player_archetype.moneys, before_revenue, minus<Money>());
 
-	Component<Money> beforeExpenses = playerArchetype.moneys;
-	for (PlayerEntity player : playerArchetype) BuildFarm(player, util::RandomKey(Data.farmTypes));
-	Component<Money> expenses = select(playerArchetype.moneys, beforeExpenses, util::minus<Money>());
+    const Component<Money> before_expenses = player_archetype.moneys;
+    for (const PlayerEntity player : player_archetype) BuildFarm(player, util::RandomKey(Data.farmTypes));
+    const Component<Money> expenses = select(player_archetype.moneys, before_expenses, minus<Money>());
 
-	for (Market& market : stateArchetype.markets) market.RecalculateMarkets();
-	
-	List<u32> constructing = select(playerArchetype.construction, util::size<ConstructionQueue>());
-	Table table("Player", playerArchetype.n);
-	table.AddColumn("Revenue", revenue);
-	table.AddColumn("Expenses", expenses);
-	table.AddColumn("Balance", playerArchetype.moneys);
-	table.AddColumn("Constructing", constructing);
-	table.Print(logger);
+    for (Market& market : state_archetype.markets) market.RecalculateMarkets();
 
-	List<BuildingUnderConstruction> displayConstruction = playerArchetype.construction[0];//.Limit(10);
-	Table cQueue("ConstructionQueue", displayConstruction.size());
-	cQueue.AddColumn("Type", select(displayConstruction, [](const BuildingUnderConstruction &c) { return c.type; }));
-	cQueue.AddColumn("Progress", select(displayConstruction, [](const BuildingUnderConstruction &c) { return c.progress; }));
-	cQueue.AddColumn("Required", select(displayConstruction, [](const BuildingUnderConstruction &c) { return c.required; }));
-	cQueue.Print(logger);
+    const List<u32> constructing = select(player_archetype.construction, size<ConstructionQueue>());
+    Table table("Player", player_archetype.Count);
+    table.AddColumn("Revenue", revenue);
+    table.AddColumn("Expenses", expenses);
+    table.AddColumn("Balance", player_archetype.moneys);
+    table.AddColumn("Constructing", constructing);
+    table.Print(logger);
+
+    const List<BuildingUnderConstruction> display_construction = player_archetype.construction[0]; //.Limit(10);
+    Table cQueue("ConstructionQueue", display_construction.size());
+    cQueue.AddColumn("Type", select(display_construction, [](const BuildingUnderConstruction& c) { return c.type; }));
+    cQueue.AddColumn("Progress", select(display_construction, [](const BuildingUnderConstruction& c) { return c.progress; }));
+    cQueue.AddColumn("Required", select(display_construction, [](const BuildingUnderConstruction& c) { return c.required; }));
+    cQueue.Print(logger);
 }
 
 void _Game::LogMoney(const std::string& label, const List<Money>& money) {
-	for (u32 i = 0; i < money.size(); ++i) {
-		logger.SetColor(172 + i * 3);
-		logger.Write("Player [{}]\t{} {}\n", i, label, money[i]);
-	}
-	logger.ClearColor();
+    for (u32 i = 0; i < money.size(); ++i) {
+        logger.SetColor(172 + i * 3);
+        logger.Write("Player [{}]\t{} {}\n", i, label, money[i]);
+    }
+    logger.ClearColor();
 }
 
-_Game::_Game(u32 players, u32 markets, u32 factories) : logger() {
-	Data.farmTypes[FarmType::Construction] = FarmStats(5, 0);
-	Data.farmTypes[FarmType::Wine] = FarmStats(1000, 250);
-	Data.farmTypes[FarmType::Wheat] = FarmStats(90, 10);
-	Data.farmTypes[FarmType::Fish] = FarmStats(10, 1);
-	Data.farmTypes[FarmType::Cows] = FarmStats(300, 50);
+_Game::_Game(u32 players, u32 markets, u32 factories) {
+    Data.farmTypes[FARM_TYPE::CONSTRUCTION] = FarmStats(5, 0);
+    Data.farmTypes[FARM_TYPE::WINE] = FarmStats(1000, 250);
+    Data.farmTypes[FARM_TYPE::WHEAT] = FarmStats(90, 10);
+    Data.farmTypes[FARM_TYPE::FISH] = FarmStats(10, 1);
+    Data.farmTypes[FARM_TYPE::COWS] = FarmStats(300, 50);
 
-	const u32 PLAYER_MONEY_START = 100;
-
-	for (u32 i = 0; i < players; i++) {
-		playerArchetype.Add(PLAYER_MONEY_START);
-		farmArchetype.Add(i, FarmType::Construction);
-	}
+    for (u32 i = 0; i < players; i++) {
+        constexpr u32 player_money_start = 100;
+        player_archetype.Add(player_money_start);
+        farm_archetype.Add(i, FARM_TYPE::CONSTRUCTION);
+    }
 }
 
-static bool BuildFarm(PlayerEntity player, FarmType type) {
-	FarmStats farm = Data.farmTypes[type];
-	if (player.Money() < farm.in) return false;
-	player.Money() -= farm.in;
-	player.Construction().emplace_back(type, 30);
-	return true;
+static bool BuildFarm(PlayerEntity player, FARM_TYPE type) {
+    const FarmStats farm = Data.farmTypes[type];
+    if (player.Money() < farm.in) return false;
+    player.Money() -= farm.in;
+    player.Construction().EmplaceBack(type, 30);
+    return true;
 }
 
 static void Construct(PlayerEntity player) {
-	if (player.Construction().empty()) return;
-	BuildingUnderConstruction& buildingUnderConstruction = player.Construction().front();
-	buildingUnderConstruction.progress += 1;
-	if (buildingUnderConstruction.progress == buildingUnderConstruction.required) {
-		player.Construction().pop(); 
-		farmArchetype.Add(player, buildingUnderConstruction.type);
-	}
+    if (player.Construction().Empty()) return;
+    BuildingUnderConstruction& building_under_construction = player.Construction().Front();
+    building_under_construction.progress += 1;
+    if (building_under_construction.progress == building_under_construction.required) {
+        player.Construction().Pop();
+        farm_archetype.Add(player, building_under_construction.type);
+    }
 }
