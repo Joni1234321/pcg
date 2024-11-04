@@ -1,5 +1,6 @@
 #pragma once
 
+#include <format>
 #include <span>
 #include <utility>
 #include <vector>
@@ -15,6 +16,7 @@ struct String {
     constexpr String(const char character, const u32 count) : data(count, character, std::allocator<char>()) { }
     constexpr String(std::string&& text) : data(std::move(text)) { }            // NOLINT(*-explicit-constructor, *-explicit-conversions)
     constexpr String(const char* text) : data(text, std::allocator<char>()) { } // NOLINT(*-explicit-constructor, *-explicit-conversions)
+    template <typename... Args> constexpr String(const char* text, Args... args) : data(std::vformat(text, std::make_format_args(args...))) { }
 
     operator const char*() const { return data.c_str(); }
     constexpr String& operator +=(const String& other) {
@@ -114,7 +116,7 @@ template <typename T> struct List {
     [[nodiscard]] List<T> Limit(const u32 limit) const {
         if (Empty()) { return List<T>(); }
         auto first = begin();
-        auto last = begin() + Min(limit, Size());
+        auto last = begin() + math::Min(limit, Size());
         return List<T>(first, last);
     }
 
@@ -123,6 +125,7 @@ protected:
 };
 
 template <typename T> struct Queue : public List<T> {
+    void RemoveAt(u32 pos) { this->data.erase(this->data.begin() + pos); }
     void Pop() { this->data.erase(this->data.begin()); }
 };
 

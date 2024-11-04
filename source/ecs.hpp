@@ -46,4 +46,4 @@ struct Archetype {
     [[nodiscard]] static constexpr Entity begin() noexcept { return 0; }
     [[nodiscard]] constexpr Entity end() const noexcept { return Count; }
 };
-}
+} // namespace pcg

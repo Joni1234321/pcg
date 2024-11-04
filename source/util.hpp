@@ -14,20 +14,6 @@ inline u32 Rand() {
     static std::uniform_int_distribution distribution(0U, U32_MAX);
     return distribution(gen);
 }
-template <typename T = void> struct Minus {
-    T operator()(const T& left, const T& right) const { return left - right; } // NOLINT(*-overloaded-operator)
-};
-template <typename T = void> struct Plus {
-    T operator()(const T& left, const T& right) const { return left + right; } // NOLINT(*-overloaded-operator)
-};
-template <typename T = void> struct Size {
-    u32 operator()(const T& container) const { return container.Size(); } // NOLINT(*-overloaded-operator)
-};
-
-
-template <typename T> T Max(T left, T right) { return left > right ? left : right; }
-template <typename T> T Min(T left, T right) { return left < right ? left : right; }
-inline u32 SubSafe(const u32 left, const u32 right) { return static_cast<u32>(right < left) * (left - right); }
 template <typename Collection> typename Collection::key_type RandomKey(const Collection& collection) {
     if (std::empty(collection)) { throw std::runtime_error("Collection is empty!"); }
     auto iterator = std::next(std::begin(collection), Rand() % std::size(collection));
@@ -39,3 +25,18 @@ template <typename Collection> const typename Collection::value_type& RandomValu
     return iterator->second;
 }
 } // namespace pce
+
+namespace pce::math {
+template <typename T = void> struct Minus {
+    T operator()(const T& left, const T& right) const { return left - right; } // NOLINT(*-overloaded-operator)
+};
+template <typename T = void> struct Plus {
+    T operator()(const T& left, const T& right) const { return left + right; } // NOLINT(*-overloaded-operator)
+};
+template <typename T = void> struct Size {
+    u32 operator()(const T& container) const { return container.Size(); } // NOLINT(*-overloaded-operator)
+};
+template <typename T> T Max(T left, T right) { return left > right ? left : right; }
+template <typename T> T Min(T left, T right) { return left < right ? left : right; }
+inline u32 SubSafe(const u32 left, const u32 right) { return static_cast<u32>(right < left) * (left - right); }
+} // namespace pce::math

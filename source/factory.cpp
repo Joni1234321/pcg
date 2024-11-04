@@ -8,7 +8,7 @@ bool PlayerArchetype::Add(f32 money) {
     if (!Archetype::Add()) { return false; }
 
     (void)moneys.EmplaceBack(money);
-    (void)construction.EmplaceBack();
+    (void)construction_queue.EmplaceBack();
 
     return true;
 }
@@ -22,7 +22,7 @@ bool PlayerArchetype::Remove(const Entity entity) {
 bool StateArchetype::Add(Entity player) {
     if (!Archetype::Add()) { return false; }
 
-    constexpr u32 population = 1000U;
+    constexpr u32 population = 100U;
     (void)players.EmplaceBack(player);
     markets.PushBack(Market { .population = Rand() % population });
 

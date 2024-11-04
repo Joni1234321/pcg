@@ -19,7 +19,12 @@ struct BuildingUnderConstruction {
     FARM_TYPE type;
     u16 progress;
 };
-struct ConstructionQueue : pce::Queue<BuildingUnderConstruction> { };
+struct ConstructionQueue : pce::Queue<BuildingUnderConstruction> {
+    ConstructionQueue() = default;
+    ConstructionQueue(const ConstructionQueue& queue) = delete;
+    ConstructionQueue(ConstructionQueue&& queue) = default;
+    u32 construction_capacity { 1U };
+};
 struct Market {
     u32 population { };
     u32 demand { };
@@ -49,8 +54,7 @@ struct FarmSectorArchetype final : Sector {
 
 struct PlayerArchetype final : Archetype {
     pce::Component<Money> moneys;
-    pce::Component<ConstructionQueue> construction;
-
+    pce::Component<ConstructionQueue> construction_queue;
     bool Add(f32);
     bool Remove(Entity entity) override;
 };

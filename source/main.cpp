@@ -18,11 +18,10 @@ using pce::List;
         for (u32 i = 0U; i < skip; i++) {
             game.logger.LogLine();
             game.logger.Log("Turn {:4}", turn);
-            game.Tick(turn);
+            game.Tick(turn, i + 1U == skip);
             turn++;
         }
         PrintListStats(game.logger, reinterpret<List<f32>>(player_archetype.moneys));
-        //game.logger.LogVectorStats(reinterpret<List<f32>>(player_archetype.moneys));
         game.logger.Print();
         (void)std::cin.ignore();
     }
