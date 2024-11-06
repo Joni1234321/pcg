@@ -9,16 +9,21 @@ enum class FARM_TYPE : u8 { CONSTRUCTION, WINE, WHEAT, FISH, COWS };
 enum class RESOURCE_BUILDINGS : u8 { WOOD, FE, AG, AU };
 enum class GOOD : u8 { WOOD, IRON, FOOD, STEEL, COAL };
 
-struct Money : C1<f32, Money> {
-    using C1::C1;
-};
-struct Production : C1<u32, Production> {
-    using C1::C1;
-};
+//struct Money : C1<f32, Money> {
+//    using C1::C1;
+//};
+//struct Production : C1<u32, Production> {
+//    using C1::C1;
+//};
 struct Tick {
     u32 value;
 };
-
+//struct Money {
+//    f32 value;
+//};
+using Money = NamedType<f32, struct _Money, Arithmitic>;
+using Production = NamedType<u32, struct _Production, Arithmitic>;
+// two ways
 using Ticks = NamedType<u32, struct _Ticks>;
 
 struct BuildingUnderConstruction {
@@ -58,14 +63,16 @@ struct FarmSectorArchetype final : Sector {
 struct PlayerArchetype final : Archetype {
     pce::Component<Money> moneys;
     pce::Component<ConstructionQueue> construction_queue;
-    bool Add(f32);
+    bool Add(Money);
     bool Remove(Entity entity) override;
 };
 
 struct PlanetArchetype final : Archetype {
     pce::Component<Money> moneys;
     pce::Component<ConstructionQueue> construction_queue;
-    bool Add(f32);
+    pce::Component<Tick> ages;
+
+    bool Add(Money, Tick);
     bool Remove(Entity entity) override;
 };
 

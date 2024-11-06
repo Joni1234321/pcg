@@ -38,7 +38,7 @@ struct Planet : Entity {
 };
 
 static bool TryQueueFarm(Player player, FARM_TYPE type);
-static void ProcessIncome(const Farm farm) { farm.Player().Money() += static_cast<f32>(farm.FarmStats().production); }
+static void ProcessIncome(const Farm farm) { farm.Player().Money().value += static_cast<f32>(farm.FarmStats().production); }
 static void ProcessConstructionQueue(Player player);
 constexpr u16 BUILDING_TIME = 30U;
 
@@ -86,7 +86,7 @@ Game::Game(const u32 players) {
     data.farm_types[FARM_TYPE::WINE] = FarmStats { .cost = 1000U, .production = 50U };
 
     for (u32 i = 0U; i < players; i++) {
-        constexpr Money player_money_start = 100.0F;
+        constexpr Money player_money_start = Money{ 100.0F };
         (void)player_archetype.Add(player_money_start);
         (void)farm_archetype.Add(i, FARM_TYPE::CONSTRUCTION);
         Player(i).ConstructionQueue().construction_capacity++;
@@ -96,8 +96,8 @@ Game::Game(const u32 players) {
 static bool TryQueueFarm(const Player player, FARM_TYPE type) {
     const FarmStats farm = data.farm_types[type];
     const Money cost(static_cast<f32>(farm.cost)); // NOLINT(*-narrowing-conversions)
-    if (player.Money() < cost) { return false; }
-    player.Money() -= cost;
+    if (player.Money().value < cost.value) { return false; }
+    player.Money().value -= cost.value;
     (void)player.ConstructionQueue().EmplaceBack(type);
     return true;
 }

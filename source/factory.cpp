@@ -4,7 +4,7 @@
 namespace pcg {
 using pce::Rand;
 
-bool PlayerArchetype::Add(f32 money) {
+bool PlayerArchetype::Add(const Money money) {
     if (!Archetype::Add()) { return false; }
 
     (void)moneys.EmplaceBack(money);
@@ -20,11 +20,12 @@ bool PlayerArchetype::Remove(const Entity entity) {
 
     return true;
 }
-bool PlanetArchetype::Add(const f32 money) {
+bool PlanetArchetype::Add(const Money money, const Tick tick) {
     if (!Archetype::Add()) { return false; }
 
     (void)moneys.EmplaceBack(money);
     (void)construction_queue.EmplaceBack();
+    (void)ages.EmplaceBack(tick);
 
     return true;
 }

@@ -8,28 +8,34 @@
 namespace pcg {
 template <typename T, typename Parameter, template<typename> class... Skills> class NamedType : public Skills<NamedType<T, Parameter, Skills...>>... {
 public:
-    explicit NamedType(const T& value) : value_(value) { }
-    T& get() { return value_; }
-    const T& get() const { return value_; }
+    constexpr explicit NamedType(const T& value) : value(value) { }
+    T& Value() { return value; }
+    const T& Value() const { return value; }
+    T value;
 
 private:
-    T value_;
 };
 template <typename T, template<typename> class crtpType> struct crtp {
-    T& underlying() { return static_cast<T&>(*this); }
-    const T& underlying() const { return static_cast<const T&>(*this); }
+    T& Underlying() { return static_cast<T&>(*this); }
+    const T& Underlying() const { return static_cast<const T&>(*this); }
+};
+template <typename T> struct Arithmitic : crtp<T, Arithmitic> {
+    T operator+(const T& other) const { return T(this->Underlying().Value() + other.Value()); }
+    T operator-(const T& other) const { return T(this->Underlying().Value() - other.Value()); }
+    T operator*(const T& other) const { return T(this->Underlying().Value() * other.Value()); }
+    T operator/(const T& other) const { return T(this->Underlying().Value() / other.Value()); }
 };
 template <typename T> struct Addable : crtp<T, Addable> {
-    T operator+(const T& other) { return T(this->underlying().get() + other.get()); }
+    T operator+(const T& other) { return T(this->Underlying().Value() + other.Value()); }
 };
 template <typename T> struct Incrementable : crtp<T, Incrementable> {
     T& operator+=(const T& other) {
-        this->underlying().get() += other.get();
-        return this->underlying();
+        this->Underlying().Value() += other.Value();
+        return this->Underlying();
     }
 };
 template <typename T> struct Printable : crtp<T, Printable> {
-    void print(std::ostream& os) const { os << this->underlying().get(); }
+    void print(std::ostream& os) const { os << this->Underlying().Value(); }
 };
 
 template <typename T, typename Parameter> std::ostream& operator<<(std::ostream& os, const NamedType<T, Parameter>& object) {
@@ -37,7 +43,7 @@ template <typename T, typename Parameter> std::ostream& operator<<(std::ostream&
     return os;
 }
 template <typename T> struct Multiplicable : crtp<T, Multiplicable> {
-    T operator*(const T& other) { return T(this->underlying().get() * other.get()); }
+    T operator*(const T& other) { return T(this->Underlying().Value() * other.Value()); }
 };
 
 template <typename T, typename Derived> struct C1 {
