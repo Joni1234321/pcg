@@ -15,14 +15,17 @@ struct Money : C1<f32, Money> {
 struct Production : C1<u32, Production> {
     using C1::C1;
 };
+struct Tick {
+    u32 value;
+};
+
+using Ticks = NamedType<u32, struct _Ticks>;
+
 struct BuildingUnderConstruction {
     FARM_TYPE type;
     u16 progress;
 };
 struct ConstructionQueue : pce::Queue<BuildingUnderConstruction> {
-    ConstructionQueue() = default;
-    ConstructionQueue(const ConstructionQueue& queue) = delete;
-    ConstructionQueue(ConstructionQueue&& queue) = default;
     u32 construction_capacity { 1U };
 };
 struct Market {
@@ -59,12 +62,23 @@ struct PlayerArchetype final : Archetype {
     bool Remove(Entity entity) override;
 };
 
+struct PlanetArchetype final : Archetype {
+    pce::Component<Money> moneys;
+    pce::Component<ConstructionQueue> construction_queue;
+    bool Add(f32);
+    bool Remove(Entity entity) override;
+};
+
 inline PlayerArchetype player_archetype;
 inline StateArchetype state_archetype;
 inline FarmSectorArchetype farm_archetype;
+inline PlanetArchetype planet_archetype;
 } // namespace pcg
 
 #include "format"
+template < > struct std::formatter<pcg::Tick> : std::formatter<u32> {
+    auto format(const pcg::Tick& data, std::format_context& ctx) const { return formatter<u32>::format(data.value, ctx); }
+};
 template < > struct std::formatter<pcg::Money> : std::formatter<f32> {
     auto format(const pcg::Money& data, std::format_context& ctx) const { return formatter<f32>::format(data.value, ctx); }
 };
@@ -75,4 +89,3 @@ struct std::formatter<EnumType> : std::formatter<std::underlying_type_t<EnumType
 template < > struct std::formatter<pce::String> : std::formatter<const char*> {
     auto format(const pce::String& data, std::format_context& ctx) const { return formatter<const char*>::format(data.CString(), ctx); }
 };
-

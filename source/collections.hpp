@@ -108,8 +108,8 @@ template <typename T> struct List {
     constexpr void PushBack(T& t) { data.push_back(t); }
     constexpr void PushBack(T&& t) { data.push_back(std::move(t)); }
 
-    void swap_back(u32 i) {
-        std::swap(data[i], data.back());
+    void SwapBack(u32 pos) {
+        std::swap(data[pos], data.back());
         data.pop_back();
     }
 
@@ -144,7 +144,7 @@ struct Entities : private List<Entity> {
     using List<Entity>::end;
     using List<Entity>::Size;
     using List<Entity>::PopBack;
-    using List<Entity>::swap_back;
+    using List<Entity>::SwapBack;
     using List<Entity>::value_type;
 };
 
@@ -162,7 +162,7 @@ struct Parent : private List<Entity> {
     using List<Entity>::end;
     using List<Entity>::Size;
     using List<Entity>::PopBack;
-    using List<Entity>::swap_back;
+    using List<Entity>::SwapBack;
     using List<Entity>::value_type;
 };
 

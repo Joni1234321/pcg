@@ -18,7 +18,7 @@ struct Data {
 struct Game {
     pce::Logger logger;
     explicit Game(u32 players);
-    void Tick(u32 tick, bool debug);
+    void PlayTick(Tick tick, b8 debug);
 };
 
 inline Data data; // NOLINT(*-err58-cpp, *-avoid-non-const-global-variables)

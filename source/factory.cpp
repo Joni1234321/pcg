@@ -15,7 +15,24 @@ bool PlayerArchetype::Add(f32 money) {
 bool PlayerArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
-    moneys.swap_back(entity);
+    moneys.SwapBack(entity);
+    construction_queue.SwapBack(entity);
+
+    return true;
+}
+bool PlanetArchetype::Add(const f32 money) {
+    if (!Archetype::Add()) { return false; }
+
+    (void)moneys.EmplaceBack(money);
+    (void)construction_queue.EmplaceBack();
+
+    return true;
+}
+bool PlanetArchetype::Remove(const Entity entity) {
+    if (!Archetype::Remove(entity)) { return false; }
+
+    moneys.SwapBack(entity);
+    construction_queue.SwapBack(entity);
 
     return true;
 }
@@ -31,8 +48,8 @@ bool StateArchetype::Add(Entity player) {
 bool StateArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
-    players.swap_back(entity);
-    markets.swap_back(entity);
+    players.SwapBack(entity);
+    markets.SwapBack(entity);
 
     return true;
 }
@@ -47,8 +64,8 @@ bool FarmSectorArchetype::Add(Entity player, FARM_TYPE farm_type) {
 bool FarmSectorArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
-    players.swap_back(entity);
-    type.swap_back(entity);
+    players.SwapBack(entity);
+    type.SwapBack(entity);
 
     return true;
 }

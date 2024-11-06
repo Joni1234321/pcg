@@ -111,6 +111,11 @@ struct Table { // NOLINT(*-struct-pack-align)
         std::iota(idx.begin(), idx.end(), 0U);
         AddColumn(name, idx);
     }
+    template <typename T> void AddColumnFixed(String title, Span<T> values, u32 width) {
+        rows[0U] += std::format("{:>{}} |", title, width);
+        for (u32 i = 0U; i < values.size(); i++) { rows[i + 1U] += std::format("{:>{}} |", values[i], width); }
+    }
+    template <typename T> void AddColumnFixed(String title, List<T> values, u32 width) { AddColumnFixed(title, Span<T>(values), width); }
     template <typename T> void AddColumn(String title, Span<T> values) { AddColumnFixed(title, values, title.size() + 1U); }
     template <typename T> void AddColumn(String title, List<T> values) { AddColumnFixed(title, Span<T>(values), title.size() + 1U); }
     void Print(Logger& logger, const LOGGER_COLOR coloring) const {
@@ -130,10 +135,7 @@ struct Table { // NOLINT(*-struct-pack-align)
 private:
     List<String> rows;
 
-    template <typename T> void AddColumnFixed(String title, Span<T> values, u32 width) {
-        rows[0U] += std::format("{:>{}} |", title, width);
-        for (u32 i = 0U; i < values.size(); i++) { rows[i + 1U] += std::format("{:>{}} |", values[i], width); }
-    }
+
 };
 
 template <typename T> static void PrintListStats(Logger& logger, const List<T>& list) {
