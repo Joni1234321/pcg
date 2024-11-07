@@ -15,21 +15,18 @@ enum class GOOD : u8 { WOOD, IRON, FOOD, STEEL, COAL };
 //struct Production : C1<u32, Production> {
 //    using C1::C1;
 //};
-struct Tick {
-    u32 value;
-};
 //struct Money {
 //    f32 value;
 //};
-using Money = NamedType<f32, struct _Money, Arithmitic>;
-using Production = NamedType<u32, struct _Production, Arithmitic>;
+using Tick = NamedType<u32, struct TickTag, Arithmetic>;
+using Money = NamedType<f32, struct MoneyTag, Arithmetic>;
+using Production = NamedType<u32, struct ProductionTag, Arithmetic>;
 // two ways
-using Ticks = NamedType<u32, struct _Ticks>;
 
 struct BuildingUnderConstruction {
     FARM_TYPE type;
     u16 progress;
-};
+} __attribute__((aligned(4)));
 struct ConstructionQueue : pce::Queue<BuildingUnderConstruction> {
     u32 construction_capacity { 1U };
 };
@@ -82,17 +79,4 @@ inline FarmSectorArchetype farm_archetype;
 inline PlanetArchetype planet_archetype;
 } // namespace pcg
 
-#include "format"
-template < > struct std::formatter<pcg::Tick> : std::formatter<u32> {
-    auto format(const pcg::Tick& data, std::format_context& ctx) const { return formatter<u32>::format(data.value, ctx); }
-};
-template < > struct std::formatter<pcg::Money> : std::formatter<f32> {
-    auto format(const pcg::Money& data, std::format_context& ctx) const { return formatter<f32>::format(data.value, ctx); }
-};
-template <typename EnumType> requires std::is_enum_v<EnumType>
-struct std::formatter<EnumType> : std::formatter<std::underlying_type_t<EnumType>> {
-    auto format(const EnumType& enum_value, format_context& ctx) const { return std::formatter<std::underlying_type_t<EnumType>>::format(static_cast<std::underlying_type_t<EnumType>>(enum_value), ctx); }
-};
-template < > struct std::formatter<pce::String> : std::formatter<const char*> {
-    auto format(const pce::String& data, std::format_context& ctx) const { return formatter<const char*>::format(data.CString(), ctx); }
-};
+

@@ -14,6 +14,7 @@ using pce::RandomKey;
 using pce::List;
 using pce::Table;
 using pce::Select;
+using pce::Logger;
 namespace math = pce::math;
 
 struct Player : Entity {
@@ -34,39 +35,67 @@ struct Farm : Entity {
 struct Planet : Entity {
     constexpr Planet(const Entity entity) : Entity(entity) { } // NOLINT(*-explicit-constructor, *-explicit-conversions)
     [[nodiscard]] constexpr Money& Money() const { return planet_archetype.moneys[index]; }
-    [[nodiscard]] constexpr ConstructionQueue& ConstructionQueue() const { return player_archetype.construction_queue[index]; }
+    [[nodiscard]] constexpr ConstructionQueue& ConstructionQueue() const { return planet_archetype.construction_queue[index]; }
+    [[nodiscard]] constexpr Tick& Age() const { return planet_archetype.ages[index]; }
 };
 
+struct RevenueCapture {
+    Component<Money> before_revenue;
+    Component<Money> revenue;
+    Component<Money> before_expenses;
+    Component<Money> expenses;
+    Component<Money> balance;
+};
+
+void PrintRevenueCapture(Logger& logger, const String name, Archetype& archetype, RevenueCapture& revenue_capture, List<String> constructing) {
+    Table player_table(name, archetype.Count);
+    player_table.AddColumn("Revenue", revenue_capture.revenue);
+    player_table.AddColumn("Expenses", revenue_capture.expenses);
+    player_table.AddColumn("Balance", revenue_capture.balance);
+    player_table.AddColumnFixed("Constructing", constructing, 20);
+    player_table.Print(logger, Table::COLOR_ENABLED);
+}
+
 static bool TryQueueFarm(Player player, FARM_TYPE type);
-static void ProcessIncome(const Farm farm) { farm.Player().Money().value += static_cast<f32>(farm.FarmStats().production); }
+static void ProcessIncome(const Farm farm) { farm.Player().Money() += Money { static_cast<f32>(farm.FarmStats().production) }; }
 static void ProcessConstructionQueue(Player player);
 constexpr u16 BUILDING_TIME = 30U;
 
-void Game::PlayTick(struct Tick tick, bool debug) {
+void Game::PlayTick(Tick tick, const bool debug) {
+    RevenueCapture player_revenue_capture, planet_revenue_capture;
     for (const Player player : player_archetype) { ProcessConstructionQueue(player); }
     for (const Planet planet : planet_archetype) { ProcessConstructionQueue(planet); }
 
-    const Component<Money> before_revenue = player_archetype.moneys;
+    player_revenue_capture.before_revenue = player_archetype.moneys;
+    planet_revenue_capture.before_revenue = planet_archetype.moneys;
     for (const Farm farm : farm_archetype) { ProcessIncome(farm); }
-    const Component<Money> revenue = Select(player_archetype.moneys, before_revenue, math::Minus<Money>());
+    player_revenue_capture.revenue = Select(player_archetype.moneys, player_revenue_capture.before_revenue, math::Minus<Money>());
+    planet_revenue_capture.revenue = Select(planet_archetype.moneys, planet_revenue_capture.before_revenue, math::Minus<Money>());
 
-    const Component<Money> before_expenses = player_archetype.moneys;
+    player_revenue_capture.before_expenses = player_archetype.moneys;
+    planet_revenue_capture.before_expenses = planet_archetype.moneys;
     for (const Player player : player_archetype) { (void)TryQueueFarm(player, RandomKey(data.farm_types)); }
-    const Component<Money> expenses = Select(player_archetype.moneys, before_expenses, math::Minus<Money>());
+    for (const Planet planet : planet_archetype) { (void)TryQueueFarm(planet, RandomKey(data.farm_types)); }
+    player_revenue_capture.expenses = Select(player_archetype.moneys, player_revenue_capture.before_expenses, math::Minus<Money>());
+    planet_revenue_capture.expenses = Select(planet_archetype.moneys, planet_revenue_capture.before_expenses, math::Minus<Money>());
+    player_revenue_capture.balance = player_archetype.moneys;
+    planet_revenue_capture.balance = planet_archetype.moneys;
 
     for (Market& market : state_archetype.markets) { market.RecalculateMarkets(); }
 
     if (!debug) { return; }
 
-    const List<String> constructing = Select(player_archetype.construction_queue, [] (const ConstructionQueue& construction_queue) -> String {
+    List<String> constructing = Select(player_archetype.construction_queue, [] (const ConstructionQueue& construction_queue) -> String {
         return { "{} / {} Q:{}", math::Min(construction_queue.Size(), construction_queue.construction_capacity), construction_queue.construction_capacity, construction_queue.Size() };
     });
-    Table table("Player", player_archetype.Count);
-    table.AddColumn("Revenue", revenue);
-    table.AddColumn("Expenses", expenses);
-    table.AddColumn("Balance", player_archetype.moneys);
-    table.AddColumnFixed("Constructing", constructing, 20);
-    table.Print(logger, Table::COLOR_ENABLED);
+
+    PrintRevenueCapture(logger, "Player", player_archetype, player_revenue_capture, constructing);
+
+    constructing = Select(planet_archetype.construction_queue, [] (const ConstructionQueue& construction_queue) -> String {
+        return { "{} / {} Q:{}", math::Min(construction_queue.Size(), construction_queue.construction_capacity), construction_queue.construction_capacity, construction_queue.Size() };
+    });
+
+    PrintRevenueCapture(logger, "Planet", planet_archetype, planet_revenue_capture, constructing);
 
     if (!debug) { return; }
 
@@ -86,7 +115,7 @@ Game::Game(const u32 players) {
     data.farm_types[FARM_TYPE::WINE] = FarmStats { .cost = 1000U, .production = 50U };
 
     for (u32 i = 0U; i < players; i++) {
-        constexpr Money player_money_start = Money{ 100.0F };
+        constexpr Money player_money_start = Money { 100.0F };
         (void)player_archetype.Add(player_money_start);
         (void)farm_archetype.Add(i, FARM_TYPE::CONSTRUCTION);
         Player(i).ConstructionQueue().construction_capacity++;
@@ -96,8 +125,8 @@ Game::Game(const u32 players) {
 static bool TryQueueFarm(const Player player, FARM_TYPE type) {
     const FarmStats farm = data.farm_types[type];
     const Money cost(static_cast<f32>(farm.cost)); // NOLINT(*-narrowing-conversions)
-    if (player.Money().value < cost.value) { return false; }
-    player.Money().value -= cost.value;
+    if (player.Money() < cost) { return false; }
+    player.Money() -= cost;
     (void)player.ConstructionQueue().EmplaceBack(type);
     return true;
 }

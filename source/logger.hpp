@@ -123,19 +123,19 @@ struct Table { // NOLINT(*-struct-pack-align)
         logger.Write("{}", line);
         logger.Write("|{}", rows[0U]);
         logger.Write("{}", line);
-        for (u32 i = 1U; i < rows.Size(); i++) {
-            if (coloring == COLOR_ENABLED) { logger.RotateColor(i - 1U); }
-            logger.Write("|{}", rows[i]);
+        if (rows.Size() > 1U) {
+            for (u32 i = 1U; i < rows.Size(); i++) {
+                if (coloring == COLOR_ENABLED) { logger.RotateColor(i - 1U); }
+                logger.Write("|{}", rows[i]);
+            }
+            logger.ClearColor();
+            logger.Write("{}", line);
         }
-        logger.ClearColor();
-        logger.Write("{}", line);
         logger.Print();
     }
 
 private:
     List<String> rows;
-
-
 };
 
 template <typename T> static void PrintListStats(Logger& logger, const List<T>& list) {

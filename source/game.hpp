@@ -9,7 +9,8 @@
 
 namespace pcg {
 struct FarmStats {
-    u32 cost, production;
+    u32 cost;
+    u32 production;
 };
 
 struct Data {

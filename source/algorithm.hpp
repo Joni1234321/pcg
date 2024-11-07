@@ -33,16 +33,14 @@ template <typename Container, typename OutputContainer, typename UnaryOperation>
 
 template <typename Container, typename BinaryOperation> constexpr auto Select(const Container& container1, const Container& container2, BinaryOperation binary_operation) {
     Container out { };
-    out.Resize(container1.Size(), 0);
-    TransformLocal(std::begin(container1), std::end(container1), std::begin(container2), std::begin(out), binary_operation);
+    TransformLocal(std::begin(container1), std::end(container1), std::begin(container2), std::back_inserter(out), binary_operation);
     return out;
 }
 
 template <typename Container, typename UnaryOperation> constexpr auto Select(const Container& container, UnaryOperation unary_operation) {
     using ResultType = decltype(unary_operation(*std::begin(container)));
     List<ResultType> out { };
-    out.Resize(container.Size(), 0);
-    TransformLocal(container.begin(), container.end(), out.begin(), unary_operation);
+    TransformLocal(container.begin(), container.end(), std::back_inserter(out), unary_operation);
     return out;
 }
 } // namespace pce
