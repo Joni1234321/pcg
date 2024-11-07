@@ -102,7 +102,8 @@ template <typename T> struct List {
     [[nodiscard]] constexpr const T& Back() const { return data.back(); }
 
     constexpr void PopBack() { data.pop_back(); }
-    constexpr void Resize(u32 size) { data.resize(size); }
+    constexpr void Resize(const u32 size) { data.resize(size); }
+    constexpr void Resize(const u32 size, const T filler) { data.resize(size, filler); }
 
     [[nodiscard]] constexpr bool Empty() const { return data.empty(); }
     constexpr void PushBack(T& t) { data.push_back(t); }
