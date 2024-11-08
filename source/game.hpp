@@ -18,12 +18,12 @@ struct Data {
 };
 struct Game {
     pce::Logger logger;
-    explicit Game(u32 players);
+    explicit Game(u32 players, const u32 planets);
     void PlayTick(Tick tick, b8 debug);
 };
 
 inline Data data; // NOLINT(*-err58-cpp, *-avoid-non-const-global-variables)
-inline Game game(2U); // NOLINT(*-err58-cpp, *-avoid-non-const-global-variables)
+inline Game game(2U, 10U); // NOLINT(*-err58-cpp, *-avoid-non-const-global-variables)
 
 // map power
 // isolated small island homogen culture

@@ -26,7 +26,7 @@ using Production = NamedType<u32, struct ProductionTag, Arithmetic>;
 struct BuildingUnderConstruction {
     FARM_TYPE type;
     u16 progress;
-} __attribute__((aligned(4)));
+};
 struct ConstructionQueue : pce::Queue<BuildingUnderConstruction> {
     u32 construction_capacity { 1U };
 };
@@ -49,7 +49,7 @@ struct StateArchetype final : Archetype {
     bool Remove(Entity entity) override;
 };
 struct Sector : Archetype {
-    pce::Parent players;
+    pce::Parent planets;
 };
 struct FarmSectorArchetype final : Sector {
     pce::Component<FARM_TYPE> type;
@@ -65,6 +65,7 @@ struct PlayerArchetype final : Archetype {
 };
 
 struct PlanetArchetype final : Archetype {
+    pce::Parent players;
     pce::Component<Money> moneys;
     pce::Component<ConstructionQueue> construction_queue;
     pce::Component<Tick> ages;

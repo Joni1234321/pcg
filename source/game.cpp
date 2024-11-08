@@ -26,7 +26,7 @@ struct Player : Entity {
 struct Farm : Entity {
     constexpr Farm(const Entity entity) : Entity(entity) { } // NOLINT(*-explicit-constructor, *-explicit-conversions)
 
-    [[nodiscard]] constexpr Player Player() const { return farm_archetype.players[index]; }
+    [[nodiscard]] constexpr Planet Planet() const { return farm_archetype.planets[index]; }
 
     [[nodiscard]] constexpr FARM_TYPE FarmType() const { return farm_archetype.type[index]; }
     [[nodiscard]] FarmStats FarmStats() const { return data.farm_types[FarmType()]; }
@@ -34,6 +34,9 @@ struct Farm : Entity {
 
 struct Planet : Entity {
     constexpr Planet(const Entity entity) : Entity(entity) { } // NOLINT(*-explicit-constructor, *-explicit-conversions)
+
+    [[nodiscard]] constexpr Player Player() const { return planet_archetype.players[index]; }
+
     [[nodiscard]] constexpr Money& Money() const { return planet_archetype.moneys[index]; }
     [[nodiscard]] constexpr ConstructionQueue& ConstructionQueue() const { return planet_archetype.construction_queue[index]; }
     [[nodiscard]] constexpr Tick& Age() const { return planet_archetype.ages[index]; }
@@ -47,25 +50,25 @@ struct RevenueCapture {
     Component<Money> balance;
 };
 
-void PrintRevenueCapture(Logger& logger, const String name, Archetype& archetype, RevenueCapture& revenue_capture, List<String> constructing) {
-    Table player_table(name, archetype.Count);
-    player_table.AddColumn("Revenue", revenue_capture.revenue);
-    player_table.AddColumn("Expenses", revenue_capture.expenses);
-    player_table.AddColumn("Balance", revenue_capture.balance);
-    player_table.AddColumnFixed("Constructing", constructing, 20);
-    player_table.Print(logger, Table::COLOR_ENABLED);
+Table PrintRevenueCapture(Logger& logger, const String name, Archetype& archetype, RevenueCapture& revenue_capture, List<String> constructing) {
+    Table table(name, archetype.Count);
+    table.AddColumn("Revenue", revenue_capture.revenue);
+    table.AddColumn("Expenses", revenue_capture.expenses);
+    table.AddColumn("Balance", revenue_capture.balance);
+    table.AddColumnFixed("Constructing", constructing, 20);
+    return table;
 }
 
-static bool TryQueueFarm(Player player, FARM_TYPE type);
-static void ProcessIncome(const Farm farm) { farm.Player().Money() += Money { static_cast<f32>(farm.FarmStats().production) }; }
+static bool TryQueueFarm(Player player, Planet planet, FARM_TYPE type);
+static void ProcessIncome(const Farm farm) { farm.Planet().Money() += Money { static_cast<f32>(farm.FarmStats().production) }; }
 static void ProcessConstructionQueue(Player player);
 constexpr u16 BUILDING_TIME = 30U;
 
-void Game::PlayTick(Tick tick, const bool debug) {
-    RevenueCapture player_revenue_capture, planet_revenue_capture;
+void Game::PlayTick(Tick tick, const b8 debug) {
     for (const Player player : player_archetype) { ProcessConstructionQueue(player); }
     for (const Planet planet : planet_archetype) { ProcessConstructionQueue(planet); }
 
+    RevenueCapture player_revenue_capture, planet_revenue_capture;
     player_revenue_capture.before_revenue = player_archetype.moneys;
     planet_revenue_capture.before_revenue = planet_archetype.moneys;
     for (const Farm farm : farm_archetype) { ProcessIncome(farm); }
@@ -74,8 +77,13 @@ void Game::PlayTick(Tick tick, const bool debug) {
 
     player_revenue_capture.before_expenses = player_archetype.moneys;
     planet_revenue_capture.before_expenses = planet_archetype.moneys;
-    for (const Player player : player_archetype) { (void)TryQueueFarm(player, RandomKey(data.farm_types)); }
-    for (const Planet planet : planet_archetype) { (void)TryQueueFarm(planet, RandomKey(data.farm_types)); }
+    for (const Player player : player_archetype) { 
+        if (planet_archetype.Count == 0) continue;
+        Planet planet = Planet{ pce::Rand() % planet_archetype.Count };
+        FARM_TYPE farm_type = RandomKey(data.farm_types);
+        (void)TryQueueFarm(player, planet, farm_type);
+    }
+    //for (const Planet planet : planet_archetype) { (void)TryQueueFarm(planet, RandomKey(data.farm_types)); }
     player_revenue_capture.expenses = Select(player_archetype.moneys, player_revenue_capture.before_expenses, math::Minus<Money>());
     planet_revenue_capture.expenses = Select(planet_archetype.moneys, planet_revenue_capture.before_expenses, math::Minus<Money>());
     player_revenue_capture.balance = player_archetype.moneys;
@@ -89,13 +97,15 @@ void Game::PlayTick(Tick tick, const bool debug) {
         return { "{} / {} Q:{}", math::Min(construction_queue.Size(), construction_queue.construction_capacity), construction_queue.construction_capacity, construction_queue.Size() };
     });
 
-    PrintRevenueCapture(logger, "Player", player_archetype, player_revenue_capture, constructing);
+    Table player_table = PrintRevenueCapture(logger, "Player", player_archetype, player_revenue_capture, constructing);
+    player_table.Print(logger, Table::COLOR_ENABLED);
 
     constructing = Select(planet_archetype.construction_queue, [] (const ConstructionQueue& construction_queue) -> String {
         return { "{} / {} Q:{}", math::Min(construction_queue.Size(), construction_queue.construction_capacity), construction_queue.construction_capacity, construction_queue.Size() };
     });
 
-    PrintRevenueCapture(logger, "Planet", planet_archetype, planet_revenue_capture, constructing);
+    Table planet_table = PrintRevenueCapture(logger, "Planet", planet_archetype, planet_revenue_capture, constructing);
+    planet_table.Print(logger, Table::COLOR_ENABLED);
 
     if (!debug) { return; }
 
@@ -107,7 +117,10 @@ void Game::PlayTick(Tick tick, const bool debug) {
     construction_table.Print(logger, Table::COLOR_DISABLED);
 }
 
-Game::Game(const u32 players) {
+Game::Game(const u32 players, const u32 planets) {
+
+    Tick start_tick = Tick{ 0U };
+
     data.farm_types[FARM_TYPE::CONSTRUCTION] = FarmStats { .cost = 200U, .production = 0U };
     data.farm_types[FARM_TYPE::FISH] = FarmStats { .cost = 100U, .production = 1U };
     data.farm_types[FARM_TYPE::WHEAT] = FarmStats { .cost = 200U, .production = 3U };
@@ -120,14 +133,21 @@ Game::Game(const u32 players) {
         (void)farm_archetype.Add(i, FARM_TYPE::CONSTRUCTION);
         Player(i).ConstructionQueue().construction_capacity++;
     }
+
+    for (u32 i = 0U; i < planets; i++) {
+        constexpr Money player_money_start = Money{ 100.0F };
+        (void)planet_archetype.Add(player_money_start, start_tick);
+        (void)farm_archetype.Add(i, FARM_TYPE::CONSTRUCTION);
+        Player(i).ConstructionQueue().construction_capacity++;
+    }
 }
 
-static bool TryQueueFarm(const Player player, FARM_TYPE type) {
+static bool TryQueueFarm(const Player player, const Planet planet, FARM_TYPE type) {
     const FarmStats farm = data.farm_types[type];
     const Money cost(static_cast<f32>(farm.cost)); // NOLINT(*-narrowing-conversions)
     if (player.Money() < cost) { return false; }
     player.Money() -= cost;
-    (void)player.ConstructionQueue().EmplaceBack(type);
+    (void)planet.ConstructionQueue().EmplaceBack(type);
     return true;
 }
 

@@ -54,10 +54,10 @@ bool StateArchetype::Remove(const Entity entity) {
 
     return true;
 }
-bool FarmSectorArchetype::Add(Entity player, FARM_TYPE farm_type) {
+bool FarmSectorArchetype::Add(Entity planet, FARM_TYPE farm_type) {
     if (!Archetype::Add()) { return false; }
 
-    (void)players.EmplaceBack(player);
+    (void)planets.EmplaceBack(planet);
     (void)type.EmplaceBack(farm_type);
 
     return true;
@@ -65,7 +65,7 @@ bool FarmSectorArchetype::Add(Entity player, FARM_TYPE farm_type) {
 bool FarmSectorArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
-    players.SwapBack(entity);
+    planets.SwapBack(entity);
     type.SwapBack(entity);
 
     return true;

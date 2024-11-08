@@ -14,6 +14,10 @@ inline u32 Rand() {
     static std::uniform_int_distribution distribution(0U, U32_MAX);
     return distribution(gen);
 }
+inline u32 Rand(u32 max) {
+    if (max == 0U) return -1;
+    return Rand() % max;
+}
 template <typename Collection> typename Collection::key_type RandomKey(const Collection& collection) {
     if (std::empty(collection)) { throw std::runtime_error("Collection is empty!"); }
     auto iterator = std::next(std::begin(collection), Rand() % std::size(collection));
