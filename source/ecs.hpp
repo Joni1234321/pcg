@@ -51,12 +51,12 @@ template <typename T> struct Arithmetic : crtp<T, Arithmetic> {
         return this->Underlying();
     }
     // Comparison operators
-    bool operator==(const T& other) const { return this->Underlying().Value() == other.Value(); }
-    bool operator!=(const T& other) const { return this->Underlying().Value() != other.Value(); }
-    bool operator<(const T& other) const { return this->Underlying().Value() < other.Value(); }
-    bool operator<=(const T& other) const { return this->Underlying().Value() <= other.Value(); }
-    bool operator>(const T& other) const { return this->Underlying().Value() > other.Value(); }
-    bool operator>=(const T& other) const { return this->Underlying().Value() >= other.Value(); }
+    b8 operator==(const T& other) const { return this->Underlying().Value() == other.Value(); }
+    b8 operator!=(const T& other) const { return this->Underlying().Value() != other.Value(); }
+    b8 operator<(const T& other) const { return this->Underlying().Value() < other.Value(); }
+    b8 operator<=(const T& other) const { return this->Underlying().Value() <= other.Value(); }
+    b8 operator>(const T& other) const { return this->Underlying().Value() > other.Value(); }
+    b8 operator>=(const T& other) const { return this->Underlying().Value() >= other.Value(); }
 };
 
 template <typename T> struct Incrementable : crtp<T, Incrementable> {
@@ -73,45 +73,20 @@ template <typename T, typename Parameter> std::ostream& operator<<(std::ostream&
     object.print(os);
     return os;
 }
-template <typename T, typename Derived> struct C1 {
-    T value;
-    operator T() const { return static_cast<T>(value); } // NOLINT(*-explicit-constructor, *-explicit-conversions)
-    constexpr C1() = default;
-    constexpr C1(T val) : value(val) { } // NOLINT(*-explicit-constructor, *-explicit-conversions)
-
-    Derived operator+(const Derived& other) const { return Derived(this->value + other.value); }
-
-    Derived& operator-=(const Derived& other) {
-        value -= other.value;
-        return static_cast<Derived&>(*this);
-    }
-    Derived& operator+=(const Derived& other) {
-        value += other.value;
-        return static_cast<Derived&>(*this);
-    }
-    Derived& operator*=(const Derived& other) {
-        value *= other.value;
-        return static_cast<Derived&>(*this);
-    }
-    Derived& operator/=(const Derived& other) {
-        value /= other.value;
-        return static_cast<Derived&>(*this);
-    }
-};
 struct Archetype {
     u32 Count { 0U };
-    virtual bool Add() {
+    virtual b8 Add() {
         Count++;
         return true;
     }
-    virtual bool Remove(Entity entity) {
+    virtual b8 Remove(Entity entity) {
         if (Count == 0U) { return false; }
         Count--;
         return true;
     };
 
-    [[nodiscard]] static constexpr Entity begin() noexcept { return 0; }
-    [[nodiscard]] constexpr Entity end() const noexcept { return Count; }
+    [[nodiscard]] static constexpr Entity begin() noexcept { return Entity { 0U }; }
+    [[nodiscard]] constexpr Entity end() const noexcept { return Entity { Count }; }
 };
 } // namespace pcg
 
@@ -125,4 +100,7 @@ struct std::formatter<EnumType> : std::formatter<std::underlying_type_t<EnumType
 };
 template < > struct std::formatter<pce::String> : std::formatter<const char*> {
     auto format(const pce::String& data, std::format_context& ctx) const { return formatter<const char*>::format(data.CString(), ctx); }
+};
+template < > struct std::formatter<Entity> : std::formatter<u32> {
+    auto format(const Entity& data, std::format_context& ctx) const { return formatter<u32>::format(data, ctx); }
 };

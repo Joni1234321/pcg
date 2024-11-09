@@ -45,23 +45,23 @@ struct Market {
 struct StateArchetype final : Archetype {
     pce::Parent players;
     pce::Component<Market> markets;
-    bool Add(Entity);
-    bool Remove(Entity entity) override;
+    b8 Add(Entity);
+    b8 Remove(Entity entity) override;
 };
 struct Sector : Archetype {
     pce::Parent planets;
 };
 struct FarmSectorArchetype final : Sector {
     pce::Component<FARM_TYPE> type;
-    bool Add(Entity player, FARM_TYPE farm_type);
-    bool Remove(Entity entity) override;
+    b8 Add(Entity player, FARM_TYPE farm_type);
+    b8 Remove(Entity entity) override;
 };
 
 struct PlayerArchetype final : Archetype {
     pce::Component<Money> moneys;
     pce::Component<ConstructionQueue> construction_queue;
-    bool Add(Money);
-    bool Remove(Entity entity) override;
+    b8 Add(Money);
+    b8 Remove(Entity entity) override;
 };
 
 struct PlanetArchetype final : Archetype {
@@ -70,8 +70,8 @@ struct PlanetArchetype final : Archetype {
     pce::Component<ConstructionQueue> construction_queue;
     pce::Component<Tick> ages;
 
-    bool Add(Money, Tick);
-    bool Remove(Entity entity) override;
+    b8 Add(Money, Tick);
+    b8 Remove(Entity entity) override;
 };
 
 inline PlayerArchetype player_archetype;

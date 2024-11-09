@@ -105,7 +105,7 @@ private:
 };
 
 struct Table { // NOLINT(*-struct-pack-align)
-    enum LOGGER_COLOR : bool { COLOR_DISABLED, COLOR_ENABLED };
+    enum LOGGER_COLOR : b8 { COLOR_DISABLED, COLOR_ENABLED };
     Table(const String& name, const u32 row_count) : rows(row_count + 1U) {
         List<u32> idx(row_count);
         std::iota(idx.begin(), idx.end(), 0U);

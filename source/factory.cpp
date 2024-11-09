@@ -1,10 +1,12 @@
 #include "components.hpp"
 #include "types.hpp"
 
+
+//TODO: PLYER  PLANET CONCEPT CONSTRAINTS
 namespace pcg {
 using pce::Rand;
 
-bool PlayerArchetype::Add(const Money money) {
+b8 PlayerArchetype::Add(const Money money) {
     if (!Archetype::Add()) { return false; }
 
     (void)moneys.EmplaceBack(money);
@@ -12,7 +14,7 @@ bool PlayerArchetype::Add(const Money money) {
 
     return true;
 }
-bool PlayerArchetype::Remove(const Entity entity) {
+b8 PlayerArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
     moneys.SwapBack(entity);
@@ -20,16 +22,17 @@ bool PlayerArchetype::Remove(const Entity entity) {
 
     return true;
 }
-bool PlanetArchetype::Add(const Money money, const Tick tick) {
+b8 PlanetArchetype::Add(const Money money, const Tick tick) {
     if (!Archetype::Add()) { return false; }
 
+    (void)players.EmplaceBack(Entity::NONE);
     (void)moneys.EmplaceBack(money);
     (void)construction_queue.EmplaceBack();
     (void)ages.EmplaceBack(tick);
 
     return true;
 }
-bool PlanetArchetype::Remove(const Entity entity) {
+b8 PlanetArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
     moneys.SwapBack(entity);
@@ -37,7 +40,7 @@ bool PlanetArchetype::Remove(const Entity entity) {
 
     return true;
 }
-bool StateArchetype::Add(Entity player) {
+b8 StateArchetype::Add(Entity player) {
     if (!Archetype::Add()) { return false; }
 
     constexpr u32 population = 100U;
@@ -46,7 +49,7 @@ bool StateArchetype::Add(Entity player) {
 
     return true;
 }
-bool StateArchetype::Remove(const Entity entity) {
+b8 StateArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
     players.SwapBack(entity);
@@ -54,7 +57,7 @@ bool StateArchetype::Remove(const Entity entity) {
 
     return true;
 }
-bool FarmSectorArchetype::Add(Entity planet, FARM_TYPE farm_type) {
+b8 FarmSectorArchetype::Add(Entity planet, FARM_TYPE farm_type) {
     if (!Archetype::Add()) { return false; }
 
     (void)planets.EmplaceBack(planet);
@@ -62,7 +65,7 @@ bool FarmSectorArchetype::Add(Entity planet, FARM_TYPE farm_type) {
 
     return true;
 }
-bool FarmSectorArchetype::Remove(const Entity entity) {
+b8 FarmSectorArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
     planets.SwapBack(entity);

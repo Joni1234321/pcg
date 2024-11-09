@@ -11,6 +11,13 @@
 namespace pce {
 template <typename T> using Span = std::span<T>;
 
+struct OptionalEntity {
+    b8 has_value() { return true; }
+    Entity value() { return entity; }
+private:
+    Entity entity { Entity::NONE };
+};
+
 struct String {
     constexpr String() = default;
     constexpr String(const char character, const u32 count) : data(count, character, std::allocator<char>()) { }
@@ -30,7 +37,7 @@ struct String {
 
     constexpr void Add(const String& other) { data += other.data; }
     constexpr void Add(const String&& other) { data += other.data; }
-    [[nodiscard]] constexpr bool Empty() const { return data.empty(); }
+    [[nodiscard]] constexpr b8 Empty() const { return data.empty(); }
     [[nodiscard]] constexpr const char *CString() const { return data.c_str(); }
     [[nodiscard]] u32 size() const { return static_cast<u32>(data.size()); }
     constexpr void Clear() { data.clear(); }
@@ -105,7 +112,7 @@ template <typename T> struct List {
     constexpr void Resize(const u32 size) { data.resize(size); }
     constexpr void push_back(const T& value) { data.push_back(value); }
 
-    [[nodiscard]] constexpr bool Empty() const { return data.empty(); }
+    [[nodiscard]] constexpr b8 Empty() const { return data.empty(); }
     constexpr void PushBack(T& t) { data.push_back(t); }
     constexpr void PushBack(T&& t) { data.push_back(std::move(t)); }
 

@@ -16,14 +16,21 @@ struct FarmStats {
 struct Data {
     std::unordered_map<FARM_TYPE, FarmStats> farm_types;
 };
+struct NewGameSettings {
+    u32 players;
+    u32 planets;
+};
 struct Game {
     pce::Logger logger;
-    explicit Game(u32 players, const u32 planets);
+    explicit Game(NewGameSettings);
     void PlayTick(Tick tick, b8 debug);
 };
 
+constexpr NewGameSettings GAME_SETTINGS = { .players = 2U, .planets = 20U };
+
+
 inline Data data; // NOLINT(*-err58-cpp, *-avoid-non-const-global-variables)
-inline Game game(2U, 10U); // NOLINT(*-err58-cpp, *-avoid-non-const-global-variables)
+inline Game game(GAME_SETTINGS); // NOLINT(*-err58-cpp, *-avoid-non-const-global-variables)
 
 // map power
 // isolated small island homogen culture
