@@ -12,7 +12,7 @@ template <typename Iterator, typename OutputIterator, typename UnaryOperation> c
 }
 
 template <typename Iterator1, typename Iterator2, typename OutputIterator, typename BinaryOperation> constexpr OutputIterator TransformLocal(
-Iterator1 first1, Iterator1 last1, Iterator2 first2, OutputIterator result, BinaryOperation binary_operation) {
+    Iterator1 first1, Iterator1 last1, Iterator2 first2, OutputIterator result, BinaryOperation binary_operation) {
     while (first1 != last1) {
         *result = binary_operation(*first1, *first2);
         ++first1;
@@ -32,7 +32,8 @@ template <typename Container, typename OutputContainer, typename UnaryOperation>
 }
 
 template <typename Container, typename BinaryOperation> constexpr auto Select(const Container& container1, const Container& container2, BinaryOperation binary_operation) {
-    Container out { };
+    using ResultType = decltype(binary_operation(*container1.begin(), *container2.begin()));
+    List<ResultType> out { };
     TransformLocal(std::begin(container1), std::end(container1), std::begin(container2), std::back_inserter(out), binary_operation);
     return out;
 }

@@ -31,6 +31,7 @@ template <typename Collection> const typename Collection::value_type& RandomValu
 } // namespace pce
 
 namespace pce::math {
+template <typename T = void> T Sub(const T& left, const T& right) { return left - right; }
 template <typename T = void> struct Minus {
     T operator()(const T& left, const T& right) const { return left - right; } // NOLINT(*-overloaded-operator)
 };
@@ -43,4 +44,7 @@ template <typename T = void> struct Size {
 template <typename T> T Max(T left, T right) { return left > right ? left : right; }
 template <typename T> T Min(T left, T right) { return left < right ? left : right; }
 inline u32 SubSafe(const u32 left, const u32 right) { return static_cast<u32>(right < left) * (left - right); }
+
+template <typename T> constexpr u32 FloorToU32 (const T value) { return static_cast<u32>(value); }
+template <typename T> constexpr T Abs (const T value) { return value < 0 ? -value : value; }
 } // namespace pce::math

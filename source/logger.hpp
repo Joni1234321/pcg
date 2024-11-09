@@ -6,6 +6,7 @@
 #include <numeric>
 #include <string>
 #include <vector>
+#include <array>
 
 #include "collections.hpp"
 #include "types.hpp"
@@ -104,6 +105,23 @@ private:
     String string;
 };
 
+constexpr std::array LONG_NUMBER_SUFFIX = { 'K', 'M', 'B', 'T' };
+template <typename T> String FormatValue(const T value) {
+    if constexpr (std::is_same_v<T, pcg::Money>) {
+        const f32 number = static_cast<f32>(value);
+        f32 abs_number = math::Abs(number);
+        char suffix { ' ' };
+        for (const char current_suffix : LONG_NUMBER_SUFFIX) {
+            constexpr f32 one_thousand = 1'000.0F;
+            if (abs_number < one_thousand) { break; }
+            abs_number /= one_thousand;
+            suffix = current_suffix;
+        }
+        const char prefix { number < 0.0F ? '-' : ' ' };
+        return std::format("{}{:.2f}{}", prefix, abs_number, suffix);
+    } else { return std::format("{} ", value); }
+}
+
 struct Table { // NOLINT(*-struct-pack-align)
     enum LOGGER_COLOR : b8 { COLOR_DISABLED, COLOR_ENABLED };
     Table(const String& name, const u32 row_count) : rows(row_count + 1U) {
@@ -113,7 +131,7 @@ struct Table { // NOLINT(*-struct-pack-align)
     }
     template <typename T> void AddColumnFixed(String title, Span<T> values, u32 width) {
         rows[0U] += std::format("{:>{}} |", title, width);
-        for (u32 i = 0U; i < values.size(); i++) { rows[i + 1U] += std::format("{:>{}} |", values[i], width); }
+        for (u32 i = 0U; i < values.size(); i++) { rows[i + 1U] += std::format("{:>{}} |", FormatValue(values[i]), width); }
     }
     template <typename T> void AddColumnFixed(String title, List<T> values, u32 width) { AddColumnFixed(title, Span<T>(values), width); }
     template <typename T> void AddColumn(String title, Span<T> values) { AddColumnFixed(title, values, title.size() + 1U); }

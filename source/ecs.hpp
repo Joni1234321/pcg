@@ -4,6 +4,7 @@
 #pragma once
 
 #include "collections.hpp"
+#include "components.hpp"
 #include "types.hpp"
 
 namespace pcg {
@@ -12,10 +13,11 @@ public:
     constexpr explicit NamedType(const T& value) : value(value) { }
     T& Value() { return value; }
     const T& Value() const { return value; }
-
+    explicit operator T() const { return Value(); };
 private:
     T value;
 };
+
 template <typename T, template<typename> class crtpType> struct crtp {
     T& Underlying() { return static_cast<T&>(*this); }
     const T& Underlying() const { return static_cast<const T&>(*this); }
@@ -58,36 +60,25 @@ template <typename T> struct Arithmetic : crtp<T, Arithmetic> {
     b8 operator>(const T& other) const { return this->Underlying().Value() > other.Value(); }
     b8 operator>=(const T& other) const { return this->Underlying().Value() >= other.Value(); }
 };
-
-template <typename T> struct Incrementable : crtp<T, Incrementable> {
-    T& operator+=(const T& other) {
-        this->Underlying().Value() += other.Value();
+template <typename T, template<typename, typename> class crtpType> struct crtpV {
+    T& Underlying() { return static_cast<T&>(*this); }
+    const T& Underlying() const { return static_cast<const T&>(*this); }
+};
+template <typename T, typename V> struct Multipliable : crtpV<T, Multipliable> {
+    T operator*(const V& other) const { return T(this->Underlying().Value() * other); }
+    T& operator*=(const T& other) {
+        this->Underlying().Value() *= other.Value();
         return this->Underlying();
     }
 };
 template <typename T> struct Printable : crtp<T, Printable> {
     void print(std::ostream& os) const { os << this->Underlying().Value(); }
 };
-
 template <typename T, typename Parameter> std::ostream& operator<<(std::ostream& os, const NamedType<T, Parameter>& object) {
     object.print(os);
     return os;
 }
-struct Archetype {
-    u32 Count { 0U };
-    virtual b8 Add() {
-        Count++;
-        return true;
-    }
-    virtual b8 Remove(Entity entity) {
-        if (Count == 0U) { return false; }
-        Count--;
-        return true;
-    };
 
-    [[nodiscard]] static constexpr Entity begin() noexcept { return Entity { 0U }; }
-    [[nodiscard]] constexpr Entity end() const noexcept { return Entity { Count }; }
-};
 } // namespace pcg
 
 #include "format"

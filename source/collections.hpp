@@ -11,13 +11,6 @@
 namespace pce {
 template <typename T> using Span = std::span<T>;
 
-struct OptionalEntity {
-    b8 has_value() { return true; }
-    Entity value() { return entity; }
-private:
-    Entity entity { Entity::NONE };
-};
-
 struct String {
     constexpr String() = default;
     constexpr String(const char character, const u32 count) : data(count, character, std::allocator<char>()) { }
@@ -110,6 +103,7 @@ template <typename T> struct List {
 
     constexpr void PopBack() { data.pop_back(); }
     constexpr void Resize(const u32 size) { data.resize(size); }
+    constexpr void Reserve(const u32 size) { data.reserve(size); }
     constexpr void push_back(const T& value) { data.push_back(value); }
 
     [[nodiscard]] constexpr b8 Empty() const { return data.empty(); }
@@ -126,6 +120,13 @@ template <typename T> struct List {
         auto first = begin();
         auto last = begin() + math::Min(limit, Size());
         return List<T>(first, last);
+    }
+
+    template <typename To> [[nodiscard]] constexpr List<To> StaticCast() const {
+        List<To> result { };
+        result.Reserve(Size());
+        for (u32 i = 0U; i < Size(); i++) { result[i] = static_cast<To>(data[i]); }
+        return result;
     }
 
 protected:
@@ -176,7 +177,7 @@ struct Parent : private List<Entity> {
 
 constexpr void split(Array<List<Entity>>& ret, const List<Entity>& entities, const Parent& parents) {
     for (const Entity& entity : entities) {
-        const Entity& parent = parents[entity];
+        const Entity& parent = parents[static_cast<u32>(entity)];
         (void)ret[parent].EmplaceBack(entity);
     }
 }

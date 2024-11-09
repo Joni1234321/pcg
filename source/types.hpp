@@ -1,5 +1,6 @@
+// ReSharper disable CppInconsistentNaming
 #pragma once
-#include <stdint.h>
+#include <cstdint>
 using i8 = int8_t;
 using u8 = uint8_t;
 using i16 = int16_t;
@@ -28,6 +29,7 @@ struct Entity {
     operator u32() const { return index; } // NOLINT(*-explicit-constructor)
 
     b8 operator!=(const Entity other) const { return index != other.index; }
+    b8 operator==(const Entity other) const { return index == other.index; }
     Entity& operator++() {
         index++;
         return *this;
@@ -39,3 +41,33 @@ protected:
 };
 
 inline const Entity Entity::NONE = Entity { };
+
+template <typename T>concept DerivedFromEntity = std::is_base_of_v<Entity, T>;
+
+template <DerivedFromEntity T> struct OptionalEntity {
+    constexpr operator T& () const { return entity; }
+    constexpr OptionalEntity() = default;
+    constexpr explicit OptionalEntity(T entity) : entity(entity) { }
+    [[nodiscard]] constexpr b8 IsNone() const { return entity == Entity::NONE; }
+    [[nodiscard]] constexpr b8 IsSome() const { return entity != Entity::NONE; }
+    [[nodiscard]] constexpr T Entity() const { return entity; }
+
+private:
+    T entity { Entity::NONE };
+};
+
+struct Archetype {
+    u32 Count { 0U };
+    virtual b8 Add() {
+        Count++;
+        return true;
+    }
+    virtual b8 Remove(Entity entity) {
+        if (Count == 0U) { return false; }
+        Count--;
+        return true;
+    };
+
+    [[nodiscard]] static constexpr Entity begin() noexcept { return Entity { 0U }; }
+    [[nodiscard]] constexpr Entity end() const noexcept { return Entity { Count }; }
+};
