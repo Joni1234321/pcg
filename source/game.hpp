@@ -1,21 +1,10 @@
 #pragma once
 
-#include <cstdlib>
-#include <unordered_map>
-
 #include "components.hpp"
 #include "logger.hpp"
 #include "types.hpp"
 
 namespace pcg {
-struct FarmStats {
-    u32 cost;
-    u32 production;
-};
-
-struct Data {
-    std::unordered_map<FARM_TYPE, FarmStats> farm_types;
-};
 struct NewGameSettings {
     u32 players;
     u32 planets;

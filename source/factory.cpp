@@ -6,8 +6,8 @@
 namespace pcg {
 using pce::Rand;
 
-OptionalEntity<> PlayerArchetype::Add(const Money money) {
-    const OptionalEntity<> entity = Archetype::Add();
+Entity PlayerArchetype::Add(const Money money) {
+    const Entity entity = Archetype::Add();
 
     (void)moneys.EmplaceBack(money);
     (void)construction_queue.EmplaceBack();
@@ -22,8 +22,8 @@ b8 PlayerArchetype::Remove(const Entity entity) {
 
     return true;
 }
-OptionalEntity<> PlanetArchetype::Add(const Tick tick, const Money money) {
-    const OptionalEntity<> entity = Archetype::Add();
+Entity PlanetArchetype::Add(const Tick tick, const Money money) {
+    const Entity entity = Archetype::Add();
 
     (void)players.EmplaceBack(Entity::NONE);
     (void)moneys.EmplaceBack(money);
@@ -40,8 +40,8 @@ b8 PlanetArchetype::Remove(const Entity entity) {
 
     return true;
 }
-OptionalEntity<> StateArchetype::Add(Entity player) {
-    const OptionalEntity<> entity = Archetype::Add();
+Entity StateArchetype::Add(Entity player) {
+    const Entity entity = Archetype::Add();
 
     constexpr u32 population = 100U;
     (void)players.EmplaceBack(player);
@@ -57,8 +57,8 @@ b8 StateArchetype::Remove(const Entity entity) {
 
     return true;
 }
-OptionalEntity<> FarmSectorArchetype::Add(Entity planet, FARM_TYPE farm_type) {
-    const OptionalEntity<> entity = Archetype::Add();
+Entity FarmSectorArchetype::Add(Entity planet, FARM_TYPE farm_type) {
+    const Entity entity = Archetype::Add();
 
     (void)planets.EmplaceBack(planet);
     (void)type.EmplaceBack(farm_type);

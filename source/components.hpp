@@ -1,27 +1,41 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "collections.hpp"
 #include "ecs.hpp"
 #include "types.hpp"
 
 namespace pcg {
+using Percentage = NamedType<f32, struct PercentageTag, Arithmetic>;
+
+using Tick = NamedType<u32, struct TickTag, Arithmetic>;
+using Money = NamedType<f32, struct MoneyTag, Arithmetic>;
+using Population = NamedType<f32, struct PopulationTag, Arithmetic>;
+using Production = NamedType<u32, struct ProductionTag, Arithmetic>;
+
+// theory aktiver og passiver. aktiver is the initial cost of investments
+// https://ordbog.ku.dk/pdf/financial_terminology.pdf
+// https://uwaterloo.ca/economics/sites/default/files/uploads/documents/econ-101-syllabus.pdf
+// https://en.wikipedia.org/wiki/Supply_and_demand
+struct alignas(16U) FarmStats {
+    u32 assets;       // aktiver
+    u32 production;   // produktion
+    u32 depreciation; // afskrivning
+
+    [[nodiscard]] Money FinancialResult(const u32 cost_of_good) const { return Money { static_cast<f32>(Income(cost_of_good)) - static_cast<f32>(Expenses()) }; }     // resultat
+    [[nodiscard]] Percentage ReturnOnAssets(const u32 cost_of_good) const { return Percentage { FinancialResult(cost_of_good).Value() / static_cast<f32>(assets) }; } // afkastningsgrad
+private:
+    [[nodiscard]] u32 Expenses() const { return depreciation; }
+    [[nodiscard]] u32 Income(const u32 cost_of_good) const { return production * cost_of_good; } //
+};
 enum class FARM_TYPE : u8 { CONSTRUCTION, WINE, WHEAT, FISH, COWS };
 enum class RESOURCE_BUILDINGS : u8 { WOOD, FE, AG, AU };
 enum class GOOD : u8 { WOOD, IRON, FOOD, STEEL, COAL };
 
-//struct Money : C1<f32, Money> {
-//    using C1::C1;
-//};
-//struct Production : C1<u32, Production> {
-//    using C1::C1;
-//};
-//struct Money {
-//    f32 value;
-//};
-using Tick = NamedType<u32, struct TickTag, Arithmetic>;
-using Money = NamedType<f32, struct MoneyTag, Arithmetic>;
-using Production = NamedType<u32, struct ProductionTag, Arithmetic>;
-// two ways
+struct Data {
+    std::unordered_map<FARM_TYPE, FarmStats> farm_types;
+};
 
 struct BuildingUnderConstruction {
     FARM_TYPE type;
@@ -45,7 +59,7 @@ struct Market {
 struct StateArchetype final : Archetype {
     pce::Parent players;
     pce::Component<Market> markets;
-    OptionalEntity<> Add(Entity);
+    Entity Add(Entity);
     b8 Remove(Entity entity) override;
 };
 struct Sector : Archetype {
@@ -53,14 +67,14 @@ struct Sector : Archetype {
 };
 struct FarmSectorArchetype final : Sector {
     pce::Component<FARM_TYPE> type;
-    OptionalEntity<> Add(Entity player, FARM_TYPE farm_type);
+    Entity Add(Entity player, FARM_TYPE farm_type);
     b8 Remove(Entity entity) override;
 };
 
 struct PlayerArchetype final : Archetype {
     pce::Component<Money> moneys;
     pce::Component<ConstructionQueue> construction_queue;
-    OptionalEntity<> Add(Money);
+    Entity Add(Money);
     b8 Remove(Entity entity) override;
 };
 
@@ -70,7 +84,7 @@ struct PlanetArchetype final : Archetype {
     pce::Component<ConstructionQueue> construction_queue;
     pce::Component<Tick> ages;
 
-    OptionalEntity<> Add(Tick, Money);
+    Entity Add(Tick, Money);
     b8 Remove(Entity entity) override;
 };
 
