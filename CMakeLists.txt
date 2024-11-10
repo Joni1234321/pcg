@@ -11,12 +11,18 @@ project(PCG VERSION 1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+file(GLOB SOURCE_FILES
+        "source/*.cpp"
+        "source/*.hpp"
+)
+
 # TODO 8: Use configure_file to configure and copy TutorialConfig.h.in to
 #         TutorialConfig.h
 
 # TODO 3: Add an executable called Tutorial to the project
 # Hint: Be sure to specify the source file as tutorial.cxx
-add_executable(main source/main.cpp source/game.cpp source/factory.cpp)
+#add_executable(main source/main.cpp source/game.cpp source/factory.cpp)
+add_executable(main ${SOURCE_FILES})
 
 # TODO 9: Use target_include_directories to include ${PROJECT_BINARY_DIR}
 # target_include_directories(PCG PUBLIC "${PROJECT_BINARY_DIR}")
