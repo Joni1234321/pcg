@@ -105,22 +105,22 @@ private:
     String string;
 };
 
-constexpr std::array LONG_NUMBER_SUFFIX = { 'K', 'M', 'B', 'T' };
-template <typename T> String FormatValue(const T value) {
-    if constexpr (std::is_same_v<T, pcg::Money>) {
-        const f32 number = static_cast<f32>(value);
-        f32 abs_number = math::Abs(number);
-        char suffix { ' ' };
-        for (const char current_suffix : LONG_NUMBER_SUFFIX) {
-            constexpr f32 one_thousand = 1'000.0F;
-            if (abs_number < one_thousand) { break; }
-            abs_number /= one_thousand;
-            suffix = current_suffix;
-        }
-        const char prefix { number < 0.0F ? '-' : ' ' };
-        return std::format("{}{:.2f}{}", prefix, abs_number, suffix);
-    } else { return std::format("{} ", value); }
+template <typename T> inline String FormatValue(const T value) { return std::format("{} ", value); }
+template < > inline String FormatValue<pcg::Money>(const pcg::Money value) {
+    const f32 number = static_cast<f32>(value);
+    f32 abs_number = math::Abs(number);
+    static constexpr std::array LONG_NUMBER_SUFFIX = { 'K', 'M', 'B', 'T' };
+    char suffix { ' ' };
+    for (const char current_suffix : LONG_NUMBER_SUFFIX) {
+        constexpr f32 one_thousand = 1'000.0F;
+        if (abs_number < one_thousand) { break; }
+        abs_number /= one_thousand;
+        suffix = current_suffix;
+    }
+    const char prefix { number < 0.0F ? '-' : ' ' };
+    return std::format("{}{:.2f}{}", prefix, abs_number, suffix);
 }
+template < > inline String FormatValue(const Entity value) { return value == Entity::NONE ? String { "NONE" } : std::format("{} ", value); }
 
 struct Table { // NOLINT(*-struct-pack-align)
     enum LOGGER_COLOR : b8 { COLOR_DISABLED, COLOR_ENABLED };

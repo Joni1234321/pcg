@@ -77,6 +77,7 @@ static void ProcessConstructionQueue(Planet player);
 constexpr u16 BUILDING_TIME = 30U;
 
 void Game::PlayTick(Tick tick, const b8 debug) {
+    // Construction
     for (const Player player : player_archetype) { ProcessConstructionQueue(player); }
     for (const Planet planet : planet_archetype) { ProcessConstructionQueue(planet); }
 
@@ -84,12 +85,23 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     RevenueCapture planet_revenue_capture;
     player_revenue_capture.before_revenue = player_archetype.moneys;
     planet_revenue_capture.before_revenue = planet_archetype.moneys;
+    // Income Farms
     for (const Farm farm : farm_archetype) { ProcessIncome(farm); }
     player_revenue_capture.revenue = Select(player_archetype.moneys, player_revenue_capture.before_revenue, math::Sub<Money>);
     planet_revenue_capture.revenue = Select(planet_archetype.moneys, planet_revenue_capture.before_revenue, math::Sub<Money>);
 
-    player_revenue_capture.before_expenses = player_archetype.moneys;
     planet_revenue_capture.before_expenses = planet_archetype.moneys;
+    // Buy Farms
+    for (const Planet planet : planet_archetype) {
+        if (planet.Player().IsNone()) { continue; }
+        FARM_TYPE farm_type = RandomKey(data.farm_types);
+        (void)TryQueueFarm(planet, farm_type, planet.Money());
+    }
+    planet_revenue_capture.expenses = Select(planet_archetype.moneys, planet_revenue_capture.before_expenses, math::Sub<Money>);
+    planet_revenue_capture.balance = planet_archetype.moneys;
+
+    player_revenue_capture.before_expenses = player_archetype.moneys;
+    // Buy Farms
     for (const Player player : player_archetype) {
         if (planet_archetype.Count == 0U) { continue; }
         Planet planet = Planet { Entity { pce::Rand() % planet_archetype.Count } };
@@ -97,14 +109,16 @@ void Game::PlayTick(Tick tick, const b8 debug) {
         FARM_TYPE farm_type = RandomKey(data.farm_types);
         (void)TryQueueFarm(planet, farm_type, player.Money());
     }
-    for (const Planet planet : planet_archetype) {
-        FARM_TYPE farm_type = RandomKey(data.farm_types);
-        if (planet.Player().IsSome()) { (void)TryQueueFarm(planet, farm_type, planet.Money()); }
+    // Settle, Exploit, Research
+    for (const Player player : player_archetype) {
+        if (pce::Rand() % 100U == 0U) {
+            OptionalEntity<> optional = planet_archetype.Add(tick, Money { 0.0F });
+            if (optional.IsNone()) { continue; }
+            Planet(optional.Entity()).Take(player);
+        }
     }
     player_revenue_capture.expenses = Select(player_archetype.moneys, player_revenue_capture.before_expenses, math::Sub<Money>);
-    planet_revenue_capture.expenses = Select(planet_archetype.moneys, planet_revenue_capture.before_expenses, math::Sub<Money>);
     player_revenue_capture.balance = player_archetype.moneys;
-    planet_revenue_capture.balance = planet_archetype.moneys;
 
     for (Market& market : state_archetype.markets) { market.RecalculateMarkets(); }
 
@@ -114,14 +128,14 @@ void Game::PlayTick(Tick tick, const b8 debug) {
         return { "{:3} / {:3} Q:{:3}", math::Min(construction_queue.Size(), construction_queue.construction_capacity), construction_queue.construction_capacity, construction_queue.Size() };
     });
 
-    Table player_table = PrintRevenueCapture("Player", player_archetype, player_revenue_capture, constructing);
+    Table player_table = PrintRevenueCapture("Player Economy", player_archetype, player_revenue_capture, constructing);
     player_table.Print(logger, Table::COLOR_ENABLED);
 
     constructing = Select(planet_archetype.construction_queue, [] (const ConstructionQueue& construction_queue) -> String {
         return { "{:3} / {:3} Q:{:3}", math::Min(construction_queue.Size(), construction_queue.construction_capacity), construction_queue.construction_capacity, construction_queue.Size() };
     });
 
-    Table planet_table = PrintRevenueCapture("Planet", planet_archetype, planet_revenue_capture, constructing);\
+    Table planet_table = PrintRevenueCapture("Planet Economy", planet_archetype, planet_revenue_capture, constructing);\
     planet_table.AddColumn("Owner", Span<Entity>(planet_archetype.players));
     planet_table.Print(logger, Table::COLOR_DISABLED);
 
@@ -155,7 +169,7 @@ Game::Game(const NewGameSettings game) {
     for (u32 i = 0U; i < game.planets; i++) {
         const Entity planet { i };
         constexpr Money planet_money_start = Money { 100.0F };
-        (void)planet_archetype.Add(planet_money_start, start_tick);
+        (void)planet_archetype.Add(start_tick, planet_money_start);
         (void)farm_archetype.Add(planet, FARM_TYPE::CONSTRUCTION);
         Planet(planet).ConstructionQueue().construction_capacity++;
 

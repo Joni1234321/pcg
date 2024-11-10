@@ -26,7 +26,7 @@ struct Game {
     void PlayTick(Tick tick, b8 debug);
 };
 
-constexpr NewGameSettings GAME_SETTINGS = { .players = 2U, .planets = 20U };
+constexpr NewGameSettings GAME_SETTINGS = { .players = 2U, .planets = 4U };
 
 
 inline Data data; // NOLINT(*-err58-cpp, *-avoid-non-const-global-variables)

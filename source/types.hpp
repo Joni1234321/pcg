@@ -44,7 +44,7 @@ inline const Entity Entity::NONE = Entity { };
 
 template <typename T>concept DerivedFromEntity = std::is_base_of_v<Entity, T>;
 
-template <DerivedFromEntity T> struct OptionalEntity {
+template <DerivedFromEntity T = Entity> struct OptionalEntity {
     constexpr operator T& () const { return entity; }
     constexpr OptionalEntity() = default;
     constexpr explicit OptionalEntity(T entity) : entity(entity) { }
@@ -58,9 +58,8 @@ private:
 
 struct Archetype {
     u32 Count { 0U };
-    virtual b8 Add() {
-        Count++;
-        return true;
+    virtual OptionalEntity<> Add() {
+        return OptionalEntity { Entity { Count++ } };
     }
     virtual b8 Remove(Entity entity) {
         if (Count == 0U) { return false; }
