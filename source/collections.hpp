@@ -38,31 +38,6 @@ struct String {
 private:
     std::string data;
 };
-template <typename T> struct Array : private std::span<T> {
-    explicit Array(u32 n) : std::span<T>(new T[n](), n) { (void)std::printf("CONSTRUCTING %s \n", typeid(T).name()); }
-    Array(const Array<T>& other) = delete;
-    Array(Array<T>&& other) noexcept { (void)std::printf("MOVING %s\n", typeid(T).name()); }
-    ~Array() {
-        (void)std::printf("DELETING %s\n", typeid(T).name());
-        delete[] this->data();
-    }
-    Array<T>& operator=(Array<T>&& other) noexcept {
-        if (this != &other) {
-            delete[] this->data();
-
-            std::span<T>::operator=(std::span<T>(other.data(), other.size()));
-
-            (void)std::printf("MOVE ASSIGNING %s\n", typeid(T).name());
-            other.reset();
-        }
-        return *this;
-    }
-
-    using std::span<T>::operator[];
-    using std::span<T>::begin;
-    using std::span<T>::end;
-    using std::span<T>::size;
-};
 
 template <typename T> struct List {
     using Iter = typename std::vector<T>::iterator;
@@ -140,62 +115,21 @@ template <typename T> struct Queue : public List<T> {
 
 template <typename T> using Component = List<T>;
 
-struct Entities : private List<Entity> {
+struct Entities : List<Entity> {
     constexpr Entities() = default;
     constexpr ~Entities() { List<Entity>::~List(); }
     Entities(const Entities&) = delete;
     Entities& operator=(const Entities&) = delete;
     Entities(Entities&&) = delete;
     Entities& operator=(Entities&&) = delete;
-    using List<Entity>::operator[];
-    using List<Entity>::EmplaceBack;
-    using List<Entity>::begin;
-    using List<Entity>::end;
-    using List<Entity>::Size;
-    using List<Entity>::PopBack;
-    using List<Entity>::SwapBack;
-    using List<Entity>::value_type;
 };
 
-struct Parent : private List<Entity> {
+struct Parent : List<Entity> {
     constexpr Parent() = default;
-    constexpr ~Parent() { List<Entity>::~List(); }
+    constexpr ~Parent() { List::~List(); }
     Parent(const Parent&) = delete;
     Parent& operator=(const Parent&) = delete;
     Parent(Parent&&) = delete;
     Parent& operator=(Parent&&) = delete;
-    using List<Entity>::operator[];
-    using List<Entity>::EmplaceBack;
-    using List<Entity>::begin;
-    using List<Entity>::Back;
-    using List<Entity>::end;
-    using List<Entity>::Size;
-    using List<Entity>::PopBack;
-    using List<Entity>::SwapBack;
-    using List<Entity>::value_type;
 };
-
-constexpr void split(Array<List<Entity>>& ret, const List<Entity>& entities, const Parent& parents) {
-    for (const Entity& entity : entities) {
-        const Entity& parent = parents[static_cast<u32>(entity)];
-        (void)ret[parent].EmplaceBack(entity);
-    }
-}
-inline Array<List<Entity>> split(const List<Entity>& entities, const Parent& parents, const u32 n) {
-    Array<List<Entity>> ret(n);
-    split(ret, entities, parents);
-    return ret;
-}
-// assumes all entities are tightly packed and linked to parents
-constexpr void split(Array<List<Entity>>& ret, const Parent& parents) {
-    for (Entity entity : parents) {
-        const Entity& parent = parents[entity];
-        (void)ret[parent].EmplaceBack(entity);
-    }
-}
-inline Array<List<Entity>> split(const Parent& parents, const u32 n) {
-    Array<List<Entity>> ret(n);
-    split(ret, parents);
-    return ret;
-}
 } // namespace pce
