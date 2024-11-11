@@ -76,7 +76,7 @@ static void ProcessIncome(const Farm farm) {
 }
 static void ProcessConstructionQueue(Planet player);
 constexpr u16 BUILDING_TIME = 30U;
-
+constexpr f32 PER_MONTH = 1.0F / 12.0F;
 void Game::PlayTick(Tick tick, const b8 debug) {
     // Construction
     for (const Player player : player_archetype) { ProcessConstructionQueue(player); }
@@ -84,9 +84,8 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     // Population
     for (const Planet planet : planet_archetype) {
         Population population = planet.Population();
-        constexpr Percentage growth_rate { 1.02F };
-        Population new_population = Population { population.Value() * growth_rate.Value() };
-
+        constexpr Percentage growth_rate { (0.001F * PER_MONTH) + 1.0F }; // 0.05% every YEAR
+        planet.Population() = Population { population.Value() * growth_rate.Value() };
     }
     RevenueCapture player_revenue_capture;
     RevenueCapture planet_revenue_capture;
