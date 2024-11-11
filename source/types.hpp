@@ -21,8 +21,10 @@ using b8 = bool;
 
 constexpr u32 U32_MAX = UINT32_MAX;
 
+template <class T, class U>concept Derived = std::is_base_of_v<U, T>;
+
 struct Entity {
-    explicit constexpr Entity(u32 index) : index(index) { }
+    explicit constexpr Entity(const u32 index) : index(index) { }
     constexpr Entity() : index(U32_MAX) { }
     static const Entity NONE;
 
@@ -42,9 +44,7 @@ protected:
 
 inline const Entity Entity::NONE = Entity { };
 
-template <typename T>concept DerivedFromEntity = std::is_base_of_v<Entity, T>;
-
-template <DerivedFromEntity T = Entity> struct OptionalEntity {
+template <Derived<Entity> T = Entity> struct OptionalEntity {
     constexpr operator T&() const { return entity; }
     constexpr OptionalEntity() = default;
     constexpr explicit OptionalEntity(T entity) : entity(entity) { }

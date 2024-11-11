@@ -1,21 +1,22 @@
 #pragma once
+
+#include <cassert>
+#include <memory>
 #include <random>
+#include <stdexcept>
 
 #include "types.hpp"
-#include <memory>
-#include <stdexcept>
-#include <vector>
 
 namespace pce {
-template <typename To, typename From> constexpr To& reinterpret(From& from) { return *reinterpret_cast<To*>(&from); } // NOLINT(*-pro-type-reinterpret-cast)
+template <typename To, typename From> constexpr To& Reinterpret(From& from) { return *reinterpret_cast<To*>(&from); } // NOLINT(*-pro-type-reinterpret-cast)
 inline u32 Rand() {
     static std::random_device random_device;
     static std::mt19937 gen(random_device());
     static std::uniform_int_distribution distribution(0U, U32_MAX);
     return distribution(gen);
 }
-inline u32 Rand(u32 max) {
-    if (max == 0U) return -1;
+inline u32 Rand(const u32 max) {
+    assert(max > 0);
     return Rand() % max;
 }
 template <typename Collection> typename Collection::key_type RandomKey(const Collection& collection) {
@@ -43,6 +44,6 @@ template <typename T = void> struct Size {
 };
 template <typename T> T Max(T left, T right) { return left > right ? left : right; }
 template <typename T> T Min(T left, T right) { return left < right ? left : right; }
-template <typename T> constexpr u32 FloorToU32 (const T value) { return static_cast<u32>(value); }
-template <typename T> constexpr T Abs (const T value) { return value < 0 ? -value : value; }
+template <typename T> constexpr u32 FloorToU32(const T value) { return static_cast<u32>(value); }
+template <typename T> constexpr T Abs(const T value) { return value < 0 ? -value : value; }
 } // namespace pce::math

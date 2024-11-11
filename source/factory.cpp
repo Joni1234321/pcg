@@ -22,29 +22,32 @@ b8 PlayerArchetype::Remove(const Entity entity) {
 
     return true;
 }
-Entity PlanetArchetype::Add(const Tick tick, const Money money) {
+Entity PlanetArchetype::Add(const Tick tick, const Money money, const Population population) {
     const Entity entity = Archetype::Add();
 
     (void)players.EmplaceBack(Entity::NONE);
-    (void)moneys.EmplaceBack(money);
-    (void)construction_queue.EmplaceBack();
     (void)ages.EmplaceBack(tick);
+    (void)moneys.EmplaceBack(money);
+    (void)populations.EmplaceBack(population);
+    (void)construction_queue.EmplaceBack();
 
     return entity;
 }
 b8 PlanetArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
+    players.SwapBack(entity);
     moneys.SwapBack(entity);
     construction_queue.SwapBack(entity);
+    ages.SwapBack(entity);
 
     return true;
 }
-Entity StateArchetype::Add(Entity player) {
+Entity StateArchetype::Add(Entity planet) {
     const Entity entity = Archetype::Add();
 
     constexpr u32 population = 100U;
-    (void)players.EmplaceBack(player);
+    (void)planets.EmplaceBack(planet);
     markets.PushBack(Market { .population = Rand() % population });
 
     return entity;
@@ -52,7 +55,7 @@ Entity StateArchetype::Add(Entity player) {
 b8 StateArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
-    players.SwapBack(entity);
+    planets.SwapBack(entity);
     markets.SwapBack(entity);
 
     return true;

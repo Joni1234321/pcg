@@ -10,8 +10,8 @@ namespace pcg {
 using Percentage = NamedType<f32, struct PercentageTag, Arithmetic>;
 
 using Tick = NamedType<u32, struct TickTag, Arithmetic>;
-using Money = NamedType<f32, struct MoneyTag, Arithmetic>;
-using Population = NamedType<f32, struct PopulationTag, Arithmetic>;
+using Money = NamedType<f32, struct MoneyTag, Arithmetic, FormatLongNumber>;
+using Population = NamedType<f32, struct PopulationTag, Arithmetic, FormatLongNumber>;
 using Production = NamedType<u32, struct ProductionTag, Arithmetic>;
 
 // theory aktiver og passiver. aktiver is the initial cost of investments
@@ -52,14 +52,14 @@ struct Market {
     [[nodiscard]] f32 GetPrice() const { return 100.0F * static_cast<f32>(price_factor); }
     void RecalculateMarkets() {
         price_factor += sold < demand ? 1 : -1;
-        sold = 0;
+        sold = 0U;
     }
 };
 
 struct StateArchetype final : Archetype {
-    pce::Parent players;
+    pce::Parent planets;
     pce::Component<Market> markets;
-    Entity Add(Entity);
+    Entity Add(Entity planet);
     b8 Remove(Entity entity) override;
 };
 struct Sector : Archetype {
@@ -80,11 +80,11 @@ struct PlayerArchetype final : Archetype {
 
 struct PlanetArchetype final : Archetype {
     pce::Parent players;
-    pce::Component<Money> moneys;
-    pce::Component<ConstructionQueue> construction_queue;
     pce::Component<Tick> ages;
-
-    Entity Add(Tick, Money);
+    pce::Component<Money> moneys;
+    pce::Component<Population> populations;
+    pce::Component<ConstructionQueue> construction_queue;
+    Entity Add(Tick, Money, Population);
     b8 Remove(Entity entity) override;
 };
 

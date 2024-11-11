@@ -10,7 +10,7 @@ namespace pce {
 using pcg::game;
 using pcg::player_archetype;
 using pcg::Tick;
-using pce::reinterpret;
+using pce::Reinterpret;
 using pce::List;
 
 [[noreturn]] void RunGame() {

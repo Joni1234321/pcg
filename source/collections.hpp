@@ -79,6 +79,7 @@ template <typename T> struct List {
     constexpr void PopBack() { data.pop_back(); }
     constexpr void Resize(const u32 size) { data.resize(size); }
     constexpr void Reserve(const u32 size) { data.reserve(size); }
+    // ReSharper disable once CppInconsistentNaming
     constexpr void push_back(const T& value) { data.push_back(value); }
 
     [[nodiscard]] constexpr b8 Empty() const { return data.empty(); }

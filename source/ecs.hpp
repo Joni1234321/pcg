@@ -4,81 +4,76 @@
 #pragma once
 
 #include "collections.hpp"
-#include "components.hpp"
 #include "types.hpp"
 
 namespace pcg {
-template <typename T, typename Parameter, template<typename> class... Skills> class NamedType : public Skills<NamedType<T, Parameter, Skills...>>... {
+template <typename T, typename TagType, template<typename> class... InheritList> class NamedType : public InheritList<NamedType<T, TagType, InheritList...>>... {
 public:
+    using Tag = TagType;
+
     constexpr explicit NamedType(const T& value) : value(value) { }
     T& Value() { return value; }
     const T& Value() const { return value; }
     explicit operator T() const { return Value(); };
+
 private:
     T value;
 };
-
-template <typename T, template<typename> class crtpType> struct crtp {
-    T& Underlying() { return static_cast<T&>(*this); }
-    const T& Underlying() const { return static_cast<const T&>(*this); }
+template <typename DerivedType, template<typename> class Recurring> struct RecurringDerived {
+    DerivedType& Derived() { return static_cast<DerivedType&>(*this); }
+    const DerivedType& Derived() const { return static_cast<const DerivedType&>(*this); }
 };
-template <typename T> struct Arithmetic : crtp<T, Arithmetic> {
-    T operator+(const T& other) const { return T(this->Underlying().Value() + other.Value()); }
-    T operator-(const T& other) const { return T(this->Underlying().Value() - other.Value()); }
-    T operator*(const T& other) const { return T(this->Underlying().Value() * other.Value()); }
-    T operator/(const T& other) const { return T(this->Underlying().Value() / other.Value()); }
+
+template <typename T, template<typename> class Skill>
+concept HasASkill = std::derived_from<T, Skill<T>>;
+
+template <typename T> struct FormatLongNumber : RecurringDerived<T, FormatLongNumber> { };
+template <typename T> struct Arithmetic : RecurringDerived<T, Arithmetic> {
+    T operator+(const T& other) const { return T(this->Derived().Value() + other.Value()); }
+    T operator-(const T& other) const { return T(this->Derived().Value() - other.Value()); }
+    T operator*(const T& other) const { return T(this->Derived().Value() * other.Value()); }
+    T operator/(const T& other) const { return T(this->Derived().Value() / other.Value()); }
+    // Equals operators
     T& operator+=(const T& other) {
-        this->Underlying().Value() += other.Value();
-        return this->Underlying();
+        this->Derived().Value() += other.Value();
+        return this->Derived();
     }
     T& operator-=(const T& other) {
-        this->Underlying().Value() -= other.Value();
-        return this->Underlying();
+        this->Derived().Value() -= other.Value();
+        return this->Derived();
     }
     T& operator*=(const T& other) {
-        this->Underlying().Value() *= other.Value();
-        return this->Underlying();
+        this->Derived().Value() *= other.Value();
+        return this->Derived();
     }
     T& operator/=(const T& other) {
-        this->Underlying().Value() /= other.Value();
-        return this->Underlying();
+        this->Derived().Value() /= other.Value();
+        return this->Derived();
     }
     T operator++(int) {
-        T old = *this->Underlying();
-        this->Underlying().Value()++;
+        T old = *this->Derived();
+        (void)this->Derived().Value()++;
         return old;
     }
     T& operator++() {
-        this->Underlying().Value()++;
-        return this->Underlying();
+        (void)this->Derived().Value()++;
+        return this->Derived();
     }
     // Comparison operators
-    b8 operator==(const T& other) const { return this->Underlying().Value() == other.Value(); }
-    b8 operator!=(const T& other) const { return this->Underlying().Value() != other.Value(); }
-    b8 operator<(const T& other) const { return this->Underlying().Value() < other.Value(); }
-    b8 operator<=(const T& other) const { return this->Underlying().Value() <= other.Value(); }
-    b8 operator>(const T& other) const { return this->Underlying().Value() > other.Value(); }
-    b8 operator>=(const T& other) const { return this->Underlying().Value() >= other.Value(); }
+    b8 operator==(const T& other) const { return this->Derived().Value() == other.Value(); }
+    b8 operator!=(const T& other) const { return this->Derived().Value() != other.Value(); }
+    b8 operator<(const T& other) const { return this->Derived().Value() < other.Value(); }
+    b8 operator<=(const T& other) const { return this->Derived().Value() <= other.Value(); }
+    b8 operator>(const T& other) const { return this->Derived().Value() > other.Value(); }
+    b8 operator>=(const T& other) const { return this->Derived().Value() >= other.Value(); }
 };
-template <typename T, template<typename, typename> class crtpType> struct crtpV {
-    T& Underlying() { return static_cast<T&>(*this); }
-    const T& Underlying() const { return static_cast<const T&>(*this); }
-};
-template <typename T, typename V> struct Multipliable : crtpV<T, Multipliable> {
-    T operator*(const V& other) const { return T(this->Underlying().Value() * other); }
-    T& operator*=(const T& other) {
-        this->Underlying().Value() *= other.Value();
-        return this->Underlying();
-    }
-};
-template <typename T> struct Printable : crtp<T, Printable> {
-    void print(std::ostream& os) const { os << this->Underlying().Value(); }
+template <typename T> struct Printable : RecurringDerived<T, Printable> {
+    void print(std::ostream& os) const { os << this->Derived().Value(); }
 };
 template <typename T, typename Parameter> std::ostream& operator<<(std::ostream& os, const NamedType<T, Parameter>& object) {
     object.print(os);
     return os;
 }
-
 } // namespace pcg
 
 #include "format"

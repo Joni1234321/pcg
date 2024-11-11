@@ -5,7 +5,6 @@
 #include <format>
 #include <numeric>
 #include <string>
-#include <vector>
 #include <array>
 
 #include "collections.hpp"
@@ -27,7 +26,7 @@ constexpr auto LOGGER_PREFIX_WARNING = "";
 constexpr auto LOGGER_PREFIX_ERROR = "";
 #endif
 
-static auto LOGGER_COLOR_SET(const u32 color) { return "\033[38;5;" + std::to_string(color) + "m"; }
+static auto LoggerColorSet(const u32 color) { return "\033[38;5;" + std::to_string(color) + "m"; }
 static constexpr auto LOGGER_COLOR_CLEAR = "\033[m";
 
 #define LOGGER_COLOR_SET_ORANGE LOGGER_COLOR_SET(202)
@@ -74,7 +73,7 @@ struct Logger { // NOLINT(*-struct-pack-align)
     constexpr void LogComplexLine() { string.Add(LOG_LINE_STRING); }
 
     void SetColor(u8 color) { string.Add(std::format("\033[38;5;{}m", color)); }
-    void RotateColor(u32 index) { SetColor(static_cast<u8>(START_COLOR + (index * 3U))); }
+    void RotateColor(const u32 index) { SetColor(static_cast<u8>(START_COLOR + (index * 3U))); }
     constexpr void ClearColor() { string.Add(LOGGER_COLOR_CLEAR); }
 
     template <typename T> constexpr void LogList(const String& label, const String& value_label, const Span<T> span) {
@@ -105,8 +104,13 @@ private:
     String string;
 };
 
-template <typename T> inline String FormatValue(const T value) { return std::format("{} ", value); }
-template < > inline String FormatValue<pcg::Money>(const pcg::Money value) {
+template <typename T> String FormatValue(const T value) { return std::format("{} ", value); }
+template <typename T>concept NamedTypeArithmetic = requires (T value)
+{
+    { static_cast<f32>(value) }; // Checks if T can be cast to f32
+} && (pcg::HasASkill<T, pcg::FormatLongNumber>);
+
+template <NamedTypeArithmetic T> inline String FormatValue(const T value) {
     const f32 number = static_cast<f32>(value);
     f32 abs_number = math::Abs(number);
     static constexpr std::array LONG_NUMBER_SUFFIX = { 'K', 'M', 'B', 'T' };
@@ -120,7 +124,7 @@ template < > inline String FormatValue<pcg::Money>(const pcg::Money value) {
     const char prefix { number < 0.0F ? '-' : ' ' };
     return std::format("{}{:.2f}{}", prefix, abs_number, suffix);
 }
-template < > inline String FormatValue(const Entity value) { return value == Entity::NONE ? String { "NONE" } : std::format("{} ", value); }
+template < > inline String FormatValue<Entity>(const Entity value) { return value == Entity::NONE ? String { "NONE" } : std::format("{} ", value); }
 
 struct Table { // NOLINT(*-struct-pack-align)
     enum LOGGER_COLOR : b8 { COLOR_DISABLED, COLOR_ENABLED };
@@ -132,6 +136,7 @@ struct Table { // NOLINT(*-struct-pack-align)
     template <typename T> void AddColumnFixed(String title, Span<T> values, u32 width) {
         rows[0U] += std::format("{:>{}} |", title, width);
         for (u32 i = 0U; i < values.size(); i++) { rows[i + 1U] += std::format("{:>{}} |", FormatValue(values[i]), width); }
+        for (u32 i = static_cast<u32>(values.size()) + 1U; i < rows.Size(); i++) { rows[i] += std::format("{:>{}} |", "XXXX", width); }
     }
     template <typename T> void AddColumnFixed(String title, List<T> values, u32 width) { AddColumnFixed(title, Span<T>(values), width); }
     template <typename T> void AddColumn(String title, Span<T> values) { AddColumnFixed(title, values, title.size() + 1U); }

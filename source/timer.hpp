@@ -14,7 +14,7 @@
 namespace pce {
 class Timer {
  public:
-  Timer(const std::string& name) {
+    explicit Timer(const std::string& name) {
     start_ = std::chrono::high_resolution_clock::now();
     name_ = name;
   }
