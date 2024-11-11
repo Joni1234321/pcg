@@ -14,17 +14,20 @@ using Money = NamedType<f32, struct MoneyTag, Arithmetic, FormatLongNumber>;
 using Population = NamedType<f32, struct PopulationTag, Arithmetic, FormatLongNumber>;
 using Production = NamedType<u32, struct ProductionTag, Arithmetic>;
 
+using QualityOfLife = NamedType<f32, struct QualityOfLifeTag, Arithmetic>;
 // theory aktiver og passiver. aktiver is the initial cost of investments
 // https://ordbog.ku.dk/pdf/financial_terminology.pdf
 // https://uwaterloo.ca/economics/sites/default/files/uploads/documents/econ-101-syllabus.pdf
 // https://en.wikipedia.org/wiki/Supply_and_demand
 struct alignas(16U) FarmStats {
+    u32 level;
+    // financials
     u32 assets;       // aktiver
     u32 production;   // produktion
     u32 depreciation; // afskrivning
 
-    [[nodiscard]] Money FinancialResult(const u32 cost_of_good) const { return Money { static_cast<f32>(Income(cost_of_good)) - static_cast<f32>(Expenses()) }; }     // resultat
-    [[nodiscard]] Percentage ReturnOnAssets(const u32 cost_of_good) const { return Percentage { FinancialResult(cost_of_good).Value() / static_cast<f32>(assets) }; } // afkastningsgrad
+    [[nodiscard]] Money FinancialResult(const u32 cost_of_good) const { return Money { static_cast<f32>(Income(cost_of_good)) - static_cast<f32>(Expenses()) }; }                               // resultat
+    [[nodiscard]] Percentage ReturnOnAssets(const u32 cost_of_good) const { return Percentage { static_cast<const Money>(FinancialResult(cost_of_good)).Value() / static_cast<f32>(assets) }; } // afkastningsgrad
 private:
     [[nodiscard]] u32 Expenses() const { return depreciation; }
     [[nodiscard]] u32 Income(const u32 cost_of_good) const { return production * cost_of_good; } //
@@ -43,6 +46,9 @@ struct BuildingUnderConstruction {
 };
 struct ConstructionQueue : pce::Queue<BuildingUnderConstruction> {
     u32 construction_capacity { 1U };
+};
+struct PopulationFinance {
+    Money money { 0.0F };
 };
 struct Market {
     u32 population { };
@@ -83,6 +89,8 @@ struct PlanetArchetype final : Archetype {
     pce::Component<Tick> ages;
     pce::Component<Money> moneys;
     pce::Component<Population> populations;
+    pce::Component<Money> population_balance;
+    pce::Component<QualityOfLife> population_quality_of_life;
     pce::Component<ConstructionQueue> construction_queue;
     Entity Add(Tick, Money, Population);
     b8 Remove(Entity entity) override;

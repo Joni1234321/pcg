@@ -3,9 +3,11 @@
 #include <algorithm>
 #include <cstdio>
 #include <format>
+#include <stacktrace>
 #include <numeric>
 #include <string>
 #include <array>
+#include <iostream>
 
 #include "collections.hpp"
 #include "types.hpp"
@@ -26,13 +28,13 @@ constexpr auto LOGGER_PREFIX_WARNING = "";
 constexpr auto LOGGER_PREFIX_ERROR = "";
 #endif
 
+#define LOGGER_ERROR_WRITE(MESSAGE) Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__)
+#define LOGGER_ERROR_WRITE_RETURN(MESSAGE, RETURN) Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__); return RETURN
+#define ASSERT_DBG(CONDITION, MESSAGE) if (CONDITION) { Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__); }
+#define ASSERT_DBG_RETURN(CONDITION, MESSAGE, RETURN) if (!static_cast<b8>(CONDITION)) { Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__); return RETURN; }
+
 static auto LoggerColorSet(const u32 color) { return "\033[38;5;" + std::to_string(color) + "m"; }
 static constexpr auto LOGGER_COLOR_CLEAR = "\033[m";
-
-#define LOGGER_COLOR_SET_ORANGE LOGGER_COLOR_SET(202)
-#define LOGGER_COLOR_SET_YELLOW LOGGER_COLOR_SET(220)
-#define LOGGER_COLOR_SET_WHITE LOGGER_COLOR_SET(250)
-#define LOGGER_COLOR_SET_PINK LOGGER_COLOR_SET(189)
 
 constexpr auto LOG_LINE_STRING = "=======================================\n";        // NOLINT(*-err58-cpp)
 constexpr auto LOG_SIMPLE_LINE_STRING = "---------------------------------------\n"; // NOLINT(*-err58-cpp)
@@ -41,6 +43,7 @@ static constexpr u8 START_COLOR = 172U;
 static constexpr u32 DEFAULT_COLUMN_WIDTH = 12U;
 
 struct Logger { // NOLINT(*-struct-pack-align)
+    enum class LOGGER_COLOR : u8 { ORANGE = 202U, YELLOW = 220U, WHITE = 250U, PINK = 189U, RED = 196U };
     Logger() = default;
 
     Logger(const Logger&) = delete;
@@ -62,6 +65,13 @@ struct Logger { // NOLINT(*-struct-pack-align)
         string += LOGGER_PREFIX_LOG;
         string += std::vformat(text, std::make_format_args(args...));
         string += "\n";
+    }
+    template <typename... Args> constexpr void Error(const char* text, Args... args) {
+        SetColor(static_cast<u8>(LOGGER_COLOR::RED));
+        string += LOGGER_PREFIX_ERROR;
+        string += std::vformat(text, std::make_format_args(args...));
+        string += "\n";
+        ClearColor();
     }
     template <typename... Args> constexpr void Write(const char* text, Args... args) {
         string += LOGGER_PREFIX_NONE;
@@ -134,6 +144,7 @@ struct Table { // NOLINT(*-struct-pack-align)
         AddColumn(name, idx);
     }
     template <typename T> void AddColumnFixed(String title, Span<T> values, u32 width) {
+        ASSERT_DBG_RETURN(values.size() < rows.Size(), "Received more values than rows in table", );
         rows[0U] += std::format("{:>{}} |", title, width);
         for (u32 i = 0U; i < values.size(); i++) { rows[i + 1U] += std::format("{:>{}} |", FormatValue(values[i]), width); }
         for (u32 i = static_cast<u32>(values.size()) + 1U; i < rows.Size(); i++) { rows[i] += std::format("{:>{}} |", "XXXX", width); }

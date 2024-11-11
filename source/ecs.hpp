@@ -9,10 +9,10 @@
 namespace pcg {
 template <typename T, typename TagType, template<typename> class... InheritList> class NamedType : public InheritList<NamedType<T, TagType, InheritList...>>... {
 public:
+    using ValueType = T;
     using Tag = TagType;
-
     constexpr explicit NamedType(const T& value) : value(value) { }
-    T& Value() { return value; }
+        T& Value() { return value; }
     const T& Value() const { return value; }
     explicit operator T() const { return Value(); };
 
@@ -24,8 +24,7 @@ template <typename DerivedType, template<typename> class Recurring> struct Recur
     const DerivedType& Derived() const { return static_cast<const DerivedType&>(*this); }
 };
 
-template <typename T, template<typename> class Skill>
-concept HasASkill = std::derived_from<T, Skill<T>>;
+template <typename T, template<typename> class Skill>concept HasASkill = std::derived_from<T, Skill<T>>;
 
 template <typename T> struct FormatLongNumber : RecurringDerived<T, FormatLongNumber> { };
 template <typename T> struct Arithmetic : RecurringDerived<T, Arithmetic> {

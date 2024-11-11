@@ -29,6 +29,8 @@ Entity PlanetArchetype::Add(const Tick tick, const Money money, const Population
     (void)ages.EmplaceBack(tick);
     (void)moneys.EmplaceBack(money);
     (void)populations.EmplaceBack(population);
+    (void)population_balance.EmplaceBack( Money { 0.0F });
+    (void)population_quality_of_life.EmplaceBack( QualityOfLife { 0.0F });
     (void)construction_queue.EmplaceBack();
 
     return entity;
@@ -38,6 +40,8 @@ b8 PlanetArchetype::Remove(const Entity entity) {
 
     players.SwapBack(entity);
     moneys.SwapBack(entity);
+    populations.SwapBack(entity);
+    population_balance.SwapBack(entity);
     construction_queue.SwapBack(entity);
     ages.SwapBack(entity);
 
