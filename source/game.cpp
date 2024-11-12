@@ -44,8 +44,9 @@ struct Farm : Entity {
 
     [[nodiscard]] constexpr Planet Planet() const { return farm_archetype.planets[index]; }
 
-    [[nodiscard]] constexpr FARM_TYPE FarmType() const { return farm_archetype.type[index]; }
-    [[nodiscard]] FarmStats FarmStats() const { return data.farm_types[FarmType()]; }
+    [[nodiscard]] constexpr FarmType FarmType() const { return farm_archetype.type[index]; }
+    [[nodiscard]] constexpr Finance Finance() const { return farm_archetype.finances[index]; }
+    [[nodiscard]] Stats Stats() const { return data.farm_types[FarmType()]; }
 };
 
 struct RevenueCapture {
@@ -63,10 +64,10 @@ void AddRevenueCapture(Table& table, const RevenueCapture& revenue_capture) {
 }
 
 static QualityOfLife GetQualityOfLife(Planet planet);
-static b8 TryQueueFarm(Planet planet, FARM_TYPE type, Money& money);
+static b8 TryQueueFarm(Planet planet, FarmType type, Money& money);
 static void ProcessIncome(const Farm farm) {
     constexpr Percentage tax_rate { .2F };
-    Money result = farm.FarmStats().FinancialResult(1U);
+    Money result = farm.Finance().FinancialResult(farm.Stats(), 1U);
     if (result > Money { 0.0F } && farm.Planet().Player().IsSome()) {
         const f32 tax = static_cast<f32>(math::FloorToU32(result.Value() * tax_rate.Value()));
         const Money player_tax { tax };
@@ -90,7 +91,7 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     for (const Planet planet : planet_archetype) { ProcessConstructionQueue(planet); }
     // Population
     for (const Planet planet : planet_archetype) {
-        Percentage growth_rate = Percentage { 1.0F + GROWTH_RATE_PER_MONTH};
+        Percentage growth_rate = Percentage { 1.0F + GROWTH_RATE_PER_MONTH };
         Population population = planet.Population();
         planet.Population() = Population { population.Value() * growth_rate.Value() };
     }
@@ -117,7 +118,7 @@ void Game::PlayTick(Tick tick, const b8 debug) {
         if (planet_archetype.Count == 0U) { continue; }
         Planet planet = Planet { Entity { pce::Rand() % planet_archetype.Count } };
         if (planet.Player().IsNone() || planet.Player().Entity() != player) { continue; }
-        FARM_TYPE farm_type = RandomKey(data.farm_types);
+        FarmType farm_type = RandomKey(data.farm_types);
         (void)TryQueueFarm(planet, farm_type, player.Balance());
     }
     // Settle, Exploit, Research
@@ -166,7 +167,7 @@ void Game::PlayTick(Tick tick, const b8 debug) {
 
     const List<BuildingUnderConstruction> display_construction = player_archetype.construction_queue[0U].Limit(5U); //.Limit(10);
     Table construction_table("ConstructionQueue", display_construction.Size());
-    construction_table.AddColumn("Type", Select(display_construction, [] (const BuildingUnderConstruction& building) -> FARM_TYPE { return building.type; }));
+    construction_table.AddColumn("Type", Select(display_construction, [] (const BuildingUnderConstruction& building) -> FarmType { return building.type; }));
     construction_table.AddColumn("Progress", Select(display_construction, [] (const BuildingUnderConstruction& building) -> u16 { return building.progress; }));
     construction_table.AddColumn("Required", Select(display_construction, [] ([[maybe_unused]] const BuildingUnderConstruction& building) -> u16 { return BUILDING_TIME; }));
     construction_table.Print(logger, Table::COLOR_DISABLED);
@@ -175,30 +176,30 @@ void Game::PlayTick(Tick tick, const b8 debug) {
 Game::Game(const NewGameSettings game) {
     constexpr Tick start_tick = Tick { 0U };
 
-    data.farm_types[FARM_TYPE::CONSTRUCTION] = FarmStats { .assets = 200U, .production = 0U, .depreciation = 1U };
-    data.farm_types[FARM_TYPE::FISH] = FarmStats { .assets = 100U, .production = 1U, .depreciation = 1U };
-    data.farm_types[FARM_TYPE::WHEAT] = FarmStats { .assets = 200U, .production = 3U, .depreciation = 1U };
-    data.farm_types[FARM_TYPE::COWS] = FarmStats { .assets = 400U, .production = 10U, .depreciation = 5U };
-    data.farm_types[FARM_TYPE::WINE] = FarmStats { .assets = 1000U, .production = 50U, .depreciation = 20U };
+    data.farm_types[FarmType::Construction] = Stats { .assets = 200U, .production = 0U, .depreciation = 1U };
+    data.farm_types[FarmType::Fish] = Stats { .assets = 100U, .production = 1U, .depreciation = 1U };
+    data.farm_types[FarmType::Wheat] = Stats { .assets = 200U, .production = 3U, .depreciation = 1U };
+    data.farm_types[FarmType::Cows] = Stats { .assets = 400U, .production = 10U, .depreciation = 5U };
+    data.farm_types[FarmType::Wine] = Stats { .assets = 1000U, .production = 50U, .depreciation = 20U };
 
     for (u32 i = 0U; i < game.players; i++) {
         constexpr Money player_money_start = Money { 10000.0F };
         Player player = player_archetype.Add(player_money_start);
-        (void)farm_archetype.Add(player, FARM_TYPE::CONSTRUCTION);
+        (void)farm_archetype.Add(player, FarmType::Construction);
         player.ConstructionQueue().construction_capacity++;
     }
 
     for (u32 i = 0U; i < game.planets; i++) {
         Planet planet = planet_archetype.Add(start_tick, Money { 100.0F }, Population { 100'000'000.0F });
-        (void)farm_archetype.Add(planet, FARM_TYPE::CONSTRUCTION);
+        (void)farm_archetype.Add(planet, FarmType::Construction);
         planet.ConstructionQueue().construction_capacity++;
         const Player owner { Entity { pce::Rand() % game.players } };
         planet.TransferOwnerShipToPlayer(owner);
     }
 }
 
-static b8 TryQueueFarm(const Planet planet, const FARM_TYPE type, Money& money) {
-    const FarmStats farm = data.farm_types[type];
+static b8 TryQueueFarm(const Planet planet, const FarmType type, Money& money) {
+    const Stats farm = data.farm_types[type];
     const Money cost(static_cast<f32>(farm.assets)); // NOLINT(*-narrowing-conversions)
     if (money < cost) { return false; }
     money -= cost;
@@ -216,7 +217,7 @@ static void ProcessConstructionQueue(const Planet player) {
         const BuildingUnderConstruction building_under_construction = construction_queue[idx];
         if (building_under_construction.progress != BUILDING_TIME) { continue; }
         construction_queue.RemoveAt(idx);
-        if (building_under_construction.type == FARM_TYPE::CONSTRUCTION) { construction_queue.construction_capacity += 1U; }
+        if (building_under_construction.type == FarmType::Construction) { construction_queue.construction_capacity += 1U; }
         (void)farm_archetype.Add(player, building_under_construction.type);
     }
 }
@@ -230,7 +231,7 @@ static QualityOfLife GetQualityOfLife(Planet planet) {
     constexpr Money price_of_dictator = Money { 1000.0F };
 
     const QualityOfLife quality_of_life = planet.QualityOfLife();
-    const QUALITY_OF_LIFE_STAGE stage = GetQualityOfLifeStage(quality_of_life);
+    const QualityOfLifeStage stage = GetQualityOfLifeStage(quality_of_life);
     const f32 inter_level = (quality_of_life - QualityOfLife { static_cast<f32>(stage) } * QUALITY_OF_LIFE_LEVELS_PER_STAGE).Value();
 
     Money balance = Money { planet.PopulationBalance().Value() / planet.Population().Value() };
@@ -239,40 +240,40 @@ static QualityOfLife GetQualityOfLife(Planet planet) {
     // needs should be like vic 3
     // exponential
     switch (stage) {
-        case QUALITY_OF_LIFE_STAGE::DYING:
+        case QualityOfLifeStage::Dying:
             // life needs
             // food, water, heating
             // water is free
             balance -= Money { price_of_food.Value() * inter_level };
             break;
-        case QUALITY_OF_LIFE_STAGE::SURVIVING: balance -= Money { (price_of_food.Value() * inter_level) + 5.0F };
+        case QualityOfLifeStage::Surviving: balance -= Money { (price_of_food.Value() * inter_level) + 5.0F };
             break;
-        case QUALITY_OF_LIFE_STAGE::STRUGGLING: balance -= Money { (price_of_food.Value() * inter_level) + 10.0F };
+        case QualityOfLifeStage::Struggling: balance -= Money { (price_of_food.Value() * inter_level) + 10.0F };
             break;
-        case QUALITY_OF_LIFE_STAGE::SECURE:
+        case QualityOfLifeStage::Secure:
             // Basic needs
             // basic types of food
             balance -= Money { price_of_restaurants.Value() * inter_level };
             break;
-        case QUALITY_OF_LIFE_STAGE::COMFORTABLE:
+        case QualityOfLifeStage::Comfortable:
             // nice to have
             // beer car
             // services
             balance -= Money { price_of_cars.Value() * inter_level };
             break;
-        case QUALITY_OF_LIFE_STAGE::LAVISH:
+        case QualityOfLifeStage::Lavish:
             // luxury
             // wine, watches luxuries
             // more service
             balance -= Money { price_of_watches.Value() * inter_level };
             break;
-        case QUALITY_OF_LIFE_STAGE::EXTRAVAGANT:
+        case QualityOfLifeStage::Extravagant:
             // hard luxuries
             // ships spaceships excessive housing
             // servitors
             balance -= Money { price_of_ships.Value() * inter_level };
             break;
-        case QUALITY_OF_LIFE_STAGE::DICTATOR:
+        case QualityOfLifeStage::Dictator:
             // richest guy on earth
             // enslaving
             balance -= Money { price_of_dictator.Value() * quality_of_life.Value() };

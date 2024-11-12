@@ -19,29 +19,34 @@ using QualityOfLife = NamedType<f32, struct QualityOfLifeTag, Arithmetic>;
 // https://ordbog.ku.dk/pdf/financial_terminology.pdf
 // https://uwaterloo.ca/economics/sites/default/files/uploads/documents/econ-101-syllabus.pdf
 // https://en.wikipedia.org/wiki/Supply_and_demand
-struct alignas(16U) FarmStats {
-    u32 level;
+struct alignas(16U) Stats {
     // financials
     u32 assets;       // aktiver
     u32 production;   // produktion
     u32 depreciation; // afskrivning
-
-    [[nodiscard]] Money FinancialResult(const u32 cost_of_good) const { return Money { static_cast<f32>(Income(cost_of_good)) - static_cast<f32>(Expenses()) }; }                               // resultat
-    [[nodiscard]] Percentage ReturnOnAssets(const u32 cost_of_good) const { return Percentage { static_cast<const Money>(FinancialResult(cost_of_good)).Value() / static_cast<f32>(assets) }; } // afkastningsgrad
-private:
-    [[nodiscard]] u32 Expenses() const { return depreciation; }
-    [[nodiscard]] u32 Income(const u32 cost_of_good) const { return production * cost_of_good; } //
 };
-enum class FARM_TYPE : u8 { CONSTRUCTION, WINE, WHEAT, FISH, COWS };
-enum class RESOURCE_BUILDINGS : u8 { WOOD, FE, AG, AU };
-enum class GOOD : u8 { WOOD, IRON, FOOD, STEEL, COAL };
+struct Finance {
+    u32 level;
+    Money assets;
+    Money liabilities;
+
+    [[nodiscard]] Money FinancialResult(const Stats stats, const u32 cost_of_good) const { return Income(stats, cost_of_good) - Expenses(stats); }                                              // resultat
+    [[nodiscard]] Percentage ReturnOnAssets(const Stats stats, const u32 cost_of_good) const { return Percentage { FinancialResult(stats, cost_of_good).Value() / static_cast<f32>(assets) }; } // afkastningsgrad
+private:
+    [[nodiscard]] Money Expenses(const Stats stats) const { return Money { static_cast<f32>(level * stats.depreciation) }; }
+    [[nodiscard]] Money Income(const Stats stats, const u32 cost_of_good) const { return Money { static_cast<f32>(level * stats.production * cost_of_good) }; }
+};
+enum class FarmType : u8 { Construction, Wine, Wheat, Fish, Cows };
+enum class ResourceBuildings : u8 { Wood, Fe, Ag, Au };
+enum class Good : u8 { Wood, Iron, Food, STEEL, Coal };
+enum class QualityOfLifeStage : u8 { Dying, Surviving, Struggling, Secure, Comfortable, Lavish, Dictator, Extravagant, };
 
 struct Data {
-    std::unordered_map<FARM_TYPE, FarmStats> farm_types;
+    std::unordered_map<FarmType, Stats> farm_types;
 };
 
 struct BuildingUnderConstruction {
-    FARM_TYPE type;
+    FarmType type;
     u16 progress;
 };
 struct ConstructionQueue : pce::Queue<BuildingUnderConstruction> {
@@ -61,14 +66,9 @@ struct Market {
         sold = 0U;
     }
 };
-
-enum class QUALITY_OF_LIFE_STAGE : u8 {
-    DYING, SURVIVING, STRUGGLING, SECURE, COMFORTABLE, LAVISH, DICTATOR,
-    EXTRAVAGANT,
-};
 constexpr QualityOfLife QUALITY_OF_LIFE_LEVELS_PER_STAGE = QualityOfLife { 5.0F };
-static QUALITY_OF_LIFE_STAGE GetQualityOfLifeStage(const QualityOfLife quality_of_life) {
-    return static_cast<QUALITY_OF_LIFE_STAGE>(pce::math::Min((quality_of_life / QUALITY_OF_LIFE_LEVELS_PER_STAGE).Value(), static_cast<f32>(QUALITY_OF_LIFE_STAGE::EXTRAVAGANT)));
+static QualityOfLifeStage GetQualityOfLifeStage(const QualityOfLife quality_of_life) {
+    return static_cast<QualityOfLifeStage>(pce::math::Min((quality_of_life / QUALITY_OF_LIFE_LEVELS_PER_STAGE).Value(), static_cast<f32>(QualityOfLifeStage::Extravagant)));
 }
 struct StateArchetype final : Archetype {
     pce::Parent planets;
@@ -80,8 +80,9 @@ struct Sector : Archetype {
     pce::Parent planets;
 };
 struct FarmSectorArchetype final : Sector {
-    pce::Component<FARM_TYPE> type;
-    Entity Add(Entity player, FARM_TYPE farm_type);
+    pce::Component<FarmType> type;
+    pce::Component<Finance> finances;
+    Entity Add(Entity player, FarmType farm_type);
     b8 Remove(Entity entity) override;
 };
 
@@ -102,10 +103,13 @@ struct PlanetArchetype final : Archetype {
     pce::Component<ConstructionQueue> construction_queue;
     Entity Add(Tick, Money, Population);
     b8 Remove(Entity entity) override;
+    enum class PlanetTemplate { Agriculture , Gaia};
+    void AddTemplate (Tick, PlanetTemplate);
 };
 
 inline PlayerArchetype player_archetype;
 inline StateArchetype state_archetype;
 inline FarmSectorArchetype farm_archetype;
 inline PlanetArchetype planet_archetype;
+
 } // namespace pcg

@@ -1,7 +1,6 @@
 #include "components.hpp"
 #include "types.hpp"
 
-
 //TODO: PLYER  PLANET CONCEPT CONSTRAINTS
 namespace pcg {
 using pce::Rand;
@@ -29,8 +28,8 @@ Entity PlanetArchetype::Add(const Tick tick, const Money money, const Population
     (void)ages.EmplaceBack(tick);
     (void)moneys.EmplaceBack(money);
     (void)populations.EmplaceBack(population);
-    (void)population_balance.EmplaceBack( Money { 0.0F });
-    (void)population_quality_of_life.EmplaceBack( QualityOfLife { 0.0F });
+    (void)population_balance.EmplaceBack(Money { 0.0F });
+    (void)population_quality_of_life.EmplaceBack(QualityOfLife { 0.0F });
     (void)construction_queue.EmplaceBack();
 
     return entity;
@@ -46,6 +45,17 @@ b8 PlanetArchetype::Remove(const Entity entity) {
     ages.SwapBack(entity);
 
     return true;
+}
+void PlanetArchetype::AddTemplate(const Tick tick, const PlanetTemplate planet_template) {
+    if (planet_template == PlanetTemplate::Agriculture) {
+        (void)Add(tick, Money { 0.0F }, Population { 100'000 });
+    }
+    else if (planet_template == PlanetTemplate::Gaia) {
+        (void)Add(tick, Money { 10'000.0F }, Population { 100'000'000.0F });
+    }
+    else { // TOMB
+        (void)Add(tick, Money { 0.0F }, Population { 0.0F });
+    }
 }
 Entity StateArchetype::Add(Entity planet) {
     const Entity entity = Archetype::Add();
@@ -64,11 +74,12 @@ b8 StateArchetype::Remove(const Entity entity) {
 
     return true;
 }
-Entity FarmSectorArchetype::Add(Entity planet, FARM_TYPE farm_type) {
+Entity FarmSectorArchetype::Add(Entity planet, FarmType farm_type) {
     const Entity entity = Archetype::Add();
 
     (void)planets.EmplaceBack(planet);
     (void)type.EmplaceBack(farm_type);
+    (void)finances.EmplaceBack(Finance { .level = 1U, .assets = Money { 0.0F }, .liabilities = Money { 0.0F } });
 
     return entity;
 }
