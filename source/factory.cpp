@@ -48,7 +48,13 @@ b8 PlanetArchetype::Remove(const Entity entity) {
 }
 void PlanetArchetype::AddTemplate(const Tick tick, const PlanetTemplate planet_template) {
     if (planet_template == PlanetTemplate::Agriculture) {
-        (void)Add(tick, Money { 0.0F }, Population { 100'000 });
+        Entity planet = Add(tick, Money { 0.0F }, Population { 100'000 });
+        Entity wheat_farm = farm_archetype.Add(planet, FarmType::Wheat);
+        farm_archetype.finances[wheat_farm].level = 1000;
+        Entity cow_farm = farm_archetype.Add(planet, FarmType::Cows);
+        farm_archetype.finances[cow_farm].level = 300;
+        Entity wine_farm = farm_archetype.Add(planet, FarmType::Wine);
+        farm_archetype.finances[wine_farm].level = 90;
     }
     else if (planet_template == PlanetTemplate::Gaia) {
         (void)Add(tick, Money { 10'000.0F }, Population { 100'000'000.0F });
