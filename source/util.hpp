@@ -46,4 +46,5 @@ template <typename T> T Max(T left, T right) { return left > right ? left : righ
 template <typename T> T Min(T left, T right) { return left < right ? left : right; }
 template <typename T> constexpr u32 FloorToU32(const T value) { return static_cast<u32>(value); }
 template <typename T> constexpr T Abs(const T value) { return value < 0 ? -value : value; }
+template <typename T> constexpr T Lerp (const T min, const T max, const f32 value) { return (value * (max - min)) + min; }
 } // namespace pce::math

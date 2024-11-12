@@ -76,10 +76,12 @@ static void ProcessIncome(const Farm farm) {
     farm.Planet().Balance() += result;
 }
 static void ProcessConstructionQueue(Planet player);
-constexpr u16 BUILDING_TIME = 30U;
 constexpr f32 PER_MONTH = 1.0F / 12.0F;
 constexpr f32 PER_THOUSAND = 1.0F / 1'000.0F;
 constexpr f32 PER_MILLION = 1.0F / 1'000'000.0F;
+
+constexpr u16 BUILDING_TIME = 30U;
+constexpr f32 GROWTH_RATE_PER_MONTH = 0.0025F * PER_MONTH;
 constexpr f32 PASSIVE_INCOME = 0.2F;
 
 void Game::PlayTick(Tick tick, const b8 debug) {
@@ -88,8 +90,8 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     for (const Planet planet : planet_archetype) { ProcessConstructionQueue(planet); }
     // Population
     for (const Planet planet : planet_archetype) {
+        Percentage growth_rate = Percentage { 1.0F + GROWTH_RATE_PER_MONTH};
         Population population = planet.Population();
-        constexpr Percentage growth_rate { (0.001F * PER_MONTH) + 1.0F }; // 0.05% every YEAR
         planet.Population() = Population { population.Value() * growth_rate.Value() };
     }
     RevenueCapture player_revenue_capture;
@@ -219,23 +221,17 @@ static void ProcessConstructionQueue(const Planet player) {
     }
 }
 
-enum class QUALITY_OF_LIFE_STAGE : u8 {
-    DYING, SURVIVING, STRUGGLING, SECURE, COMFORTABLE, LAVISH, DICTATOR,
-    EXTRAVAGANT
-};
-
 static QualityOfLife GetQualityOfLife(Planet planet) {
-    constexpr QualityOfLife levels_per_stage = QualityOfLife { 5.0F };
     constexpr Money price_of_food = Money { 0.05F };
-    constexpr Money pice_of_restaurants = Money { 0.10F };
-    constexpr Money pice_of_cars = Money { 1.00F };
+    constexpr Money price_of_restaurants = Money { 0.10F };
+    constexpr Money price_of_cars = Money { 1.00F };
     constexpr Money price_of_watches = Money { 10.0F };
     constexpr Money price_of_ships = Money { 100.0F };
     constexpr Money price_of_dictator = Money { 1000.0F };
 
     const QualityOfLife quality_of_life = planet.QualityOfLife();
-    const QUALITY_OF_LIFE_STAGE stage = static_cast<QUALITY_OF_LIFE_STAGE>(math::Min((quality_of_life / levels_per_stage).Value(), static_cast<f32>(QUALITY_OF_LIFE_STAGE::EXTRAVAGANT)));
-    const f32 inter_level = (quality_of_life - QualityOfLife { static_cast<f32>(stage) } * levels_per_stage).Value();
+    const QUALITY_OF_LIFE_STAGE stage = GetQualityOfLifeStage(quality_of_life);
+    const f32 inter_level = (quality_of_life - QualityOfLife { static_cast<f32>(stage) } * QUALITY_OF_LIFE_LEVELS_PER_STAGE).Value();
 
     Money balance = Money { planet.PopulationBalance().Value() / planet.Population().Value() };
 
@@ -249,20 +245,20 @@ static QualityOfLife GetQualityOfLife(Planet planet) {
             // water is free
             balance -= Money { price_of_food.Value() * inter_level };
             break;
-        case QUALITY_OF_LIFE_STAGE::SURVIVING: balance -= Money { price_of_food.Value() * inter_level + 5.0F };
+        case QUALITY_OF_LIFE_STAGE::SURVIVING: balance -= Money { (price_of_food.Value() * inter_level) + 5.0F };
             break;
-        case QUALITY_OF_LIFE_STAGE::STRUGGLING: balance -= Money { price_of_food.Value() * inter_level + 10.0F };
+        case QUALITY_OF_LIFE_STAGE::STRUGGLING: balance -= Money { (price_of_food.Value() * inter_level) + 10.0F };
             break;
         case QUALITY_OF_LIFE_STAGE::SECURE:
             // Basic needs
             // basic types of food
-            balance -= Money { pice_of_restaurants.Value() * inter_level };
+            balance -= Money { price_of_restaurants.Value() * inter_level };
             break;
         case QUALITY_OF_LIFE_STAGE::COMFORTABLE:
             // nice to have
             // beer car
             // services
-            balance -= Money { pice_of_cars.Value() * inter_level };
+            balance -= Money { price_of_cars.Value() * inter_level };
             break;
         case QUALITY_OF_LIFE_STAGE::LAVISH:
             // luxury

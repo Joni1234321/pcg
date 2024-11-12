@@ -62,6 +62,14 @@ struct Market {
     }
 };
 
+enum class QUALITY_OF_LIFE_STAGE : u8 {
+    DYING, SURVIVING, STRUGGLING, SECURE, COMFORTABLE, LAVISH, DICTATOR,
+    EXTRAVAGANT,
+};
+constexpr QualityOfLife QUALITY_OF_LIFE_LEVELS_PER_STAGE = QualityOfLife { 5.0F };
+static QUALITY_OF_LIFE_STAGE GetQualityOfLifeStage(const QualityOfLife quality_of_life) {
+    return static_cast<QUALITY_OF_LIFE_STAGE>(pce::math::Min((quality_of_life / QUALITY_OF_LIFE_LEVELS_PER_STAGE).Value(), static_cast<f32>(QUALITY_OF_LIFE_STAGE::EXTRAVAGANT)));
+}
 struct StateArchetype final : Archetype {
     pce::Parent planets;
     pce::Component<Market> markets;
