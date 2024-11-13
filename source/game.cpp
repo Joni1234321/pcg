@@ -65,17 +65,6 @@ void AddRevenueCapture(Table& table, const RevenueCapture& revenue_capture) {
 
 static QualityOfLife GetQualityOfLife(Planet planet);
 static b8 TryQueueFarm(Planet planet, FarmType type, Money& money);
-static void ProcessIncome(const Farm farm) {
-    constexpr Percentage tax_rate { .2F };
-    Money result = farm.Finance().FinancialResult(farm.Stats(), 1U);
-    if (result > Money { 0.0F } && farm.Planet().Player().IsSome()) {
-        const f32 tax = static_cast<f32>(math::FloorToU32(result.Value() * tax_rate.Value()));
-        const Money player_tax { tax };
-        result -= player_tax;
-        farm.Planet().Player().Entity().Balance() += player_tax;
-    }
-    farm.Planet().Balance() += result;
-}
 static void ProcessConstructionQueue(Planet player);
 constexpr f32 PER_MONTH = 1.0F / 12.0F;
 constexpr f32 PER_THOUSAND = 1.0F / 1'000.0F;
@@ -102,7 +91,17 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     // Passive income
     for (const Planet planet : planet_archetype) { planet.PopulationBalance() += Money { planet.Population().Value() * PASSIVE_INCOME }; }
     // Income Farms
-    for (const Farm farm : farm_archetype) { ProcessIncome(farm); }
+    for (const Farm farm : farm_archetype) {
+        constexpr Percentage tax_rate { .2F };
+        Money result = farm.Finance().FinancialResult(farm.Stats(), 1U);
+        if (result > Money { 0.0F } && farm.Planet().Player().IsSome()) {
+            const f32 tax = static_cast<f32>(math::FloorToU32(result.Value() * tax_rate.Value()));
+            const Money player_tax { tax };
+            result -= player_tax;
+            farm.Planet().Player().Entity().Balance() += player_tax;
+        }
+        farm.Planet().Balance() += result;
+    }
     player_revenue_capture.revenue = Select(player_archetype.moneys, player_revenue_capture.before_revenue, math::Sub<Money>);
     planet_revenue_capture.revenue = Select(planet_archetype.moneys, planet_revenue_capture.before_revenue, math::Sub<Money>);
 
@@ -123,6 +122,7 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     }
     // Settle, Exploit, Research
     for (const Player player : player_archetype) {
+
         if (pce::Rand() % 100U == 0U) {
             constexpr f32 start_money { 0.0F };
             constexpr f32 starting_population { 10'000.0F };

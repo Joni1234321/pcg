@@ -29,6 +29,7 @@ struct Finance {
     u32 level;
     Money assets;
     Money liabilities;
+    Money equity;
 
     [[nodiscard]] Money FinancialResult(const Stats stats, const u32 cost_of_good) const { return Income(stats, cost_of_good) - Expenses(stats); }                                              // resultat
     [[nodiscard]] Percentage ReturnOnAssets(const Stats stats, const u32 cost_of_good) const { return Percentage { FinancialResult(stats, cost_of_good).Value() / static_cast<f32>(assets) }; } // afkastningsgrad
@@ -38,7 +39,7 @@ private:
 };
 enum class FarmType : u8 { Construction, Wine, Wheat, Fish, Cows };
 enum class ResourceBuildings : u8 { Wood, Fe, Ag, Au };
-enum class Good : u8 { Wood, Iron, Food, STEEL, Coal };
+enum class Good : u8 { Wood, Iron, Food, Steel, Coal };
 enum class QualityOfLifeStage : u8 { Dying, Surviving, Struggling, Secure, Comfortable, Lavish, Dictator, Extravagant, };
 
 struct Data {
@@ -93,7 +94,7 @@ struct PlayerArchetype final : Archetype {
     b8 Remove(Entity entity) override;
 };
 
-enum class PlanetTemplate { Agriculture, Gaia };
+enum class PlanetTemplate { Agriculture, Gaia, Playground};
 struct PlanetArchetype final : Archetype {
     pce::Parent players;
     pce::Component<Tick> ages;
