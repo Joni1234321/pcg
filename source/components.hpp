@@ -93,6 +93,7 @@ struct PlayerArchetype final : Archetype {
     b8 Remove(Entity entity) override;
 };
 
+enum class PlanetTemplate { Agriculture, Gaia };
 struct PlanetArchetype final : Archetype {
     pce::Parent players;
     pce::Component<Tick> ages;
@@ -103,8 +104,7 @@ struct PlanetArchetype final : Archetype {
     pce::Component<ConstructionQueue> construction_queue;
     Entity Add(Tick, Money, Population);
     b8 Remove(Entity entity) override;
-    enum class PlanetTemplate { Agriculture , Gaia};
-    void AddTemplate (Tick, PlanetTemplate);
+    Entity AddTemplate (Tick, PlanetTemplate);
 };
 
 inline PlayerArchetype player_archetype;

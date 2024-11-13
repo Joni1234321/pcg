@@ -46,9 +46,11 @@ b8 PlanetArchetype::Remove(const Entity entity) {
 
     return true;
 }
-void PlanetArchetype::AddTemplate(const Tick tick, const PlanetTemplate planet_template) {
-    if (planet_template == PlanetTemplate::Agriculture) {
-        Entity planet = Add(tick, Money { 0.0F }, Population { 100'000 });
+Entity PlanetArchetype::AddTemplate(const Tick tick, const PlanetTemplate planet_template) {
+    Entity planet;
+    switch (planet_template) {
+    case PlanetTemplate::Agriculture: {
+        planet = Add(tick, Money{ 0.0F }, Population{ 4'282'000 });
         Entity wheat_farm = farm_archetype.Add(planet, FarmType::Wheat);
         farm_archetype.finances[wheat_farm].level = 1000;
         Entity cow_farm = farm_archetype.Add(planet, FarmType::Cows);
@@ -56,11 +58,17 @@ void PlanetArchetype::AddTemplate(const Tick tick, const PlanetTemplate planet_t
         Entity wine_farm = farm_archetype.Add(planet, FarmType::Wine);
         farm_archetype.finances[wine_farm].level = 90;
     }
-    else if (planet_template == PlanetTemplate::Gaia) {
-        (void)Add(tick, Money { 10'000.0F }, Population { 100'000'000.0F });
+    case PlanetTemplate::Gaia: {
+        planet = Add(tick, Money{ 10'000.0F }, Population{ 100'000'000.0F });
     }
-    else { // TOMB
-        (void)Add(tick, Money { 0.0F }, Population { 0.0F });
+    default: // TOMB
+    {
+        planet = Add(tick, Money{ 0.0F }, Population{ 0.0F });
+    }
+
+    (void)farm_archetype.Add(planet, FarmType::Construction);
+    planet_archetype.construction_queue[planet].construction_capacity++;
+    return planet;
     }
 }
 Entity StateArchetype::Add(Entity planet) {

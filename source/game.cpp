@@ -190,9 +190,7 @@ Game::Game(const NewGameSettings game) {
     }
 
     for (u32 i = 0U; i < game.planets; i++) {
-        Planet planet = planet_archetype.Add(start_tick, Money { 100.0F }, Population { 100'000'000.0F });
-        (void)farm_archetype.Add(planet, FarmType::Construction);
-        planet.ConstructionQueue().construction_capacity++;
+        Planet planet = planet_archetype.AddTemplate(start_tick, PlanetTemplate::Gaia);
         const Player owner { Entity { pce::Rand() % game.players } };
         planet.TransferOwnerShipToPlayer(owner);
     }
