@@ -92,15 +92,34 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     for (const Planet planet : planet_archetype) { planet.PopulationBalance() += Money { planet.Population().Value() * PASSIVE_INCOME }; }
     // Income Farms
     for (const Farm farm : farm_archetype) {
-        constexpr Percentage tax_rate { .2F };
-        Money result = farm.Finance().FinancialResult(farm.Stats(), 1U);
-        if (result > Money { 0.0F } && farm.Planet().Player().IsSome()) {
-            const f32 tax = static_cast<f32>(math::FloorToU32(result.Value() * tax_rate.Value()));
-            const Money player_tax { tax };
-            result -= player_tax;
-            farm.Planet().Player().Entity().Balance() += player_tax;
+        constexpr Percentage tax_rate{ .2F };
+        constexpr Percentage dividend_rate { .5F };
+        constexpr Population emplyees_per_level{ 1000.0F };
+        constexpr Money wage{ 1.0F };
+        const Population employed = Population{ static_cast<f32>(farm.Finance().level) * emplyees_per_level.Value() };
+        const Money wages = Money{ employed.Value() };
+        const Money income_before_wages = farm.Finance().FinancialResult(farm.Stats(), 1U);
+        Money result = income_before_wages - wages;
+        if (result > Money { 0.0F }) {
+            if (farm.Planet().Player().IsSome()) {
+                const f32 tax = static_cast<f32>(math::FloorToU32(result.Value() * tax_rate.Value()));
+                const Money player_tax{ tax };
+                result -= player_tax;
+                farm.Planet().Player().Entity().Balance() += player_tax;
+            }
+            
+            const Money dividends = Money{ result.Value() * dividend_rate.Value() };
+            result -= dividends;
+            farm.Planet().Balance() += dividends;
+
+            farm.Finance().assets += result; // also reinvest in other companies and buy the up
+            farm.Finance().equity += result;
         }
-        farm.Planet().Balance() += result;
+        else {
+            farm.Finance().assets -= result;
+            farm.Finance().equity -= result;
+        }
+      
     }
     player_revenue_capture.revenue = Select(player_archetype.moneys, player_revenue_capture.before_revenue, math::Sub<Money>);
     planet_revenue_capture.revenue = Select(planet_archetype.moneys, planet_revenue_capture.before_revenue, math::Sub<Money>);
@@ -124,9 +143,7 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     for (const Player player : player_archetype) {
 
         if (pce::Rand() % 100U == 0U) {
-            constexpr f32 start_money { 0.0F };
-            constexpr f32 starting_population { 10'000.0F };
-            Planet planet = planet_archetype.Add(tick, Money { start_money }, Population { starting_population });
+            Planet planet = planet_archetype.AddTemplate(tick, PlanetTemplate::Barren);
             planet.TransferOwnerShipToPlayer(player);
         }
     }
@@ -157,7 +174,7 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     Table planet_table { "Planet Economy", planet_archetype.Count };
     planet_table.AddColumn("Population", planet_archetype.populations);
     planet_table.AddColumn("Pop Finances", population_balance);
-    planet_table.AddColumn("QoL", planet_archetype.population_quality_of_life);
+    //planet_table.AddColumn("QoL", planet_archetype.population_quality_of_life);
     planet_table.AddColumnFixed("Constructing ", Select(planet_archetype.construction_queue, construction_queue_to_string), width);
 
     planet_table.AddColumn("Owner", planet_archetype.players);
@@ -187,6 +204,11 @@ Game::Game(const NewGameSettings game) {
         Player player = player_archetype.Add(player_money_start);
         (void)farm_archetype.Add(player, FarmType::Construction);
         player.ConstructionQueue().construction_capacity++;
+    }
+    
+    {
+        Planet planet = planet_archetype.AddTemplate(start_tick, PlanetTemplate::Playground);
+        planet.TransferOwnerShipToPlayer(Entity { 0 });
     }
 
     for (u32 i = 0U; i < game.planets; i++) {
