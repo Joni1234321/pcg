@@ -19,23 +19,34 @@ using QualityOfLife = NamedType<f32, struct QualityOfLifeTag, Arithmetic>;
 // https://ordbog.ku.dk/pdf/financial_terminology.pdf
 // https://uwaterloo.ca/economics/sites/default/files/uploads/documents/econ-101-syllabus.pdf
 // https://en.wikipedia.org/wiki/Supply_and_demand
-struct alignas(16U) Stats {
-    // financials
-    u32 assets;       // aktiver
-    u32 production;   // produktion
-    u32 depreciation; // afskrivning
+// https://corporatefinanceinstitute.com/resources/accounting/types-of-assets/
+
+struct FinancialAssets {
+    Money inventory;
+    Money financial;
+    Money property_plant_equipment;
+    Money others;
+    [[nodiscard]] Money Total() const { return inventory + financial + property_plant_equipment + others; }
+};
+struct Stats {
+    u32 input_goods;
+    u32 output_goods;
+    u32 employees_per_level;
+    u32 property_plant_equipment_per_level;
+    u32 property_plant_equipment_lifetime;
 };
 struct Finance {
+    FinancialAssets assets;
     u32 level;
-    Money assets;
     Money liabilities;
     Money equity;
+    Population employees;
 
-    [[nodiscard]] Money FinancialResult(const Stats stats, const u32 cost_of_good) const { return Income(stats, cost_of_good) - Expenses(stats); }                                              // resultat
-    [[nodiscard]] Percentage ReturnOnAssets(const Stats stats, const u32 cost_of_good) const { return Percentage { FinancialResult(stats, cost_of_good).Value() / static_cast<f32>(assets) }; } // afkastningsgrad
+    [[nodiscard]] Money IncomeBeforeWages(const Stats stats, const u32 cost_of_good) const { return Income(stats, cost_of_good) - Expenses(stats); }                                                      // resultat
+    [[nodiscard]] Percentage ReturnOnAssets(const Stats stats, const u32 cost_of_good) const { return Percentage { IncomeBeforeWages(stats, cost_of_good).Value() / static_cast<f32>(assets.Total()) }; } // afkastningsgrad
 private:
-    [[nodiscard]] Money Expenses(const Stats stats) const { return Money { static_cast<f32>(level * stats.depreciation) }; }
-    [[nodiscard]] Money Income(const Stats stats, const u32 cost_of_good) const { return Money { static_cast<f32>(level * stats.production * cost_of_good) }; }
+    [[nodiscard]] Money Expenses(const Stats stats) const { return Money { stats.property_plant_equipment_lifetime * assets.property_plant_equipment.Value() }; }
+    [[nodiscard]] Money Income(const Stats stats, const u32 cost_of_good) const { return Money { static_cast<f32>(stats.output_goods * cost_of_good) }; }
 };
 enum class FarmType : u8 { Construction, Wine, Wheat, Fish, Cows };
 enum class ResourceBuildings : u8 { Wood, Fe, Ag, Au };
@@ -81,7 +92,7 @@ struct Sector : Archetype {
     pce::Parent planets;
 };
 struct FarmSectorArchetype final : Sector {
-    pce::Component<FarmType> type;
+    pce::Component<FarmType> types;
     pce::Component<Finance> finances;
     Entity Add(Entity player, FarmType farm_type);
     b8 Remove(Entity entity) override;
@@ -94,7 +105,7 @@ struct PlayerArchetype final : Archetype {
     b8 Remove(Entity entity) override;
 };
 
-enum class PlanetTemplate { Agriculture, Gaia, Playground, Barren};
+enum class PlanetTemplate { Agriculture, Gaia, Playground, Barren };
 struct PlanetArchetype final : Archetype {
     pce::Parent players;
     pce::Component<Tick> ages;
@@ -105,12 +116,11 @@ struct PlanetArchetype final : Archetype {
     pce::Component<ConstructionQueue> construction_queue;
     Entity Add(Tick, Money, Population);
     b8 Remove(Entity entity) override;
-    Entity AddTemplate (Tick, PlanetTemplate);
+    Entity AddTemplate(Tick, PlanetTemplate);
 };
 
 inline PlayerArchetype player_archetype;
 inline StateArchetype state_archetype;
 inline FarmSectorArchetype farm_archetype;
 inline PlanetArchetype planet_archetype;
-
 } // namespace pcg

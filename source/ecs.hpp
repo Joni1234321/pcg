@@ -12,7 +12,7 @@ public:
     using ValueType = T;
     using Tag = TagType;
     constexpr explicit NamedType(const T& value) : value(value) { }
-        T& Value() { return value; }
+    T& Value() { return value; }
     const T& Value() const { return value; }
     explicit operator T() const { return Value(); };
 

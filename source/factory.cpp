@@ -101,8 +101,10 @@ Entity FarmSectorArchetype::Add(Entity planet, FarmType farm_type) {
     const Entity entity = Archetype::Add();
 
     (void)planets.EmplaceBack(planet);
-    (void)type.EmplaceBack(farm_type);
-    (void)finances.EmplaceBack(Finance { .level = 1U, .assets = Money { 0.0F }, .liabilities = Money { 0.0F }, .equity = Money { 0.0F } });
+    (void)types.EmplaceBack(farm_type);
+    constexpr FinancialAssets financial_assets { .inventory = Money { 0.0F }, .financial = Money { 0.0F }, .property_plant_equipment = Money { 0.0F }, .others = Money { 0.0F } };
+    constexpr Finance finance { .assets = financial_assets, .liabilities = Money { 0.0F }, .equity = Money { 0.0F }, .employees = Population { 0.0F } };
+    (void)finances.EmplaceBack(finance);
 
     return entity;
 }
@@ -110,7 +112,7 @@ b8 FarmSectorArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
     planets.SwapBack(entity);
-    type.SwapBack(entity);
+    types.SwapBack(entity);
 
     return true;
 }

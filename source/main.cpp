@@ -20,7 +20,7 @@ using pce::List;
         for (u32 i = 0U; i < skip; i++) {
             game.logger.LogLine();
             game.logger.Log("Turn {:4}", tick);
-            game.PlayTick(tick, i + 1U == skip);
+            game.PlayTick(tick, tick.Value() % skip == skip - 1U);
             tick += Tick { 1U } ;
         }
         //PrintListStats(game.logger, reinterpret<List<f32>>(player_archetype.moneys));

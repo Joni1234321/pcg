@@ -18,7 +18,7 @@ struct Game {
 constexpr NewGameSettings GAME_SETTINGS_CHALLENGE = { .players = 2U, .planets = 4U };
 constexpr NewGameSettings GAME_SETTINGS_UTOPIA = { .players = 1U, .planets = 1U };
 
-inline Data data; // NOLINT(*-err58-cpp, *-avoid-non-const-global-variables)
+inline Data data;                       // NOLINT(*-err58-cpp, *-avoid-non-const-global-variables)
 inline Game game(GAME_SETTINGS_UTOPIA); // NOLINT(*-err58-cpp, *-avoid-non-const-global-variables)
 
 // map power
