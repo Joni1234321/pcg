@@ -93,22 +93,35 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     for (const Planet planet : planet_archetype) { planet.PopulationBalance() += Money { planet.Population().Value() * PASSIVE_INCOME }; }
     // Income Farms
     for (const Farm farm : farm_archetype) {
-        Money result = farm.Finance().IncomeBeforeWages(farm.Stats(), 1U);
-        constexpr Money wage { 1.0F };
+        // Employ
+        const Population employee_capacity { static_cast<f32>(farm.Finance().level * farm.Stats().employees_per_level) };
+        if (farm.Finance().employees < employee_capacity && farm.Finance().last_result > Money { 0.0F }) {
+            constexpr Percentage hiring_rate { 0.10F };
+            const Population vacant_places { employee_capacity - farm.Finance().employees };
+            const Population max_hiring { employee_capacity.Value() * hiring_rate.Value() };
+            // doing hiring logic, this is intensive and gives little immersion mayb ethis has to be refactored
+        }
+
+        Money result = farm.Finance().NetIncome(farm.Stats(), 1U);
+
+        constexpr Money wage { 0.05F };
         const Money wages = Money { farm.Finance().employees.Value() * wage.Value() };
         result -= wages;
         farm.Planet().PopulationBalance() += wages;
         farm.Finance().assets.financial -= wages;
         farm.Finance().equity -= wages;
 
-        const Money depreciation { farm.Finance().assets.property_plant_equipment.Value() * farm.Stats().property_plant_equipment_lifetime };
+        const Percentage depreciation_rate { 1.0F / static_cast<f32>(farm.Stats().property_plant_equipment_lifetime) };
+        const Money depreciation { farm.Finance().assets.property_plant_equipment.Value() * depreciation_rate.Value() };
         farm.Finance().assets.property_plant_equipment -= depreciation;
         farm.Finance().equity -= depreciation;
+
         if (result > Money { 0.0F }) {
             constexpr Percentage tax_rate { .2F };
             const Money player_tax { static_cast<f32>(math::FloorToU32(result.Value() * tax_rate.Value())) };
             result -= player_tax;
             if (farm.Planet().Player().IsSome()) { farm.Planet().Player().Entity().Balance() += player_tax; } else { farm.Planet().Balance() += player_tax; }
+
             constexpr Percentage dividend_rate { .5F };
             const Money dividends = Money { result.Value() * dividend_rate.Value() };
             result -= dividends;
@@ -118,9 +131,10 @@ void Game::PlayTick(Tick tick, const b8 debug) {
             farm.Finance().assets.others += result; // also reinvest in other companies and buy the up
             farm.Finance().equity += result;
         } else {
-            farm.Finance().assets.others -= result;
-            farm.Finance().equity -= result;
+            farm.Finance().assets.others += result;
+            farm.Finance().equity += result;
         }
+        farm.Finance().last_result = result;
     }
     player_revenue_capture.revenue = Select(player_archetype.moneys, player_revenue_capture.before_revenue, math::Sub<Money>);
     planet_revenue_capture.revenue = Select(planet_archetype.moneys, planet_revenue_capture.before_revenue, math::Sub<Money>);
@@ -158,11 +172,12 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     }
     for (Market& market : state_archetype.markets) { market.RecalculateMarkets(); }
 
-    Table farm_table { "Farm Economy", farm_archetype.Count };
-    farm_table.AddColumn("Type       ", farm_archetype.types);
+    Table farm_table { "Farms", farm_archetype.Count };
+    farm_table.AddColumn("Type ", farm_archetype.types);
     farm_table.AddColumn("Assets       ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.assets.Total(); }));
     farm_table.AddColumn("Equity       ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.equity; }));
     farm_table.AddColumn("Liabilities  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.liabilities; }));
+    farm_table.AddColumn("Last result  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.last_result; }));
     farm_table.Print(logger, Table::COLOR_DISABLED);
 
     if (!debug) { return; }
@@ -197,8 +212,6 @@ void Game::PlayTick(Tick tick, const b8 debug) {
 Game::Game(const NewGameSettings game) {
     constexpr Tick start_tick = Tick { 0U };
 
-    data.farm_types[FarmType::Construction] = Stats {
-        .input_goods = 1U, .output_goods = 0U, .employees_per_level = 100U, .property_plant_equipment_per_level = 200U, .property_plant_equipment_lifetime = 10U * TICKS_PER_YEAR };
     data.farm_types[FarmType::Fish] = Stats { .input_goods = 1U, .output_goods = 3U, .employees_per_level = 10U, .property_plant_equipment_per_level = 150U, .property_plant_equipment_lifetime = 5U * TICKS_PER_YEAR };
     data.farm_types[FarmType::Cows] = Stats { .input_goods = 5U, .output_goods = 20U, .employees_per_level = 15U, .property_plant_equipment_per_level = 250U, .property_plant_equipment_lifetime = 7U * TICKS_PER_YEAR };
     data.farm_types[FarmType::Wine] = Stats { .input_goods = 8U, .output_goods = 40U, .employees_per_level = 20U, .property_plant_equipment_per_level = 300U, .property_plant_equipment_lifetime = 15U * TICKS_PER_YEAR };
@@ -234,7 +247,6 @@ static void ProcessConstructionQueue(const Planet player) {
         const BuildingUnderConstruction building_under_construction = construction_queue[idx];
         if (building_under_construction.progress != BUILDING_TIME) { continue; }
         construction_queue.RemoveAt(idx);
-        if (building_under_construction.type == FarmType::Construction) { construction_queue.construction_capacity += 1U; }
         Farm farm = farm_archetype.Add(player, building_under_construction.type);
         farm.Finance().assets.property_plant_equipment = Money { static_cast<f32>(farm.Stats().property_plant_equipment_per_level) };
         farm.Finance().equity = farm.Finance().assets.Total();

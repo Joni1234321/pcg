@@ -40,15 +40,16 @@ struct Finance {
     u32 level;
     Money liabilities;
     Money equity;
+    Money last_result;
     Population employees;
 
-    [[nodiscard]] Money IncomeBeforeWages(const Stats stats, const u32 cost_of_good) const { return Income(stats, cost_of_good) - Expenses(stats); }                                                      // resultat
-    [[nodiscard]] Percentage ReturnOnAssets(const Stats stats, const u32 cost_of_good) const { return Percentage { IncomeBeforeWages(stats, cost_of_good).Value() / static_cast<f32>(assets.Total()) }; } // afkastningsgrad
+    [[nodiscard]] Money NetIncome(const Stats stats, const u32 cost_of_good) const { return Income(stats, cost_of_good) - Expenses(stats); }                                                      // resultat
+    [[nodiscard]] Percentage ReturnOnAssets(const Stats stats, const u32 cost_of_good) const { return Percentage { NetIncome(stats, cost_of_good).Value() / static_cast<f32>(assets.Total()) }; } // afkastningsgrad
 private:
-    [[nodiscard]] Money Expenses(const Stats stats) const { return Money { stats.property_plant_equipment_lifetime * assets.property_plant_equipment.Value() }; }
+    [[nodiscard]] Money Expenses(const Stats stats) const { return Money { 0.0F }; }
     [[nodiscard]] Money Income(const Stats stats, const u32 cost_of_good) const { return Money { static_cast<f32>(stats.output_goods * cost_of_good) }; }
 };
-enum class FarmType : u8 { Construction, Wine, Wheat, Fish, Cows };
+enum class FarmType : u8 { Wine, Wheat, Fish, Cows };
 enum class ResourceBuildings : u8 { Wood, Fe, Ag, Au };
 enum class Good : u8 { Wood, Iron, Food, Steel, Coal };
 enum class QualityOfLifeStage : u8 { Dying, Surviving, Struggling, Secure, Comfortable, Lavish, Dictator, Extravagant, };

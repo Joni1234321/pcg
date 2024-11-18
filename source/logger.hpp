@@ -120,10 +120,10 @@ template <typename T>concept NamedTypeArithmetic = requires (T value)
     { static_cast<f32>(value) }; // Checks if T can be cast to f32
 } && (pcg::HasASkill<T, pcg::FormatLongNumber>);
 
-template <NamedTypeArithmetic T> inline String FormatValue(const T value) {
+template <NamedTypeArithmetic T> String FormatValue(const T value) {
     const f32 number = static_cast<f32>(value);
     f32 abs_number = math::Abs(number);
-    static constexpr std::array LONG_NUMBER_SUFFIX = { 'K', 'M', 'B', 'T' };
+    static constexpr std::array LONG_NUMBER_SUFFIX = { 'K', 'M', 'B', 'T', 'Q', 'P', 'S' };
     char suffix { ' ' };
     for (const char current_suffix : LONG_NUMBER_SUFFIX) {
         constexpr f32 one_thousand = 1'000.0F;

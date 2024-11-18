@@ -76,7 +76,6 @@ Entity PlanetArchetype::AddTemplate(const Tick tick, const PlanetTemplate planet
             break;
         }
     }
-    (void)farm_archetype.Add(planet, FarmType::Construction);
     planet_archetype.construction_queue[planet].construction_capacity++;
     return planet;
 }
@@ -103,7 +102,7 @@ Entity FarmSectorArchetype::Add(Entity planet, FarmType farm_type) {
     (void)planets.EmplaceBack(planet);
     (void)types.EmplaceBack(farm_type);
     constexpr FinancialAssets financial_assets { .inventory = Money { 0.0F }, .financial = Money { 0.0F }, .property_plant_equipment = Money { 0.0F }, .others = Money { 0.0F } };
-    constexpr Finance finance { .assets = financial_assets, .liabilities = Money { 0.0F }, .equity = Money { 0.0F }, .employees = Population { 0.0F } };
+    constexpr Finance finance { .assets = financial_assets, .level = 0U, .liabilities = Money { 0.0F }, .equity = Money { 0.0F }, .last_result = Money { 0.0F }, .employees = Population { 0.0F } };
     (void)finances.EmplaceBack(finance);
 
     return entity;
