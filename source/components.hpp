@@ -111,7 +111,8 @@ struct PlanetArchetype final : Archetype {
     pce::Parent players;
     pce::Component<Tick> ages;
     pce::Component<Money> moneys;
-    pce::Component<Population> populations;
+    pce::Component<Population> employed;
+    pce::Component<Population> unemployed;
     pce::Component<Money> population_balance;
     pce::Component<QualityOfLife> population_quality_of_life;
     pce::Component<ConstructionQueue> construction_queue;

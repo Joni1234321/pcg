@@ -27,7 +27,8 @@ Entity PlanetArchetype::Add(const Tick tick, const Money money, const Population
     (void)players.EmplaceBack(Entity::NONE);
     (void)ages.EmplaceBack(tick);
     (void)moneys.EmplaceBack(money);
-    (void)populations.EmplaceBack(population);
+    (void)unemployed.EmplaceBack(population);
+    (void)employed.EmplaceBack(0);
     (void)population_balance.EmplaceBack(Money { 0.0F });
     (void)population_quality_of_life.EmplaceBack(QualityOfLife { 0.0F });
     (void)construction_queue.EmplaceBack();
@@ -39,7 +40,7 @@ b8 PlanetArchetype::Remove(const Entity entity) {
 
     players.SwapBack(entity);
     moneys.SwapBack(entity);
-    populations.SwapBack(entity);
+    employed.SwapBack(entity);
     population_balance.SwapBack(entity);
     construction_queue.SwapBack(entity);
     ages.SwapBack(entity);
@@ -102,7 +103,7 @@ Entity FarmSectorArchetype::Add(Entity planet, FarmType farm_type) {
     (void)planets.EmplaceBack(planet);
     (void)types.EmplaceBack(farm_type);
     constexpr FinancialAssets financial_assets { .inventory = Money { 0.0F }, .financial = Money { 0.0F }, .property_plant_equipment = Money { 0.0F }, .others = Money { 0.0F } };
-    constexpr Finance finance { .assets = financial_assets, .level = 0U, .liabilities = Money { 0.0F }, .equity = Money { 0.0F }, .last_result = Money { 0.0F }, .employees = Population { 0.0F } };
+    constexpr Finance finance { .assets = financial_assets, .level = 1U, .liabilities = Money { 0.0F }, .equity = Money { 0.0F }, .last_result = Money { 0.0F }, .employees = Population { 0.0F } };
     (void)finances.EmplaceBack(finance);
 
     return entity;

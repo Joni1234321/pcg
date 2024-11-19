@@ -28,43 +28,43 @@ template <typename T, template<typename> class Skill>concept HasASkill = std::de
 
 template <typename T> struct FormatLongNumber : RecurringDerived<T, FormatLongNumber> { };
 template <typename T> struct Arithmetic : RecurringDerived<T, Arithmetic> {
-    T operator+(const T& other) const { return T(this->Derived().Value() + other.Value()); }
-    T operator-(const T& other) const { return T(this->Derived().Value() - other.Value()); }
-    T operator*(const T& other) const { return T(this->Derived().Value() * other.Value()); }
-    T operator/(const T& other) const { return T(this->Derived().Value() / other.Value()); }
+    constexpr T operator+(const T& other) const { return T(this->Derived().Value() + other.Value()); }
+    constexpr T operator-(const T& other) const { return T(this->Derived().Value() - other.Value()); }
+    constexpr T operator*(const T& other) const { return T(this->Derived().Value() * other.Value()); }
+    constexpr T operator/(const T& other) const { return T(this->Derived().Value() / other.Value()); }
     // Equals operators
-    T& operator+=(const T& other) {
+    constexpr T& operator+=(const T& other) {
         this->Derived().Value() += other.Value();
         return this->Derived();
     }
-    T& operator-=(const T& other) {
+    constexpr T& operator-=(const T& other) {
         this->Derived().Value() -= other.Value();
         return this->Derived();
     }
-    T& operator*=(const T& other) {
+    constexpr T& operator*=(const T& other) {
         this->Derived().Value() *= other.Value();
         return this->Derived();
     }
-    T& operator/=(const T& other) {
+    constexpr T& operator/=(const T& other) {
         this->Derived().Value() /= other.Value();
         return this->Derived();
     }
-    T operator++(int) {
+    constexpr T operator++(int) {
         T old = *this->Derived();
         (void)this->Derived().Value()++;
         return old;
     }
-    T& operator++() {
+    constexpr T& operator++() {
         (void)this->Derived().Value()++;
         return this->Derived();
     }
     // Comparison operators
-    b8 operator==(const T& other) const { return this->Derived().Value() == other.Value(); }
-    b8 operator!=(const T& other) const { return this->Derived().Value() != other.Value(); }
-    b8 operator<(const T& other) const { return this->Derived().Value() < other.Value(); }
-    b8 operator<=(const T& other) const { return this->Derived().Value() <= other.Value(); }
-    b8 operator>(const T& other) const { return this->Derived().Value() > other.Value(); }
-    b8 operator>=(const T& other) const { return this->Derived().Value() >= other.Value(); }
+    constexpr b8 operator==(const T& other) const { return this->Derived().Value() == other.Value(); }
+    constexpr b8 operator!=(const T& other) const { return this->Derived().Value() != other.Value(); }
+    constexpr b8 operator<(const T& other) const { return this->Derived().Value() < other.Value(); }
+    constexpr b8 operator<=(const T& other) const { return this->Derived().Value() <= other.Value(); }
+    constexpr b8 operator>(const T& other) const { return this->Derived().Value() > other.Value(); }
+    constexpr b8 operator>=(const T& other) const { return this->Derived().Value() >= other.Value(); }
 };
 template <typename T> struct Printable : RecurringDerived<T, Printable> {
     void print(std::ostream& os) const { os << this->Derived().Value(); }

@@ -31,12 +31,17 @@ struct Planet : Entity {
 
     [[nodiscard]] constexpr Money& Balance() const { return planet_archetype.moneys[index]; }
     [[nodiscard]] constexpr ConstructionQueue& ConstructionQueue() const { return planet_archetype.construction_queue[index]; }
-    [[nodiscard]] constexpr Population& Population() const { return planet_archetype.populations[index]; }
+    [[nodiscard]] constexpr Population& Unemployed() const { return planet_archetype.unemployed[index]; }
+    [[nodiscard]] constexpr Population& Employed() const { return planet_archetype.employed[index]; }
     [[nodiscard]] constexpr Money& PopulationBalance() const { return planet_archetype.population_balance[index]; }
     [[nodiscard]] constexpr QualityOfLife& QualityOfLife() const { return planet_archetype.population_quality_of_life[index]; }
     [[nodiscard]] constexpr Tick& Age() const { return planet_archetype.ages[index]; }
 
     constexpr void TransferOwnerShipToPlayer(const pcg::Player player) const { planet_archetype.players[index] = player; }
+
+    [[nodiscard]] constexpr Population TotalPopulation() const {
+        return Employed() + Unemployed();
+    }
 };
 
 struct Farm : Entity {
@@ -82,15 +87,14 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     // Population
     for (const Planet planet : planet_archetype) {
         Percentage growth_rate = Percentage { 1.0F + GROWTH_RATE_PER_MONTH };
-        Population population = planet.Population();
-        planet.Population() = Population { population.Value() * growth_rate.Value() };
+        planet.Unemployed() = Population { planet.TotalPopulation().Value() * growth_rate.Value()};
     }
     RevenueCapture player_revenue_capture;
     RevenueCapture planet_revenue_capture;
     player_revenue_capture.before_revenue = player_archetype.moneys;
     planet_revenue_capture.before_revenue = planet_archetype.moneys;
     // Passive income
-    for (const Planet planet : planet_archetype) { planet.PopulationBalance() += Money { planet.Population().Value() * PASSIVE_INCOME }; }
+    for (const Planet planet : planet_archetype) { planet.PopulationBalance() += Money { planet.Unemployed().Value() * PASSIVE_INCOME }; }
     // Income Farms
     for (const Farm farm : farm_archetype) {
         // Employ
@@ -98,7 +102,12 @@ void Game::PlayTick(Tick tick, const b8 debug) {
         if (farm.Finance().employees < employee_capacity && farm.Finance().last_result > Money { 0.0F }) {
             constexpr Percentage hiring_rate { 0.10F };
             const Population vacant_places { employee_capacity - farm.Finance().employees };
-            const Population max_hiring { employee_capacity.Value() * hiring_rate.Value() };
+            const Population max_hiring { employee_capacity.Value() * hiring_rate.Value() }; //  
+            const Population hiring_f { math::Min(vacant_places, max_hiring, farm.Planet().Unemployed()) };
+            const Population hiring { math::Ceil(hiring_f.Value()) };
+            farm.Planet().Unemployed() -= hiring;
+            farm.Planet().Employed() += hiring;
+            farm.Finance().employees += hiring;
             // doing hiring logic, this is intensive and gives little immersion mayb ethis has to be refactored
         }
 
@@ -194,7 +203,8 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     player_table.Print(logger, Table::COLOR_ENABLED);
 
     Table planet_table { "Planet Economy", planet_archetype.Count };
-    planet_table.AddColumn("Population", planet_archetype.populations);
+    planet_table.AddColumn("Employed", planet_archetype.employed);
+    planet_table.AddColumn("Unemployed", planet_archetype.unemployed);
     planet_table.AddColumn("Pop Finances", population_balance);
     //planet_table.AddColumn("QoL", planet_archetype.population_quality_of_life);
     planet_table.AddColumnFixed("Constructing ", Select(planet_archetype.construction_queue, construction_queue_to_string), width);
@@ -265,7 +275,7 @@ static QualityOfLife GetQualityOfLife(Planet planet) {
     const QualityOfLifeStage stage = GetQualityOfLifeStage(quality_of_life);
     const f32 inter_level = (quality_of_life - QualityOfLife { static_cast<f32>(stage) } * QUALITY_OF_LIFE_LEVELS_PER_STAGE).Value();
 
-    Money balance = Money { planet.PopulationBalance().Value() / planet.Population().Value() };
+    Money balance = Money { planet.PopulationBalance().Value() / planet.Employed().Value() };
 
     // VITAMINS
     // needs should be like vic 3
