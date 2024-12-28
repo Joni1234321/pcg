@@ -1,5 +1,8 @@
 // ReSharper disable CppNonExplicitConvertingConstructor
 #include "game.hpp"
+
+#include <engine.hpp>
+
 #include "algorithm.hpp"
 #include "components.hpp"
 
@@ -168,7 +171,10 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     farm_table.AddColumn("Liabilities  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.liabilities; }));
     farm_table.AddColumn("Last result  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.last_result; }));
     farm_table.AddColumn("Population balance", farm_archetype.population_balance);
-    farm_table.Print(logger, Table::COLOR_DISABLED);
+    String string = farm_table.WriteToLogger(logger, Table::COLOR_DISABLED);
+    static pce::ui::TextElementFixed::Handle textHandle = pce::ui::CreateFixedText("", pce::ui::font.small, SDL_FColor(0.0F, 0.0F, 0.0F, 1.0F), 10.0F, 200.0F);
+    (void)TTF_SetTextString(pce::ui::textElements[textHandle.id].text, string.CString(), string.size());
+    logger.Print();
 
     if (!debug) { return; }
 

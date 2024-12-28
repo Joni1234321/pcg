@@ -32,6 +32,9 @@ struct FontCollection {
 };
 
 struct TextElementFixed {
+    struct Handle {
+        u32 id;
+    };
     TTF_Text* text;
     f32 x;
     f32 y;
@@ -39,20 +42,21 @@ struct TextElementFixed {
 
 inline FontCollection font;
 inline std::vector<TextElementFixed> textElements = { };
-inline TextElementFixed* AddText (const std::string& str, const SDL_FColor color, const f32 x, const f32 y) {
-    TTF_Text* text = TTF_CreateText(textRenderer, font.small, str.c_str(), str.size());
+inline TextElementFixed::Handle CreateFixedText(const String& string, TTF_Font* font, const SDL_FColor color, const f32 x, const f32 y) {
+    TTF_Text* text = TTF_CreateText(textRenderer, font, string.CString(), string.size());
     (void)TTF_SetTextColorFloat(text, color.r, color.g, color.b, color.a);
-    TextElementFixed* result = &textElements.emplace_back(text, x, y);
-    return result;
+    textElements.emplace_back(text, x, y);
+    //TTF_SetFontWrapAlignment()
+    TTF_SetTextWrapWidth(text, 680);
+    return TextElementFixed::Handle { static_cast<u32>(textElements.size() - 1) };
 }
 }
 
 namespace pce {
-inline ui::TextElementFixed* textElement;
+inline ui::TextElementFixed::Handle tick_handle;
 inline SDL_Window* window = nullptr;
 inline SDL_Renderer* renderer = nullptr;
-inline SDL_Surface* textSurface = nullptr;
-inline SDL_Texture* textTexture = nullptr;
+
 
 inline void TestDraw(u32 i) {
     // Background
@@ -64,19 +68,9 @@ inline void TestDraw(u32 i) {
     constexpr SDL_FRect rect { .x = 400, .y = 200, .w = 30, .h = 30 };
     SDL_RenderFillRect(renderer, &rect);
 
-    // Text
-    SDL_FRect dstRect = { 30.0F, 30.0F };
-    SDL_GetTextureSize(textTexture, &dstRect.w, &dstRect.h);
-    SDL_RenderTexture(renderer, textTexture, nullptr, &dstRect);
-
     const std::string str = std::format("Tick {:6}", i);
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    //SDL_RenderDebugText(renderer, 0, 0, str.c_str());
-
-    const u8 j = i / 10 % 3;
-    TTF_SetTextString(textElement->text, str.c_str(), str.length());
-    TTF_SetTextFont(textElement->text, j % 3 == 0 ? ui::font.small : j % 3 == 1 ? ui::font.normal : ui::font.large);
-    for (const ui::TextElementFixed &text : ui::textElements) { TTF_DrawRendererText(text.text, text.x, text.y); }
+    TTF_SetTextString(ui::textElements[tick_handle.id].text, str.c_str(), str.length());
+    for (const ui::TextElementFixed& text : ui::textElements) { TTF_DrawRendererText(text.text, text.x, text.y); }
 
     // Present
     SDL_RenderPresent(renderer);
@@ -100,21 +94,17 @@ inline b8 InitEngine() {
 }
 
 inline b8 SetWindow(const u32 width, const u32 height) {
-    if (!SDL_CreateWindowAndRenderer("PCG", static_cast<i32>(width), static_cast<i32>(height), 0, &window, &renderer)) {
+    if (!SDL_CreateWindowAndRenderer("PCG", static_cast<i32>(width), static_cast<i32>(height), SDL_WINDOW_RESIZABLE, &window, &renderer)) {
         SDL_Log("SDL_CreateWindowAndRenderer failed (%s)", SDL_GetError());
         SDL_Quit();
         return false;
     }
     ui::textRenderer = TTF_CreateRendererTextEngine(renderer);
 
-    std::string welcome = "Welcome to the Engine!\n FISH";
-    constexpr SDL_Color color { 0, 0, 0, 255 };
+    String welcome = "Welcome to the Engine!\n FISH";
     constexpr SDL_FColor textColor { 0.0F, 0.0F, 1.0F, 1.0F };
-    textSurface = TTF_RenderText_Solid_Wrapped(ui::font.normal, welcome.c_str(), welcome.length(), color, width);
-    textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-    if (textTexture == nullptr) { SDL_Log("SDL_CreateTextureFromSurface() failed (%s)", SDL_GetError()); }
-
-    textElement = ui::AddText(welcome, textColor, 10.0F, 0.0F );
+    tick_handle = ui::CreateFixedText(welcome, ui::font.small, textColor, 10.0F, 0.0F);
+    ui::CreateFixedText(welcome, ui::font.normal, textColor, 10.0F, 10.0F);
     return true;
 }
 

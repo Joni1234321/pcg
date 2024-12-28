@@ -54,8 +54,8 @@ i32 main(const i32 argc, char** argv) {
 
     if (!pce::InitEngine()) { return -1; }
 
-    constexpr u32 width = 640U;
-    constexpr u32 height = 480U;
+    constexpr u32 width = 1600U;
+    constexpr u32 height = 900U;
     if (!pce::SetWindow(width, height)) { return -1; }
 
     SDL_Log("Starting game");

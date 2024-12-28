@@ -107,6 +107,7 @@ struct Logger { // NOLINT(*-struct-pack-align)
         string.Add("\n");
     }
 
+    String& GetString() { return string; }
 private:
     String string;
 };
@@ -149,7 +150,7 @@ struct Table { // NOLINT(*-struct-pack-align)
     template <typename T> void AddColumnFixed(String title, List<T> values, u32 width) { AddColumnFixed(title, Span<T>(values), width); }
     template <typename T> void AddColumn(String title, Span<T> values) { AddColumnFixed(title, values, title.size() + 1U); }
     template <typename T> void AddColumn(String title, List<T> values) { AddColumnFixed(title, Span<T>(values), title.size() + 1U); }
-    void Print(Logger& logger, const LOGGER_COLOR coloring) const {
+    String& WriteToLogger (Logger& logger, const LOGGER_COLOR coloring) const {
         const String line('-', rows[0U].size() + 1U);
         logger.Write("{}", line);
         logger.Write("|{}", rows[0U]);
@@ -162,6 +163,10 @@ struct Table { // NOLINT(*-struct-pack-align)
             logger.ClearColor();
             logger.Write("{}", line);
         }
+        return logger.GetString();
+    }
+    void Print(Logger& logger, const LOGGER_COLOR coloring) const {
+        (void)WriteToLogger(logger, coloring);
         logger.Print();
     }
 
