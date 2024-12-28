@@ -44,7 +44,6 @@ template <typename T = void> struct Size {
 };
 template <typename T> constexpr T Max(T left, T right) { return left > right ? left : right; }
 template <typename T> constexpr T Min(T left, T right) { return left < right ? left : right; }
-template <typename T> constexpr T Min(T left, T right, T right2) { return Min(Min(left, right), right2); }
 template <typename T> constexpr u32 FloorToU32(const T value) { return static_cast<u32>(value); }
 inline f32 Ceil(const f32 value) { return std::ceil(value); }
 template <typename T> constexpr T Abs(const T value) { return value < 0 ? -value : value; }

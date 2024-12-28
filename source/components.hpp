@@ -95,6 +95,7 @@ struct Sector : Archetype {
 struct FarmSectorArchetype final : Sector {
     pce::Component<FarmType> types;
     pce::Component<Finance> finances;
+    pce::Component<Money> population_balance;
     Entity Add(Entity player, FarmType farm_type);
     b8 Remove(Entity entity) override;
 };
@@ -113,7 +114,6 @@ struct PlanetArchetype final : Archetype {
     pce::Component<Money> moneys;
     pce::Component<Population> employed;
     pce::Component<Population> unemployed;
-    pce::Component<Money> population_balance;
     pce::Component<QualityOfLife> population_quality_of_life;
     pce::Component<ConstructionQueue> construction_queue;
     Entity Add(Tick, Money, Population);
