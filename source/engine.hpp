@@ -4,6 +4,10 @@
 
 #include "types.hpp"
 
+#include "imgui.h"
+#include "imgui_impl_sdl3.h"
+#include "imgui_impl_sdlrenderer3.h"
+
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_render.h>
@@ -57,6 +61,7 @@ inline ui::TextElementFixed::Handle tick_handle;
 inline SDL_Window* window = nullptr;
 inline SDL_Renderer* renderer = nullptr;
 
+void DrawImgui ();
 
 inline void TestDraw(u32 i) {
     // Background
@@ -94,21 +99,91 @@ inline b8 InitEngine() {
 }
 
 inline b8 SetWindow(const u32 width, const u32 height) {
-    if (!SDL_CreateWindowAndRenderer("PCG", static_cast<i32>(width), static_cast<i32>(height), SDL_WINDOW_RESIZABLE, &window, &renderer)) {
+    constexpr u32 window_flags = SDL_WINDOW_RESIZABLE;
+    if (!SDL_CreateWindowAndRenderer("PCG", static_cast<i32>(width), static_cast<i32>(height), window_flags, &window, &renderer)) {
         SDL_Log("SDL_CreateWindowAndRenderer failed (%s)", SDL_GetError());
         SDL_Quit();
         return false;
     }
     ui::textRenderer = TTF_CreateRendererTextEngine(renderer);
 
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsLight();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer3_Init(renderer);
+
+
     String welcome = "Welcome to the Engine!\n FISH";
     constexpr SDL_FColor textColor { 0.0F, 0.0F, 1.0F, 1.0F };
     tick_handle = ui::CreateFixedText(welcome, ui::font.small, textColor, 10.0F, 0.0F);
     ui::CreateFixedText(welcome, ui::font.normal, textColor, 10.0F, 10.0F);
+
     return true;
 }
 
+inline void DrawImgui() {
+            // Start the Dear ImGui frame
+        ImGui_ImplSDLRenderer3_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
+        ImGui::NewFrame();
+
+        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+        if (show_demo_window)
+            ImGui::ShowDemoWindow(&show_demo_window);
+
+        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
+        {
+            static float f = 0.0f;
+            static int counter = 0;
+
+            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+
+            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+            ImGui::Checkbox("Another Window", &show_another_window);
+
+            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+                counter++;
+            ImGui::SameLine();
+            ImGui::Text("counter = %d", counter);
+
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+            ImGui::End();
+        }
+
+        // 3. Show another simple window.
+        if (show_another_window)
+        {
+            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+            ImGui::Text("Hello from another window!");
+            if (ImGui::Button("Close Me"))
+                show_another_window = false;
+            ImGui::End();
+        }
+
+        // Rendering
+        ImGui::Render();
+
+}
+
 inline void DestroyEngine() {
+    ImGui_ImplSDLRenderer3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
+
     TTF_DestroyRendererTextEngine(ui::textRenderer);
 
     SDL_DestroyRenderer(renderer);

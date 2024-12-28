@@ -175,7 +175,9 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     static pce::ui::TextElementFixed::Handle textHandle = pce::ui::CreateFixedText("", pce::ui::font.small, SDL_FColor(0.0F, 0.0F, 0.0F, 1.0F), 10.0F, 200.0F);
     (void)TTF_SetTextString(pce::ui::textElements[textHandle.id].text, string.CString(), string.size());
     logger.Print();
+    logger.ClearColor()
 
+    return;
     if (!debug) { return; }
 
     auto construction_queue_to_string = [] (const ConstructionQueue& construction_queue) -> String {
