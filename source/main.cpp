@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "collections.hpp"
 #include "components.hpp"
 #include "engine.hpp"
@@ -14,12 +12,9 @@ using pcg::Tick;
 using pce::Reinterpret;
 using pce::List;
 
-u32 RunGame() {
+void RunGame() {
     Tick tick{0U};
 
-    if (!InitEngine() || !SetWindow(640U, 480U)) return 1U;
-
-    SDL_Log("Start game");
     bool running = true;
     while (running) {
         constexpr u32 skip = 10U;
@@ -47,8 +42,6 @@ u32 RunGame() {
         //game.logger.Print();
         //        (void)std::cin.ignore();
     }
-    DestroyEngine();
-    return 0U;
 }
 } // namespace pce
 
@@ -56,6 +49,14 @@ i32 main(i32 argc, c8 *argv[]) {
     (void) argc;
     (void) argv;
 
-    const u32 status = pce::RunGame();
-    return static_cast<i32>(status);
+    SDL_Log("Starting game");
+
+    if (!pce::InitEngine() || !pce::SetWindow(640U, 480U)) return -1;
+
+    SDL_Log("Starting game");
+
+    pce::RunGame();
+
+    pce::DestroyEngine();
+    return 0;
 }
