@@ -14,33 +14,34 @@ using pce::List;
 
 void RunGame() {
     Tick tick { 0U };
-
     bool running = true;
     while (running) {
+        tick += Tick { 1U };
         constexpr u32 skip = 10U;
-        for (u32 i = 0U; i < skip; i++) {
-            game.logger.LogLine();
-            game.logger.Log("Turn {:4}", tick);
-            game.PlayTick(tick, tick.Value() % skip == skip - 1U);
-            tick += Tick { 1U };
+        bool debug = tick.Value() % skip == skip - 1U;
 
-            SDL_Event event;
-            while (SDL_PollEvent(&event)) {
-                switch (event.type) {
-                    case SDL_EVENT_QUIT:
-                        running = false;
-                        break;
-                    default:
-                        break;
-                }
+        game.logger.LogLine();
+        game.logger.Log("Tick {:6}", tick);
+        game.PlayTick(tick, debug);
+
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+                case SDL_EVENT_QUIT:
+                    running = false;
+                    break;
+                default:
+                    break;
             }
-            if (!running) { break; }
-            TestDraw(tick.Value());
         }
+        if (!running) { break; }
+        TestDraw(tick.Value());
 
-        //PrintListStats(game.logger, reinterpret<List<f32>>(player_archetype.moneys));
-        //game.logger.Print();
-        //        (void)std::cin.ignore();
+        if (debug) {
+            //PrintListStats(game.logger, reinterpret<List<f32>>(player_archetype.moneys));
+            //game.logger.Print();
+            //        (void)std::cin.ignore();
+        }
     }
 }
 } // namespace pce

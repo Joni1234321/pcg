@@ -3,11 +3,9 @@
 #include <algorithm>
 #include <cstdio>
 #include <format>
-#include <stacktrace>
 #include <numeric>
 #include <string>
 #include <array>
-#include <iostream>
 
 #include "collections.hpp"
 #include "types.hpp"
@@ -60,7 +58,6 @@ struct Logger { // NOLINT(*-struct-pack-align)
         (void)std::printf(string.CString()); // NOLINT(*-vararg)
         string.Clear();
     }
-
     template <typename... Args> constexpr void Log(const char* text, Args... args) {
         string += LOGGER_PREFIX_LOG;
         string += std::vformat(text, std::make_format_args(args...));
