@@ -38,9 +38,7 @@ struct Planet : Entity {
 
     constexpr void TransferOwnerShipToPlayer(const pcg::Player player) const { planet_archetype.players[index] = player; }
 
-    [[nodiscard]] constexpr Population TotalPopulation() const {
-        return Employed() + Unemployed();
-    }
+    [[nodiscard]] constexpr Population TotalPopulation() const { return Employed() + Unemployed(); }
 };
 
 struct Farm : Entity {
@@ -86,7 +84,7 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     // Population
     for (const Planet planet : planet_archetype) {
         Percentage growth_rate = Percentage { 1.0F + GROWTH_RATE_PER_MONTH };
-        planet.Unemployed() = Population { planet.TotalPopulation().Value() * growth_rate.Value()};
+        planet.Unemployed() = Population { planet.TotalPopulation().Value() * growth_rate.Value() };
     }
     RevenueCapture player_revenue_capture;
     RevenueCapture planet_revenue_capture;
@@ -160,9 +158,7 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     player_revenue_capture.balance = player_archetype.moneys;
 
     // Buying goods
-    for (const Planet planet : planet_archetype) {
-        planet.QualityOfLife() = GetQualityOfLife(planet);
-    }
+    for (const Planet planet : planet_archetype) { planet.QualityOfLife() = GetQualityOfLife(planet); }
     for (Market& market : state_archetype.markets) { market.RecalculateMarkets(); }
 
     Table farm_table { "Farms", farm_archetype.Count };
@@ -224,9 +220,9 @@ Game::Game(const NewGameSettings game) {
 
 static b8 TryQueueFarm(const Planet planet, const FarmType type, Money& money) {
     const Stats stats = data.farm_types[type];
-    const Money cost{ static_cast<f32>(stats.property_plant_equipment_per_level) }; // NOLINT(*-narrowing-conversions)
+    const Money cost { static_cast<f32>(stats.property_plant_equipment_per_level) }; // NOLINT(*-narrowing-conversions)
     if (money < cost) { return false; }
-    const Population employees{ stats.employees_per_level };
+    const Population employees { static_cast<float>(stats.employees_per_level) };
     if (planet.Unemployed() < employees) { return false; }
     planet.Unemployed() -= employees;
     money -= cost;
@@ -247,12 +243,12 @@ static void ProcessConstructionQueue(const Planet player) {
         Farm farm = farm_archetype.Add(player, building_under_construction.type);
         farm.Finance().assets.property_plant_equipment = Money { static_cast<f32>(farm.Stats().property_plant_equipment_per_level) };
         farm.Finance().equity = farm.Finance().assets.Total();
-        farm.Finance().employees += Population{ farm.Stats().employees_per_level };
+        farm.Finance().employees += Population { static_cast<f32>(farm.Stats().employees_per_level) };
     }
 }
 
 static QualityOfLife GetQualityOfLife(Planet planet) {
-    return QualityOfLife{ 0.0F };
+    return QualityOfLife { 0.0F };
     constexpr Money price_of_food = Money { 0.05F };
     constexpr Money price_of_restaurants = Money { 0.10F };
     constexpr Money price_of_cars = Money { 1.00F };
@@ -264,7 +260,7 @@ static QualityOfLife GetQualityOfLife(Planet planet) {
     const QualityOfLifeStage stage = GetQualityOfLifeStage(quality_of_life);
     const f32 inter_level = (quality_of_life - QualityOfLife { static_cast<f32>(stage) } * QUALITY_OF_LIFE_LEVELS_PER_STAGE).Value();
 
-    Money balance = Money{ 0.0F };//Money { planet.PopulationBalance().Value() / planet.Employed().Value() };
+    Money balance = Money { 0.0F }; //Money { planet.PopulationBalance().Value() / planet.Employed().Value() };
 
     // VITAMINS
     // needs should be like vic 3

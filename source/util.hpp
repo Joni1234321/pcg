@@ -47,5 +47,5 @@ template <typename T> constexpr T Min(T left, T right) { return left < right ? l
 template <typename T> constexpr u32 FloorToU32(const T value) { return static_cast<u32>(value); }
 inline f32 Ceil(const f32 value) { return std::ceil(value); }
 template <typename T> constexpr T Abs(const T value) { return value < 0 ? -value : value; }
-template <typename T> constexpr T Lerp (const T min, const T max, const f32 value) { return (value * (max - min)) + min; }
+template <typename T> constexpr T Lerp(const T min, const T max, const f32 value) { return (value * (max - min)) + min; }
 } // namespace pce::math

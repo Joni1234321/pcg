@@ -13,7 +13,7 @@ using pce::Reinterpret;
 using pce::List;
 
 void RunGame() {
-    Tick tick{0U};
+    Tick tick { 0U };
 
     bool running = true;
     while (running) {
@@ -22,19 +22,19 @@ void RunGame() {
             game.logger.LogLine();
             game.logger.Log("Turn {:4}", tick);
             game.PlayTick(tick, tick.Value() % skip == skip - 1U);
-            tick += Tick{1U};
+            tick += Tick { 1U };
 
             SDL_Event event;
             while (SDL_PollEvent(&event)) {
                 switch (event.type) {
                     case SDL_EVENT_QUIT:
                         running = false;
-
+                        break;
                     default:
                         break;
                 }
             }
-            if (!running) break;
+            if (!running) { break; }
             TestDraw(tick.Value());
         }
 
@@ -45,13 +45,17 @@ void RunGame() {
 }
 } // namespace pce
 
-i32 main(i32 argc, c8 *argv[]) {
-    (void) argc;
-    (void) argv;
+i32 main(const i32 argc, char** argv) {
+    (void)argc;
+    (void)argv;
 
     SDL_Log("Starting game");
 
-    if (!pce::InitEngine() || !pce::SetWindow(640U, 480U)) return -1;
+    if (!pce::InitEngine()) { return -1; }
+
+    constexpr u32 width = 640U;
+    constexpr u32 height = 480U;
+    if (!pce::SetWindow(width, height)) { return -1; }
 
     SDL_Log("Starting game");
 
