@@ -4,6 +4,7 @@
 #include "game.hpp"
 #include "logger.hpp"
 #include "types.hpp"
+#include "frame.hpp"
 
 namespace pce {
 using pcg::game;
@@ -11,8 +12,10 @@ using pcg::player_archetype;
 using pcg::Tick;
 using pce::Reinterpret;
 using pce::List;
+namespace frame = pcg::frame;
 
 void RunGame() {
+    frame::MainMenuBuild();
     Tick tick { 0U };
     bool running = true;
     while (running) {
@@ -23,6 +26,7 @@ void RunGame() {
         game.logger.LogLine();
         game.logger.Log("Tick {:6}", tick);
         game.PlayTick(tick, debug);
+        frame::MainMenuTick(tick.Value());
 
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -41,7 +45,7 @@ void RunGame() {
             }
         }
         if (!running) { break; }
-        TestDraw(tick.Value());
+        TestDraw();
 
         if (debug) {
             //PrintListStats(game.logger, reinterpret<List<f32>>(player_archetype.moneys));
@@ -62,7 +66,7 @@ i32 main(const i32 argc, char** argv) {
 
     constexpr u32 width = 1600U;
     constexpr u32 height = 900U;
-    if (!pce::SetWindow(width, height)) { return -1; }
+    if (!pce::InitWindow(width, height)) { return -1; }
 
     SDL_Log("Starting game");
 
