@@ -26,13 +26,18 @@ void RunGame() {
 
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
-            ImGui_ImplSDL3_ProcessEvent(&event);
+            (void)ImGui_ImplSDL3_ProcessEvent(&event);
             switch (event.type) {
-                case SDL_EVENT_QUIT:
-                    running = false;
+                case SDL_EVENT_QUIT: running = false;
                     break;
-                default:
+                case SDL_EVENT_KEY_DOWN:
+                    switch (event.key.key) {
+                        case SDLK_ESCAPE: running = false;
+                            break;
+                        default: break;
+                    }
                     break;
+                default: break;
             }
         }
         if (!running) { break; }
