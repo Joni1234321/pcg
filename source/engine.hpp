@@ -35,7 +35,7 @@ struct FontCollection {
     }
 };
 
-struct TextElementFixed {
+struct TextElement {
     struct Handle {
         u32 id;
     };
@@ -43,26 +43,39 @@ struct TextElementFixed {
     f32 x;
     f32 y;
 };
-
+struct Element {
+    struct Handle {
+        u32 id;
+    };
+    SDL_FColor color;
+    SDL_FRect rect;
+};
 inline FontCollection font;
-inline std::vector<TextElementFixed> textElements = { };
-inline TextElementFixed::Handle CreateFixedText(const String& string, TTF_Font* font, const SDL_FColor color, const f32 x, const f32 y) {
+
+inline std::vector<TextElement> textElements = { };
+inline std::vector<Element> elements = { };
+inline TextElement::Handle CreateText(const String& string, TTF_Font* font, const SDL_FColor color, const f32 x, const f32 y) {
     TTF_Text* text = TTF_CreateText(textRenderer, font, string.CString(), string.size());
     (void)TTF_SetTextColorFloat(text, color.r, color.g, color.b, color.a);
     textElements.emplace_back(text, x, y);
-    //TTF_SetFontWrapAlignment()
-    TTF_SetTextWrapWidth(text, 680);
-    return TextElementFixed::Handle { static_cast<u32>(textElements.size() - 1) };
+    //TTF_SetTextWrapWidth(text, 680U);
+    return TextElement::Handle { static_cast<u32>(textElements.size() - 1) };
 }
+inline Element::Handle CreateElement(const SDL_FRect rect, const SDL_FColor color) {
+    elements.emplace_back(color, rect);
+    return Element::Handle { static_cast<u32>(elements.size() - 1) };
+}
+
 }
 
 namespace pce {
 inline ImGuiIO* io;
-inline ui::TextElementFixed::Handle tick_handle;
+inline ui::TextElement::Handle tick_handle;
+inline ui::Element::Handle element_handle;
 inline SDL_Window* window = nullptr;
 inline SDL_Renderer* renderer = nullptr;
 
-void DrawImgui();
+void DrawImgui(SDL_Renderer* renderer);
 
 inline void TestDraw(u32 i) {
     // Background
@@ -70,17 +83,19 @@ inline void TestDraw(u32 i) {
     SDL_RenderClear(renderer);
 
     // Square
-    SDL_SetRenderDrawColor(renderer, i / 3, i++ / 10, i / 67, 100);
-    constexpr SDL_FRect rect { .x = 400, .y = 200, .w = 30, .h = 30 };
-    SDL_RenderFillRect(renderer, &rect);
-
+    ui::elements[element_handle.id].color = SDL_FColor { i++ % 3 / 3.0F, i % 10 / 10.0F, i % 67 / 67.0F, 100.0F};
     const std::string str = std::format("Tick {:6}", i);
     TTF_SetTextString(ui::textElements[tick_handle.id].text, str.c_str(), str.length());
-    for (const ui::TextElementFixed& text : ui::textElements) { TTF_DrawRendererText(text.text, text.x, text.y); }
 
-        DrawImgui();
-    ImGui::Render();
-    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
+    // Draw
+    for (const ui::TextElement& text : ui::textElements) { TTF_DrawRendererText(text.text, text.x, text.y); }
+    for (const ui::Element& element : ui::elements) {
+        SDL_SetRenderDrawColorFloat(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
+        SDL_RenderFillRect(renderer, &element.rect);
+    }
+
+
+    DrawImgui(renderer);
 
     // Present
     SDL_RenderPresent(renderer);
@@ -119,7 +134,7 @@ inline b8 SetWindow(const u32 width, const u32 height) {
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 
-    ImGui::StyleColorsLight();
+    ImGui::StyleColorsLight(&ImGui::GetStyle());
 
     if (!ImGui_ImplSDL3_InitForSDLRenderer(window, renderer)) {
         SDL_Log("Failed to initialize ImGui SDL3 backend.");
@@ -130,19 +145,26 @@ inline b8 SetWindow(const u32 width, const u32 height) {
         return false;
     }
 
-    String welcome = "Welcome to the Engine!\n FISH";
+    const String welcome = "Welcome to PCG!\nFISH 2 \n THE SEQUEL";
     constexpr SDL_FColor textColor { 0.0F, 0.0F, 1.0F, 1.0F };
-    tick_handle = ui::CreateFixedText(welcome, ui::font.small, textColor, 10.0F, 0.0F);
-    ui::CreateFixedText(welcome, ui::font.normal, textColor, 10.0F, 10.0F);
+    tick_handle = ui::CreateText(welcome, ui::font.small, textColor, 10.0F, 0.0F);
+    element_handle = ui::CreateElement(SDL_FRect { .x = 400, .y = 200, .w = 30, .h = 30 }, textColor);
 
+    ui::CreateText(welcome, ui::font.normal, textColor, 10.0F, 10.0F);
+    ui::CreateElement(SDL_FRect { .x = 100, .y = 200, .w = 30, .h = 30 },textColor);
     return true;
 }
 inline bool show_demo_window = true;
-inline void DrawImgui() {
+inline void DrawImgui(SDL_Renderer* renderer) {
     ImGui_ImplSDLRenderer3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
+
     ImGui::ShowDemoWindow(&show_demo_window);
+
+    ImGui::Render();
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
+
 }
 
 inline void DestroyEngine() {

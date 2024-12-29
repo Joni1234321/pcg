@@ -18,7 +18,7 @@ void RunGame() {
     while (running) {
         tick += Tick { 1U };
         constexpr u32 skip = 10U;
-        bool debug = tick.Value() % skip == skip - 1U;
+        const bool debug = tick.Value() % skip == skip - 1U;
 
         game.logger.LogLine();
         game.logger.Log("Tick {:6}", tick);
