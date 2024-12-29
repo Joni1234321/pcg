@@ -6,8 +6,6 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/lib/imgui)
-file(GLOB IMGUI_SOURCES "lib/imgui/*.cpp")
-
 add_executable(${PROJECT_NAME}
                source/main.cpp
                source/factory.cpp
@@ -21,9 +19,10 @@ add_executable(${PROJECT_NAME}
                ${IMGUI_DIR}/imgui_impl_sdlrenderer3.cpp
 )
 
-
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source)
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+target_include_directories(${PROJECT_NAME}
+                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source
+                           PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib
+)
 
 option(DOWNLOAD_DEPENDENCIES "Download dependencies" TRUE)
 if (DOWNLOAD_DEPENDENCIES)
@@ -34,21 +33,24 @@ if (DOWNLOAD_DEPENDENCIES)
 			GIT_TAG "preview-3.1.6"
 			EXCLUDE_FROM_ALL
 	)
-	fetchcontent_makeavailable(SDL3)
 	fetchcontent_declare(
 			SDL3_ttf
 			GIT_REPOSITORY "https://github.com/libsdl-org/SDL_ttf.git"
 			GIT_TAG "main"
 			EXCLUDE_FROM_ALL
 	)
+	fetchcontent_makeavailable(SDL3)
 	fetchcontent_makeavailable(SDL3_ttf)
 else ()
 	find_package(SDL3 CONFIG REQUIRED)
 	find_package(SDL3_ttf CONFIG REQUIRED)
 endif ()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
-target_link_libraries(${PROJECT_NAME} PRIVATE SDL3_ttf::SDL3_ttf)
+target_link_libraries(${PROJECT_NAME}
+                      PRIVATE SDL3::SDL3
+                      PRIVATE SDL3_ttf::SDL3_ttf
+)
+
 add_custom_command(
 		TARGET ${PROJECT_NAME} POST_BUILD
 		COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_FILE:SDL3::SDL3-shared> $<TARGET_FILE_DIR:${PROJECT_NAME}>
