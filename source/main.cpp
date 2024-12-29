@@ -12,10 +12,11 @@ using pcg::player_archetype;
 using pcg::Tick;
 using pce::Reinterpret;
 using pce::List;
-namespace frame = pcg::frame;
+using namespace pcg::frame;
 
 void RunGame() {
-    frame::MainMenuBuild();
+    MainMenuFrame main_menu_frame;
+    FPSFrame fps_frame;
     Tick tick { 0U };
     bool running = true;
     while (running) {
@@ -26,7 +27,9 @@ void RunGame() {
         game.logger.LogLine();
         game.logger.Log("Tick {:6}", tick);
         game.PlayTick(tick, debug);
-        frame::MainMenuTick(tick.Value());
+
+        main_menu_frame.Tick(tick.Value());
+        fps_frame.Tick(tick.Value());
 
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -45,7 +48,7 @@ void RunGame() {
             }
         }
         if (!running) { break; }
-        TestDraw();
+        Draw();
 
         if (debug) {
             //PrintListStats(game.logger, reinterpret<List<f32>>(player_archetype.moneys));

@@ -21,17 +21,20 @@ struct FontCollection {
     TTF_Font* small = nullptr;
     TTF_Font* normal = nullptr;
     TTF_Font* large = nullptr;
+    TTF_Font* h1 = nullptr;
     FontCollection() { }
     b8 Load(const std::string& path) {
         small = TTF_OpenFont(path.c_str(), 14.0F);
         normal = TTF_OpenFont(path.c_str(), 22.0F);
         large = TTF_OpenFont(path.c_str(), 36.0F);
-        return small && normal && large;
+        h1 = TTF_OpenFont(path.c_str(), 72.0F);
+        return small && normal && large && h1;
     }
     constexpr ~FontCollection() {
         TTF_CloseFont(small);
         TTF_CloseFont(normal);
         TTF_CloseFont(large);
+        TTF_CloseFont(h1);
     }
 };
 
@@ -47,29 +50,79 @@ struct Element {
     struct Handle {
         u32 id;
     };
-    SDL_FColor color;
+    SDL_Color color;
     SDL_FRect rect;
 };
 inline FontCollection font;
 
 inline std::vector<TextElement> textElements = { };
 inline std::vector<Element> elements = { };
-inline TextElement::Handle CreateText(const String& string, TTF_Font* font, const SDL_FColor color, const f32 x, const f32 y) {
+inline TextElement::Handle CreateText(const String& string, TTF_Font* font, const SDL_Color color, const f32 x, const f32 y) {
     TTF_Text* text = TTF_CreateText(textRenderer, font, string.CString(), string.size());
-    (void)TTF_SetTextColorFloat(text, color.r, color.g, color.b, color.a);
+    (void)TTF_SetTextColor(text, color.r, color.g, color.b, color.a);
     textElements.emplace_back(text, x, y);
     //TTF_SetTextWrapWidth(text, 680U);
     return TextElement::Handle { static_cast<u32>(textElements.size() - 1) };
 }
-inline Element::Handle CreateElement(const SDL_FRect rect, const SDL_FColor color) {
+inline Element::Handle CreateElement(const SDL_FRect rect, const SDL_Color color) {
     elements.emplace_back(color, rect);
     return Element::Handle { static_cast<u32>(elements.size() - 1) };
 }
 }
 
+namespace pce::ui::colors {
+constexpr SDL_Color black { 0, 0, 0, 255U };
+constexpr SDL_Color white { 255U, 255U, 255U, 255U };
+
+// Color palette
+constexpr SDL_Color light_sky_blue { 135U, 206U, 250U, 255U };
+constexpr SDL_Color dark_dark_brown { 62U, 68U, 43U, 255U };
+
+constexpr SDL_Color red { 255U, 0, 0, 255U };
+constexpr SDL_Color green { 0, 255U, 0, 255U };
+constexpr SDL_Color blue { 0, 0, 255U, 255U };
+constexpr SDL_Color yellow { 255U, 255U, 0, 255U };
+constexpr SDL_Color cyan { 0, 255U, 255U, 255U };
+constexpr SDL_Color magenta { 255U, 0, 255U, 255U };
+
+constexpr SDL_Color gray { 128U, 128U, 128U, 255U };
+constexpr SDL_Color dark_gray { 64U, 64U, 64U, 255U };
+constexpr SDL_Color light_gray { 192U, 192U, 192U, 255U };
+
+constexpr SDL_Color orange { 255U, 165U, 0, 255U };
+constexpr SDL_Color pink { 255U, 192U, 203U, 255U };
+constexpr SDL_Color purple { 128U, 0, 128U, 255U };
+constexpr SDL_Color brown { 165U, 42U, 42U, 255U };
+constexpr SDL_Color gold { 255U, 215U, 0, 255U };
+
+constexpr SDL_Color navy { 0, 0, 128U, 255U };
+constexpr SDL_Color teal { 0, 128U, 128U, 255U };
+constexpr SDL_Color olive { 128U, 128U, 0, 255U };
+constexpr SDL_Color maroon { 128U, 0, 0, 255U };
+constexpr SDL_Color lime { 50U, 205U, 50U, 255U };
+
+constexpr SDL_Color sky_blue { 135U, 206U, 235U, 255U };
+constexpr SDL_Color deep_sky_blue { 0, 191U, 255U, 255U };
+constexpr SDL_Color royal_blue { 65U, 105U, 225U, 255U };
+constexpr SDL_Color forest_green { 34U, 139U, 34U, 255U };
+constexpr SDL_Color sea_green { 46U, 139U, 87U, 255U };
+
+constexpr SDL_Color indigo { 75U, 0, 130U, 255U };
+constexpr SDL_Color violet { 238U, 130U, 238U, 255U };
+constexpr SDL_Color lavender { 230U, 230U, 250U, 255U };
+constexpr SDL_Color beige { 245U, 245U, 220U, 255U };
+constexpr SDL_Color ivory { 255U, 255U, 240U, 255U };
+
+constexpr SDL_Color chocolate { 210U, 105U, 30U, 255U };
+constexpr SDL_Color coral { 255U, 127U, 80U, 255U };
+constexpr SDL_Color salmon { 250U, 128U, 114U, 255U };
+constexpr SDL_Color khaki { 240U, 230U, 140U, 255U };
+}
+
 namespace pce {
 inline SDL_Window* window = nullptr;
 inline SDL_Renderer* renderer = nullptr;
+inline SDL_Color clear_color = ui::colors::dark_dark_brown;
 
 inline void DrawImgui(SDL_Renderer* renderer) {
     ImGui_ImplSDLRenderer3_NewFrame();
@@ -83,13 +136,13 @@ inline void DrawImgui(SDL_Renderer* renderer) {
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
 }
 
-inline void TestDraw() {
-    (void)SDL_SetRenderDrawColor(renderer, 255, 255, 255, 100);
+inline void Draw() {
+    (void)SDL_SetRenderDrawColor(renderer, clear_color.r, clear_color.g, clear_color.b, clear_color.a);
     (void)SDL_RenderClear(renderer);
 
     for (const ui::TextElement& text : ui::textElements) { TTF_DrawRendererText(text.text, text.x, text.y); }
     for (const ui::Element& element : ui::elements) {
-        SDL_SetRenderDrawColorFloat(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
+        SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
         SDL_RenderFillRect(renderer, &element.rect);
     }
 

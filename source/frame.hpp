@@ -1,34 +1,48 @@
 #pragma once
 
-#include "engine.hpp"
 #include "collections.hpp"
+#include "engine.hpp"
 #include "types.hpp"
 
 namespace pcg::frame {
 pce::ui::TextElement::Handle tick_handle;
-pce::ui::Element::Handle element_handle;
 
-void MainMenuBuild() {
-    namespace ui = pce::ui;
-    using pce::String;
+class MainMenuFrame {
+    std::vector<pce::ui::Element::Handle> elements { };
 
-    const String welcome = "Welcome to PCG!\nFISH 2 \n THE SEQUEL";
-    constexpr SDL_FColor textColor { 0.0F, 0.0F, 1.0F, 1.0F };
-    tick_handle = ui::CreateText(welcome, ui::font.small, textColor, 10.0F, 0.0F);
-    element_handle = ui::CreateElement(SDL_FRect { .x = 400, .y = 200, .w = 30, .h = 30 }, textColor);
+public:
+    MainMenuFrame() {
+        namespace ui = pce::ui;
 
-    ui::CreateText(welcome, ui::font.normal, textColor, 10.0F, 10.0F);
-    ui::CreateElement(SDL_FRect { .x = 100, .y = 200, .w = 30, .h = 30 },textColor);
-}
+        (void)ui::CreateText("Hey Helene!", ui::font.h1, ui::colors::light_sky_blue, 30.0F, 30.0F);
 
-void MainMenuTick(u32 i) {
-    namespace ui = pce::ui;
+        SDL_FRect rect { .x = 200, .y = 200, .w = 30, .h = 30 };
 
-    ui::elements[element_handle.id].color = SDL_FColor { i++ % 3 / 3.0F, i % 10 / 10.0F, i % 67 / 67.0F, 100.0F};
-    const std::string str = std::format("Tick {:6}", i);
-    TTF_SetTextString(ui::textElements[tick_handle.id].text, str.c_str(), str.length());
-}
-}
-namespace pcg::screen {
+        (void)elements.emplace_back(ui::CreateElement(rect, ui::colors::black));
 
+        rect.x += 200;
+        (void)elements.emplace_back(ui::CreateElement(rect, ui::colors::black));
+
+    }
+
+    void Tick(u32 i) {
+        namespace ui = pce::ui;
+        for (const ui::Element::Handle& handle : elements) { ui::elements[handle.id].color = SDL_Color {static_cast<u8>(i / 3), static_cast<u8>(i / 10), static_cast<u8>(i / 67), 255 }; }
+    }
+};
+
+class FPSFrame {
+public:
+    FPSFrame() {
+        namespace ui = pce::ui;
+
+        tick_handle = ui::CreateText("", ui::font.small, ui::colors::blue, 10.0F, 0.0F);
+    }
+    void Tick(u32 i) {
+        namespace ui = pce::ui;
+
+        const std::string str = std::format("Tick {:6}", i);
+        (void)TTF_SetTextString(ui::textElements[tick_handle.id].text, str.c_str(), str.length());
+    }
+};
 }
