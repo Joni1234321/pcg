@@ -4,12 +4,16 @@
 #include <span>
 #include <utility>
 #include <vector>
+#include <filesystem>
 
 #include "types.hpp"
 #include "util.hpp"
 
 namespace pce {
 template <typename T> using Span = std::span<T>;
+using AbsolutePath = std::filesystem::path;
+using RelativePath = std::filesystem::path;
+using AssetPath = std::filesystem::path;
 
 struct String {
     constexpr String() = default;

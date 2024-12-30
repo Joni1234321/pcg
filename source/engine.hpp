@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <filesystem>
 
 #include "collections.hpp"
 #include "types.hpp"
@@ -15,6 +16,14 @@
 
 #include <SDL3_ttf/SDL_ttf.h>
 
+namespace pce::assets {
+inline AbsolutePath Absolute(const RelativePath& relative_path) { return absolute(relative_path); }
+inline AbsolutePath Asset(const AssetPath& asset_path) {
+    const RelativePath assets_dir = R"(../assets)";
+    return absolute(assets_dir / asset_path);
+}
+}
+
 namespace pce::ui {
 inline TTF_TextEngine* textRenderer = nullptr;
 
@@ -24,11 +33,12 @@ struct FontCollection {
     TTF_Font* large = nullptr;
     TTF_Font* h1 = nullptr;
     FontCollection() { }
-    b8 Load(const String& path) {
-        small = TTF_OpenFont(path.CString(), 14.0F);
-        normal = TTF_OpenFont(path.CString(), 22.0F);
-        large = TTF_OpenFont(path.CString(), 36.0F);
-        h1 = TTF_OpenFont(path.CString(), 72.0F);
+    b8 Load(const AbsolutePath& path) {
+        const String font = path.string();
+        small = TTF_OpenFont(font, 14.0F);
+        normal = TTF_OpenFont(font, 22.0F);
+        large = TTF_OpenFont(font, 36.0F);
+        h1 = TTF_OpenFont(font, 72.0F);
         return small && normal && large && h1;
     }
     ~FontCollection() {
@@ -141,10 +151,10 @@ inline void Draw() {
     (void)SDL_SetRenderDrawColor(renderer, clear_color.r, clear_color.g, clear_color.b, clear_color.a);
     (void)SDL_RenderClear(renderer);
 
-    for (const ui::TextElement& text : ui::textElements) { TTF_DrawRendererText(text.text, text.x, text.y); }
+    for (const ui::TextElement& text : ui::textElements) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
     for (const ui::Element& element : ui::elements) {
-        SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
-        SDL_RenderFillRect(renderer, &element.rect);
+        (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
+        (void)SDL_RenderFillRect(renderer, &element.rect);
     }
 
     DrawImgui(renderer);
@@ -161,8 +171,9 @@ inline b8 InitEngine() {
         SDL_Log("SDL_ttf failed (%s)", SDL_GetError());
         return false;
     }
-    constexpr const char* font_path_absolute = "C:\\Active\\CPP\\pcg\\resources\\font.ttf";
-    if (!ui::font.Load(font_path_absolute)) {
+    constexpr const char* font_path_absolute = R"(C:\Active\CPP\pcg\resources\font.ttf)";
+    const RelativePath font_path = "font.ttf";
+    if (!ui::font.Load(assets::Asset(font_path))) {
         SDL_Log("Font not loaded (%s)", SDL_GetError());
         return false;
     }
