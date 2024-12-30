@@ -161,8 +161,8 @@ inline b8 InitEngine() {
         SDL_Log("SDL_ttf failed (%s)", SDL_GetError());
         return false;
     }
-    constexpr const char* font_path = "../resources/font.ttf";
-    if (!ui::font.Load(font_path)) {
+    constexpr const char* font_path_absolute = "C:\\Active\\CPP\\pcg\\resources\\font.ttf";
+    if (!ui::font.Load(font_path_absolute)) {
         SDL_Log("Font not loaded (%s)", SDL_GetError());
         return false;
     }
