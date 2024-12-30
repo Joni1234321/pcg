@@ -122,7 +122,7 @@ template <typename T> using Component = List<T>;
 
 struct Entities : List<Entity> {
     constexpr Entities() = default;
-    constexpr ~Entities() { List<Entity>::~List(); }
+    constexpr ~Entities() = default;
     Entities(const Entities&) = delete;
     Entities& operator=(const Entities&) = delete;
     Entities(Entities&&) = delete;
@@ -131,7 +131,7 @@ struct Entities : List<Entity> {
 
 struct Parent : List<Entity> {
     constexpr Parent() = default;
-    constexpr ~Parent() { List::~List(); }
+    constexpr ~Parent() = default;
     Parent(const Parent&) = delete;
     Parent& operator=(const Parent&) = delete;
     Parent(Parent&&) = delete;

@@ -30,7 +30,6 @@ struct FontCollection {
     TTF_Font* normal = nullptr;
     TTF_Font* large = nullptr;
     TTF_Font* h1 = nullptr;
-    FontCollection() { }
     b8 Load(const AbsolutePath& path) {
         const String font = path.string();
         small = TTF_OpenFont(font, 14.0F);
@@ -40,10 +39,10 @@ struct FontCollection {
         return small && normal && large && h1;
     }
     ~FontCollection() {
-        TTF_CloseFont(small);
-        TTF_CloseFont(normal);
-        TTF_CloseFont(large);
-        TTF_CloseFont(h1);
+        if (small != nullptr) { TTF_CloseFont(small); small = nullptr; }
+        if (normal != nullptr) { TTF_CloseFont(normal); normal = nullptr; }
+        if (large != nullptr) { TTF_CloseFont(large); large = nullptr; }
+        if (h1 != nullptr) { TTF_CloseFont(h1); h1 = nullptr; }
     }
 };
 
@@ -68,9 +67,7 @@ class UISystem {
     std::vector<Element> elements;
 
 public:
-    UISystem(SDL_Renderer* renderer) {
-        text_renderer = TTF_CreateRendererTextEngine(renderer);
-    }
+    UISystem(SDL_Renderer* renderer) { text_renderer = TTF_CreateRendererTextEngine(renderer); }
     void Draw(SDL_Renderer* renderer) {
         for (const TextElement& text : textElements) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
         for (const Element& element : elements) {
@@ -223,11 +220,11 @@ struct Engine {
         (void)SDL_SetRenderDrawColor(renderer, clear_color.r, clear_color.g, clear_color.b, clear_color.a);
         (void)SDL_RenderClear(renderer);
     }
-    void Present () {
-        (void)SDL_RenderPresent(renderer);
-    }
+    void Present() { (void)SDL_RenderPresent(renderer); }
 
     ~Engine() {
+        font.~FontCollection();
+
         ImGui_ImplSDLRenderer3_Shutdown();
         ImGui_ImplSDL3_Shutdown();
         ImGui::DestroyContext(ImGui::GetCurrentContext());
