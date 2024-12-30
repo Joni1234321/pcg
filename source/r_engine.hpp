@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <filesystem>
+#include <functional>
 
 #include "u_collections.hpp"
 #include "u_types.hpp"
@@ -25,6 +26,10 @@ inline AbsolutePath Asset(const AssetPath& asset_path) {
 }
 
 namespace pce::ui {
+inline b8 bb_collision(const f32 x, f32 y, const SDL_FRect rect) {
+// todo: make hit collision
+    return false;
+}
 struct FontCollection {
     TTF_Font* small = nullptr;
     TTF_Font* normal = nullptr;
@@ -60,6 +65,7 @@ struct Element {
     };
     SDL_Color color;
     SDL_FRect rect;
+    void (*on_click)();
 };
 class UISystem {
     TTF_TextEngine* text_renderer = nullptr;
@@ -83,9 +89,9 @@ public:
         //TTF_SetTextWrapWidth(text, 680U);
         return TextElement::Handle { static_cast<u32>(textElements.size() - 1) };
     }
-    Element::Handle CreateElement(const SDL_FRect rect, const SDL_Color color) {
-        (void)elements.emplace_back(color, rect);
-        return Element::Handle { static_cast<u32>(elements.size() - 1) };
+    Element::Handle CreateElement(const SDL_FRect rect, const SDL_Color color, void (*on_click)()) {
+        (void)elements.emplace_back(color, rect, on_click);
+        return Element::Handle { static_cast<u32>(elements.size() - 1)};
     }
 
     [[nodiscard]] Element operator [](const Element::Handle handle) { return elements[handle.id]; }

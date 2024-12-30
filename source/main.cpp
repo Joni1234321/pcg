@@ -1,10 +1,10 @@
-#include "u_collections.hpp"
 #include "g_components.hpp"
-#include "r_engine.hpp"
 #include "g_game.hpp"
+#include "m_frame.hpp"
+#include "r_engine.hpp"
+#include "u_collections.hpp"
 #include "u_logger.hpp"
 #include "u_types.hpp"
-#include "m_frame.hpp"
 
 namespace pce {
 using pcg::game;
@@ -14,8 +14,8 @@ using pce::Reinterpret;
 using pce::List;
 using namespace pcg::frame;
 
-void RunGame(Engine &engine) {
-    ui::UISystem ui_system (engine.renderer);
+void RunGame(Engine& engine) {
+    ui::UISystem ui_system(engine.renderer);
 
     MainMenuFrame main_menu_frame(ui_system, engine.font);
     FPSFrame fps_frame(ui_system, engine.font);
@@ -40,8 +40,7 @@ void RunGame(Engine &engine) {
             switch (event.type) {
                 case SDL_EVENT_QUIT: running = false;
                     break;
-                case SDL_EVENT_KEY_DOWN:
-                    switch (event.key.key) {
+                case SDL_EVENT_KEY_DOWN: switch (event.key.key) {
                         case SDLK_ESCAPE: running = false;
                             break;
                         default: break;

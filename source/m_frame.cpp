@@ -13,10 +13,10 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system, const ui::FontCollection& 
 
     SDL_FRect rect { .x = 200, .y = 200, .w = 30, .h = 30 };
 
-    (void)elements.emplace_back(ui_system.CreateElement(rect, ui::colors::black));
+    (void)elements.emplace_back(ui_system.CreateElement(rect, ui::colors::black, nullptr));
 
     rect.x += 200;
-    (void)elements.emplace_back(ui_system.CreateElement(rect, ui::colors::black));
+    (void)elements.emplace_back(ui_system.CreateElement(rect, ui::colors::black, nullptr));
 }
 void MainMenuFrame::Tick(u32 i, ui::UISystem& ui_system) {
     for (const ui::Element::Handle& sqr : elements) { ui_system[sqr].color = SDL_Color { static_cast<u8>(i / 3), static_cast<u8>(i / 10), static_cast<u8>(i / 67), 255 }; }
