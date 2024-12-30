@@ -2,9 +2,14 @@ cmake_minimum_required(VERSION 3.20)
 
 project(pcg VERSION 1.0)
 
+option(DOWNLOAD_DEPENDENCIES "Download dependencies" TRUE)
+option(_SET_WARNINGS_ENABLED "Enable warnings" FALSE)
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-changes-meaning")
+if (_SET_WARNINGS_ENABLED)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error -Wall -Wextra -Wpedantic -Werror")
+endif ()
 
 set(imgui_dir ${CMAKE_SOURCE_DIR}/lib/imgui)
 set(resources_dir ${CMAKE_SOURCE_DIR}/resources)
@@ -12,6 +17,7 @@ add_executable(${PROJECT_NAME}
                source/main.cpp
                source/factory.cpp
                source/game.cpp
+               source/frame.cpp
                ${imgui_dir}/imgui.cpp
                ${imgui_dir}/imgui_demo.cpp
                ${imgui_dir}/imgui_draw.cpp
@@ -26,7 +32,6 @@ target_include_directories(${PROJECT_NAME}
                            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib
 )
 
-option(DOWNLOAD_DEPENDENCIES "Download dependencies" TRUE)
 if (DOWNLOAD_DEPENDENCIES)
 	include(FetchContent)
 	fetchcontent_declare(
