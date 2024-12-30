@@ -76,5 +76,6 @@ i32 main(const i32 argc, char** argv) {
     pce::RunGame();
 
     pce::DestroyEngine();
+    SDL_Log("Something might have failed (%s)", SDL_GetError());
     return 0;
 }

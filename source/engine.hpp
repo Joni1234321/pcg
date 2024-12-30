@@ -1,7 +1,8 @@
 #pragma once
 
-#include <engine.hpp>
+#include <vector>
 
+#include "collections.hpp"
 #include "types.hpp"
 
 #include "imgui/imgui.h"
@@ -23,14 +24,14 @@ struct FontCollection {
     TTF_Font* large = nullptr;
     TTF_Font* h1 = nullptr;
     FontCollection() { }
-    b8 Load(const std::string& path) {
-        small = TTF_OpenFont(path.c_str(), 14.0F);
-        normal = TTF_OpenFont(path.c_str(), 22.0F);
-        large = TTF_OpenFont(path.c_str(), 36.0F);
-        h1 = TTF_OpenFont(path.c_str(), 72.0F);
+    b8 Load(const String& path) {
+        small = TTF_OpenFont(path.CString(), 14.0F);
+        normal = TTF_OpenFont(path.CString(), 22.0F);
+        large = TTF_OpenFont(path.CString(), 36.0F);
+        h1 = TTF_OpenFont(path.CString(), 72.0F);
         return small && normal && large && h1;
     }
-    constexpr ~FontCollection() {
+    ~FontCollection() {
         TTF_CloseFont(small);
         TTF_CloseFont(normal);
         TTF_CloseFont(large);
@@ -170,7 +171,7 @@ inline b8 InitEngine() {
 
 inline b8 InitWindow(const u32 width, const u32 height) {
     constexpr u32 window_flags = SDL_WINDOW_RESIZABLE;
-    if (!SDL_CreateWindowAndRenderer("PCG", static_cast<i32>(width), static_cast<i32>(height), window_flags, &window, &renderer)) {
+    if (!SDL_CreateWindowAndRenderer("Video Game", static_cast<i32>(width), static_cast<i32>(height), window_flags, &window, &renderer)) {
         SDL_Log("SDL_CreateWindowAndRenderer failed (%s)", SDL_GetError());
         SDL_Quit();
         return false;

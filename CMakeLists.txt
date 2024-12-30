@@ -5,18 +5,19 @@ project(pcg VERSION 1.0)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/lib/imgui)
+set(imgui_dir ${CMAKE_SOURCE_DIR}/lib/imgui)
+set(resources_dir ${CMAKE_SOURCE_DIR}/resources)
 add_executable(${PROJECT_NAME}
                source/main.cpp
                source/factory.cpp
                source/game.cpp
-               ${IMGUI_DIR}/imgui.cpp
-               ${IMGUI_DIR}/imgui_demo.cpp
-               ${IMGUI_DIR}/imgui_draw.cpp
-               ${IMGUI_DIR}/imgui_tables.cpp
-               ${IMGUI_DIR}/imgui_widgets.cpp
-               ${IMGUI_DIR}/imgui_impl_sdl3.cpp
-               ${IMGUI_DIR}/imgui_impl_sdlrenderer3.cpp
+               ${imgui_dir}/imgui.cpp
+               ${imgui_dir}/imgui_demo.cpp
+               ${imgui_dir}/imgui_draw.cpp
+               ${imgui_dir}/imgui_tables.cpp
+               ${imgui_dir}/imgui_widgets.cpp
+               ${imgui_dir}/imgui_impl_sdl3.cpp
+               ${imgui_dir}/imgui_impl_sdlrenderer3.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -41,6 +42,7 @@ if (DOWNLOAD_DEPENDENCIES)
 	)
 	fetchcontent_makeavailable(SDL3)
 	fetchcontent_makeavailable(SDL3_ttf)
+
 else ()
 	find_package(SDL3 CONFIG REQUIRED)
 	find_package(SDL3_ttf CONFIG REQUIRED)
@@ -53,8 +55,9 @@ target_link_libraries(${PROJECT_NAME}
 
 add_custom_command(
 		TARGET ${PROJECT_NAME} POST_BUILD
+		COMMAND "${CMAKE_COMMAND}" -E echo "Copying files..."
 		COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_FILE:SDL3::SDL3-shared> $<TARGET_FILE_DIR:${PROJECT_NAME}>
 		COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_FILE:SDL3_ttf::SDL3_ttf-shared> $<TARGET_FILE_DIR:${PROJECT_NAME}>
+		COMMAND "${CMAKE_COMMAND}" -E echo "Finished copying files"
 		VERBATIM
 )
-
