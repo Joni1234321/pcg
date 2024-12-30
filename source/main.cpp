@@ -14,9 +14,10 @@ using pce::Reinterpret;
 using pce::List;
 using namespace pcg::frame;
 
-void RunGame() {
-    MainMenuFrame main_menu_frame;
-    FPSFrame fps_frame;
+void RunGame(Engine &engine) {
+    ui::UISystem ui_system (engine.renderer );
+    MainMenuFrame main_menu_frame(ui_system, engine.font);
+    FPSFrame fps_frame(ui_system, engine.font);
     Tick tick { 0U };
     bool running = true;
     while (running) {
@@ -26,10 +27,10 @@ void RunGame() {
 
         game.logger.LogLine();
         game.logger.Log("Tick {:6}", tick);
-        game.PlayTick(tick, debug);
+        game.PlayTick(tick, ui_system, engine.font, debug);
 
-        main_menu_frame.Tick(tick.Value());
-        fps_frame.Tick(tick.Value());
+        main_menu_frame.Tick(tick.Value(), ui_system);
+        fps_frame.Tick(tick.Value(), ui_system);
 
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -48,7 +49,12 @@ void RunGame() {
             }
         }
         if (!running) { break; }
-        Draw();
+        engine.ClearScreen();
+
+        ui_system.Draw(engine.renderer);
+        DrawImgui(engine.renderer);
+
+        engine.Present();
 
         if (debug) {
             //PrintListStats(game.logger, reinterpret<List<f32>>(player_archetype.moneys));
@@ -63,19 +69,17 @@ i32 main(const i32 argc, char** argv) {
     (void)argc;
     (void)argv;
 
-    SDL_Log("Starting game");
+    SDL_Log("Starting Engine");
+    pce::Engine engine;
 
-    if (!pce::InitEngine()) { return -1; }
+    if (!engine.Load()) { return -1; }
 
     constexpr u32 width = 1600U;
     constexpr u32 height = 900U;
-    if (!pce::InitWindow(width, height)) { return -1; }
+    if (!engine.InitWindow(width, height)) { return -1; }
 
     SDL_Log("Starting game");
+    RunGame(engine);
 
-    pce::RunGame();
-
-    pce::DestroyEngine();
-    SDL_Log("Something might have failed (%s)", SDL_GetError());
     return 0;
 }

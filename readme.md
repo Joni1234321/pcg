@@ -1,6 +1,6 @@
 # Installation
 1. Install libfreetype with MINGW64 and add its path to environment.  
-On my Windows machine it's `C:\msys64\mingw64\bin`
+On my Windows machine it's `C:\msys64\mingw64\bin` `C:\msys64\mingw64\include`
 2. Run CMAKE it copies the DLL's into the build directory 
 
 ## Problem
@@ -11,3 +11,15 @@ freetyped.dll not found. idk, found this post that says we need to not use relat
     char* font_path_absolute = "C:\\Active\\CPP\\pcg\\resources\\font.ttf"; // working
     char* font_path = "../resources/font.ttf"; // fail
 ```
+
+Also `Could NOT find Freetype (missing: FREETYPE_INCLUDE_DIRS)`
+its because you have to add environment `C:\msys64\mingw64\include`
+try adding the libfreetype 6 dll
+
+clicking the file can also cause error this works fine if running from mingw
+# WSL
+```
+install ninja-build  
+install libfreetype6-dev
+```
+

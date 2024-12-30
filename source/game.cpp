@@ -80,7 +80,7 @@ constexpr f32 PER_MILLION = 1.0F / 1'000'000.0F;
 constexpr u16 BUILDING_TIME = 30U;
 constexpr f32 GROWTH_RATE_PER_MONTH = 0.0025F * PER_MONTH;
 
-void Game::PlayTick(Tick tick, const b8 debug) {
+void Game::PlayTick(Tick tick, pce::ui::UISystem& ui_system, const pce::ui::FontCollection& font, const b8 debug) {
     // Construction
     for (const Player player : player_archetype) { ProcessConstructionQueue(player); }
     for (const Planet planet : planet_archetype) { ProcessConstructionQueue(planet); }
@@ -172,8 +172,8 @@ void Game::PlayTick(Tick tick, const b8 debug) {
     farm_table.AddColumn("Last result  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.last_result; }));
     farm_table.AddColumn("Population balance", farm_archetype.population_balance);
     String string = farm_table.WriteToLogger(logger, Table::COLOR_DISABLED);
-    static pce::ui::TextElement::Handle textHandle = pce::ui::CreateText("", pce::ui::font.small, pce::ui::colors::black, 10.0F, 200.0F);
-    (void)TTF_SetTextString(pce::ui::textElements[textHandle.id].text, string.CString(), string.size());
+    static pce::ui::TextElement::Handle info_text = ui_system.CreateText("", font.small, pce::ui::colors::black, 10.0F, 200.0F);
+    (void)TTF_SetTextString(ui_system[info_text].text, string.CString(), string.size());
     logger.Print();
 
     return;

@@ -25,8 +25,6 @@ inline AbsolutePath Asset(const AssetPath& asset_path) {
 }
 
 namespace pce::ui {
-inline TTF_TextEngine* textRenderer = nullptr;
-
 struct FontCollection {
     TTF_Font* small = nullptr;
     TTF_Font* normal = nullptr;
@@ -64,21 +62,44 @@ struct Element {
     SDL_Color color;
     SDL_FRect rect;
 };
-inline FontCollection font;
+class UISystem {
+    TTF_TextEngine* text_renderer = nullptr;
+    std::vector<TextElement> textElements;
+    std::vector<Element> elements;
 
-inline std::vector<TextElement> textElements = { };
-inline std::vector<Element> elements = { };
-inline TextElement::Handle CreateText(const String& string, TTF_Font* font, const SDL_Color color, const f32 x, const f32 y) {
-    TTF_Text* text = TTF_CreateText(textRenderer, font, string.CString(), string.size());
-    (void)TTF_SetTextColor(text, color.r, color.g, color.b, color.a);
-    textElements.emplace_back(text, x, y);
-    //TTF_SetTextWrapWidth(text, 680U);
-    return TextElement::Handle { static_cast<u32>(textElements.size() - 1) };
-}
-inline Element::Handle CreateElement(const SDL_FRect rect, const SDL_Color color) {
-    elements.emplace_back(color, rect);
-    return Element::Handle { static_cast<u32>(elements.size() - 1) };
-}
+public:
+    UISystem(SDL_Renderer* renderer) {
+        text_renderer = TTF_CreateRendererTextEngine(renderer);
+    }
+    void Draw(SDL_Renderer* renderer) {
+        for (const TextElement& text : textElements) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
+        for (const Element& element : elements) {
+            (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
+            (void)SDL_RenderFillRect(renderer, &element.rect);
+        }
+    }
+
+    TextElement::Handle CreateText(const String& string, TTF_Font* font, const SDL_Color color, const f32 x, const f32 y) {
+        TTF_Text* text = TTF_CreateText(text_renderer, font, string.CString(), string.size());
+        (void)TTF_SetTextColor(text, color.r, color.g, color.b, color.a);
+        (void)textElements.emplace_back(text, x, y);
+        //TTF_SetTextWrapWidth(text, 680U);
+        return TextElement::Handle { static_cast<u32>(textElements.size() - 1) };
+    }
+    Element::Handle CreateElement(const SDL_FRect rect, const SDL_Color color) {
+        (void)elements.emplace_back(color, rect);
+        return Element::Handle { static_cast<u32>(elements.size() - 1) };
+    }
+
+    [[nodiscard]] Element operator [](const Element::Handle handle) { return elements[handle.id]; }
+    [[nodiscard]] TextElement operator [](const TextElement::Handle handle) { return textElements[handle.id]; }
+
+    ~UISystem() {
+        for (const TextElement& text : textElements) { TTF_DestroyText(text.text); }
+        for (const Element& element : elements) { }
+        TTF_DestroyRendererTextEngine(text_renderer);
+    }
+};
 }
 
 namespace pce::ui::colors {
@@ -131,8 +152,6 @@ constexpr SDL_Color khaki { 240U, 230U, 140U, 255U };
 }
 
 namespace pce {
-inline SDL_Window* window = nullptr;
-inline SDL_Renderer* renderer = nullptr;
 inline SDL_Color clear_color = ui::colors::dark_dark_brown;
 
 inline void DrawImgui(SDL_Renderer* renderer) {
@@ -147,77 +166,77 @@ inline void DrawImgui(SDL_Renderer* renderer) {
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
 }
 
-inline void Draw() {
-    (void)SDL_SetRenderDrawColor(renderer, clear_color.r, clear_color.g, clear_color.b, clear_color.a);
-    (void)SDL_RenderClear(renderer);
+struct Engine {
+    SDL_Window* window = nullptr;
+    SDL_Renderer* renderer = nullptr;
 
-    for (const ui::TextElement& text : ui::textElements) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
-    for (const ui::Element& element : ui::elements) {
-        (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
-        (void)SDL_RenderFillRect(renderer, &element.rect);
+    ui::FontCollection font;
+
+    Engine() = default;
+
+    b8 Load() {
+        if (!SDL_Init(SDL_INIT_VIDEO)) {
+            SDL_Log("SDL_Init failed (%s)", SDL_GetError());
+            return false;
+        }
+        if (!TTF_Init()) {
+            SDL_Log("SDL_ttf failed (%s)", SDL_GetError());
+            return false;
+        }
+        const RelativePath font_path = "font.ttf";
+        if (!font.Load(assets::Asset(font_path))) {
+            SDL_Log("Font not loaded (%s)", SDL_GetError());
+            return false;
+        }
+        return true;
     }
 
-    DrawImgui(renderer);
+    b8 InitWindow(const u32 width, const u32 height) {
+        constexpr u32 window_flags = SDL_WINDOW_RESIZABLE;
+        if (!SDL_CreateWindowAndRenderer("Video Game", static_cast<i32>(width), static_cast<i32>(height), window_flags, &window, &renderer)) {
+            SDL_Log("SDL_CreateWindowAndRenderer failed (%s)", SDL_GetError());
+            SDL_Quit();
+            return false;
+        }
 
-    (void)SDL_RenderPresent(renderer);
-}
+        TTF_CreateRendererTextEngine(renderer);
 
-inline b8 InitEngine() {
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
-        SDL_Log("SDL_Init failed (%s)", SDL_GetError());
-        return false;
-    }
-    if (!TTF_Init()) {
-        SDL_Log("SDL_ttf failed (%s)", SDL_GetError());
-        return false;
-    }
-    constexpr const char* font_path_absolute = R"(C:\Active\CPP\pcg\resources\font.ttf)";
-    const RelativePath font_path = "font.ttf";
-    if (!ui::font.Load(assets::Asset(font_path))) {
-        SDL_Log("Font not loaded (%s)", SDL_GetError());
-        return false;
-    }
-    return true;
-}
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO* io = &ImGui::GetIO();
+        io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+        io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+        if (!ImGui_ImplSDL3_InitForSDLRenderer(window, renderer)) {
+            SDL_Log("Failed to initialize ImGui SDL3 backend.");
+            return false;
+        }
+        if (!ImGui_ImplSDLRenderer3_Init(renderer)) {
+            SDL_Log("Failed to initialize ImGui SDL Renderer3 backend.");
+            return false;
+        }
+        ImGui::StyleColorsLight(&ImGui::GetStyle());
 
-inline b8 InitWindow(const u32 width, const u32 height) {
-    constexpr u32 window_flags = SDL_WINDOW_RESIZABLE;
-    if (!SDL_CreateWindowAndRenderer("Video Game", static_cast<i32>(width), static_cast<i32>(height), window_flags, &window, &renderer)) {
-        SDL_Log("SDL_CreateWindowAndRenderer failed (%s)", SDL_GetError());
+        return true;
+    }
+
+    void ClearScreen() {
+        (void)SDL_SetRenderDrawColor(renderer, clear_color.r, clear_color.g, clear_color.b, clear_color.a);
+        (void)SDL_RenderClear(renderer);
+    }
+    void Present () {
+        (void)SDL_RenderPresent(renderer);
+    }
+
+    ~Engine() {
+        ImGui_ImplSDLRenderer3_Shutdown();
+        ImGui_ImplSDL3_Shutdown();
+        ImGui::DestroyContext(ImGui::GetCurrentContext());
+
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+
+        TTF_Quit();
         SDL_Quit();
-        return false;
     }
-
-    ui::textRenderer = TTF_CreateRendererTextEngine(renderer);
-
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO* io = &ImGui::GetIO();
-    io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-    io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
-    if (!ImGui_ImplSDL3_InitForSDLRenderer(window, renderer)) {
-        SDL_Log("Failed to initialize ImGui SDL3 backend.");
-        return false;
-    }
-    if (!ImGui_ImplSDLRenderer3_Init(renderer)) {
-        SDL_Log("Failed to initialize ImGui SDL Renderer3 backend.");
-        return false;
-    }
-    ImGui::StyleColorsLight(&ImGui::GetStyle());
-    return true;
-}
-
-inline void DestroyEngine() {
-    ImGui_ImplSDLRenderer3_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
-    ImGui::DestroyContext(ImGui::GetCurrentContext());
-
-    TTF_DestroyRendererTextEngine(ui::textRenderer);
-
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-
-    TTF_Quit();
-    SDL_Quit();
-}
+};
 }
