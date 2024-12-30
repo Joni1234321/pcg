@@ -15,9 +15,11 @@ using pce::List;
 using namespace pcg::frame;
 
 void RunGame(Engine &engine) {
-    ui::UISystem ui_system (engine.renderer );
+    ui::UISystem ui_system (engine.renderer);
+
     MainMenuFrame main_menu_frame(ui_system, engine.font);
     FPSFrame fps_frame(ui_system, engine.font);
+
     Tick tick { 0U };
     bool running = true;
     while (running) {
@@ -63,23 +65,28 @@ void RunGame(Engine &engine) {
         }
     }
 }
+b8 Start() {
+    SDL_Log("Starting Engine");
+    Engine engine;
+
+    if (!engine.Load()) { return false; }
+
+    constexpr u32 width = 1600U;
+    constexpr u32 height = 900U;
+    if (!engine.InitWindow(width, height)) { return false; }
+
+    SDL_Log("Starting game");
+    RunGame(engine);
+
+    return true;
+}
 } // namespace pce
 
 i32 main(const i32 argc, char** argv) {
     (void)argc;
     (void)argv;
 
-    SDL_Log("Starting Engine");
-    pce::Engine engine;
+    const b8 result = pce::Start();
 
-    if (!engine.Load()) { return -1; }
-
-    constexpr u32 width = 1600U;
-    constexpr u32 height = 900U;
-    if (!engine.InitWindow(width, height)) { return -1; }
-
-    SDL_Log("Starting game");
-    RunGame(engine);
-
-    return 0;
+    return result ? 0 : 1;
 }
