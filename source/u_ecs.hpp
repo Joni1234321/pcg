@@ -3,8 +3,8 @@
 // ReSharper disable CppNonExplicitConvertingConstructor
 #pragma once
 
-#include "collections.hpp"
-#include "types.hpp"
+#include "u_collections.hpp"
+#include "u_types.hpp"
 
 namespace pcg {
 template <typename T, typename TagType, template<typename> class... InheritList> class NamedType : public InheritList<NamedType<T, TagType, InheritList...>>... {

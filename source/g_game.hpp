@@ -1,10 +1,10 @@
 #pragma once
 
-#include <engine.hpp>
+#include <r_engine.hpp>
 
-#include "components.hpp"
-#include "logger.hpp"
-#include "types.hpp"
+#include "g_components.hpp"
+#include "u_logger.hpp"
+#include "u_types.hpp"
 
 namespace pcg {
 struct NewGameSettings {

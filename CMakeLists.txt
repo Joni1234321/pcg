@@ -15,9 +15,9 @@ set(imgui_dir ${CMAKE_SOURCE_DIR}/lib/imgui)
 set(resources_dir ${CMAKE_SOURCE_DIR}/resources)
 add_executable(${PROJECT_NAME}
                source/main.cpp
-               source/factory.cpp
-               source/game.cpp
-               source/frame.cpp
+               source/g_factory.cpp
+               source/g_game.cpp
+               source/m_frame.cpp
                ${imgui_dir}/imgui.cpp
                ${imgui_dir}/imgui_demo.cpp
                ${imgui_dir}/imgui_draw.cpp
