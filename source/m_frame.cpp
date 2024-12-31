@@ -17,6 +17,12 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system, const ui::FontCollection& 
 
     rect.x += 200;
     (void)elements.emplace_back(ui_system.CreateElement(rect, ui::colors::black, nullptr));
+
+    rect.y = 400;
+    ui_system.CreateList(ui::colors::white, rect, 10U, 25.0F, ui::UISystem::ListDirection::vertical);
+    rect.h *= 2;
+    ui_system.CreateList(ui::colors::green, rect, 10U, 25.0F, ui::UISystem::ListDirection::horizontal);
+
 }
 void MainMenuFrame::Tick(u32 i, ui::UISystem& ui_system) {
     for (const ui::Element::Handle& sqr : elements) { ui_system[sqr].color = SDL_Color { static_cast<u8>(i / 3), static_cast<u8>(i / 10), static_cast<u8>(i / 67), 255 }; }
