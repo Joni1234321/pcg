@@ -50,7 +50,8 @@ template <typename T> struct List {
 
     constexpr List() : data() { }
     constexpr List(std::initializer_list<T> init_list) : data(init_list) { }
-    explicit constexpr List(u32 size) : data(size, std::allocator<T>()) { }
+    explicit constexpr List(u32 size) : data() { data.reserve(size); }
+    explicit constexpr List(u32 size, const T& val) : data(size, val, std::allocator<T>()) { }
     constexpr ~List() = default;
 
     template <class Iter> constexpr List(Iter first, Iter last) : data(first, last) { }

@@ -7,6 +7,7 @@
 #include "u_logger.hpp"
 #include "u_types.hpp"
 #include "u_util.hpp"
+#include "u_table.hpp"
 
 namespace pcg {
 using pce::Component;
@@ -14,7 +15,7 @@ using pce::String;
 using pce::RandomKey;
 using pce::Span;
 using pce::List;
-using pce::Table;
+using pce::LoggerTable;
 using pce::Select;
 using pce::Logger;
 namespace math = pce::math;
@@ -61,7 +62,7 @@ struct RevenueCapture {
     Component<Money> balance;
 };
 
-void AddRevenueCapture(Table& table, const RevenueCapture& revenue_capture) {
+void AddRevenueCapture(LoggerTable& table, const RevenueCapture& revenue_capture) {
     table.AddColumn("Revenue ", revenue_capture.revenue);
     table.AddColumn("Expenses ", revenue_capture.expenses);
     table.AddColumn("Balance ", revenue_capture.balance);
@@ -162,14 +163,14 @@ void Game::PlayTick(Tick tick, pce::ui::UISystem& ui_system, const pce::ui::Font
     for (const Planet planet : planet_archetype) { planet.QualityOfLife() = GetQualityOfLife(planet); }
     for (Market& market : state_archetype.markets) { market.RecalculateMarkets(); }
 
-    Table farm_table { "Farms", farm_archetype.Count };
+    LoggerTable farm_table { "Farms", farm_archetype.Count };
     farm_table.AddColumn("Type ", farm_archetype.types);
     farm_table.AddColumn("Assets       ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.assets.Total(); }));
     farm_table.AddColumn("Equity       ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.equity; }));
     farm_table.AddColumn("Liabilities  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.liabilities; }));
     farm_table.AddColumn("Last result  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.last_result; }));
     farm_table.AddColumn("Population balance", farm_archetype.population_balance);
-    String string = farm_table.WriteToLogger(logger, Table::COLOR_DISABLED);
+    String string = farm_table.WriteToLogger(logger, LoggerTable::COLOR_DISABLED);
     static pce::ui::TextElement::Handle info_text = ui_system.CreateText("", font.small, pce::ui::colors::black, 10.0F, 200.0F);
     (void)TTF_SetTextString(ui_system[info_text].text, string.CString(), string.size());
     logger.Print();
@@ -183,25 +184,25 @@ void Game::PlayTick(Tick tick, pce::ui::UISystem& ui_system, const pce::ui::Font
 
     constexpr u32 width = 20U;
 
-    Table player_table { "Player Economy", player_archetype.Count };
+    LoggerTable player_table { "Player Economy", player_archetype.Count };
     AddRevenueCapture(player_table, player_revenue_capture);
     player_table.AddColumnFixed("Constructing ", Select(player_archetype.construction_queue, construction_queue_to_string), width);
-    player_table.Print(logger, Table::COLOR_ENABLED);
+    player_table.Print(logger, LoggerTable::COLOR_ENABLED);
 
-    Table planet_table { "Planet Economy", planet_archetype.Count };
+    LoggerTable planet_table { "Planet Economy", planet_archetype.Count };
     planet_table.AddColumn("Employed", planet_archetype.employed);
     planet_table.AddColumn("Unemployed", planet_archetype.unemployed);
     //planet_table.AddColumn("QoL", planet_archetype.population_quality_of_life);
     planet_table.AddColumnFixed("Constructing ", Select(planet_archetype.construction_queue, construction_queue_to_string), width);
     planet_table.AddColumn("Owner", planet_archetype.players);
-    planet_table.Print(logger, Table::COLOR_DISABLED);
+    planet_table.Print(logger, LoggerTable::COLOR_DISABLED);
 
     const List<BuildingUnderConstruction> display_construction = player_archetype.construction_queue[0U].Limit(5U); //.Limit(10);
-    Table construction_table("ConstructionQueue", display_construction.Size());
+    LoggerTable construction_table("ConstructionQueue", display_construction.Size());
     construction_table.AddColumn("Type", Select(display_construction, [] (const BuildingUnderConstruction& building) -> FarmType { return building.type; }));
     construction_table.AddColumn("Progress", Select(display_construction, [] (const BuildingUnderConstruction& building) -> u16 { return building.progress; }));
     construction_table.AddColumn("Required", Select(display_construction, [] ([[maybe_unused]] const BuildingUnderConstruction& building) -> u16 { return BUILDING_TIME; }));
-    construction_table.Print(logger, Table::COLOR_DISABLED);
+    construction_table.Print(logger, LoggerTable::COLOR_DISABLED);
 }
 
 Game::Game(const NewGameSettings game) {

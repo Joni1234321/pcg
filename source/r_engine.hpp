@@ -154,6 +154,7 @@ public:
 
     [[nodiscard]] Element operator [](const Element::Handle handle) { return elements[handle.id]; }
     [[nodiscard]] TextElement operator [](const TextElement::Handle handle) { return text_elements[handle.id]; }
+    [[nodiscard]] ListElement operator [](const ListElement::Handle handle) { return list_elements[handle.id]; }
 
     ~UISystem() {
         for (const TextElement &text: text_elements) { TTF_DestroyText(text.text); }
