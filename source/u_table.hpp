@@ -1,45 +1,45 @@
 #pragma once
 
+#include <any>
+
+#include "u_logger.hpp"
 #include "u_types.hpp"
 #include "u_collections.hpp"
 
 namespace pce {
-class Table {
+struct Table {
+    //using Cell = std::variant<u32, f32>;
+    using Cell = u32;
+    using Column = List<Cell>;
+    String name;
     List<String> headers;
-    List<List<u32>> rows;
-public:
-    Table(String&& name, const u32 row_count) : rows(row_count, List<u32> { } ) { }
+    List<Column> columns;
+    Table(String&& name) : name(std::move(name)), headers(), columns() { }
     void AddColumn(String&& title, const List<u32>& values) {
-        ASSERT_DBG_RETURN(values.Size() < rows.Size(), "Received more values than rows in table", );
+        ASSERT_DBG_RETURN(ColumnCount() == 0 || values.Size() == RowCount(), "Received different amount of values", );
         headers.EmplaceBack(std::move(title));
-        for (u32 i = 0U; i < values.Size(); i++) { rows[i].EmplaceBack(values[i]); }
-        for (u32 i = values.Size(); i < rows.Size(); i++) { rows[i].EmplaceBack(0); }
+        columns.EmplaceBack(values);
     }
-    [[nodiscard]] u32 ColumnCount () const { return rows[0U].Size(); }
-    [[nodiscard]] const List<String>& Headers () const { return headers; }
+    [[nodiscard]] constexpr u32 RowCount() const { return columns[0].Size(); }
+    [[nodiscard]] constexpr u32 ColumnCount() const { return columns.Size(); }
 };
-#if false
-inline String& WriteToLogger (Logger& logger, const Table& table) {
-    for (const String& header : table.Headers) logger.Write(header);
-    logger.Write("|{}", rows[0U]);
-    const String line('-', table.ColumnCount());
-    logger.Write("{}", line);
-    logger.Write("{}", line);
-    if (rows.Size() > 1U) {
-        for (u32 i = 1U; i < rows.Size(); i++) {
-            if (coloring == COLOR_ENABLED) { logger.RotateColor(i - 1U); }
-            logger.Write("|{}", rows[i]);
+
+inline String TableToString (const Table& table) {
+    String header_string = "|";
+    for (const String& header : table.headers) { header_string += std::format(" {} |", header); }
+    String line ('-', header_string.size());
+    String result = std::format("{}\n{}\n{}\n", line, header_string, line);
+    for (u32 row = 0U; row < table.RowCount(); row++) {
+        result += "|";
+        for (u32 column = 0U; column < table.ColumnCount(); column++) {
+            std::variant<unsigned, float> val = table.columns[column][row];
+            String text = std::visit([](auto& x) { return std::to_string(x); }, val);
+            result += std::format(" {:>{}} |", text, table.headers[column].size());
         }
-        logger.ClearColor();
-        logger.Write("{}", line);
+        result += "\n";
     }
-    return logger.GetString();
+    return result;
 }
-inline void Print(Logger& logger,  const LOGGER_COLOR coloring) const {
-    (void)WriteToLogger(logger, coloring);
-    logger.Print();
-}
-#endif
 
 class LoggerTable { // NOLINT(*-struct-pack-align)
     List<String> rows;

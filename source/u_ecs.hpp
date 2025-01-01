@@ -24,7 +24,6 @@ template <typename DerivedType, template<typename> class Recurring> struct Recur
     const DerivedType& Derived() const { return static_cast<const DerivedType&>(*this); }
 };
 
-template <typename T, template<typename> class Skill>concept HasASkill = std::derived_from<T, Skill<T>>;
 
 template <typename T> struct FormatLongNumber : RecurringDerived<T, FormatLongNumber> { };
 template <typename T> struct Arithmetic : RecurringDerived<T, Arithmetic> {

@@ -9,6 +9,7 @@
 
 #include "u_collections.hpp"
 #include "u_types.hpp"
+#include "u_ecs.hpp"
 
 namespace pce {
 #define DISABLE_PREFIX 1 // NOLINT(*-macro-usage)
@@ -134,7 +135,7 @@ String FormatValue(const T value) { return std::format("{} ", value); }
 template<typename T>concept NamedTypeArithmetic = requires(T value)
 {
     { static_cast<f32>(value) }; // Checks if T can be cast to f32
-} && (pcg::HasASkill<T, pcg::FormatLongNumber>);
+} && (HasASkill<T, pcg::FormatLongNumber>);
 
 template<NamedTypeArithmetic T>
 String FormatValue(const T value) {

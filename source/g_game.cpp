@@ -16,6 +16,7 @@ using pce::RandomKey;
 using pce::Span;
 using pce::List;
 using pce::LoggerTable;
+using pce::Table;
 using pce::Select;
 using pce::Logger;
 namespace math = pce::math;
@@ -78,6 +79,7 @@ constexpr f32 PER_MILLION = 1.0F / 1'000'000.0F;
 
 constexpr u16 BUILDING_TIME = 30U;
 constexpr f32 GROWTH_RATE_PER_MONTH = 0.0025F * PER_MONTH;
+
 
 void Game::PlayTick(Tick tick, pce::ui::UISystem& ui_system, const pce::ui::FontCollection& font, const b8 debug) {
     // Construction
@@ -163,6 +165,14 @@ void Game::PlayTick(Tick tick, pce::ui::UISystem& ui_system, const pce::ui::Font
     for (const Planet planet : planet_archetype) { planet.QualityOfLife() = GetQualityOfLife(planet); }
     for (Market& market : state_archetype.markets) { market.RecalculateMarkets(); }
 
+    Table table ("Fish");
+    table.AddColumn("Assets       ", List (10, 1U));
+    table.AddColumn("Fish         ", List (10, 100U));
+    table.AddColumn("Texture      ", List (10, 420U + tick.Value()));
+
+    DrawTable(ui_system, table, font);
+    return;
+
     LoggerTable farm_table { "Farms", farm_archetype.Count };
     farm_table.AddColumn("Type ", farm_archetype.types);
     farm_table.AddColumn("Assets       ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.assets.Total(); }));
@@ -170,9 +180,8 @@ void Game::PlayTick(Tick tick, pce::ui::UISystem& ui_system, const pce::ui::Font
     farm_table.AddColumn("Liabilities  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.liabilities; }));
     farm_table.AddColumn("Last result  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.last_result; }));
     farm_table.AddColumn("Population balance", farm_archetype.population_balance);
-    String string = farm_table.WriteToLogger(logger, LoggerTable::COLOR_DISABLED);
-    static pce::ui::TextElement::Handle info_text = ui_system.CreateText("", font.small, pce::ui::colors::black, 10.0F, 200.0F);
-    (void)TTF_SetTextString(ui_system[info_text].text, string.CString(), string.size());
+    //string = farm_table.WriteToLogger(logger, LoggerTable::COLOR_DISABLED);
+    //(void)TTF_SetTextString(ui_system[info_text].text, string.CString(), string.size());
     logger.Print();
 
     return;

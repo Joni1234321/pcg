@@ -8,6 +8,7 @@
 #include "u_types.hpp"
 
 namespace pce {
+template <typename T, template<typename> class Skill>concept HasASkill = std::derived_from<T, Skill<T>>;
 template <typename To, typename From> constexpr To& Reinterpret(From& from) { return *reinterpret_cast<To*>(&from); } // NOLINT(*-pro-type-reinterpret-cast)
 inline u32 Rand() {
     static std::random_device random_device;

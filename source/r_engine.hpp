@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <functional>
 
+#include "r_ui.hpp"
 #include "u_collections.hpp"
 #include "u_types.hpp"
 
@@ -17,6 +18,8 @@
 
 #include <SDL3_ttf/SDL_ttf.h>
 
+
+
 namespace pce::assets {
 inline AbsolutePath Absolute(const RelativePath &relative_path) { return absolute(relative_path); }
 
@@ -26,196 +29,8 @@ inline AbsolutePath Asset(const AssetPath &asset_path) {
 }
 }
 
-namespace pce::ui {
-inline b8 bb_collision(const f32 x, f32 y, const SDL_FRect rect) {
-    // todo: make hit collision
-    return false;
-}
-
-struct FontCollection {
-    TTF_Font *small = nullptr;
-    TTF_Font *normal = nullptr;
-    TTF_Font *large = nullptr;
-    TTF_Font *h1 = nullptr;
-
-    b8 Load(const AbsolutePath &path) {
-        const String font = path.string();
-        small = TTF_OpenFont(font, 14.0F);
-        normal = TTF_OpenFont(font, 22.0F);
-        large = TTF_OpenFont(font, 36.0F);
-        h1 = TTF_OpenFont(font, 72.0F);
-        return small && normal && large && h1;
-    }
-
-    ~FontCollection() {
-        if (small != nullptr) {
-            TTF_CloseFont(small);
-            small = nullptr;
-        }
-        if (normal != nullptr) {
-            TTF_CloseFont(normal);
-            normal = nullptr;
-        }
-        if (large != nullptr) {
-            TTF_CloseFont(large);
-            large = nullptr;
-        }
-        if (h1 != nullptr) {
-            TTF_CloseFont(h1);
-            h1 = nullptr;
-        }
-    }
-};
-
-struct TextElement {
-    struct Handle {
-        u32 id;
-    };
-
-    TTF_Text *text;
-    f32 x;
-    f32 y;
-};
-
-struct Element {
-    struct Handle {
-        u32 id;
-    };
-
-    SDL_Color color;
-    SDL_FRect rect;
-
-    void (*on_click)();
-};
-
-struct ListElement {
-    struct Handle {
-        u32 id;
-    };
-
-    SDL_Color color;
-    std::vector<SDL_FRect> rects;
-};
-
-class UISystem {
-    TTF_TextEngine *text_renderer = nullptr;
-    std::vector<TextElement> text_elements;
-    std::vector<Element> elements;
-    std::vector<ListElement> list_elements;
-
-public:
-    UISystem(SDL_Renderer *renderer) { text_renderer = TTF_CreateRendererTextEngine(renderer); }
-
-    void Draw(SDL_Renderer *renderer) {
-        for (const TextElement &text: text_elements) { (void) TTF_DrawRendererText(text.text, text.x, text.y); }
-        for (const Element &element: elements) {
-            (void) SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
-            (void) SDL_RenderFillRect(renderer, &element.rect);
-        }
-        for (const ListElement &list: list_elements) {
-            (void) SDL_SetRenderDrawColor(renderer, list.color.r, list.color.g, list.color.b, list.color.a);
-            (void) SDL_RenderFillRects(renderer, list.rects.data(), static_cast<u32>(list.rects.size()));
-        }
-    }
-
-    TextElement::Handle CreateText(const String &string, TTF_Font *font, const SDL_Color color, const f32 x,
-                                   const f32 y) {
-        TTF_Text *text = TTF_CreateText(text_renderer, font, string.CString(), string.size());
-        (void) TTF_SetTextColor(text, color.r, color.g, color.b, color.a);
-        (void) text_elements.emplace_back(text, x, y);
-        //TTF_SetTextWrapWidth(text, 680U);
-        return TextElement::Handle{static_cast<u32>(text_elements.size() - 1)};
-    }
-
-    Element::Handle CreateElement(const SDL_FRect rect, const SDL_Color color, void (*on_click)()) {
-        (void) elements.emplace_back(color, rect, on_click);
-        return Element::Handle{static_cast<u32>(elements.size() - 1)};
-    }
-
-    enum class ListDirection { horizontal, vertical };
-    ListElement::Handle CreateList(const SDL_Color color, const SDL_FRect rect, const u32 count, const f32 gap, const ListDirection direction) {
-        std::vector<SDL_FRect> rects;
-        rects.reserve(count);
-        if (direction == ListDirection::horizontal) {
-            for (u32 i = 0; i < count; i++) {
-                const f32 x = rect.x + (rect.w + gap) * static_cast<f32>(i);
-                rects.emplace_back(x, rect.y, rect.w, rect.h);
-            }
-        }
-        else if (direction == ListDirection::vertical) {
-            for (u32 i = 0; i < count; i++) {
-                const f32 y = rect.y + (rect.h + gap) * static_cast<f32>(i);
-                rects.emplace_back(rect.x, y, rect.w, rect.h);
-            }
-        }
-        (void)list_elements.emplace_back(color, std::move(rects));
-        return ListElement::Handle{static_cast<u32>(list_elements.size() - 1)};
-    }
-
-    [[nodiscard]] Element operator [](const Element::Handle handle) { return elements[handle.id]; }
-    [[nodiscard]] TextElement operator [](const TextElement::Handle handle) { return text_elements[handle.id]; }
-    [[nodiscard]] ListElement operator [](const ListElement::Handle handle) { return list_elements[handle.id]; }
-
-    ~UISystem() {
-        for (const TextElement &text: text_elements) { TTF_DestroyText(text.text); }
-        for (const Element &element: elements) {
-        }
-        TTF_DestroyRendererTextEngine(text_renderer);
-    }
-};
-}
-
-namespace pce::ui::colors {
-constexpr SDL_Color black{0, 0, 0, 255U};
-constexpr SDL_Color white{255U, 255U, 255U, 255U};
-
-// Color palette
-constexpr SDL_Color light_sky_blue{135U, 206U, 250U, 255U};
-constexpr SDL_Color dark_dark_brown{62U, 68U, 43U, 255U};
-
-constexpr SDL_Color red{255U, 0, 0, 255U};
-constexpr SDL_Color green{0, 255U, 0, 255U};
-constexpr SDL_Color blue{0, 0, 255U, 255U};
-constexpr SDL_Color yellow{255U, 255U, 0, 255U};
-constexpr SDL_Color cyan{0, 255U, 255U, 255U};
-constexpr SDL_Color magenta{255U, 0, 255U, 255U};
-
-constexpr SDL_Color gray{128U, 128U, 128U, 255U};
-constexpr SDL_Color dark_gray{64U, 64U, 64U, 255U};
-constexpr SDL_Color light_gray{192U, 192U, 192U, 255U};
-
-constexpr SDL_Color orange{255U, 165U, 0, 255U};
-constexpr SDL_Color pink{255U, 192U, 203U, 255U};
-constexpr SDL_Color purple{128U, 0, 128U, 255U};
-constexpr SDL_Color brown{165U, 42U, 42U, 255U};
-constexpr SDL_Color gold{255U, 215U, 0, 255U};
-
-constexpr SDL_Color navy{0, 0, 128U, 255U};
-constexpr SDL_Color teal{0, 128U, 128U, 255U};
-constexpr SDL_Color olive{128U, 128U, 0, 255U};
-constexpr SDL_Color maroon{128U, 0, 0, 255U};
-constexpr SDL_Color lime{50U, 205U, 50U, 255U};
-
-constexpr SDL_Color sky_blue{135U, 206U, 235U, 255U};
-constexpr SDL_Color deep_sky_blue{0, 191U, 255U, 255U};
-constexpr SDL_Color royal_blue{65U, 105U, 225U, 255U};
-constexpr SDL_Color forest_green{34U, 139U, 34U, 255U};
-constexpr SDL_Color sea_green{46U, 139U, 87U, 255U};
-
-constexpr SDL_Color indigo{75U, 0, 130U, 255U};
-constexpr SDL_Color violet{238U, 130U, 238U, 255U};
-constexpr SDL_Color lavender{230U, 230U, 250U, 255U};
-constexpr SDL_Color beige{245U, 245U, 220U, 255U};
-constexpr SDL_Color ivory{255U, 255U, 240U, 255U};
-
-constexpr SDL_Color chocolate{210U, 105U, 30U, 255U};
-constexpr SDL_Color coral{255U, 127U, 80U, 255U};
-constexpr SDL_Color salmon{250U, 128U, 114U, 255U};
-constexpr SDL_Color khaki{240U, 230U, 140U, 255U};
-}
-
 namespace pce {
-inline SDL_Color clear_color = ui::colors::dark_dark_brown;
+inline SDL_Color clear_color = colors::dark_dark_brown;
 
 inline void DrawImgui(SDL_Renderer *renderer) {
     ImGui_ImplSDLRenderer3_NewFrame();
