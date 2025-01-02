@@ -8,13 +8,28 @@
 
 namespace pce {
 struct Table {
-    //using Cell = std::variant<u32, f32>;
+    using Cell = String;
+    using Column = List<Cell>;
+    String name;
+    List<String> headers { };
+    List<Column> columns { };
+    explicit Table(String&& name) : name(std::move(name)) { }
+    void AddColumn(String&& title, const List<String>& values) {
+        ASSERT_DBG_RETURN(ColumnCount() == 0 || values.Size() == RowCount(), "Received different amount of values", );
+        headers.EmplaceBack(std::move(title));
+        columns.EmplaceBack(values);
+    }
+    [[nodiscard]] constexpr u32 RowCount() const { return columns[0].Size(); }
+    [[nodiscard]] constexpr u32 ColumnCount() const { return columns.Size(); }
+};
+
+struct TableU32 {
     using Cell = u32;
     using Column = List<Cell>;
     String name;
-    List<String> headers;
-    List<Column> columns;
-    Table(String&& name) : name(std::move(name)), headers(), columns() { }
+    List<String> headers { };
+    List<Column> columns { };
+    explicit TableU32(String&& name) : name(std::move(name)) { }
     void AddColumn(String&& title, const List<u32>& values) {
         ASSERT_DBG_RETURN(ColumnCount() == 0 || values.Size() == RowCount(), "Received different amount of values", );
         headers.EmplaceBack(std::move(title));
@@ -24,7 +39,7 @@ struct Table {
     [[nodiscard]] constexpr u32 ColumnCount() const { return columns.Size(); }
 };
 
-inline String TableToString (const Table& table) {
+inline String TableToString (const TableU32& table) {
     String header_string = "|";
     for (const String& header : table.headers) { header_string += std::format(" {} |", header); }
     String line ('-', header_string.size());

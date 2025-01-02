@@ -17,6 +17,7 @@ using pce::Span;
 using pce::List;
 using pce::LoggerTable;
 using pce::Table;
+using pce::TableU32;
 using pce::Select;
 using pce::Logger;
 namespace math = pce::math;
@@ -165,12 +166,19 @@ void Game::PlayTick(Tick tick, pce::ui::UISystem& ui_system, const pce::ui::Font
     for (const Planet planet : planet_archetype) { planet.QualityOfLife() = GetQualityOfLife(planet); }
     for (Market& market : state_archetype.markets) { market.RecalculateMarkets(); }
 
-    Table table ("Fish");
-    table.AddColumn("Assets       ", List (10, 1U));
-    table.AddColumn("Fish         ", List (10, 100U));
-    table.AddColumn("Texture      ", List (10, 420U + tick.Value()));
 
-    DrawTable(ui_system, table, font);
+    static pce::ui::TableElement::Handle table_handle;
+    Table table ("Fish");
+    table.AddColumn("Assets       ", List (10, String(1U)));
+    table.AddColumn("Fish         ", List (10, String(100U)));
+    table.AddColumn("Texture      ", List (10, String(420U + tick.Value())));
+
+    static b8 update_once = true;
+    if (update_once) {
+        update_once = false;
+        table_handle = ui_system.CreateTable(table, font, pce::colors::light_sky_blue);
+    }
+    ui_system.Update(table_handle, table);
     return;
 
     LoggerTable farm_table { "Farms", farm_archetype.Count };
