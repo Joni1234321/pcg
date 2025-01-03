@@ -167,7 +167,6 @@ void Game::PlayTick(Tick tick, pce::ui::UISystem& ui_system, const pce::ui::Font
     for (Market& market : state_archetype.markets) { market.RecalculateMarkets(); }
 
 
-    static pce::ui::TableElement::Handle table_handle;
     Table table { "Farms" };
     table.AddColumn("Type ", farm_archetype.types);
     table.AddColumn("Assets       ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.assets.Total(); }));
@@ -176,11 +175,9 @@ void Game::PlayTick(Tick tick, pce::ui::UISystem& ui_system, const pce::ui::Font
     table.AddColumn("Last result  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.last_result; }));
     table.AddColumn("Population balance", farm_archetype.population_balance);
 
-    static b8 update_once = true;
-    if (update_once) {
-        update_once = false;
-        table_handle = ui_system.CreateTable(table, font, pce::colors::light_sky_blue);
-    }
+    constexpr f32 table_x = 200.0F;
+    constexpr f32 table_y = 200.0F;
+    static pce::ui::TableElement::Handle table_handle = ui_system.CreateTable(table, font, pce::colors::light_sky_blue, table_x, table_y);
     ui_system.UpdateTable(table_handle, table);
     return;
 

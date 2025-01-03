@@ -22,13 +22,13 @@ struct Table {
     template <typename T> void AddColumn(String&& title, const List<T>& values) {
         headers.EmplaceBack(std::move(title));
         List<String> strings { values.Size() };
-        for (const auto& value : values) { strings.EmplaceBack(String(value)); }
+        for (const auto& value : values) { strings.EmplaceBack(FormatValue(value)); }
         columns.EmplaceBack(strings);
     }
 
     [[nodiscard]] constexpr u32 RowCount() const { return columns[0].Size(); }
     [[nodiscard]] constexpr u32 ColumnCount() const { return columns.Size(); }
-    [[nodiscard]] constexpr const u32 Size() const { return RowCount() * ColumnCount(); }
+    [[nodiscard]] constexpr u32 Size() const { return RowCount() * ColumnCount(); }
 };
 
 struct TableU32 {
