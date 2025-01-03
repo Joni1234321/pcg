@@ -105,8 +105,11 @@ struct TableElement {
         u32 id;
     };
 
+    SDL_Color text_color;
+    const FontCollection& font_collection;
     List<TextElement::Handle> headers;
     List<TextElement::Handle> text_grid;
+    RowInfo header_row_meta;
     List<RowInfo> row_meta;
     List<ColumnInfo> column_meta;
 };
@@ -165,7 +168,21 @@ public:
             }
         }
         (void)list_elements.emplace_back(color, std::move(rects));
-        return ListElement::Handle{static_cast<u32>(list_elements.size() - 1)};
+        return ListElement::Handle{ static_cast<u32>(list_elements.size() - 1)};
+    }
+
+
+    void UpdateText(const TextElement::Handle handle, const String& string) {
+        (void)TTF_SetTextString(text_elements[handle.id].text, string.CString(), string.size());
+    }
+    void UpdateText(const TextElement::Handle handle, const String& string, const f32 x, const f32 y) {
+        TextElement& text_element = text_elements[handle.id];
+        (void)TTF_SetTextString(text_element.text, string.CString(), string.size());
+        text_element.x = x;
+        text_element.y = y;
+    }
+    void GetTextSize(const TextElement::Handle handle, u32 *width, u32 *height) {
+        (void)TTF_GetTextSize(text_elements[handle.id].text, reinterpret_cast<i32*>(width) , reinterpret_cast<i32*>(height));
     }
 
 
@@ -174,8 +191,115 @@ public:
     [[nodiscard]] ListElement operator [](const ListElement::Handle handle) { return list_elements[handle.id]; }
     [[nodiscard]] TableElement operator [](const TableElement::Handle handle) { return table_elements[handle.id]; }
 
-        TableElement::Handle CreateTable (const Table& table, const FontCollection& font_collection, SDL_Color text_color) {
-        TableElement table_element;
+
+    void IncreaseTableSize (TableElement& table_element, const Table& table) {
+        ASSERT_DBG_RETURN(table.Size() > table_element.text_grid.Size(), "New table layout is not bigger than previous",)
+        const u32 old_columns = table_element.column_meta.Size();
+        const u32 old_size = table_element.text_grid.Size();
+        constexpr f32 x_start = 500.0F;
+        constexpr f32 y_start = 200.0F;
+        f32 x = x_start;
+        f32 y = y_start;
+
+        table_element.header_row_meta.y = y;
+        table_element.headers.Resize(table.ColumnCount());
+        table_element.text_grid.Resize(table.Size());
+        table_element.row_meta.Resize(table.RowCount());
+        table_element.column_meta.Resize(table.ColumnCount());
+
+        // Create header
+        for (u32 column = 0; column < table.headers.Size(); column++) {
+            const b8 recycle_text = column < old_columns;
+
+            const String& string = table.headers[column];
+            ColumnInfo& column_info = table_element.column_meta[column];
+            TextElement::Handle& handle = table_element.headers[column];
+            if (recycle_text) {
+                UpdateText(handle, string, x, y);
+            }
+            else {
+                handle = CreateText(string, table_element.font_collection.normal, table_element.text_color, x, y);
+            }
+            GetTextSize(handle, &column_info.width, &table_element.header_row_meta.height);
+            column_info.x = x;
+            x += static_cast<f32>(column_info.width);
+        }
+        y += static_cast<f32>(table_element.header_row_meta.height);
+
+        // Create row
+        for (u32 row = 0; row < table.RowCount(); row++) {
+            for (u32 column = 0; column < table.ColumnCount(); column++) {
+                x = table_element.column_meta[column].x;
+
+                const u32 i = row * table.ColumnCount() + column;
+                const b8 recycle_text = i < old_size;
+
+                const String& string = table.columns[column][row];
+                TextElement::Handle& text_handle = table_element.text_grid[i];
+                if (recycle_text) {
+                    UpdateText(text_handle, string, x, y);
+                }
+                else {
+                    text_handle = CreateText(string, table_element.font_collection.small, table_element.text_color, x, y);
+                }
+            }
+
+            const TextElement::Handle first_text_in_row = table_element.text_grid[row * table.ColumnCount()];
+            RowInfo& row_info = table_element.row_meta[row];
+            GetTextSize(first_text_in_row, nullptr, &row_info.height);
+            y += static_cast<f32>(row_info.height);
+            row_info.y = y;
+        }
+
+    }
+
+    TableElement::Handle CreateTable (const Table& table, const FontCollection& font_collection, SDL_Color text_color) {
+        TableElement table_element { .text_color = text_color, .font_collection = font_collection };
+        IncreaseTableSize(table_element, table);
+        // constexpr f32 x_start = 500.0F;
+        // constexpr f32 y_start = 200.0F;
+        // f32 x = x_start;
+        // f32 y = y_start;
+        //
+        // // Create header
+        // for (const String& title : table.headers) {
+        //     ColumnInfo column_info { x, 0U};
+        //     RowInfo header_row_info { y, 0U };
+        //
+        //     const TextElement::Handle handle = CreateText(title, font_collection.normal, text_color, x, y);
+        //     (void)TTF_GetTextSize(this->operator[](handle).text, reinterpret_cast<i32*>(&column_info.width), reinterpret_cast<i32*>(&header_row_info.height));
+        //
+        //     (void)table_element.column_meta.EmplaceBack(column_info);
+        //     (void)table_element.row_meta.EmplaceBack(header_row_info);
+        //     (void)table_element.headers.EmplaceBack(handle);
+        //
+        //     x += column_info.width;
+        // }
+        //
+        // // Create row
+        // for (u32 row = 0; row < table.RowCount(); row++) {
+        //     x = x_start;
+        //     y += table_element.row_meta.Back().height;
+        //     RowInfo row_info { y, 0U };
+        //
+        //     for (u32 column = 0; column < table.ColumnCount(); column++) {
+        //         const TextElement::Handle handle = CreateText(table.columns[column][row], font_collection.small, text_color, x, y);
+        //         (void)table_element.text_grid.EmplaceBack(handle);
+        //
+        //         x += table_element.column_meta[column].width;
+        //     }
+        //
+        //     (void)TTF_GetTextSize(this->operator[](table_element.text_grid.Back()).text, nullptr, reinterpret_cast<i32*>(&row_info.height));
+        //     (void)table_element.row_meta.EmplaceBack(row_info);
+        // }
+        //
+        (void)table_elements.EmplaceBack(table_element);
+        return TableElement::Handle {table_elements.Size() - 1 };
+    }
+
+
+    TableElement::Handle CreateTable (const TableU32& table, const FontCollection& font_collection, SDL_Color text_color) {
+        TableElement table_element { .font_collection = font_collection};
         constexpr f32 x_start = 500.0F;
         constexpr f32 y_start = 200.0F;
         f32 x = x_start;
@@ -203,52 +327,9 @@ public:
             RowInfo row_info { y, 0U };
 
             for (u32 column = 0; column < table.ColumnCount(); column++) {
-                const TextElement::Handle handle = CreateText(table.columns[column][row], font_collection.small, text_color, x, y);
-                (void)table_element.text_grid.EmplaceBack(handle);
-
-                x += table_element.column_meta[column].width;
-            }
-
-            (void)TTF_GetTextSize(this->operator[](table_element.text_grid.Back()).text, nullptr, reinterpret_cast<i32*>(&row_info.height));
-            (void)table_element.row_meta.EmplaceBack(row_info);
-        }
-
-        (void)table_elements.EmplaceBack(table_element);
-        return TableElement::Handle {table_elements.Size() - 1 };
-    }
-
-    TableElement::Handle CreateTable (const TableU32& table, const FontCollection& font_collection, SDL_Color text_color) {
-        TableElement table_element;
-        constexpr f32 x_start = 500.0F;
-        constexpr f32 y_start = 200.0F;
-        f32 x = x_start;
-        f32 y = y_start;
-
-        // Create header
-        for (const String& title : table.headers) {
-            ColumnInfo column_info { x, 0U};
-            RowInfo header_row_info { y, 0U };
-
-            const pce::ui::TextElement::Handle handle = CreateText(title, font_collection.normal, text_color, x, y);
-            (void)TTF_GetTextSize(this->operator[](handle).text, reinterpret_cast<i32*>(&column_info.width), reinterpret_cast<i32*>(&header_row_info.height));
-
-            (void)table_element.column_meta.EmplaceBack(column_info);
-            (void)table_element.row_meta.EmplaceBack(header_row_info);
-            (void)table_element.headers.EmplaceBack(handle);
-
-            x += column_info.width;
-        }
-
-        // Create row
-        for (u32 row = 0; row < table.RowCount(); row++) {
-            x = x_start;
-            y += table_element.row_meta.Back().height;
-            RowInfo row_info { y, 0U };
-
-            for (u32 column = 0; column < table.ColumnCount(); column++) {
                 const u32& value = table.columns[column][row];
                 const String string = std::to_string(value);
-                const pce::ui::TextElement::Handle handle = CreateText(string, font_collection.small, text_color, x, y);
+                const TextElement::Handle handle = CreateText(string, font_collection.small, text_color, x, y);
                 (void)table_element.text_grid.EmplaceBack(handle);
 
                 x += table_element.column_meta[column].width;
@@ -259,20 +340,22 @@ public:
         }
 
         (void)table_elements.EmplaceBack(table_element);
-        return TableElement::Handle{static_cast<u32>(table_elements.Size() - 1)};
+        return TableElement::Handle{(table_elements.Size() - 1)};
     }
 
-    void Update (const TableElement::Handle& handle, const Table& table) {
-        TableElement table_element = this->operator[](handle);
+    void UpdateTable (const TableElement::Handle& handle, const Table& table) {
+        TableElement& table_element = table_elements[handle.id];
+        if (table.Size() > table_element.text_grid.Size()) { IncreaseTableSize(table_element, table); }
         for (u32 row = 0; row < table.RowCount(); row++) {
             for (u32 column = 0; column < table.ColumnCount(); column++) {
-                const TextElement text_element = this->operator[](table_element.text_grid[column + row * table.ColumnCount()]);
-                const String string = table.columns[column][row];
-                TTF_SetTextString(text_element.text, string.CString(), string.size());
+                const u32 i = row * table.ColumnCount() + column;
+                const TextElement::Handle text_handle = table_element.text_grid[i];
+                const String& string = table.columns[column][row];
+                UpdateText(text_handle, string);
             }
         }
     }
-    void Update (const TableElement::Handle& handle, const TableU32& table) {
+    void UpdateTable (const TableElement::Handle& handle, const TableU32& table) {
       TableElement table_element = this->operator[](handle);
         for (u32 row = 0; row < table.RowCount(); row++) {
             for (u32 column = 0; column < table.ColumnCount(); column++) {

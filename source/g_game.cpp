@@ -168,17 +168,20 @@ void Game::PlayTick(Tick tick, pce::ui::UISystem& ui_system, const pce::ui::Font
 
 
     static pce::ui::TableElement::Handle table_handle;
-    Table table ("Fish");
-    table.AddColumn("Assets       ", List (10, String(1U)));
-    table.AddColumn("Fish         ", List (10, String(100U)));
-    table.AddColumn("Texture      ", List (10, String(420U + tick.Value())));
+    Table table { "Farms" };
+    table.AddColumn("Type ", farm_archetype.types);
+    table.AddColumn("Assets       ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.assets.Total(); }));
+    table.AddColumn("Equity       ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.equity; }));
+    table.AddColumn("Liabilities  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.liabilities; }));
+    table.AddColumn("Last result  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.last_result; }));
+    table.AddColumn("Population balance", farm_archetype.population_balance);
 
     static b8 update_once = true;
     if (update_once) {
         update_once = false;
         table_handle = ui_system.CreateTable(table, font, pce::colors::light_sky_blue);
     }
-    ui_system.Update(table_handle, table);
+    ui_system.UpdateTable(table_handle, table);
     return;
 
     LoggerTable farm_table { "Farms", farm_archetype.Count };
