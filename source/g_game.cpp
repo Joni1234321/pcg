@@ -1,6 +1,6 @@
 // ReSharper disable CppNonExplicitConvertingConstructor
 #include "g_game.hpp"
-#include "r_engine.hpp"
+#include "r_ui.hpp"
 #include "u_algorithm.hpp"
 #include "g_components.hpp"
 
@@ -82,7 +82,7 @@ constexpr u16 BUILDING_TIME = 30U;
 constexpr f32 GROWTH_RATE_PER_MONTH = 0.0025F * PER_MONTH;
 
 
-void Game::PlayTick(Tick tick, pce::ui::UISystem& ui_system, const pce::ui::FontCollection& font, const b8 debug) {
+void Game::PlayTick(Tick tick, pce::ui::UISystem& ui_system, const b8 debug) {
     // Construction
     for (const Player player : player_archetype) { ProcessConstructionQueue(player); }
     for (const Planet planet : planet_archetype) { ProcessConstructionQueue(planet); }
@@ -167,18 +167,6 @@ void Game::PlayTick(Tick tick, pce::ui::UISystem& ui_system, const pce::ui::Font
     for (Market& market : state_archetype.markets) { market.RecalculateMarkets(); }
 
 
-    Table table { "Farms" };
-    table.AddColumn("Type ", farm_archetype.types);
-    table.AddColumn("Assets       ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.assets.Total(); }));
-    table.AddColumn("Equity       ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.equity; }));
-    table.AddColumn("Liabilities  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.liabilities; }));
-    table.AddColumn("Last result  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.last_result; }));
-    table.AddColumn("Population balance", farm_archetype.population_balance);
-
-    constexpr f32 table_x = 200.0F;
-    constexpr f32 table_y = 200.0F;
-    static pce::ui::TableElement::Handle table_handle = ui_system.CreateTable(table, font, pce::colors::light_sky_blue, table_x, table_y);
-    ui_system.UpdateTable(table_handle, table);
     return;
 
     LoggerTable farm_table { "Farms", farm_archetype.Count };

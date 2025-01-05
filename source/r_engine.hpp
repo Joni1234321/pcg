@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <functional>
 
-#include "r_ui.hpp"
+#include "r_colors.hpp"
 #include "u_collections.hpp"
 #include "u_types.hpp"
 
@@ -48,7 +48,6 @@ struct Engine {
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
 
-    ui::FontCollection font;
 
     Engine() = default;
 
@@ -59,11 +58,6 @@ struct Engine {
         }
         if (!TTF_Init()) {
             SDL_Log("SDL_ttf failed (%s)", SDL_GetError());
-            return false;
-        }
-        const RelativePath font_path = "font.ttf";
-        if (!font.Load(assets::Asset(font_path))) {
-            SDL_Log("Font not loaded (%s)", SDL_GetError());
             return false;
         }
         return true;
@@ -105,9 +99,9 @@ struct Engine {
 
     void Present() { (void) SDL_RenderPresent(renderer); }
 
-    ~Engine() {
-        font.~FontCollection();
+    void GetWindowSize(u32* width, u32* height) { (void) SDL_GetWindowSize(window, reinterpret_cast<i32*>(width), reinterpret_cast<i32*>(height)); }
 
+    ~Engine() {
         ImGui_ImplSDLRenderer3_Shutdown();
         ImGui_ImplSDL3_Shutdown();
         ImGui::DestroyContext(ImGui::GetCurrentContext());

@@ -14,7 +14,7 @@ struct NewGameSettings {
 struct Game {
     pce::Logger logger;
     explicit Game(NewGameSettings);
-    void PlayTick(Tick tick, pce::ui::UISystem& ui_system, const pce::ui::FontCollection& font, const b8 debug);
+    void PlayTick(Tick tick, pce::ui::UISystem& ui_system, const b8 debug);
 };
 
 constexpr NewGameSettings GAME_SETTINGS_CHALLENGE = { .players = 2U, .planets = 4U };

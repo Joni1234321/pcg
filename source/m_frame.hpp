@@ -13,10 +13,16 @@ public:
 };
 
 class FPSFrame {
+    pce::ui::TextElement::Handle tick_text;
 public:
     FPSFrame(pce::ui::UISystem& ui_system, const pce::ui::FontCollection& font);
     void Tick(u32 i, pce::ui::UISystem& ui_system);
-private:
-    pce::ui::TextElement::Handle tick_text;
+};
+
+class OverviewFrame {
+    pce::ui::TableElement::Handle table_handle;
+public:
+    OverviewFrame(pce::ui::UISystem& ui_system, const pce::ui::FontCollection& font);
+    void Tick(pce::ui::UISystem& ui_system);
 };
 }
