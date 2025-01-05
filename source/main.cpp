@@ -15,7 +15,7 @@ using pce::List;
 using namespace pcg::frame;
 
 void RunGame(Engine& engine) {
-    ui::UISystem ui_system(engine.renderer);
+    ui::UISystem ui_system(engine);
 
     MainMenuFrame main_menu_frame(ui_system);
     FPSFrame fps_frame(ui_system);
@@ -28,8 +28,6 @@ void RunGame(Engine& engine) {
         constexpr u32 skip = 10U;
         const bool debug = tick.Value() % skip == skip - 1U;
 
-        // game.logger.LogLine();
-        // game.logger.Log("Tick {:6}", tick);
         game.PlayTick(tick, ui_system, debug);
 
         main_menu_frame.Tick(tick.Value(), ui_system);
@@ -54,7 +52,7 @@ void RunGame(Engine& engine) {
         engine.ClearScreen();
 
         ui_system.Draw(engine.renderer);
-        DrawImgui(engine.renderer);
+        //DrawImgui(engine.renderer);
 
         engine.Present();
 

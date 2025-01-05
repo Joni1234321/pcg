@@ -1,8 +1,6 @@
 #pragma once
 
-#include <vector>
 #include <filesystem>
-#include <functional>
 
 #include "r_colors.hpp"
 #include "u_collections.hpp"
@@ -18,12 +16,10 @@
 
 #include <SDL3_ttf/SDL_ttf.h>
 
-
-
 namespace pce::assets {
-inline AbsolutePath Absolute(const RelativePath &relative_path) { return absolute(relative_path); }
+inline AbsolutePath Absolute(const RelativePath& relative_path) { return absolute(relative_path); }
 
-inline AbsolutePath Asset(const AssetPath &asset_path) {
+inline AbsolutePath Asset(const AssetPath& asset_path) {
     const RelativePath assets_dir = R"(../assets)";
     return absolute(assets_dir / asset_path);
 }
@@ -32,7 +28,7 @@ inline AbsolutePath Asset(const AssetPath &asset_path) {
 namespace pce {
 inline SDL_Color clear_color = colors::dark_dark_brown;
 
-inline void DrawImgui(SDL_Renderer *renderer) {
+inline void DrawImgui(SDL_Renderer* renderer) {
     ImGui_ImplSDLRenderer3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
@@ -45,9 +41,8 @@ inline void DrawImgui(SDL_Renderer *renderer) {
 }
 
 struct Engine {
-    SDL_Window *window = nullptr;
-    SDL_Renderer *renderer = nullptr;
-
+    SDL_Window* window = nullptr;
+    SDL_Renderer* renderer = nullptr;
 
     Engine() = default;
 
@@ -65,8 +60,7 @@ struct Engine {
 
     b8 InitWindow(const u32 width, const u32 height) {
         constexpr u32 window_flags = SDL_WINDOW_RESIZABLE;
-        if (!SDL_CreateWindowAndRenderer("Video Game", static_cast<i32>(width), static_cast<i32>(height), window_flags,
-                                         &window, &renderer)) {
+        if (!SDL_CreateWindowAndRenderer("Video Game", static_cast<i32>(width), static_cast<i32>(height), window_flags, &window, &renderer)) {
             SDL_Log("SDL_CreateWindowAndRenderer failed (%s)", SDL_GetError());
             SDL_Quit();
             return false;
@@ -76,9 +70,9 @@ struct Engine {
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
-        ImGuiIO *io = &ImGui::GetIO();
+        ImGuiIO* io = &ImGui::GetIO();
         io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-        io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
+        io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
         if (!ImGui_ImplSDL3_InitForSDLRenderer(window, renderer)) {
             SDL_Log("Failed to initialize ImGui SDL3 backend.");
             return false;
@@ -93,13 +87,13 @@ struct Engine {
     }
 
     void ClearScreen() {
-        (void) SDL_SetRenderDrawColor(renderer, clear_color.r, clear_color.g, clear_color.b, clear_color.a);
-        (void) SDL_RenderClear(renderer);
+        (void)SDL_SetRenderDrawColor(renderer, clear_color.r, clear_color.g, clear_color.b, clear_color.a);
+        (void)SDL_RenderClear(renderer);
     }
 
-    void Present() { (void) SDL_RenderPresent(renderer); }
+    void Present() { (void)SDL_RenderPresent(renderer); }
 
-    void GetWindowSize(u32* width, u32* height) { (void) SDL_GetWindowSize(window, reinterpret_cast<i32*>(width), reinterpret_cast<i32*>(height)); }
+    void GetWindowSize(u32* width, u32* height) { (void)SDL_GetWindowSize(window, reinterpret_cast<i32*>(width), reinterpret_cast<i32*>(height)); }
 
     ~Engine() {
         ImGui_ImplSDLRenderer3_Shutdown();

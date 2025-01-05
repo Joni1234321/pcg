@@ -97,12 +97,45 @@ struct TableElement {
     f32 x;
     f32 y;
     SDL_Color text_color;
-    const FontCollection& font_collection;
     List<TextElement::Handle> headers;
     List<TextElement::Handle> text_grid;
     RowInfo header_row_meta;
     List<RowInfo> row_meta;
     List<ColumnInfo> column_meta;
+};
+
+
+class Color {
+    u8 red;
+    u8 green;
+    u8 blue;
+    u8 alpha;
+public:
+    Color(u8 r, u8 g, u8 b) : red(r), green(g), blue(b), alpha(255) { }
+    Color(u8 r, u8 g, u8 b, u8 a) : red(r), green(g), blue(b), alpha(a) { }
+    Color(f32 r, f32 g, f32 b) : red(r * 255U), green(g * 255U), blue(b * 255U), alpha(255) { }
+    Color(f32 r, f32 g, f32 b, f32 a) : red(r * 255U), green(g * 255U), blue(b * 255U), alpha(a * 255U) { }
+    Color (const SDL_Color color) : Color(color.r, color.g, color.b, color.a) { }
+    Color (const SDL_FColor color) : Color(color.r, color.g, color.b, color.a) { }
+};
+class Node {
+    Color background_color;
+    float2 position;
+    uint2 size;
+    List<Node> children;
+public:
+    Node();
+    void AddChild (Node&& node);
+};
+struct TextNode : Node {
+    void SetText(String& string);
+    String& GetText();
+private:
+    String text;
+};
+struct NodeBuilder {
+    NodeBuilder();
+    void WithColor(u8 r, u8 g, u8 b);
 };
 
 class UISystem {
@@ -114,14 +147,19 @@ class UISystem {
     List<TableElement> table_elements { };
 
 public:
+    u32 screen_width;
+    u32 screen_height;
     FontCollection font;
-    explicit UISystem(SDL_Renderer* renderer) : text_renderer(TTF_CreateRendererTextEngine(renderer)) {
+    FontCollection font_bold;
+    explicit UISystem(Engine& engine) : text_renderer(TTF_CreateRendererTextEngine(engine.renderer)) {
+        engine.GetWindowSize(&screen_width, &screen_height);
         const RelativePath font_path = "font.ttf";
         if (!font.Load(assets::Asset(font_path))) { SDL_Log("Font not loaded (%s)", SDL_GetError()); }
+        const RelativePath font_bold_path = "TitilliumWeb-SemiBold.ttf";
+        if (!font_bold.Load(assets::Asset(font_bold_path))) { SDL_Log("Bold font not loaded (%s)", SDL_GetError()); }
     }
 
     void Draw(SDL_Renderer* renderer) {
-        for (const TextElement& text : text_elements) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
         for (const Element& element : elements) {
             (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
             (void)SDL_RenderFillRect(renderer, &element.rect);
@@ -130,24 +168,29 @@ public:
             (void)SDL_SetRenderDrawColor(renderer, list.color.r, list.color.g, list.color.b, list.color.a);
             (void)SDL_RenderFillRects(renderer, list.rects.data(), static_cast<u32>(list.rects.size()));
         }
+        for (const TextElement& text : text_elements) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
+
     }
 
-    TextElement::Handle CreateText(const String& string, TTF_Font* font, const SDL_Color color, f32 x, const f32 y, const TextAlign alignment, const f32 parent_width) {
+    TextElement::Handle CreateTextAligned(const String& string, TTF_Font* font, const SDL_Color color, f32 x, const f32 y, const TextAlign alignment, const u32 width) {
         TTF_Text* text = TTF_CreateText(text_renderer, font, string.CString(), string.size());
         i32 text_width;
         (void)TTF_SetTextColor(text, color.r, color.g, color.b, color.a);
         (void)TTF_GetTextSize(text, &text_width, nullptr);
         switch (alignment) {
             case TextAlign::left: break;
-            case TextAlign::center: x += (parent_width - static_cast<f32>(text_width)) * 0.5F;
-                break;
-            case TextAlign::right: x += parent_width - static_cast<f32>(text_width);
-                break;
+            case TextAlign::center: x += (width - static_cast<f32>(text_width)) * 0.5F;
+            break;
+            case TextAlign::right: x += width - static_cast<f32>(text_width);
+            break;
         }
         (void)text_elements.emplace_back(text, x, y);
         return TextElement::Handle { static_cast<u32>(text_elements.size() - 1) };
     }
 
+    TextElement::Handle CreateText(const String& string, TTF_Font* font, const SDL_Color color, f32 x, const f32 y) {
+        return CreateTextAligned(string, font, color, x, y, TextAlign::left, 0U);
+    }
     Element::Handle CreateElement(const SDL_FRect rect, const SDL_Color color, void (*on_click)()) {
         (void)elements.emplace_back(color, rect, on_click);
         return Element::Handle { static_cast<u32>(elements.size() - 1) };
@@ -182,10 +225,10 @@ public:
         text_element.y = y;
     }
 
-    [[nodiscard]] Element operator [](const Element::Handle handle) { return elements[handle.id]; }
-    [[nodiscard]] TextElement operator [](const TextElement::Handle handle) { return text_elements[handle.id]; }
-    [[nodiscard]] ListElement operator [](const ListElement::Handle handle) { return list_elements[handle.id]; }
-    [[nodiscard]] TableElement operator [](const TableElement::Handle handle) { return table_elements[handle.id]; }
+    [[nodiscard]] Element& operator [](const Element::Handle handle) { return elements[handle.id]; }
+    [[nodiscard]] TextElement& operator [](const TextElement::Handle handle) { return text_elements[handle.id]; }
+    [[nodiscard]] ListElement& operator [](const ListElement::Handle handle) { return list_elements[handle.id]; }
+    [[nodiscard]] TableElement& operator [](const TableElement::Handle handle) { return table_elements[handle.id]; }
 
     void IncreaseTableSize(TableElement& table_element, const Table& table) {
         ASSERT_DBG_RETURN(table.Size() > table_element.text_grid.Size(), "New table layout is not bigger than previous",)
@@ -208,7 +251,7 @@ public:
             ColumnInfo& column_info = table_element.column_meta[column];
             TextElement::Handle& handle = table_element.headers[column];
             if (recycle_text) { UpdateText(handle, string, x, y); } else {
-                handle = CreateText(string, table_element.font_collection.small, table_element.text_color, x, y, TextAlign::left, table_element.column_meta[column].width);
+                handle = CreateText(string, font.small, table_element.text_color, x, y);
             }
             GetTextSize(handle, &column_info.width, &table_element.header_row_meta.height);
             column_info.x = x;
@@ -227,7 +270,7 @@ public:
                 const String& string = table.columns[column][row];
                 TextElement::Handle& text_handle = table_element.text_grid[i];
                 if (recycle_text) { UpdateText(text_handle, string, x, y); } else {
-                    text_handle = CreateText(string, table_element.font_collection.small, table_element.text_color, x, y, TextAlign::left, table_element.column_meta[column].width);
+                    text_handle = CreateText(string, font.small, table_element.text_color, x, y);
                 }
             }
 
@@ -239,8 +282,8 @@ public:
         }
     }
 
-    TableElement::Handle CreateTable(const Table& table, const FontCollection& font_collection, SDL_Color text_color, const f32 x, const f32 y) {
-        TableElement table_element { .x = x, .y = y, .text_color = text_color, .font_collection = font_collection };
+    TableElement::Handle CreateTable(const Table& table, SDL_Color text_color, const f32 x, const f32 y) {
+        TableElement table_element { .x = x, .y = y, .text_color = text_color };
         IncreaseTableSize(table_element, table);
         (void)table_elements.EmplaceBack(table_element);
         return TableElement::Handle { table_elements.Size() - 1 };
@@ -260,8 +303,6 @@ public:
     }
 
     ~UISystem() {
-        font.~FontCollection();
-
         for (const TextElement& text : text_elements) { TTF_DestroyText(text.text); }
         for (const Element& element : elements) { }
         TTF_DestroyRendererTextEngine(text_renderer);

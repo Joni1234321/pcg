@@ -19,6 +19,16 @@ using c16 = char16_t;
 using c32 = char32_t;
 using b8 = bool;
 
+struct float2 {
+    f32 x;
+    f32 y;
+};
+struct uint2 {
+    u32 x;
+    u32 y;
+};
+
+
 constexpr u32 U32_MAX = UINT32_MAX;
 
 template <class T, class U>concept Derived = std::is_base_of_v<U, T>;
