@@ -17,8 +17,8 @@ using namespace pcg::frame;
 void RunGame(Engine& engine) {
     ui::UISystem ui_system(engine.renderer);
 
-    MainMenuFrame main_menu_frame(ui_system, engine.font);
-    FPSFrame fps_frame(ui_system, engine.font);
+    MainMenuFrame main_menu_frame(ui_system);
+    FPSFrame fps_frame(ui_system);
     //OverviewFrame table_test_frame(ui_system, engine.font);
 
     Tick tick { 0U };
@@ -30,7 +30,7 @@ void RunGame(Engine& engine) {
 
         // game.logger.LogLine();
         // game.logger.Log("Tick {:6}", tick);
-        game.PlayTick(tick, ui_system, engine.font, debug);
+        game.PlayTick(tick, ui_system, debug);
 
         main_menu_frame.Tick(tick.Value(), ui_system);
         fps_frame.Tick(tick.Value(), ui_system);

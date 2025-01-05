@@ -6,6 +6,7 @@
 #include "u_table.hpp"
 #include "u_collections.hpp"
 #include "u_types.hpp"
+#include "r_engine.hpp"
 
 #include <SDL3/SDL_render.h>
 
@@ -106,7 +107,6 @@ struct TableElement {
 
 class UISystem {
     TTF_TextEngine *text_renderer;
-    ui::FontCollection font;
 
     std::vector<TextElement> text_elements { };
     std::vector<Element> elements { };
@@ -114,11 +114,11 @@ class UISystem {
     List<TableElement> table_elements { };
 
 public:
+    FontCollection font;
     UISystem(SDL_Renderer *renderer) : text_renderer(TTF_CreateRendererTextEngine(renderer)) {
         const RelativePath font_path = "font.ttf";
         if (!font.Load(assets::Asset(font_path))) {
             SDL_Log("Font not loaded (%s)", SDL_GetError());
-            return false;
         }
     }
 
