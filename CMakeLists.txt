@@ -18,6 +18,7 @@ add_executable(${PROJECT_NAME}
                source/g_factory.cpp
                source/g_game.cpp
                source/m_frame.cpp
+               source/r_ui.cpp
                ${imgui_dir}/imgui.cpp
                ${imgui_dir}/imgui_demo.cpp
                ${imgui_dir}/imgui_draw.cpp
