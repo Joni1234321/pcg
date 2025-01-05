@@ -19,12 +19,12 @@ inline b8 bb_collision(const f32 x, f32 y, const SDL_FRect rect) {
 }
 
 struct FontCollection {
-    TTF_Font *small = nullptr;
-    TTF_Font *normal = nullptr;
-    TTF_Font *large = nullptr;
-    TTF_Font *h1 = nullptr;
+    TTF_Font* small = nullptr;
+    TTF_Font* normal = nullptr;
+    TTF_Font* large = nullptr;
+    TTF_Font* h1 = nullptr;
 
-    b8 Load(const AbsolutePath &path) {
+    b8 Load(const AbsolutePath& path) {
         const String font = path.string();
         small = TTF_OpenFont(font, 14.0F);
         normal = TTF_OpenFont(font, 22.0F);
@@ -59,7 +59,7 @@ struct TextElement {
         u32 id;
     };
 
-    TTF_Text *text;
+    TTF_Text* text;
     f32 x;
     f32 y;
 };
@@ -106,7 +106,7 @@ struct TableElement {
 };
 
 class UISystem {
-    TTF_TextEngine *text_renderer;
+    TTF_TextEngine* text_renderer;
 
     std::vector<TextElement> text_elements { };
     std::vector<Element> elements { };
@@ -115,50 +115,43 @@ class UISystem {
 
 public:
     FontCollection font;
-    UISystem(SDL_Renderer *renderer) : text_renderer(TTF_CreateRendererTextEngine(renderer)) {
+    explicit UISystem(SDL_Renderer* renderer) : text_renderer(TTF_CreateRendererTextEngine(renderer)) {
         const RelativePath font_path = "font.ttf";
-        if (!font.Load(assets::Asset(font_path))) {
-            SDL_Log("Font not loaded (%s)", SDL_GetError());
+        if (!font.Load(assets::Asset(font_path))) { SDL_Log("Font not loaded (%s)", SDL_GetError()); }
+    }
+
+    void Draw(SDL_Renderer* renderer) {
+        for (const TextElement& text : text_elements) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
+        for (const Element& element : elements) {
+            (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
+            (void)SDL_RenderFillRect(renderer, &element.rect);
+        }
+        for (const ListElement& list : list_elements) {
+            (void)SDL_SetRenderDrawColor(renderer, list.color.r, list.color.g, list.color.b, list.color.a);
+            (void)SDL_RenderFillRects(renderer, list.rects.data(), static_cast<u32>(list.rects.size()));
         }
     }
 
-    void Draw(SDL_Renderer *renderer) {
-        for (const TextElement &text: text_elements) { (void) TTF_DrawRendererText(text.text, text.x, text.y); }
-        for (const Element &element: elements) {
-            (void) SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
-            (void) SDL_RenderFillRect(renderer, &element.rect);
-        }
-        for (const ListElement &list: list_elements) {
-            (void) SDL_SetRenderDrawColor(renderer, list.color.r, list.color.g, list.color.b, list.color.a);
-            (void) SDL_RenderFillRects(renderer, list.rects.data(), static_cast<u32>(list.rects.size()));
-        }
-    }
-
-    TextElement::Handle CreateText(const String &string, TTF_Font *font, const SDL_Color color, f32 x, const f32 y, const TextAlign alignment, const
-                                   f32 parent_width) {
-        TTF_Text *text = TTF_CreateText(text_renderer, font, string.CString(), string.size());
+    TextElement::Handle CreateText(const String& string, TTF_Font* font, const SDL_Color color, f32 x, const f32 y, const TextAlign alignment, const f32 parent_width) {
+        TTF_Text* text = TTF_CreateText(text_renderer, font, string.CString(), string.size());
         i32 text_width;
         (void)TTF_SetTextColor(text, color.r, color.g, color.b, color.a);
         (void)TTF_GetTextSize(text, &text_width, nullptr);
         switch (alignment) {
-            case TextAlign::left:
-            break;
-            case TextAlign::center:
-                x += (parent_width - static_cast<f32>(text_width)) * 0.5F;
-            break;
-            case TextAlign::right:
-                x += parent_width - static_cast<f32>(text_width);
-            break;
+            case TextAlign::left: break;
+            case TextAlign::center: x += (parent_width - static_cast<f32>(text_width)) * 0.5F;
+                break;
+            case TextAlign::right: x += parent_width - static_cast<f32>(text_width);
+                break;
         }
         (void)text_elements.emplace_back(text, x, y);
-        return TextElement::Handle{static_cast<u32>(text_elements.size() - 1)};
+        return TextElement::Handle { static_cast<u32>(text_elements.size() - 1) };
     }
 
     Element::Handle CreateElement(const SDL_FRect rect, const SDL_Color color, void (*on_click)()) {
-        (void) elements.emplace_back(color, rect, on_click);
-        return Element::Handle{static_cast<u32>(elements.size() - 1)};
+        (void)elements.emplace_back(color, rect, on_click);
+        return Element::Handle { static_cast<u32>(elements.size() - 1) };
     }
-
 
     enum class ListDirection { horizontal, vertical };
     ListElement::Handle CreateList(const SDL_Color color, const SDL_FRect rect, const u32 count, const f32 gap, const ListDirection direction) {
@@ -169,25 +162,19 @@ public:
                 const f32 x = rect.x + (rect.w + gap) * static_cast<f32>(i);
                 rects.emplace_back(x, rect.y, rect.w, rect.h);
             }
-        }
-        else if (direction == ListDirection::vertical) {
+        } else if (direction == ListDirection::vertical) {
             for (u32 i = 0; i < count; i++) {
                 const f32 y = rect.y + (rect.h + gap) * static_cast<f32>(i);
                 rects.emplace_back(rect.x, y, rect.w, rect.h);
             }
         }
         (void)list_elements.emplace_back(color, std::move(rects));
-        return ListElement::Handle{ static_cast<u32>(list_elements.size() - 1)};
+        return ListElement::Handle { static_cast<u32>(list_elements.size() - 1) };
     }
 
+    void GetTextSize(const TextElement::Handle handle, u32* width, u32* height) const { (void)TTF_GetTextSize(text_elements[handle.id].text, reinterpret_cast<i32*>(width), reinterpret_cast<i32*>(height)); }
 
-    void GetTextSize(const TextElement::Handle handle, u32 *width, u32 *height) const {
-        (void)TTF_GetTextSize(text_elements[handle.id].text, reinterpret_cast<i32*>(width) , reinterpret_cast<i32*>(height));
-    }
-
-    void UpdateText(const TextElement::Handle handle, const String& string) {
-        (void)TTF_SetTextString(text_elements[handle.id].text, string.CString(), string.size());
-    }
+    void UpdateText(const TextElement::Handle handle, const String& string) { (void)TTF_SetTextString(text_elements[handle.id].text, string.CString(), string.size()); }
     void UpdateText(const TextElement::Handle handle, const String& string, const f32 x, const f32 y) {
         TextElement& text_element = text_elements[handle.id];
         (void)TTF_SetTextString(text_element.text, string.CString(), string.size());
@@ -200,8 +187,7 @@ public:
     [[nodiscard]] ListElement operator [](const ListElement::Handle handle) { return list_elements[handle.id]; }
     [[nodiscard]] TableElement operator [](const TableElement::Handle handle) { return table_elements[handle.id]; }
 
-
-    void IncreaseTableSize (TableElement& table_element, const Table& table) {
+    void IncreaseTableSize(TableElement& table_element, const Table& table) {
         ASSERT_DBG_RETURN(table.Size() > table_element.text_grid.Size(), "New table layout is not bigger than previous",)
         const u32 old_columns = table_element.column_meta.Size();
         const u32 old_size = table_element.text_grid.Size();
@@ -221,10 +207,7 @@ public:
             const String& string = table.headers[column];
             ColumnInfo& column_info = table_element.column_meta[column];
             TextElement::Handle& handle = table_element.headers[column];
-            if (recycle_text) {
-                UpdateText(handle, string, x, y);
-            }
-            else {
+            if (recycle_text) { UpdateText(handle, string, x, y); } else {
                 handle = CreateText(string, table_element.font_collection.small, table_element.text_color, x, y, TextAlign::left, table_element.column_meta[column].width);
             }
             GetTextSize(handle, &column_info.width, &table_element.header_row_meta.height);
@@ -243,10 +226,7 @@ public:
 
                 const String& string = table.columns[column][row];
                 TextElement::Handle& text_handle = table_element.text_grid[i];
-                if (recycle_text) {
-                    UpdateText(text_handle, string, x, y);
-                }
-                else {
+                if (recycle_text) { UpdateText(text_handle, string, x, y); } else {
                     text_handle = CreateText(string, table_element.font_collection.small, table_element.text_color, x, y, TextAlign::left, table_element.column_meta[column].width);
                 }
             }
@@ -259,14 +239,14 @@ public:
         }
     }
 
-    TableElement::Handle CreateTable (const Table& table, const FontCollection& font_collection, SDL_Color text_color, const f32 x, const f32 y) {
+    TableElement::Handle CreateTable(const Table& table, const FontCollection& font_collection, SDL_Color text_color, const f32 x, const f32 y) {
         TableElement table_element { .x = x, .y = y, .text_color = text_color, .font_collection = font_collection };
         IncreaseTableSize(table_element, table);
         (void)table_elements.EmplaceBack(table_element);
-        return TableElement::Handle {table_elements.Size() - 1 };
+        return TableElement::Handle { table_elements.Size() - 1 };
     }
 
-    void UpdateTable (const TableElement::Handle& handle, const Table& table) {
+    void UpdateTable(const TableElement::Handle& handle, const Table& table) {
         TableElement& table_element = table_elements[handle.id];
         if (table.Size() > table_element.text_grid.Size()) { IncreaseTableSize(table_element, table); }
         for (u32 row = 0; row < table.RowCount(); row++) {
@@ -282,12 +262,9 @@ public:
     ~UISystem() {
         font.~FontCollection();
 
-        for (const TextElement &text: text_elements) { TTF_DestroyText(text.text); }
-        for (const Element &element: elements) {
-        }
+        for (const TextElement& text : text_elements) { TTF_DestroyText(text.text); }
+        for (const Element& element : elements) { }
         TTF_DestroyRendererTextEngine(text_renderer);
     }
 };
 }
-
-
