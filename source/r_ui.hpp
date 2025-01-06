@@ -106,29 +106,44 @@ struct TableElement {
 
 
 class Color {
-    u8 red;
-    u8 green;
-    u8 blue;
-    u8 alpha;
 public:
-    Color(u8 r, u8 g, u8 b) : red(r), green(g), blue(b), alpha(255) { }
-    Color(u8 r, u8 g, u8 b, u8 a) : red(r), green(g), blue(b), alpha(a) { }
-    Color(f32 r, f32 g, f32 b) : red(r * 255U), green(g * 255U), blue(b * 255U), alpha(255) { }
-    Color(f32 r, f32 g, f32 b, f32 a) : red(r * 255U), green(g * 255U), blue(b * 255U), alpha(a * 255U) { }
-    Color (const SDL_Color color) : Color(color.r, color.g, color.b, color.a) { }
-    Color (const SDL_FColor color) : Color(color.r, color.g, color.b, color.a) { }
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
+    Color(u8 r, u8 g, u8 b) : r(r), g(g), b(b), a(255) { }
+    Color(u8 r, u8 g, u8 b, u8 a) : r(r), g(g), b(b), a(a) { }
+    //Color(f32 r, f32 g, f32 b) : r(r * 255U), g(g * 255U), b(b * 255U), a(255) { }
+    //Color(f32 r, f32 g, f32 b, f32 a) : r(r * 255U), g(g * 255U), b(b * 255U), a(a * 255U) { }
+    explicit Color (const SDL_Color color) : Color(color.r, color.g, color.b, color.a) { }
+    explicit Color (const SDL_FColor color) : Color(color.r, color.g, color.b, color.a) { }
+};
+struct ResolvedLayout {
+    SDL_FRect layout;
+};
+struct StyleLength {
+    u32 value : 31;
+    b8 hug : 1;
+    b8 fill  : 1;
 };
 class Node {
     Color background_color;
     float2 position;
     float2 padding;
     uint2 size;
+    StyleLength width;
+    StyleLength height;
     List<Node> children;
 public:
-    Node() = default;
+    Node();
     Node(const Node&) = delete;
     Node(Node&&) = default;
     void AddChild (Node&& node);
+
+    List<Node>& GetChildren();
+    Color GetResolvedBackgroundColor();
+    float2 GetResolvedPosition();
+    SDL_FRect GetLayout();
 };
 struct TextNode : Node {
     void SetText(String& string);
@@ -150,6 +165,7 @@ class NodeRenderer {
 };
 
 class UISystem {
+    SDL_Renderer* renderer;
     TTF_TextEngine* text_renderer;
 
     std::vector<TextElement> text_elements { };
@@ -166,7 +182,11 @@ public:
     explicit UISystem(Engine& engine);
     ~UISystem();
 
-    void Draw(SDL_Renderer* renderer);
+    void SetColor(Color color);
+
+    void DrawElements(SDL_Renderer* renderer);
+    void UpdateNodeLayout(Node& node);
+
     TextElement::Handle CreateTextAligned(const String& string, TTF_Font* font, const SDL_Color color, f32 x, const f32 y, const TextAlign alignment, const u32 width);
     TextElement::Handle CreateText(const String& string, TTF_Font* font, const SDL_Color color, f32 x, const f32 y);
     Element::Handle CreateElement(const SDL_FRect rect, const SDL_Color color, void (*on_click)());

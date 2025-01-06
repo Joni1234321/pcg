@@ -1,13 +1,13 @@
 #include "r_ui.hpp"
 
-pce::ui::UISystem::UISystem(Engine& engine): text_renderer(TTF_CreateRendererTextEngine(engine.renderer)) {
+pce::ui::UISystem::UISystem(Engine& engine): renderer(engine.renderer), text_renderer(TTF_CreateRendererTextEngine(engine.renderer)) {
     engine.GetWindowSize(&screen_width, &screen_height);
     const RelativePath font_path = "font.ttf";
     if (!font.Load(assets::Asset(font_path))) { SDL_Log("Font not loaded (%s)", SDL_GetError()); }
     const RelativePath font_bold_path = "TitilliumWeb-SemiBold.ttf";
     if (!font_bold.Load(assets::Asset(font_bold_path))) { SDL_Log("Bold font not loaded (%s)", SDL_GetError()); }
 }
-void pce::ui::UISystem::Draw(SDL_Renderer* renderer) {
+void pce::ui::UISystem::DrawElements(SDL_Renderer* renderer) {
     for (const Element& element : elements) {
         (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
         (void)SDL_RenderFillRect(renderer, &element.rect);
@@ -17,12 +17,18 @@ void pce::ui::UISystem::Draw(SDL_Renderer* renderer) {
         (void)SDL_RenderFillRects(renderer, list.rects.data(), static_cast<u32>(list.rects.size()));
     }
     for (const TextElement& text : text_elements) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
-
+}
+void pce::ui::UISystem::UpdateNodeLayout(Node& node) {
+    // Draw
+    //for (Node& child : node.GetChildren()) { UpdateNodeLayout(child); }
 }
 pce::ui::UISystem::~UISystem() {
     for (const TextElement& text : text_elements) { TTF_DestroyText(text.text); }
     for (const Element& element : elements) { }
     TTF_DestroyRendererTextEngine(text_renderer);
+}
+void pce::ui::UISystem::SetColor(Color color) {
+    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 }
 pce::ui::TextElement::Handle pce::ui::UISystem::CreateTextAligned(const String& string, TTF_Font* font, const SDL_Color color, f32 x, const f32 y, const TextAlign alignment, const u32 width) {
     TTF_Text* text = TTF_CreateText(text_renderer, font, string.CString(), string.size());
@@ -39,10 +45,8 @@ pce::ui::TextElement::Handle pce::ui::UISystem::CreateTextAligned(const String& 
     (void)text_elements.emplace_back(text, x, y);
     return TextElement::Handle { static_cast<u32>(text_elements.size() - 1) };
 }
-pce::ui::TextElement::Handle pce::ui::UISystem::CreateText(const String& string, TTF_Font* font, const SDL_Color color, f32 x, const f32 y) {
-    return CreateTextAligned(string, font, color, x, y, TextAlign::left, 0U);
-}
-pce::ui::Element::Handle pce::ui::UISystem::CreateElement(const SDL_FRect rect, const SDL_Color color, void(* on_click)()) {
+pce::ui::TextElement::Handle pce::ui::UISystem::CreateText(const String& string, TTF_Font* font, const SDL_Color color, f32 x, const f32 y) { return CreateTextAligned(string, font, color, x, y, TextAlign::left, 0U); }
+pce::ui::Element::Handle pce::ui::UISystem::CreateElement(const SDL_FRect rect, const SDL_Color color, void (*on_click)()) {
     (void)elements.emplace_back(color, rect, on_click);
     return Element::Handle { static_cast<u32>(elements.size() - 1) };
 }
@@ -83,9 +87,7 @@ void pce::ui::UISystem::IncreaseTableSize(TableElement& table_element, const Tab
         const String& string = table.headers[column];
         ColumnInfo& column_info = table_element.column_meta[column];
         TextElement::Handle& handle = table_element.headers[column];
-        if (recycle_text) { UpdateText(handle, string, x, y); } else {
-            handle = CreateText(string, font.small, table_element.text_color, x, y);
-        }
+        if (recycle_text) { UpdateText(handle, string, x, y); } else { handle = CreateText(string, font.small, table_element.text_color, x, y); }
         GetTextSize(handle, &column_info.width, &table_element.header_row_meta.height);
         column_info.x = x;
         x += static_cast<f32>(column_info.width);
@@ -102,9 +104,7 @@ void pce::ui::UISystem::IncreaseTableSize(TableElement& table_element, const Tab
 
             const String& string = table.columns[column][row];
             TextElement::Handle& text_handle = table_element.text_grid[i];
-            if (recycle_text) { UpdateText(text_handle, string, x, y); } else {
-                text_handle = CreateText(string, font.small, table_element.text_color, x, y);
-            }
+            if (recycle_text) { UpdateText(text_handle, string, x, y); } else { text_handle = CreateText(string, font.small, table_element.text_color, x, y); }
         }
 
         const TextElement::Handle first_text_in_row = table_element.text_grid[row * table.ColumnCount()];
@@ -132,4 +132,3 @@ void pce::ui::UISystem::UpdateTable(const TableElement::Handle& handle, const Ta
         }
     }
 }
-

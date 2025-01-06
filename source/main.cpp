@@ -51,7 +51,7 @@ void RunGame(Engine& engine) {
         if (!running) { break; }
         engine.ClearScreen();
 
-        ui_system.Draw(engine.renderer);
+        ui_system.DrawElements(engine.renderer);
         //DrawImgui(engine.renderer);
 
         engine.Present();

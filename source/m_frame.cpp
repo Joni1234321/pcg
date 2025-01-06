@@ -6,6 +6,9 @@
 namespace pcg::frame {
 namespace ui = pce::ui;
 namespace colors = pce::colors;
+void TestNodeExample () {
+//    ui::NodeBuilder().WithColor(ui::Color (0x12, 0x12, 0x12, 0xFF));
+}
 FPSFrame::FPSFrame(ui::UISystem& ui_system) : tick_text { ui_system.CreateText("", ui_system.font.small, colors::blue, 10.0F, 0.0F) } { }
 void FPSFrame::Tick(u32 i, ui::UISystem& ui_system) {
     const std::string str = std::format("Tick {:6}", i);
