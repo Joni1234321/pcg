@@ -29,6 +29,7 @@ constexpr auto LOGGER_PREFIX_ERROR = "";
 
 #define LOGGER_ERROR_WRITE(MESSAGE) Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__)
 #define LOGGER_ERROR_WRITE_RETURN(MESSAGE, RETURN) Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__); return RETURN
+#define FAILED(MESSAGE) Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__);
 #define ASSERT_DBG(CONDITION, MESSAGE) if (CONDITION) { Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__); }
 #define ASSERT_DBG_RETURN(CONDITION, MESSAGE, RETURN) if (!static_cast<b8>(CONDITION)) { Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__); return RETURN; }
 
@@ -76,6 +77,15 @@ struct Logger {
         SetColor(static_cast<u8>(LOGGER_COLOR::RED));
         string += LOGGER_PREFIX_ERROR;
         string += std::vformat(text, std::make_format_args(args...));
+        string += "\n";
+        ClearColor();
+    }
+    template<typename... Args>
+    constexpr void ErrorWithFile(const char *text, Args... args) {
+        SetColor(static_cast<u8>(LOGGER_COLOR::RED));
+        string += LOGGER_PREFIX_ERROR;
+        string += std::vformat(text, std::make_format_args(args...));
+        string += std::format("Line[{}] FILE: [{}]", __LINE__, __FILE__);
         string += "\n";
         ClearColor();
     }

@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 #include <filesystem>
+#include <queue>
 
 #include "u_types.hpp"
 #include "u_util.hpp"
@@ -114,7 +115,7 @@ protected:
     std::vector<T> data;
 };
 
-template <typename T> struct Queue : public List<T> {
+template <typename T> struct Queue : List<T> {
     void RemoveAt(u32 pos) { this->data.erase(this->data.begin() + pos); }
     void Pop() { this->data.erase(this->data.begin()); }
 };

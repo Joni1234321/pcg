@@ -121,24 +121,35 @@ public:
 struct ResolvedLayout {
     SDL_FRect layout;
 };
-struct StyleLength {
-    u32 value : 31;
-    b8 hug : 1;
-    b8 fill  : 1;
+struct LayoutLength {
+    enum LayoutType { fixed, hug, fill };
+    u32 resolved;
+    LayoutType layout_type;
 };
 class Node {
+    String name;
     Color background_color;
     float2 position;
     float2 padding;
     uint2 size;
-    StyleLength width;
-    StyleLength height;
+
+    LayoutLength width;
+    LayoutLength height;
+    Node& parent;
     List<Node> children;
+
 public:
     Node();
     Node(const Node&) = delete;
     Node(Node&&) = default;
     void AddChild (Node&& node);
+
+    const String& GetName() const;
+
+    const LayoutLength& GetWidth() const { return width; }
+    void RecalculateResolvedWidth();
+    void SetWidth(LayoutLength new_width);
+
 
     List<Node>& GetChildren();
     Color GetResolvedBackgroundColor();
