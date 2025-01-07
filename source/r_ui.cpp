@@ -1,5 +1,8 @@
 #include "r_ui.hpp"
 
+#include "queue"
+#include "stack"
+
 namespace pce::ui {
 UISystem::UISystem(Engine& engine): renderer(engine.renderer), text_renderer(TTF_CreateRendererTextEngine(engine.renderer)) {
     engine.GetWindowSize(&screen_width, &screen_height);
@@ -46,6 +49,52 @@ void Node::RecalculateResolvedWidth() {
     }
 }
 
+void Node::BFSRecalculateChildrenWithFill () {
+    std::queue<Node*> queue { };
+    queue.push(this);
+    while (!queue.empty()) {
+        Node* node = queue.front();
+        queue.pop();
+        u32 space_taken = 0U;
+        List<Node*> children_with_fill { };
+        for (Node& child : node->children) {
+            switch (child.width.layout_type) {
+                case LayoutLength::hug:
+                    break;
+                case LayoutLength::fixed:
+                    space_taken += child.width.resolved;
+                case LayoutLength::fill:
+                    children_with_fill.EmplaceBack(&child);
+            }
+        }
+        if (children_with_fill.Size() > 0U) {
+            u32 pixels_per = 0U;
+            u32 left_over = 0U;
+            if (space_taken < node->width.resolved) {
+                pixels_per = (space_taken - node->width.resolved) / children_with_fill.Size();
+                left_over = (space_taken - node->width.resolved) % children_with_fill.Size();
+            }
+            for (Node* child : children_with_fill) {
+                child->width.resolved = pixels_per;
+                queue.push(child);
+            }
+            children_with_fill[0U]->width.resolved += left_over;
+        }
+    }
+}
+
+void Node::RecalculateParentsWithHug() {
+    Node* parent = &this->parent;
+    while (parent != nullptr && parent->width.layout_type == LayoutLength::hug) {
+        parent->width.resolved = 0.0F;
+        for (Node& child : children) {
+            child.RecalculateResolvedWidth();
+            width.resolved += child.width.resolved;
+        }
+
+        parent = &parent->parent;
+    }
+}
 
 
 void Node::SetWidth(LayoutLength new_width) {
@@ -67,40 +116,10 @@ void Node::SetWidth(LayoutLength new_width) {
             break;
     }
 
-    // BFS Recalculate children with fill
-    std::queue<Node*> queue { };
-    queue.push(this);
-    while (!queue.empty()) {
-        Node* node = queue.front();
-        queue.pop();
-        u32 space_taken = 0U;
-        List<Node*> children_fill { };
-        for (Node& child : node->children) {
-            switch (child.width.layout_type) {
-                case LayoutLength::hug:
-                    break;
-                case LayoutLength::fixed:
-                    space_taken += child.width.resolved;
-                case LayoutLength::fill:
-                    children_fill.EmplaceBack(&child);
-            }
-        }
-        if (children_fill.Size() > 0U) {
-            u32 pixels_per = space_taken >= node->width.resolved ? 0U : (space_taken - node->width.resolved) / children_fill.Size();
-            u32 left_over = (space_taken - node->width.resolved) % children_fill.Size();
-            for (Node* child : children_fill) {
-                child->width.resolved = pixels_per;
-                queue.push(child);
-            }
-            children_fill[0U]->width.resolved += left_over;
-        }
-    }
-
-
-    // Recalculate parents with hug todo make this bFS
-    if (parent.width.layout_type == LayoutLength::hug) {
-        parent.RecalculateResolvedWidth();
-    }
+    // BFS Recalculate children with fill, bfs is cache aligned
+    BFSRecalculateChildrenWithFill();
+    // Recalculate parents with hug
+    RecalculateParentsWithHug();
 }
 
 void UISystem::UpdateNodeLayout(Node& node) {

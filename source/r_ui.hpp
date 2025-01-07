@@ -148,6 +148,8 @@ public:
 
     const LayoutLength& GetWidth() const { return width; }
     void RecalculateResolvedWidth();
+    void BFSRecalculateChildrenWithFill();
+    void RecalculateParentsWithHug();
     void SetWidth(LayoutLength new_width);
 
 
