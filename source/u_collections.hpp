@@ -117,7 +117,9 @@ protected:
 
 template <typename T> struct Queue : List<T> {
     void RemoveAt(u32 pos) { this->data.erase(this->data.begin() + pos); }
+    [[nodiscard]] constexpr T Front () { return this->data.front(); }
     void Pop() { this->data.erase(this->data.begin()); }
+    Span<T> LastElementsToSpan(u32 elements) { return Span<T> (this->data.end() - elements, this->data.end()); }
 };
 
 template <typename T> using Component = List<T>;

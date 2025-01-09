@@ -48,38 +48,45 @@ void Node::RecalculateResolvedWidth() {
             }
     }
 }
+void Node::RecalculateChildrenWithFill(Queue<Node*>& nodes_with_fill) {
+    u32 initial_size = nodes_with_fill.Size();
+    u32 space_taken = 0U;
+    for (Node& child : children) {
+        switch (child.width.layout_type) {
+            case LayoutLength::hug:
+                space_taken += child.width.resolved;
+            break;
+            case LayoutLength::fixed:
+                space_taken += child.width.resolved;
+            case LayoutLength::fill:
+                nodes_with_fill.EmplaceBack(&child);
+        }
+    }
+
+    u32 n =
+    const Span<Node*> children_with_fill = nodes_with_fill.LastElementsToSpan(initial_size - nodes_with_fill.Size());
+    if (!children_with_fill.empty()) {
+        u32 pixels_per = 0U;
+        u32 left_over = 0U;
+        if (space_taken < width.resolved) {
+            pixels_per = (space_taken - width.resolved) / children_with_fill.size();
+            left_over = (space_taken - width.resolved) % children_with_fill.size();
+        }
+        for (Node* child : children_with_fill) {
+            child->width.resolved = pixels_per;
+            nodes_with_fill.EmplaceBack(child);
+        }
+        children_with_fill[0U]->width.resolved += left_over;
+    }
+}
 
 void Node::BFSRecalculateChildrenWithFill () {
-    std::queue<Node*> queue { };
-    queue.push(this);
-    while (!queue.empty()) {
-        Node* node = queue.front();
-        queue.pop();
-        u32 space_taken = 0U;
-        List<Node*> children_with_fill { };
-        for (Node& child : node->children) {
-            switch (child.width.layout_type) {
-                case LayoutLength::hug:
-                    break;
-                case LayoutLength::fixed:
-                    space_taken += child.width.resolved;
-                case LayoutLength::fill:
-                    children_with_fill.EmplaceBack(&child);
-            }
-        }
-        if (children_with_fill.Size() > 0U) {
-            u32 pixels_per = 0U;
-            u32 left_over = 0U;
-            if (space_taken < node->width.resolved) {
-                pixels_per = (space_taken - node->width.resolved) / children_with_fill.Size();
-                left_over = (space_taken - node->width.resolved) % children_with_fill.Size();
-            }
-            for (Node* child : children_with_fill) {
-                child->width.resolved = pixels_per;
-                queue.push(child);
-            }
-            children_with_fill[0U]->width.resolved += left_over;
-        }
+    Queue<Node*> queue { };
+    queue.EmplaceBack(this);
+    while (!queue.Empty()) {
+        Node* node = queue.Front();
+        queue.Pop();
+        node->RecalculateChildrenWithFill(queue);
     }
 }
 
@@ -91,6 +98,8 @@ void Node::RecalculateParentsWithHug() {
             child.RecalculateResolvedWidth();
             width.resolved += child.width.resolved;
         }
+        // since we have changed the parent then we should check if that elements parent is fill, and recalculate siblings with fill
+        // recalculate siblings
 
         parent = &parent->parent;
     }

@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <filesystem>
+#include <stack>
 
 #include "u_table.hpp"
 #include "u_collections.hpp"
@@ -148,6 +149,7 @@ public:
 
     const LayoutLength& GetWidth() const { return width; }
     void RecalculateResolvedWidth();
+    void RecalculateChildrenWithFill(Queue<Node*>& nodes_with_fill);
     void BFSRecalculateChildrenWithFill();
     void RecalculateParentsWithHug();
     void SetWidth(LayoutLength new_width);
