@@ -2,6 +2,8 @@
 
 #include "queue"
 #include "stack"
+#include <ranges>
+
 
 namespace pce::ui {
 UISystem::UISystem(Engine& engine): renderer(engine.renderer), text_renderer(TTF_CreateRendererTextEngine(engine.renderer)) {
@@ -23,118 +25,6 @@ void UISystem::DrawElements(SDL_Renderer* renderer) {
     for (const TextElement& text : text_elements) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
 }
 
-void Node::RecalculateResolvedWidth() {
-    switch (width.layout_type) {
-        case LayoutLength::fixed:
-            break;
-        case LayoutLength::hug:
-            width.resolved = 0.0F;
-            for (Node& child : children) {
-                child.RecalculateResolvedWidth();
-                width.resolved += child.width.resolved;
-            }
-            break;
-        case LayoutLength::fill:
-            switch (parent.GetWidth().layout_type) {
-                case LayoutLength::fixed:
-                    width.resolved = parent.width.resolved;
-                    break;
-                case LayoutLength::fill:
-                    width.resolved = parent.width.resolved;
-                    break;
-                case LayoutLength::hug:
-                    Logger().ErrorWithFile("Child [{}] cannot be fill because its parent [{}] is hug", name, parent.name);
-                    break;
-            }
-    }
-}
-void Node::RecalculateChildrenWithFill(Queue<Node*>& nodes_with_fill) {
-    u32 initial_size = nodes_with_fill.Size();
-    u32 space_taken = 0U;
-    for (Node& child : children) {
-        switch (child.width.layout_type) {
-            case LayoutLength::hug:
-                space_taken += child.width.resolved;
-            break;
-            case LayoutLength::fixed:
-                space_taken += child.width.resolved;
-            case LayoutLength::fill:
-                nodes_with_fill.EmplaceBack(&child);
-        }
-    }
-
-    u32 n =
-    const Span<Node*> children_with_fill = nodes_with_fill.LastElementsToSpan(initial_size - nodes_with_fill.Size());
-    if (!children_with_fill.empty()) {
-        u32 pixels_per = 0U;
-        u32 left_over = 0U;
-        if (space_taken < width.resolved) {
-            pixels_per = (space_taken - width.resolved) / children_with_fill.size();
-            left_over = (space_taken - width.resolved) % children_with_fill.size();
-        }
-        for (Node* child : children_with_fill) {
-            child->width.resolved = pixels_per;
-            nodes_with_fill.EmplaceBack(child);
-        }
-        children_with_fill[0U]->width.resolved += left_over;
-    }
-}
-
-void Node::BFSRecalculateChildrenWithFill () {
-    Queue<Node*> queue { };
-    queue.EmplaceBack(this);
-    while (!queue.Empty()) {
-        Node* node = queue.Front();
-        queue.Pop();
-        node->RecalculateChildrenWithFill(queue);
-    }
-}
-
-void Node::RecalculateParentsWithHug() {
-    Node* parent = &this->parent;
-    while (parent != nullptr && parent->width.layout_type == LayoutLength::hug) {
-        parent->width.resolved = 0.0F;
-        for (Node& child : children) {
-            child.RecalculateResolvedWidth();
-            width.resolved += child.width.resolved;
-        }
-        // since we have changed the parent then we should check if that elements parent is fill, and recalculate siblings with fill
-        // recalculate siblings
-
-        parent = &parent->parent;
-    }
-}
-
-
-void Node::SetWidth(LayoutLength new_width) {
-    width = new_width;
-    switch (width.layout_type) {
-        case LayoutLength::fixed:
-            break;
-        // assuming no children have fill when parent is hugging
-        case LayoutLength::hug:
-            width.resolved = 0U;
-            for (Node& child : children) {
-                if (child.width.layout_type == LayoutLength::fill) { Logger().ErrorWithFile("Failed making [{}] hug because child [{}] has fill", name, child.name); }
-                width.resolved += child.width.resolved;
-            }
-            break;
-        case LayoutLength::fill:
-            if (parent.width.layout_type == LayoutLength::hug) { Logger().ErrorWithFile("Failed making [{}] fill because parent [{}] has hug", name, parent.name); }
-            width.resolved = parent.width.resolved;
-            break;
-    }
-
-    // BFS Recalculate children with fill, bfs is cache aligned
-    BFSRecalculateChildrenWithFill();
-    // Recalculate parents with hug
-    RecalculateParentsWithHug();
-}
-
-void UISystem::UpdateNodeLayout(Node& node) {
-    // Draw
-    //for (Node& child : node.GetChildren()) { UpdateNodeLayout(child); }
-}
 UISystem::~UISystem() {
     for (const TextElement& text : text_elements) { TTF_DestroyText(text.text); }
     for (const Element& element : elements) { }
@@ -245,5 +135,152 @@ void UISystem::UpdateTable(const TableElement::Handle& handle, const Table& tabl
             UpdateText(text_handle, string);
         }
     }
+}
+
+// Assume node is leaf with fixed or child_constraint
+void NodeGenerator::UpdateLayout(Node* root) {
+    // Create tree
+    List nodes { root };
+    for (u32 i = 0U; i < nodes.Size(); ++i) { Node* parent = nodes[i]; for (Node& child : parent->children) { (void)nodes.EmplaceBack(&child); } }
+
+    // From bottom up create children constrained
+    for (Node* parent : nodes | std::views::reverse | std::ranges::views::filter([](const Node* parent){ return parent->width.layout_type == LayoutLength::child_constraint})) {
+        parent->width.resolved = std::accumulate(parent->children.begin(), parent->children.end(), 0U, [](u32 sum, const Node& child) { return sum + child.width.resolved; } );
+    }
+
+    // From top down create parents constrained
+    for (u32 i = 0U; i < nodes.Size(); ++i) {
+        Node* parent = nodes[i];
+
+        List<Node*> parent_constrained_children { };
+        u32 pixels_taken = 0U;
+        for (Node& child : parent->children) { if (child.width.layout_type == LayoutLength::parent_constraint) { (void)parent_constrained_children.EmplaceBack(&child); } else { pixels_taken += child.width.resolved; } }
+
+        u32 n_children = parent_constrained_children.Size();
+        if (n_children > 0U) {
+            u32 pixels_per = 0U;
+            u32 left_over = 0U;
+            if (pixels_taken < parent->width.resolved) {
+                pixels_per = (pixels_taken - parent->width.resolved) / n_children;
+                left_over = (pixels_taken - parent->width.resolved) % n_children;
+            }
+            for (Node* child : parent_constrained_children) { child->width.resolved = pixels_per; }
+            parent_constrained_children[0U]->width.resolved += left_over;
+        }
+    }
+}
+// Node renderer
+void Node::RecalculateResolvedWidth() {
+    switch (width.layout_type) {
+        case LayoutLength::fixed:
+            break;
+        case LayoutLength::child_constraint:
+            width.resolved = 0.0F;
+            for (Node& child : children) {
+                child.RecalculateResolvedWidth();
+                width.resolved += child.width.resolved;
+            }
+            break;
+        case LayoutLength::parent_constraint:
+            switch (parent.GetWidth().layout_type) {
+                case LayoutLength::fixed:
+                    width.resolved = parent.width.resolved;
+                    break;
+                case LayoutLength::parent_constraint:
+                    width.resolved = parent.width.resolved;
+                    break;
+                case LayoutLength::child_constraint:
+                    Logger().ErrorWithFile("Child [{}] cannot be parent_constraint because its parent_constraint [{}] is child_constraint", name, parent.name);
+                    break;
+            }
+    }
+}
+void Node::RecalculateChildrenWithFill(Queue<Node*>& parent_constrained_nodes) {
+    u32 initial_size = parent_constrained_nodes.Size();
+    u32 pixels_taken = 0U;
+    for (Node& child : children) {
+        switch (child.width.layout_type) {
+            case LayoutLength::child_constraint:
+                pixels_taken += child.width.resolved;
+                break;
+            case LayoutLength::fixed:
+                pixels_taken += child.width.resolved;
+                break;
+            case LayoutLength::parent_constraint:
+                parent_constrained_nodes.EmplaceBack(&child);
+                break;
+        }
+    }
+
+    u32 n_elements = initial_size - parent_constrained_nodes.Size();
+    const Span<Node*> parent_constrained_children = parent_constrained_nodes.LastElementsToSpan(n_elements);
+    if (!parent_constrained_children.empty()) {
+        u32 pixels_per = 0U;
+        u32 left_over = 0U;
+        if (pixels_taken < width.resolved) {
+            pixels_per = (pixels_taken - width.resolved) / n_elements;
+            left_over = (pixels_taken - width.resolved) % n_elements;
+        }
+        for (Node* child : parent_constrained_children) {
+            child->width.resolved = pixels_per;
+            parent_constrained_nodes.EmplaceBack(child);
+        }
+        parent_constrained_children[0U]->width.resolved += left_over;
+    }
+}
+
+void Node::BFSRecalculateChildren() {
+    Queue<Node*> queue { };
+    queue.EmplaceBack(this);
+    while (!queue.Empty()) {
+        Node* node = queue.Front();
+        queue.Pop();
+        node->RecalculateChildrenWithFill(queue);
+    }
+}
+
+void Node::RecalculateParents() {
+    Node* parent = &this->parent;
+    while (parent != nullptr && parent->width.layout_type == LayoutLength::child_constraint) {
+        parent->width.resolved = 0.0F;
+        for (Node& child : children) {
+            child.RecalculateResolvedWidth();
+            width.resolved += child.width.resolved;
+        }
+        // we dont need to recalculate siblings since no siblings can be parent constrained
+        parent = &parent->parent;
+    }
+}
+
+// On width changed for any objects, you should recalculate children with parent_constraints and parents with children_constraint
+// if fixed then no constraints and it should be seen as a seperate tree
+void Node::SetWidth(LayoutLength new_width) {
+    width = new_width;
+    switch (width.layout_type) {
+        case LayoutLength::fixed:
+            break;
+        // assuming no children have parent_constraint when parent_constraint is hugging
+        case LayoutLength::child_constraint:
+            width.resolved = 0U;
+            for (Node& child : children) {
+                if (child.width.layout_type == LayoutLength::parent_constraint) { Logger().ErrorWithFile("Failed making [{}] child_constraint because child_constraint [{}] has parent_constraint", name, child.name); }
+                width.resolved += child.width.resolved;
+            }
+            break;
+        case LayoutLength::parent_constraint:
+            if (parent.width.layout_type == LayoutLength::child_constraint) { Logger().ErrorWithFile("Failed making [{}] parent_constraint because parent_constraint [{}] has child_constraint", name, parent.name); }
+            width.resolved = parent.width.resolved;
+            break;
+    }
+
+    // BFS Recalculate children with parent_constraint, bfs is cache aligned
+    BFSRecalculateChildren();
+    // Recalculate parents with child_constraint
+    RecalculateParents();
+}
+
+void UISystem::UpdateNodeLayout(Node& node) {
+    // Draw
+    //for (Node& child_constraint : node.GetChildren()) { UpdateNodeLayout(child_constraint); }
 }
 }

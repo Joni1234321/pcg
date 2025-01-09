@@ -123,10 +123,12 @@ struct ResolvedLayout {
     SDL_FRect layout;
 };
 struct LayoutLength {
-    enum LayoutType { fixed, hug, fill };
+    enum Constraint { fixed, child_constraint, parent_constraint };
     u32 resolved;
-    LayoutType layout_type;
+    Constraint layout_type;
 };
+
+struct NodeGenerator;
 class Node {
     String name;
     Color background_color;
@@ -139,6 +141,7 @@ class Node {
     Node& parent;
     List<Node> children;
 
+    friend NodeGenerator;
 public:
     Node();
     Node(const Node&) = delete;
@@ -149,9 +152,9 @@ public:
 
     const LayoutLength& GetWidth() const { return width; }
     void RecalculateResolvedWidth();
-    void RecalculateChildrenWithFill(Queue<Node*>& nodes_with_fill);
-    void BFSRecalculateChildrenWithFill();
-    void RecalculateParentsWithHug();
+    void RecalculateChildrenWithFill(Queue<Node*>& parent_constrained_nodes);
+    void BFSRecalculateChildren();
+    void RecalculateParents();
     void SetWidth(LayoutLength new_width);
 
 
@@ -177,6 +180,10 @@ private:
 };
 class NodeRenderer {
     void RenderNode(Node& node);
+};
+
+struct  NodeGenerator {
+    void UpdateLayout(Node* root);
 };
 
 class UISystem {
