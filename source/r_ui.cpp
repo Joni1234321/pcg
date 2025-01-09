@@ -4,7 +4,6 @@
 #include "stack"
 #include <ranges>
 
-
 namespace pce::ui {
 UISystem::UISystem(Engine& engine): renderer(engine.renderer), text_renderer(TTF_CreateRendererTextEngine(engine.renderer)) {
     engine.GetWindowSize(&screen_width, &screen_height);
@@ -140,21 +139,29 @@ void UISystem::UpdateTable(const TableElement::Handle& handle, const Table& tabl
 // Assume node is leaf with fixed or child_constraint
 void NodeGenerator::UpdateLayout(Node* root) {
     // Create tree
-    List nodes { root };
-    for (u32 i = 0U; i < nodes.Size(); ++i) { Node* parent = nodes[i]; for (Node& child : parent->children) { (void)nodes.EmplaceBack(&child); } }
+    List parents { root };
+    // Possibly make this a cooler for loop
+    for (u32 i = 0U; i < parents.Size(); ++i) {
+        Node* parent = parents[i];
+        for (Node& child : parent->children) { (void)parents.EmplaceBack(&child); }
+    }
 
     // From bottom up create children constrained
-    for (Node* parent : nodes | std::views::reverse | std::ranges::views::filter([](const Node* parent){ return parent->width.layout_type == LayoutLength::child_constraint})) {
-        parent->width.resolved = std::accumulate(parent->children.begin(), parent->children.end(), 0U, [](u32 sum, const Node& child) { return sum + child.width.resolved; } );
+    // Remember child_constraint only consist of fixed and child_constrained
+    auto isChildConstrained = [&] (const Node* parent) -> bool { return parent->width.layout_type == LayoutLength::child_constraint; };
+    auto bottomUpChildConstrainedParents = parents | std::views::reverse | std::ranges::views::filter(isChildConstrained) ;
+    for (Node* parent : bottomUpChildConstrainedParents) {
+        parent->width.resolved = std::accumulate(parent->children.begin(), parent->children.end(), 0U, [&] (const u32 sum, const Node& child) { return sum + child.width.resolved; });
     }
 
     // From top down create parents constrained
-    for (u32 i = 0U; i < nodes.Size(); ++i) {
-        Node* parent = nodes[i];
-
+    for (Node* parent : parents) {
         List<Node*> parent_constrained_children { };
         u32 pixels_taken = 0U;
-        for (Node& child : parent->children) { if (child.width.layout_type == LayoutLength::parent_constraint) { (void)parent_constrained_children.EmplaceBack(&child); } else { pixels_taken += child.width.resolved; } }
+        for (Node& child : parent->children) {
+            if (child.width.layout_type == LayoutLength::parent_constraint) { (void)parent_constrained_children.EmplaceBack(&child); }
+            else { pixels_taken += child.width.resolved; }
+        }
 
         u32 n_children = parent_constrained_children.Size();
         if (n_children > 0U) {
@@ -171,29 +178,9 @@ void NodeGenerator::UpdateLayout(Node* root) {
 }
 // Node renderer
 void Node::RecalculateResolvedWidth() {
-    switch (width.layout_type) {
-        case LayoutLength::fixed:
-            break;
-        case LayoutLength::child_constraint:
-            width.resolved = 0.0F;
-            for (Node& child : children) {
-                child.RecalculateResolvedWidth();
-                width.resolved += child.width.resolved;
-            }
-            break;
-        case LayoutLength::parent_constraint:
-            switch (parent.GetWidth().layout_type) {
-                case LayoutLength::fixed:
-                    width.resolved = parent.width.resolved;
-                    break;
-                case LayoutLength::parent_constraint:
-                    width.resolved = parent.width.resolved;
-                    break;
-                case LayoutLength::child_constraint:
-                    Logger().ErrorWithFile("Child [{}] cannot be parent_constraint because its parent_constraint [{}] is child_constraint", name, parent.name);
-                    break;
-            }
-    }
+    Node* root = this;
+    while (root->width.layout_type != LayoutLength::fixed) { root = &root->parent; }
+    NodeGenerator().UpdateLayout(root);
 }
 void Node::RecalculateChildrenWithFill(Queue<Node*>& parent_constrained_nodes) {
     u32 initial_size = parent_constrained_nodes.Size();
