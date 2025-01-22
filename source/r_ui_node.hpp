@@ -34,57 +34,49 @@ struct LayoutLength {
     Constraint layout_type;
 };
 
-struct NodeGenerator;
+struct NodeTree;
 struct NodeBuilder;
 
-class Node {
+struct Node {
+    Node* parent { nullptr };
+    List<Node> children { };
+
     String name { };
     String text { };
     SDL_Color background_color { 0, 0, 0 };
     uint2 position { };
     uint2 padding { };
-    uint2 size { };
 
     LayoutLength width { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
     LayoutLength height { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
-    Node* parent = nullptr;
-    List<Node> children { };
 
-    friend NodeGenerator;
     friend NodeBuilder;
-
-public:
-    Node() { }
-    void SetWidth(LayoutLength new_width);
-    [[nodiscard]] Node *GetParent() const { return parent; }
-    [[nodiscard]] SDL_Color GetBackgroundColor() const { return background_color; }
-    [[nodiscard]] uint2 GetResolvedPosition() const { return { width.resolved, height.resolved }; }
-    void AddChild(Node& child) {
-        child.parent = this;
-        children.PushBack(child);
-    }
-    void AddChild(Node&& child) {
-        child.parent = this;
-        children.PushBack(child);
-    }
-    [[nodiscard]] const List<Node>& GetChildren() const { return children; }
+    friend NodeTree;
 };
 
-class TextNode : public Node {
-    TextNode() : Node() { };
-    void SetText(String& string);
-    String& GetText();
+struct NodeTree {
+    Node root { };
+    void MarkDirty() { dirty = true; }
+    const FrameElements& GetFrameElements() {
+        if (dirty) {
+            dirty = false;
+            RecalculateLayout();
+            frame_elements = CreateFrameElements();
+        }
+        return frame_elements;
+    };
 
 private:
-    Color color { 0, 0, 0 };
-    String text { };
+    bool dirty { true };
+    FrameElements frame_elements { };
+    FrameElements CreateFrameElements();
+    void RecalculateLayout();
 };
 struct NodeBuilder {
-    NodeBuilder() : node() { }
+    NodeBuilder() { }
     explicit NodeBuilder(const Node& node) : node(node) { }
-    NodeBuilder& Color(SDL_Color color);
-    NodeBuilder& Size(LayoutLength width, LayoutLength height);
-    NodeBuilder& AbsolutePosition(uint2 pos);
+    NodeBuilder& Fill(SDL_Color color);
+    NodeBuilder& Absolute(uint2 pos);
     NodeBuilder& Layout(LayoutLength width, LayoutLength height);
     NodeBuilder& Fixed(uint2 size);
     NodeBuilder& FixedWidth(u32 width);
@@ -94,14 +86,20 @@ struct NodeBuilder {
     NodeBuilder& FillWidth();
     NodeBuilder& FillHeight();
     NodeBuilder& Text(String& string);
-    Node Build() { return node; };
+    Node Build(NodeTree& node_tree) {
+        node.parent = nullptr;
+        node_tree.root = node;
+        return node;
+    };
+    Node& Build(Node& parent) {
+        node.parent = &parent;
+        parent.children.push_back(node);
+        return parent.children.Back();
+    }
 
 private:
-    Node node;
+    Node node { };
 };
-struct NodeGenerator {
-    void RecalculateLayout(Node* root);
-    FrameElements CreateFrameElements(Node* root);
-};
-void RenderFrameElements(SDL_Renderer* renderer, FrameElements& frame_elements);
+
+void RenderFrameElements(SDL_Renderer* renderer, NodeTree& node_tree);
 }

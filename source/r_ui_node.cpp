@@ -5,9 +5,9 @@
 
 namespace pce::ui {
 // Assume node is leaf with fixed or child_constraint
-void NodeGenerator::RecalculateLayout(Node* root) {
+void NodeTree::RecalculateLayout() {
     // Create tree
-    List parents { root };
+    List parents { &root };
     // Possibly make this a cooler for loop
     for (u32 i = 0U; i < parents.Size(); ++i) {
         Node* parent = parents[i];
@@ -33,18 +33,27 @@ void NodeGenerator::RecalculateLayout(Node* root) {
             u32 pixels_per = 0U;
             u32 left_over = 0U;
             if (pixels_taken < parent->width.resolved) {
-                pixels_per = (pixels_taken - parent->width.resolved) / n_children;
-                left_over = (pixels_taken - parent->width.resolved) % n_children;
+                pixels_per = (parent->width.resolved - pixels_taken) / n_children;
+                left_over = (parent->width.resolved - pixels_taken) % n_children;
             }
             for (Node* child : parent_constrained_children) { child->width.resolved = pixels_per; }
             parent_constrained_children[0U]->width.resolved += left_over;
         }
     }
+
+    // From top down position
+    for (Node* parent : parents) {
+        u32 x = parent->position.x;
+        for (Node& child : parent->children) {
+            child.position.x = x;
+            x += child.width.resolved;
+        }
+    }
 }
-FrameElements NodeGenerator::CreateFrameElements(Node* root) {
+FrameElements NodeTree::CreateFrameElements() {
     FrameElements elements;
     std::stack<const Node*> nodes;
-    nodes.emplace(root);
+    (void)nodes.emplace(&root);
     while (!nodes.empty()) {
         const Node* node = nodes.top();
         nodes.pop();
@@ -53,13 +62,14 @@ FrameElements NodeGenerator::CreateFrameElements(Node* root) {
         RectangleElement rectangle { .color = color, .rect = rect, .on_click = nullptr };
         elements.rectangles.PushBack(rectangle);
 
-        for (const Node& child : node->children) { nodes.emplace(&child); }
+        for (const Node& child : node->children) { (void)nodes.emplace(&child); }
     }
 
     return elements;
 }
 
-void RenderFrameElements(SDL_Renderer* renderer, FrameElements& frame_elements) {
+void RenderFrameElements(SDL_Renderer* renderer, NodeTree& node_tree) {
+    const FrameElements& frame_elements = node_tree.GetFrameElements();
     for (const RectangleElement& element : frame_elements.rectangles) {
         (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
         (void)SDL_RenderFillRect(renderer, &element.rect);
@@ -67,17 +77,12 @@ void RenderFrameElements(SDL_Renderer* renderer, FrameElements& frame_elements) 
     for (const TextElement& text : frame_elements.texts) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
 }
 
-void Node::SetWidth(LayoutLength new_width) {
-    width = new_width;
-    Node* root = this;
-    while (root->width.layout_type != LayoutLength::fixed) { root = root->parent; } // NOLINT(*-id-dependent-backward-branch)
-    NodeGenerator().RecalculateLayout(root);
-}
-NodeBuilder& NodeBuilder::Color(SDL_Color color) {
+
+NodeBuilder& NodeBuilder::Fill(SDL_Color color) {
     node.background_color = color;
     return *this;
 }
-NodeBuilder& NodeBuilder::AbsolutePosition(uint2 pos) {
+NodeBuilder& NodeBuilder::Absolute(uint2 pos) {
     node.position = pos;
     return *this;
 }
@@ -86,4 +91,13 @@ NodeBuilder& NodeBuilder::Fixed(uint2 size) {
     node.height = { .resolved = size.y, .layout_type = LayoutLength::fixed };
     return *this;
 }
+NodeBuilder& NodeBuilder::FillWidth() {
+    node.width = { .resolved = -1U, .layout_type = LayoutLength::parent_constraint };
+    return *this;
+}
+NodeBuilder& NodeBuilder::FillHeight() {
+    node.height = { .resolved = -1U, .layout_type = LayoutLength::parent_constraint };
+    return *this;
+}
+
 }

@@ -8,7 +8,7 @@ namespace pcg::frame {
 namespace ui = pce::ui;
 namespace colors = pce::colors;
 void TestNodeExample() {
-//    ui::NodeBuilder().Color(ui::Color (0x12, 0x12, 0x12, 0xFF));
+//    ui::NodeBuilder().Fill(ui::Fill (0x12, 0x12, 0x12, 0xFF));
 }
 FPSFrame::FPSFrame(ui::UISystem& ui_system) : tick_text { ui_system.CreateText("", ui_system.font.small, colors::blue, 10.0F, 0.0F) } { }
 void FPSFrame::Tick(u32 i, ui::UISystem& ui_system) {
@@ -47,7 +47,12 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) {
     rect.h *= 2;
     ui_system.CreateList(colors::green, rect, 10U, 25.0F, ui::UISystem::ListDirection::horizontal);
 
-    root = ui::NodeBuilder().Fixed(uint2(100U,100U)).Color(colors::red).AbsolutePosition(uint2 { 300U, 100U }).Build();
+    tree.root = ui::NodeBuilder().Fixed(uint2(100U, 100U)).Absolute(uint2 { 600U, 100U }).Fill(colors::cyan).Build(tree);
+    ui::Node& box = ui::NodeBuilder().Fixed(uint2(90, 90)).Absolute(uint2 { 605, 105 }).Fill(colors::yellow).Build(tree.root);
+    ui::Node& r = ui::NodeBuilder().FillWidth().FillHeight().Fill(colors::red).Build(box);
+    ui::Node& b = ui::NodeBuilder().FillWidth().FillHeight().Fill(colors::blue).Build(box);
+    tree.MarkDirty();
+
 }
 void MainMenuFrame::Tick(u32 i, ui::UISystem& ui_system) {
     for (const ui::RectangleElement::Handle sqr : elements) { ui_system[sqr].color = SDL_Color { static_cast<u8>(i / 3U), static_cast<u8>(i / 10U), static_cast<u8>(i / 67U), 255 }; }

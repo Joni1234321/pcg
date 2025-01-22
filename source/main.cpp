@@ -53,8 +53,7 @@ void RunGame(Engine& engine) {
 
         ui_system.RenderElements(engine.renderer);
 
-        ui::FrameElements frame_elements = ui::NodeGenerator().CreateFrameElements(&main_menu_frame.root);
-        ui::RenderFrameElements(engine.renderer, frame_elements);
+        RenderFrameElements(engine.renderer, main_menu_frame.tree);
         //DrawImgui(engine.renderer);
 
         engine.Present();
