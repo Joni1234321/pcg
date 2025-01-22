@@ -1,8 +1,5 @@
 #include "r_ui.hpp"
 
-#include "queue"
-#include "stack"
-#include <ranges>
 
 namespace pce::ui {
 UISystem::UISystem(Engine& engine): renderer(engine.renderer), text_renderer(TTF_CreateRendererTextEngine(engine.renderer)) {
@@ -12,8 +9,8 @@ UISystem::UISystem(Engine& engine): renderer(engine.renderer), text_renderer(TTF
     const RelativePath font_bold_path = "TitilliumWeb-SemiBold.ttf";
     if (!font_bold.Load(assets::Asset(font_bold_path))) { SDL_Log("Bold font not loaded (%s)", SDL_GetError()); }
 }
-void UISystem::DrawElements(SDL_Renderer* renderer) {
-    for (const Element& element : elements) {
+void UISystem::RenderElements(SDL_Renderer* renderer) {
+    for (const RectangleElement& element : rectangle_elements) {
         (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
         (void)SDL_RenderFillRect(renderer, &element.rect);
     }
@@ -26,7 +23,7 @@ void UISystem::DrawElements(SDL_Renderer* renderer) {
 
 UISystem::~UISystem() {
     for (const TextElement& text : text_elements) { TTF_DestroyText(text.text); }
-    for (const Element& element : elements) { }
+    for (const RectangleElement& element : rectangle_elements) { }
     TTF_DestroyRendererTextEngine(text_renderer);
 }
 void UISystem::SetColor(Color color) { (void)SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a); }
@@ -49,9 +46,9 @@ TextElement::Handle UISystem::CreateTextAligned(const String& string, TTF_Font* 
     return TextElement::Handle { static_cast<u32>(text_elements.size() - 1) };
 }
 TextElement::Handle UISystem::CreateText(const String& string, TTF_Font* font, const SDL_Color color, f32 x, const f32 y) { return CreateTextAligned(string, font, color, x, y, TextAlign::left, 0U); }
-Element::Handle UISystem::CreateElement(const SDL_FRect rect, const SDL_Color color, void (*on_click)()) {
-    (void)elements.emplace_back(color, rect, on_click);
-    return Element::Handle { static_cast<u32>(elements.size() - 1) };
+RectangleElement::Handle UISystem::CreateElement(const SDL_FRect rect, const SDL_Color color, void (*on_click)()) {
+    (void)rectangle_elements.emplace_back(color, rect, on_click);
+    return RectangleElement::Handle { static_cast<u32>(rectangle_elements.size() - 1) };
 }
 ListElement::Handle UISystem::CreateList(const SDL_Color color, const SDL_FRect rect, const u32 count, const f32 gap, const ListDirection direction) {
     std::vector<SDL_FRect> rects;
@@ -134,140 +131,5 @@ void UISystem::UpdateTable(const TableElement::Handle& handle, const Table& tabl
             UpdateText(text_handle, string);
         }
     }
-}
-
-// Assume node is leaf with fixed or child_constraint
-void NodeGenerator::UpdateLayout(Node* root) {
-    // Create tree
-    List parents { root };
-    // Possibly make this a cooler for loop
-    for (u32 i = 0U; i < parents.Size(); ++i) {
-        Node* parent = parents[i];
-        for (Node& child : parent->children) { (void)parents.EmplaceBack(&child); }
-    }
-
-    // From bottom up create children constrained
-    // Remember child_constraint only consist of fixed and child_constrained
-    auto isChildConstrained = [&] (const Node* parent) -> bool { return parent->width.layout_type == LayoutLength::child_constraint; };
-    auto bottomUpChildConstrainedParents = parents | std::views::reverse | std::ranges::views::filter(isChildConstrained) ;
-    for (Node* parent : bottomUpChildConstrainedParents) {
-        parent->width.resolved = std::accumulate(parent->children.begin(), parent->children.end(), 0U, [&] (const u32 sum, const Node& child) { return sum + child.width.resolved; });
-    }
-
-    // From top down create parents constrained
-    for (Node* parent : parents) {
-        List<Node*> parent_constrained_children { };
-        u32 pixels_taken = 0U;
-        for (Node& child : parent->children) {
-            if (child.width.layout_type == LayoutLength::parent_constraint) { (void)parent_constrained_children.EmplaceBack(&child); }
-            else { pixels_taken += child.width.resolved; }
-        }
-
-        u32 n_children = parent_constrained_children.Size();
-        if (n_children > 0U) {
-            u32 pixels_per = 0U;
-            u32 left_over = 0U;
-            if (pixels_taken < parent->width.resolved) {
-                pixels_per = (pixels_taken - parent->width.resolved) / n_children;
-                left_over = (pixels_taken - parent->width.resolved) % n_children;
-            }
-            for (Node* child : parent_constrained_children) { child->width.resolved = pixels_per; }
-            parent_constrained_children[0U]->width.resolved += left_over;
-        }
-    }
-}
-// Node renderer
-void Node::RecalculateResolvedWidth() {
-    Node* root = this;
-    while (root->width.layout_type != LayoutLength::fixed) { root = &root->parent; }
-    NodeGenerator().UpdateLayout(root);
-}
-void Node::RecalculateChildrenWithFill(Queue<Node*>& parent_constrained_nodes) {
-    u32 initial_size = parent_constrained_nodes.Size();
-    u32 pixels_taken = 0U;
-    for (Node& child : children) {
-        switch (child.width.layout_type) {
-            case LayoutLength::child_constraint:
-                pixels_taken += child.width.resolved;
-                break;
-            case LayoutLength::fixed:
-                pixels_taken += child.width.resolved;
-                break;
-            case LayoutLength::parent_constraint:
-                parent_constrained_nodes.EmplaceBack(&child);
-                break;
-        }
-    }
-
-    u32 n_elements = initial_size - parent_constrained_nodes.Size();
-    const Span<Node*> parent_constrained_children = parent_constrained_nodes.LastElementsToSpan(n_elements);
-    if (!parent_constrained_children.empty()) {
-        u32 pixels_per = 0U;
-        u32 left_over = 0U;
-        if (pixels_taken < width.resolved) {
-            pixels_per = (pixels_taken - width.resolved) / n_elements;
-            left_over = (pixels_taken - width.resolved) % n_elements;
-        }
-        for (Node* child : parent_constrained_children) {
-            child->width.resolved = pixels_per;
-            parent_constrained_nodes.EmplaceBack(child);
-        }
-        parent_constrained_children[0U]->width.resolved += left_over;
-    }
-}
-
-void Node::BFSRecalculateChildren() {
-    Queue<Node*> queue { };
-    queue.EmplaceBack(this);
-    while (!queue.Empty()) {
-        Node* node = queue.Front();
-        queue.Pop();
-        node->RecalculateChildrenWithFill(queue);
-    }
-}
-
-void Node::RecalculateParents() {
-    Node* parent = &this->parent;
-    while (parent != nullptr && parent->width.layout_type == LayoutLength::child_constraint) {
-        parent->width.resolved = 0.0F;
-        for (Node& child : children) {
-            child.RecalculateResolvedWidth();
-            width.resolved += child.width.resolved;
-        }
-        // we dont need to recalculate siblings since no siblings can be parent constrained
-        parent = &parent->parent;
-    }
-}
-
-// On width changed for any objects, you should recalculate children with parent_constraints and parents with children_constraint
-// if fixed then no constraints and it should be seen as a seperate tree
-void Node::SetWidth(LayoutLength new_width) {
-    width = new_width;
-    switch (width.layout_type) {
-        case LayoutLength::fixed:
-            break;
-        // assuming no children have parent_constraint when parent_constraint is hugging
-        case LayoutLength::child_constraint:
-            width.resolved = 0U;
-            for (Node& child : children) {
-                if (child.width.layout_type == LayoutLength::parent_constraint) { Logger().ErrorWithFile("Failed making [{}] child_constraint because child_constraint [{}] has parent_constraint", name, child.name); }
-                width.resolved += child.width.resolved;
-            }
-            break;
-        case LayoutLength::parent_constraint:
-            if (parent.width.layout_type == LayoutLength::child_constraint) { Logger().ErrorWithFile("Failed making [{}] parent_constraint because parent_constraint [{}] has child_constraint", name, parent.name); }
-            width.resolved = parent.width.resolved;
-            break;
-    }
-
-    // BFS Recalculate children with parent_constraint, bfs is cache aligned
-    BFSRecalculateChildren();
-    // Recalculate parents with child_constraint
-    RecalculateParents();
-}
-
-void UISystem::UpdateNodeLayout(Node& node) {
-    // Draw
-    //for (Node& child_constraint : node.GetChildren()) { UpdateNodeLayout(child_constraint); }
 }
 }

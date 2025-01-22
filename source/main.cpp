@@ -51,7 +51,10 @@ void RunGame(Engine& engine) {
         if (!running) { break; }
         engine.ClearScreen();
 
-        ui_system.DrawElements(engine.renderer);
+        ui_system.RenderElements(engine.renderer);
+
+        ui::FrameElements frame_elements = ui::NodeGenerator().CreateFrameElements(&main_menu_frame.root);
+        ui::RenderFrameElements(engine.renderer, frame_elements);
         //DrawImgui(engine.renderer);
 
         engine.Present();

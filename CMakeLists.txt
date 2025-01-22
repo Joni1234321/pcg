@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.25)
 
 project(pcg VERSION 1.0)
 
@@ -19,6 +19,8 @@ add_executable(${PROJECT_NAME}
                source/g_game.cpp
                source/m_frame.cpp
                source/r_ui.cpp
+               source/r_ui_node.cpp
+               source/r_ui_element.cpp
                ${imgui_dir}/imgui.cpp
                ${imgui_dir}/imgui_demo.cpp
                ${imgui_dir}/imgui_draw.cpp

@@ -7,8 +7,10 @@
 namespace pcg::frame {
 
 class MainMenuFrame {
-    std::vector<pce::ui::Element::Handle> elements { };
+    std::vector<pce::ui::RectangleElement::Handle> elements { };
 public:
+    pce::ui::Node root;
+
     MainMenuFrame(pce::ui::UISystem& ui_system);
     void Tick(u32 i, pce::ui::UISystem& ui_system);
 };
