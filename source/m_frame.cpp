@@ -48,9 +48,9 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) {
     ui_system.CreateList(colors::green, rect, 10U, 25.0F, ui::UISystem::ListDirection::horizontal);
 
     tree.root = ui::NodeBuilder().Fixed(uint2(100U, 100U)).Absolute(uint2 { 600U, 100U }).Fill(colors::cyan).Build(tree);
-    ui::Node& box = ui::NodeBuilder().Fixed(uint2(90, 90)).Absolute(uint2 { 605, 105 }).Fill(colors::yellow).Build(tree.root);
-    ui::Node& r = ui::NodeBuilder().FillWidth().FillHeight().Fill(colors::red).Build(box);
-    ui::Node& b = ui::NodeBuilder().FillWidth().FillHeight().Fill(colors::blue).Build(box);
+    ui::Node& box = ui::NodeBuilder().FillWidth().FillHeight().Padding({ 5, 5}).Fill(colors::yellow).Build(tree.root);
+    // ui::Node& r = ui::NodeBuilder().FillWidth().FillHeight().Fill(colors::red).Build(box);
+    // ui::Node& b = ui::NodeBuilder().FillWidth().FillHeight().Fill(colors::blue).Build(box);
     tree.MarkDirty();
 
 }

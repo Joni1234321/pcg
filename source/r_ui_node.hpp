@@ -85,6 +85,7 @@ struct NodeBuilder {
     NodeBuilder& HugHeight();
     NodeBuilder& FillWidth();
     NodeBuilder& FillHeight();
+    NodeBuilder& Padding(uint2 padding);
     NodeBuilder& Text(String& string);
     Node Build(NodeTree& node_tree) {
         node.parent = nullptr;

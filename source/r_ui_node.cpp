@@ -17,8 +17,8 @@ void NodeTree::RecalculateLayout() {
     // From bottom up create children constrained
     // Remember child_constraint only consist of fixed and child_constrained
     auto isChildConstrained = [&] (const Node* parent) -> bool { return parent->width.layout_type == LayoutLength::child_constraint; };
-    auto bottomUpChildConstrainedParents = parents | std::views::reverse | std::ranges::views::filter(isChildConstrained);
-    for (Node* parent : bottomUpChildConstrainedParents) {
+    auto bottomUpChildConstrained = parents | std::views::reverse | std::ranges::views::filter(isChildConstrained);
+    for (Node* parent : bottomUpChildConstrained) {
         parent->width.resolved = std::accumulate(parent->children.begin(), parent->children.end(), 0U, [&] (const u32 sum, const Node& child) -> u32 { return sum + child.width.resolved; });
     }
 
@@ -26,7 +26,7 @@ void NodeTree::RecalculateLayout() {
     for (Node* parent : parents) {
         List<Node*> parent_constrained_children { };
         u32 pixels_taken = 0U;
-        for (Node& child : parent->children) { if (child.width.layout_type == LayoutLength::parent_constraint) { (void)parent_constrained_children.EmplaceBack(&child); } else { pixels_taken += child.width.resolved; } }
+        for (Node& child : parent->children) { if (child.width.layout_type == LayoutLength::parent_constraint) { (void)parent_constrained_children.EmplaceBack(&child); } else { pixels_taken += child.width.resolved + child.padding.x * 2U; } }
 
         u32 n_children = parent_constrained_children.Size();
         if (n_children > 0U) {
@@ -36,7 +36,7 @@ void NodeTree::RecalculateLayout() {
                 pixels_per = (parent->width.resolved - pixels_taken) / n_children;
                 left_over = (parent->width.resolved - pixels_taken) % n_children;
             }
-            for (Node* child : parent_constrained_children) { child->width.resolved = pixels_per; }
+            for (Node* child : parent_constrained_children) { child->width.resolved = pixels_per - child->padding.x * 2U; }
             parent_constrained_children[0U]->width.resolved += left_over;
         }
     }
@@ -45,8 +45,8 @@ void NodeTree::RecalculateLayout() {
     for (Node* parent : parents) {
         u32 x = parent->position.x;
         for (Node& child : parent->children) {
-            child.position.x = x;
-            x += child.width.resolved;
+            child.position.x = x + child.padding.x;
+            x = child.position.x + child.width.resolved + child.padding.x;
         }
     }
 }
@@ -99,5 +99,8 @@ NodeBuilder& NodeBuilder::FillHeight() {
     node.height = { .resolved = -1U, .layout_type = LayoutLength::parent_constraint };
     return *this;
 }
-
+NodeBuilder& NodeBuilder::Padding(uint2 padding) {
+    node.padding = padding;
+    return *this;
+}
 }
