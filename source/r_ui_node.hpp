@@ -29,7 +29,8 @@ struct ResolvedLayout {
     SDL_FRect layout;
 };
 struct LayoutLength {
-    enum Constraint { fixed, child_constraint, parent_constraint };
+    enum Constraint { child_constraint, parent_constraint, fixed };
+    enum RelatedConstraint { hug, fill };
     u32 resolved;
     Constraint layout_type;
 };
@@ -50,16 +51,21 @@ struct Node {
     LayoutLength width { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
     LayoutLength height { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
 
+    SDL_FRect bounding_box { };
+
+    [[nodiscard]] constexpr uint2 NonContentSize() const { return padding; }
     [[nodiscard]] constexpr uint2 OuterBoxPosition() const { return position; }
-    [[nodiscard]] constexpr uint2 InnerBoxPosition() const { return position + padding; }
-    [[nodiscard]] constexpr uint2 InnerBoxSize() const { return OuterBoxSize() - padding * 2U; }
     [[nodiscard]] constexpr uint2 OuterBoxSize() const { return { width.resolved, height.resolved }; }
+    [[nodiscard]] constexpr uint2 OuterBoxEndPosition() const { return OuterBoxPosition() + OuterBoxSize(); }
+    [[nodiscard]] constexpr uint2 InnerBoxPosition() const { return OuterBoxPosition() + NonContentSize(); }
+    [[nodiscard]] constexpr uint2 InnerBoxSize() const { return OuterBoxSize() - NonContentSize() * 2U; }
 
     [[nodiscard]] constexpr SDL_FRect OuterRect() const { return { .x = static_cast<f32>(position.x), .y = static_cast<f32>(position.y), .w = static_cast<f32>(width.resolved), .h = static_cast<f32>(height.resolved) }; };
+    [[nodiscard]] constexpr b8 IsInside(uint2 screen_position) const;
+
     friend NodeBuilder;
     friend NodeTree;
 };
-
 struct NodeTree {
     Node root { };
     void MarkDirty() { dirty = true; }
@@ -72,6 +78,18 @@ struct NodeTree {
         return frame_elements;
     };
 
+    Node *HitNode(uint2 screen_position) {
+        if (!root.IsInside(screen_position)) { return nullptr; }
+        Node* node = &root;
+        const auto is_inside_node = [screen_position] (const Node& child) -> b8 { return child.IsInside(screen_position); };
+        while (true) {
+            auto node_iterator = std::ranges::find_if(node->children, is_inside_node);
+            if (node_iterator == node->children.end()) { break; }
+            node = &*node_iterator;
+        }
+        return node;
+    }
+
 private:
     bool dirty { true };
     FrameElements frame_elements { };
@@ -79,7 +97,11 @@ private:
     void RecalculateLayout();
 };
 struct NodeBuilder {
-    NodeBuilder() { }
+    explicit NodeBuilder(uint2 size);
+    explicit NodeBuilder(LayoutLength::RelatedConstraint constraint);
+    NodeBuilder(u32 width, LayoutLength::RelatedConstraint height_constraint);
+    NodeBuilder(LayoutLength::RelatedConstraint width_constraint, u32 height);
+    NodeBuilder(LayoutLength::RelatedConstraint width_constraint, LayoutLength::RelatedConstraint height_constraint);
     explicit NodeBuilder(const Node& node) : node(node) { }
     NodeBuilder& Fill(SDL_Color color);
     NodeBuilder& Absolute(uint2 pos);
