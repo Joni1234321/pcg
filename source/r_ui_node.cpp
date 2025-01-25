@@ -6,35 +6,36 @@
 namespace pce::ui {
 // Assume node is leaf with fixed or child_constraint
 void NodeTree::RecalculateLayout() {
-    // Create tree
     List parents { &root };
-    // Possibly make this a cooler for loop
     for (u32 i = 0U; i < parents.Size(); ++i) {
         Node* parent = parents[i];
         for (Node& child : parent->children) { (void)parents.EmplaceBack(&child); }
     }
 
-    // From bottom up create children constrained
-    // Remember child_constraint only consist of fixed and child_constrained
-    auto isChildConstrained = [&] (const Node* parent) -> bool { return parent->width.layout_type == LayoutLength::child_constraint; };
-    auto bottomUpChildConstrained = parents | std::views::reverse | std::ranges::views::filter(isChildConstrained);
-    for (Node* parent : bottomUpChildConstrained) {
-        parent->width.resolved = std::accumulate(parent->children.begin(), parent->children.end(), 0U, [&] (const u32 sum, const Node& child) -> u32 { return sum + child.width.resolved; });
+    auto reversedParents = parents | std::views::reverse;
+    for (Node* parent : reversedParents) {
+        //uint2 content_sizes = std::ranges::fold_left(parent->children, uint2{ 0U, 0U }, [&] (const uint2 sum, const Node& child) -> uint2 { return sum + child.OuterBoxSize(); }) + parent->padding * 2U;
+        if (parent->width.layout_type == LayoutLength::child_constraint) {
+            parent->width.resolved = std::ranges::fold_left(parent->children, 0U, [&] (const u32 sum, const Node& child) -> u32 { return sum + child.OuterBoxSize().x; }) + parent->padding.x * 2U;
+        }
+        if (parent->height.layout_type == LayoutLength::child_constraint) {
+            parent->height.resolved = std::ranges::fold_left(parent->children, 0U, [&] (const u32 sum, const Node& child) -> u32 { return sum + child.OuterBoxSize().y; }) + parent->padding.y * 2U;
+        }
     }
 
-    // From top down create parents constrained
+    // From top down create parents constrained (fill)
     for (Node* parent : parents) {
         List<Node*> parent_constrained_children { };
         u32 pixels_taken = 0U;
-        for (Node& child : parent->children) { if (child.width.layout_type == LayoutLength::parent_constraint) { (void)parent_constrained_children.EmplaceBack(&child); } else { pixels_taken += child.width.resolved + child.padding.x * 2U; } }
+        for (Node& child : parent->children) { if (child.width.layout_type == LayoutLength::parent_constraint) { (void)parent_constrained_children.EmplaceBack(&child); } else { pixels_taken += child.OuterBoxSize().x; } }
 
         u32 n_children = parent_constrained_children.Size();
         if (n_children > 0U) {
             u32 pixels_per = 0U;
             u32 left_over = 0U;
-            if (pixels_taken < parent->width.resolved) {
-                pixels_per = (parent->width.resolved - pixels_taken) / n_children;
-                left_over = (parent->width.resolved - pixels_taken) % n_children;
+            if (pixels_taken < parent->InnerBoxSize().x) {
+                pixels_per = (parent->InnerBoxSize().x - pixels_taken) / n_children;
+                left_over = (parent->InnerBoxSize().x - pixels_taken) % n_children;
             }
             for (Node* child : parent_constrained_children) { child->width.resolved = pixels_per - child->padding.x * 2U; }
             parent_constrained_children[0U]->width.resolved += left_over;
@@ -43,10 +44,10 @@ void NodeTree::RecalculateLayout() {
 
     // From top down position
     for (Node* parent : parents) {
-        u32 x = parent->position.x;
+        uint2 position = parent->InnerBoxPosition();
         for (Node& child : parent->children) {
-            child.position.x = x + child.padding.x;
-            x = child.position.x + child.width.resolved + child.padding.x;
+            child.position = position;
+            position.x += child.OuterBoxSize().x;
         }
     }
 }
@@ -57,9 +58,7 @@ FrameElements NodeTree::CreateFrameElements() {
     while (!nodes.empty()) {
         const Node* node = nodes.top();
         nodes.pop();
-        const SDL_FRect rect { .x = static_cast<f32>(node->position.x), .y = static_cast<f32>(node->position.y), .w = static_cast<f32>(node->width.resolved), .h = static_cast<f32>(node->height.resolved) };
-        const SDL_Color color { .r = node->background_color.r, .g = node->background_color.g, .b = node->background_color.b, .a = node->background_color.a };
-        RectangleElement rectangle { .color = color, .rect = rect, .on_click = nullptr };
+        RectangleElement rectangle { .color = node->background_color, .rect = node->OuterRect(), .on_click = nullptr };
         elements.rectangles.PushBack(rectangle);
 
         for (const Node& child : node->children) { (void)nodes.emplace(&child); }
@@ -77,7 +76,6 @@ void RenderFrameElements(SDL_Renderer* renderer, NodeTree& node_tree) {
     for (const TextElement& text : frame_elements.texts) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
 }
 
-
 NodeBuilder& NodeBuilder::Fill(SDL_Color color) {
     node.background_color = color;
     return *this;
@@ -89,6 +87,14 @@ NodeBuilder& NodeBuilder::Absolute(uint2 pos) {
 NodeBuilder& NodeBuilder::Fixed(uint2 size) {
     node.width = { .resolved = size.x, .layout_type = LayoutLength::fixed };
     node.height = { .resolved = size.y, .layout_type = LayoutLength::fixed };
+    return *this;
+}
+NodeBuilder& NodeBuilder::HugWidth() {
+    node.width = { .resolved = -1U, .layout_type = LayoutLength::child_constraint };
+    return *this;
+}
+NodeBuilder& NodeBuilder::HugHeight() {
+    node.height = { .resolved = -1U, .layout_type = LayoutLength::child_constraint };
     return *this;
 }
 NodeBuilder& NodeBuilder::FillWidth() {

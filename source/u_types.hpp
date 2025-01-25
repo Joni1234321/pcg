@@ -26,8 +26,39 @@ struct float2 {
 struct uint2 {
     u32 x;
     u32 y;
+    constexpr uint2 operator+(const uint2& other) const { return { x + other.x, y + other.y }; }
+    constexpr uint2 operator-(const uint2& other) const { return { x - other.x, y - other.y }; }
+    constexpr uint2 operator*(const uint2& other) const { return { x * other.x, y * other.y }; }
+    constexpr uint2 operator/(const uint2& other) const { return { x / other.x, y / other.y }; }
+    constexpr uint2 operator*(const u32& k) const { return { x * k, y * k }; }
+    constexpr uint2 operator/(const u32& k) const { return { x / k, y / k }; }
+    constexpr uint2& operator+=(const uint2& other) {
+        x += other.x;
+        y += other.y;
+        return *this;
+    }
+    constexpr uint2& operator-=(const uint2& other) {
+        x -= other.x;
+        y -= other.y;
+        return *this;
+    }
+    constexpr uint2& operator*=(const uint2& other) {
+        x *= other.x;
+        y *= other.y;
+        return *this;
+    }
+    constexpr uint2& operator/=(const uint2& other) {
+        x /= other.x;
+        y /= other.y;
+        return *this;
+    }
+    constexpr b8 operator==(const uint2& other) const { return x == other.x && y == other.y; }
+    constexpr b8 operator!=(const uint2& other) const { return !(*this == other); }
+    constexpr b8 operator<(const uint2& other) const { return (x < other.x) || (x == other.x && y < other.y); }
+    constexpr b8 operator<=(const uint2& other) const { return *this < other || *this == other; }
+    constexpr b8 operator>(const uint2& other) const { return !(*this <= other); }
+    constexpr b8 operator>=(const uint2& other) const { return !(*this < other); }
 };
-
 
 constexpr u32 U32_MAX = UINT32_MAX;
 
@@ -55,7 +86,7 @@ protected:
 inline const Entity Entity::NONE = Entity { };
 
 template <Derived<Entity> T = Entity> struct OptionalEntity {
-    constexpr operator T&() const { return entity; }
+    constexpr operator uint2() const { return entity; }
     constexpr OptionalEntity() = default;
     constexpr explicit OptionalEntity(T entity) : entity(entity) { }
     [[nodiscard]] constexpr b8 IsNone() const { return entity == Entity::NONE; }

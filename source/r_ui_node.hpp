@@ -50,6 +50,12 @@ struct Node {
     LayoutLength width { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
     LayoutLength height { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
 
+    [[nodiscard]] constexpr uint2 OuterBoxPosition() const { return position; }
+    [[nodiscard]] constexpr uint2 InnerBoxPosition() const { return position + padding; }
+    [[nodiscard]] constexpr uint2 InnerBoxSize() const { return OuterBoxSize() - padding * 2U; }
+    [[nodiscard]] constexpr uint2 OuterBoxSize() const { return { width.resolved, height.resolved }; }
+
+    [[nodiscard]] constexpr SDL_FRect OuterRect() const { return { .x = static_cast<f32>(position.x), .y = static_cast<f32>(position.y), .w = static_cast<f32>(width.resolved), .h = static_cast<f32>(height.resolved) }; };
     friend NodeBuilder;
     friend NodeTree;
 };

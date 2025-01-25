@@ -47,12 +47,13 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) {
     rect.h *= 2;
     ui_system.CreateList(colors::green, rect, 10U, 25.0F, ui::UISystem::ListDirection::horizontal);
 
-    tree.root = ui::NodeBuilder().Fixed(uint2(100U, 100U)).Absolute(uint2 { 600U, 100U }).Fill(colors::cyan).Build(tree);
-    ui::Node& box = ui::NodeBuilder().FillWidth().FillHeight().Padding({ 5, 5}).Fill(colors::yellow).Build(tree.root);
+    tree.root = ui::NodeBuilder().Fixed({ 100U, 100U }).Absolute({ 600U, 100U }).Padding({ 5U, 5U }).Fill(colors::cyan).Build(tree);
+    ui::Node& box1 = ui::NodeBuilder().FillWidth().FillHeight().Fill(colors::yellow).Build(tree.root);
+    ui::Node& box2 = ui::NodeBuilder().FillWidth().FillHeight().Fill(colors::red).Build(tree.root);
+    ui::Node& box3 = ui::NodeBuilder().HugWidth().FillHeight().Padding({ 10U, 10U }).Fill(colors::black).Build(tree.root);
     // ui::Node& r = ui::NodeBuilder().FillWidth().FillHeight().Fill(colors::red).Build(box);
     // ui::Node& b = ui::NodeBuilder().FillWidth().FillHeight().Fill(colors::blue).Build(box);
     tree.MarkDirty();
-
 }
 void MainMenuFrame::Tick(u32 i, ui::UISystem& ui_system) {
     for (const ui::RectangleElement::Handle sqr : elements) { ui_system[sqr].color = SDL_Color { static_cast<u8>(i / 3U), static_cast<u8>(i / 10U), static_cast<u8>(i / 67U), 255 }; }
