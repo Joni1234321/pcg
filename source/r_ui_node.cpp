@@ -14,22 +14,18 @@ void NodeTree::RecalculateLayout() {
 
     auto reversedParents = parents | std::views::reverse;
     for (Node* parent : reversedParents) {
-        //uint2 content_sizes = std::ranges::fold_left(parent->children, uint2{ 0U, 0U }, [&] (const uint2 sum, const Node& child) -> uint2 { return sum + child.OuterBoxSize(); }) + parent->padding * 2U;
-        if (parent->width.layout_type == LayoutLength::child_constraint) {
-            parent->width.resolved = std::ranges::fold_left(parent->children, 0U, [&] (const u32 sum, const Node& child) -> u32 { return sum + child.OuterBoxSize().x; }) + parent->padding.x * 2U;
-        }
-        if (parent->height.layout_type == LayoutLength::child_constraint) {
-            parent->height.resolved = std::ranges::fold_left(parent->children, 0U, [&] (const u32 sum, const Node& child) -> u32 { return sum + child.OuterBoxSize().y; }) + parent->padding.y * 2U;
-        }
+        const uint2 children_content_size = std::ranges::fold_left(parent->children, parent->padding * 2U, [&] (const uint2 sum, const Node& child) -> uint2 { return sum + child.OuterBoxSize(); });
+        if (parent->width.layout_type == LayoutLength::child_constraint) { parent->width.resolved = children_content_size.x; }
+        if (parent->height.layout_type == LayoutLength::child_constraint) { parent->height.resolved = children_content_size.y; }
     }
 
     // From top down create parents constrained (fill)
     for (Node* parent : parents) {
-        List<Node*> parent_constrained_children { };
+        List<Node*> parent_constrained { };
         u32 pixels_taken = 0U;
-        for (Node& child : parent->children) { if (child.width.layout_type == LayoutLength::parent_constraint) { (void)parent_constrained_children.EmplaceBack(&child); } else { pixels_taken += child.OuterBoxSize().x; } }
+        for (Node& child : parent->children) { if (child.width.layout_type == LayoutLength::parent_constraint) { (void)parent_constrained.EmplaceBack(&child); } else { pixels_taken += child.OuterBoxSize().x; } }
 
-        u32 n_children = parent_constrained_children.Size();
+        u32 n_children = parent_constrained.Size();
         if (n_children > 0U) {
             u32 pixels_per = 0U;
             u32 left_over = 0U;
@@ -37,8 +33,8 @@ void NodeTree::RecalculateLayout() {
                 pixels_per = (parent->InnerBoxSize().x - pixels_taken) / n_children;
                 left_over = (parent->InnerBoxSize().x - pixels_taken) % n_children;
             }
-            for (Node* child : parent_constrained_children) { child->width.resolved = pixels_per - child->padding.x * 2U; }
-            parent_constrained_children[0U]->width.resolved += left_over;
+            for (Node* child : parent_constrained) { child->width.resolved = pixels_per - child->padding.x * 2U; }
+            parent_constrained[0U]->width.resolved += left_over;
         }
     }
 
