@@ -82,6 +82,7 @@ template <typename T> struct List {
     [[nodiscard]] constexpr const T& Front() const { return data.front(); }
     [[nodiscard]] constexpr const T& Back() const { return data.back(); }
 
+    constexpr void Clear () { data.clear(); }
     constexpr void PopBack() { data.pop_back(); }
     constexpr void Resize(const u32 size) { data.resize(size); }
     constexpr void Reserve(const u32 size) { data.reserve(size); }

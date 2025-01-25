@@ -21,21 +21,25 @@ void NodeTree::RecalculateLayout() {
 
     // From top down create parents constrained (fill)
     for (Node* parent : parents) {
+        // major axis
         List<Node*> parent_constrained { };
-        u32 pixels_taken = 0U;
-        for (Node& child : parent->children) { if (child.width.layout_type == LayoutLength::parent_constraint) { (void)parent_constrained.EmplaceBack(&child); } else { pixels_taken += child.OuterBoxSize().x; } }
-
+        uint2 pixels_taken { 0U, 0U };
+        for (Node& child : parent->children) { if (child.width.layout_type == LayoutLength::parent_constraint) { (void)parent_constrained.EmplaceBack(&child); } else { pixels_taken.x += child.OuterBoxSize().x; } }
         u32 n_children = parent_constrained.Size();
         if (n_children > 0U) {
             u32 pixels_per = 0U;
             u32 left_over = 0U;
-            if (pixels_taken < parent->InnerBoxSize().x) {
-                pixels_per = (parent->InnerBoxSize().x - pixels_taken) / n_children;
-                left_over = (parent->InnerBoxSize().x - pixels_taken) % n_children;
+            if (pixels_taken.x < parent->InnerBoxSize().x) {
+                pixels_per = (parent->InnerBoxSize().x - pixels_taken.x) / n_children;
+                left_over = (parent->InnerBoxSize().x - pixels_taken.x) % n_children;
             }
             for (Node* child : parent_constrained) { child->width.resolved = pixels_per - child->padding.x * 2U; }
             parent_constrained[0U]->width.resolved += left_over;
         }
+
+        // minor
+        auto children = parent->children | std::views::filter([&] (const Node& child) -> bool { return child.height.layout_type == LayoutLength::parent_constraint; });
+        for (Node& child : children) { child.height.resolved = parent->InnerBoxSize().y; }
     }
 
     // From top down position
