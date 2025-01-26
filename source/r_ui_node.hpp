@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+#include <ranges>
 #include <functional>
 
 #include <SDL3/SDL_render.h>
@@ -26,6 +28,7 @@ public:
     explicit Color(const SDL_Color color) : Color(color.r, color.g, color.b, color.a) { }
     explicit Color(const SDL_FColor color) : Color(color.r, color.g, color.b, color.a) { }
 };
+inline SDL_Color darken_color(const SDL_Color color, const f32 factor) { return SDL_Color { static_cast<u8>(color.r * factor), static_cast<u8>(color.g * factor), static_cast<u8>(color.b * factor), color.a }; }
 
 struct ResolvedLayout {
     SDL_FRect layout;
@@ -41,11 +44,31 @@ struct NodeTree;
 struct NodeBuilder;
 
 struct Node {
-    Node* parent { nullptr };
-    List<Node> children { };
+    struct Handle {
+        u32 id { U32_MAX };
+        Handle() { }
+        explicit Handle(const u32 value) : id(value) { }
+        // Handle(const Handle&) = delete;
+        // Handle& operator=(const Handle&) = delete;
+        // Handle(Handle&&) = delete;
+        // Handle& operator=(Handle&&) = delete;
 
+        [[nodiscard]] bool IsRoot() const noexcept { return id == 0U; }
+        [[nodiscard]] bool HasValue() const noexcept { return id != U32_MAX; }
+    };
+    Node() = default;
+    // Node(const Node&) = delete;
+    // Node& operator=(const Node&) = delete;
+    // Node(Node&&) = delete;
+    // Node& operator=(Node&&) = delete;
     String name { };
     String text { };
+
+    SDL_FRect bounding_box { };
+
+    Handle parent { };
+    List<Handle> children { };
+
     SDL_Color background_color { 0, 0, 0 };
     SDL_Color background_color_hover { 0, 0, 0 };
     uint2 position { };
@@ -54,11 +77,9 @@ struct Node {
     LayoutLength width { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
     LayoutLength height { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
 
-    SDL_FRect bounding_box { };
-
-    std::function<void(Node*)> on_click;
-    std::function<void(Node*)> on_hover;
-    std::function<void(Node*)> on_hover_out;
+    std::function<void(Node*)> on_click { };
+    std::function<void(Node*)> on_hover { };
+    std::function<void(Node*)> on_hover_out { };
 
     void OnHover() {
         std::swap(background_color, background_color_hover);
@@ -84,13 +105,37 @@ struct Node {
         return relative.x < static_cast<u32>(bounding_box.w) && relative.y < static_cast<u32>(bounding_box.h);
     }
 
-    void Propagate(std::function<void(Node*)> proj) { for (Node* node = this; node != nullptr; node = node->parent) { std::invoke(proj, node); } }
-
     friend NodeBuilder;
     friend NodeTree;
 };
 struct NodeTree {
-    Node root { };
+    List<Node> nodes;
+
+    [[nodiscard]] static constexpr Node::Handle Root() { return Node::Handle { 0U }; }
+    Node::Handle SetRoot(const Node& root) {
+        ASSERT_DBG(nodes.Empty(), "Setting root non empty tree");
+        nodes.PushBack(root);
+        return Root();
+    }
+
+    [[nodiscard]] Node& GetNode(const Node::Handle node) { return nodes[node.id]; }
+    [[nodiscard]] Node::Handle AddNode(const Node& node, const Node::Handle parent_handle ) {
+        Node::Handle handle { nodes.Size() };
+        nodes.PushBack(node);
+        nodes.Back().parent = parent_handle;
+        GetNode(parent_handle).children.PushBack(handle);
+        return handle;
+    }
+
+    void Propagate(Node::Handle handle, const std::function<void(Node&)>& proj) {
+        if (!handle.HasValue()) { return;}
+        do {
+            Node& node = GetNode(handle);
+            std::invoke(proj, node);
+            handle = node.parent;
+        } while (handle.HasValue());
+    }
+
     void MarkDirty() { dirty = true; }
     const FrameElements& GetFrameElements() {
         if (dirty) {
@@ -101,14 +146,15 @@ struct NodeTree {
         return frame_elements;
     };
 
-    Node *HitNode(uint2 screen_position) {
-        if (!root.IsInside(screen_position)) { return nullptr; }
-        Node* node = &root;
-        const auto is_inside_node = [screen_position] (const Node& child) -> b8 { return child.IsInside(screen_position); };
+    Node::Handle HitNode(uint2 screen_position) {
+        if (!GetNode(Root()).IsInside(screen_position)) { return Node::Handle { };  }
+        Node::Handle node { 0U };
+        auto nodes_real = GetNode(node).children | std::views::transform([&](const auto handle) -> const Node& { return GetNode(handle); });
+        const auto is_inside_node = [screen_position, this] (const Node::Handle child) -> b8 { return this->GetNode(child).IsInside(screen_position); };
         while (true) {
-            auto node_iterator = std::ranges::find_if(node->children, is_inside_node, std::identity { });
-            if (node_iterator == node->children.end()) { break; }
-            node = &*node_iterator;
+            auto node_iterator = std::ranges::find_if(GetNode(node).children, is_inside_node, std::identity { });
+            if (node_iterator == GetNode(node).children.end()) { break; }
+            node = *node_iterator;
         }
         return node;
     }
@@ -119,13 +165,13 @@ private:
     FrameElements CreateFrameElements();
     void RecalculateLayout();
 };
+
 struct NodeBuilder {
     explicit NodeBuilder(uint2 size);
     explicit NodeBuilder(LayoutLength::RelatedConstraint constraint);
     NodeBuilder(u32 width, LayoutLength::RelatedConstraint height_constraint);
     NodeBuilder(LayoutLength::RelatedConstraint width_constraint, u32 height);
     NodeBuilder(LayoutLength::RelatedConstraint width_constraint, LayoutLength::RelatedConstraint height_constraint);
-    explicit NodeBuilder(const Node& node) : node(node) { }
     NodeBuilder& Name(const String& name);
     NodeBuilder& Fill(SDL_Color color);
     NodeBuilder& Absolute(uint2 pos);
@@ -139,27 +185,24 @@ struct NodeBuilder {
     NodeBuilder& FillHeight();
     NodeBuilder& Padding(uint2 padding);
     NodeBuilder& Text(String& string);
-    Node Build(NodeTree& node_tree) {
-        node.parent = nullptr;
-        node.background_color_hover = colors::blue;
+    void Finalize() {
+        const f32 darken = 0.5F;
+        node.background_color_hover = darken_color(node.background_color, darken);
         node.on_click = [&] (Node* node) -> void { Logger().Log("Clicked"); };
         node.on_hover = [&] (Node* node) -> void { Logger().Log("Hover"); };
-        node_tree.root = node;
-        return node;
+        node.on_hover_out = [&] (Node* node) -> void { Logger().Log("On Hover Out"); };
+    }
+    Node::Handle BuildRoot(NodeTree& node_tree) {
+        Finalize();
+        node_tree.SetRoot(node);
+        return Node::Handle { 0U };
     };
-    Node& Build(Node& parent) {
-        node.parent = &parent;
-        node.background_color_hover = colors::blue;
-        node.on_click = [&] (Node* node) -> void { Logger().Log("Clicked"); };
-        node.on_hover = [&] (Node* node) -> void { Logger().Log("Hover"); };
-
-        parent.children.push_back(node);
-        return parent.children.Back();
+    Node::Handle Build(NodeTree& node_tree, Node::Handle parent_handle) {
+        Finalize();
+        return node_tree.AddNode(node, parent_handle);
     }
 
 private:
     Node node { };
 };
-
-void RenderFrameElements(SDL_Renderer* renderer, NodeTree& node_tree);
-}
+} // pce::ui

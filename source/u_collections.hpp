@@ -72,10 +72,10 @@ template <typename T> struct List {
 
     template <class... Args> T& EmplaceBack(Args&&... args) { return data.emplace_back(std::forward<Args>(args)...); }
 
-    constexpr Iter begin() { return data.begin(); }
-    constexpr Iter end() { return data.end(); }
-    constexpr T& Front() { return data.front(); }
-    constexpr T& Back() { return data.back(); }
+    [[nodiscard]] constexpr Iter begin() { return data.begin(); }
+    [[nodiscard]] constexpr Iter end() { return data.end(); }
+    [[nodiscard]] constexpr T& Front() { return data.front(); }
+    [[nodiscard]] constexpr T& Back() { return data.back(); }
 
     [[nodiscard]] constexpr CIter begin() const { return data.begin(); }
     [[nodiscard]] constexpr CIter end() const { return data.end(); }
@@ -90,7 +90,7 @@ template <typename T> struct List {
     constexpr void push_back(const T& value) { data.push_back(value); }
 
     [[nodiscard]] constexpr b8 Empty() const { return data.empty(); }
-    constexpr void PushBack(T& t) { data.push_back(t); }
+    constexpr void PushBack(const T& t) { data.push_back(t); }
     constexpr void PushBack(T&& t) { data.push_back(std::move(t)); }
 
     void SwapBack(u32 pos) {

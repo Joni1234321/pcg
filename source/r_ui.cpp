@@ -1,8 +1,27 @@
 #include "r_ui.hpp"
 
-
 namespace pce::ui {
-UISystem::UISystem(Engine& engine): renderer(engine.renderer), text_renderer(TTF_CreateRendererTextEngine(engine.renderer)) {
+void UISystem::Tick(InputSystem& input_system, NodeTree& tree) {
+    Node::Handle previous_hovered_node = hovered_node;
+
+    hovered_node = tree.HitNode(input_system.MousePosition());
+    if (previous_hovered_node.id != hovered_node.id) {
+        tree.Propagate(previous_hovered_node, &Node::OnHoverOut);
+        tree.Propagate(hovered_node, &Node::OnHover);
+    }
+
+    if (hovered_node.HasValue() || previous_hovered_node.HasValue()) { tree.MarkDirty(); }
+}
+void UISystem::RenderTree(SDL_Renderer* renderer, NodeTree& node_tree) {
+    const FrameElements& frame_elements = node_tree.GetFrameElements();
+    for (const RectangleElement& element : frame_elements.rectangles) {
+        (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
+        (void)SDL_RenderFillRect(renderer, &element.rect);
+    }
+    for (const TextElement& text : frame_elements.texts) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
+}
+void UISystem::LeftClick(NodeTree& tree) { tree.Propagate(hovered_node, &Node::OnClick); }
+UISystem::UISystem(Engine& engine): text_renderer(TTF_CreateRendererTextEngine(engine.renderer)) {
     engine.GetWindowSize(&screen_width, &screen_height);
     const RelativePath font_path = "font.ttf";
     if (!font.Load(assets::Asset(font_path))) { SDL_Log("Font not loaded (%s)", SDL_GetError()); }
@@ -26,7 +45,6 @@ UISystem::~UISystem() {
     for (const RectangleElement& element : rectangle_elements) { }
     TTF_DestroyRendererTextEngine(text_renderer);
 }
-void UISystem::SetColor(Color color) { (void)SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a); }
 TextElement::Handle UISystem::CreateTextAligned(const String& string, TTF_Font* font, const SDL_Color color, f32 x, const f32 y, const TextAlign alignment, const u32 width) {
     TTF_Text* text = TTF_CreateText(text_renderer, font, string.CString(), string.size());
     i32 text_width;

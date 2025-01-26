@@ -25,10 +25,9 @@ class UISystem {
     std::vector<RectangleElement> rectangle_elements { };
     std::vector<ListElement> list_elements { };
     List<TableElement> table_elements { };
-    Node* root;
+    Node::Handle hovered_node { };
 
 public:
-    SDL_Renderer* renderer;
     enum class ListDirection { horizontal, vertical };
     u32 screen_width;
     u32 screen_height;
@@ -37,6 +36,9 @@ public:
     explicit UISystem(Engine& engine);
     ~UISystem();
 
+    void Tick(InputSystem& input_system, NodeTree& tree);
+    void RenderTree(SDL_Renderer* renderer, NodeTree& node_tree);
+    void LeftClick(NodeTree& tree);
     void SetColor(Color color);
 
     void RenderElements(SDL_Renderer* renderer);
@@ -63,5 +65,4 @@ public:
     TableElement::Handle CreateTable(const Table& table, SDL_Color text_color, const f32 x, const f32 y);
     void UpdateTable(const TableElement::Handle& handle, const Table& table);
 };
-
 }

@@ -17,6 +17,7 @@ using pce::List;
 using namespace pcg::frame;
 
 void RunGame(Engine& engine) {
+    InputSystem input_system { };
     ui::UISystem ui_system(engine);
 
     MainMenuFrame main_menu_frame(ui_system);
@@ -25,7 +26,6 @@ void RunGame(Engine& engine) {
 
     Tick tick { 0U };
     bool running = true;
-    ui::Node* hovered_node = nullptr;
     while (running) {
         tick += Tick { 1U };
         constexpr u32 skip = 10U;
@@ -36,17 +36,8 @@ void RunGame(Engine& engine) {
         main_menu_frame.Tick(tick.Value(), ui_system);
         fps_frame.Tick(tick.Value(), ui_system);
 
-        // UI SYSTEM
-        f32 x, y;
-        (void)SDL_GetMouseState(&x, &y);
-
-        ui::Node* previous_hovered_node = hovered_node;
-        hovered_node = main_menu_frame.tree.HitNode({ static_cast<u32>(x), static_cast<u32>(y) });
-        if (previous_hovered_node != hovered_node) {
-            previous_hovered_node->Propagate(&ui::Node::OnHoverOut);
-            hovered_node->Propagate(&ui::Node::OnHover);
-        }
-
+        input_system.Tick();
+        ui_system.Tick(input_system, main_menu_frame.tree);
 
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -65,7 +56,7 @@ void RunGame(Engine& engine) {
                     }
                     break;
                 case SDL_EVENT_MOUSE_BUTTON_DOWN:
-                    if (event.button.button == SDL_BUTTON_LEFT) { hovered_node->Propagate(&ui::Node::OnClick); }
+                    if (event.button.button == SDL_BUTTON_LEFT) { ui_system.LeftClick(main_menu_frame.tree); }
                     break;
                 default:
                     //Logger().Log("Unhandled event {}", event.type);
@@ -73,14 +64,12 @@ void RunGame(Engine& engine) {
             }
         }
 
-        if (hovered_node != nullptr) { main_menu_frame.tree.MarkDirty(); }
-
         if (!running) { break; }
 
         engine.ClearScreen();
 
         ui_system.RenderElements(engine.renderer);
-        RenderFrameElements(engine.renderer, main_menu_frame.tree);
+        ui_system.RenderTree(engine.renderer, main_menu_frame.tree);
 
         //DrawImgui(engine.renderer);
         engine.Present();

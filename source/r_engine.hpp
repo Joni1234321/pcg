@@ -26,6 +26,21 @@ inline AbsolutePath Asset(const AssetPath& asset_path) {
 }
 
 namespace pce {
+class InputSystem {
+    uint2 mouse_position { };
+
+public:
+    void Tick() {
+        float2 mouse_position_f;
+        (void)SDL_GetMouseState(&mouse_position_f.x, &mouse_position_f.y);
+        mouse_position.x = static_cast<u32>(mouse_position_f.x);
+        mouse_position.y = static_cast<u32>(mouse_position_f.y);
+    }
+    [[nodiscard]] uint2 MousePosition() const { return mouse_position; }
+};
+}
+
+namespace pce {
 inline SDL_Color clear_color = colors::dark_dark_brown;
 
 inline void DrawImgui(SDL_Renderer* renderer) {
