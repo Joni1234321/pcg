@@ -82,12 +82,13 @@ template <typename T> struct List {
     [[nodiscard]] constexpr const T& Front() const { return data.front(); }
     [[nodiscard]] constexpr const T& Back() const { return data.back(); }
 
-    constexpr void Clear () { data.clear(); }
+    constexpr void Clear() { data.clear(); }
     constexpr void PopBack() { data.pop_back(); }
     constexpr void Resize(const u32 size) { data.resize(size); }
     constexpr void Reserve(const u32 size) { data.reserve(size); }
     // ReSharper disable once CppInconsistentNaming
     constexpr void push_back(const T& value) { data.push_back(value); }
+    template <std::_Container_compatible_range<T> _Rng> constexpr void AppendRange(_Rng&& range) { data.append_range(range); }
 
     [[nodiscard]] constexpr b8 Empty() const { return data.empty(); }
     constexpr void PushBack(const T& t) { data.push_back(t); }
@@ -118,9 +119,9 @@ protected:
 
 template <typename T> struct Queue : List<T> {
     void RemoveAt(u32 pos) { this->data.erase(this->data.begin() + pos); }
-    [[nodiscard]] constexpr T Front () { return this->data.front(); }
+    [[nodiscard]] constexpr T Front() { return this->data.front(); }
     void Pop() { this->data.erase(this->data.begin()); }
-    Span<T> LastElementsToSpan(u32 elements) { return Span<T> (this->data.end() - elements, this->data.end()); }
+    Span<T> LastElementsToSpan(u32 elements) { return Span<T>(this->data.end() - elements, this->data.end()); }
 };
 
 template <typename T> using Component = List<T>;

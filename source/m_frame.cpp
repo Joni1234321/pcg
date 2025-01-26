@@ -47,9 +47,10 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) {
     rect.h *= 2;
     ui_system.CreateList(colors::green, rect, 10U, 25.0F, ui::UISystem::ListDirection::horizontal);
 
-    ui::Node::Handle frame = ui::NodeBuilder(uint2{ 100U, 100U }).Absolute({ 600U, 100U }).BuildRoot(tree);
+    ui::Node::Handle frame = ui::NodeBuilder(uint2{ 100U, 100U }).Gap(10U).BuildRoot(tree, { 600U, 100U });
+
     {
-        ui::Node::Handle root = ui::NodeBuilder(uint2{ 100U, 100U }).Absolute({ 600U, 100U }).Padding({ 5U, 5U }).Fill(colors::cyan).Build(tree, frame);
+        ui::Node::Handle root = ui::NodeBuilder(uint2{ 100U, 100U }).Padding({ 5U, 5U }).Fill(colors::cyan).Build(tree, frame);
         ui::Node::Handle box1 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::yellow).Padding({ 5U, 5U}).Build(tree, root);
         ui::Node::Handle box11 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::blue).Build(tree, box1);
         ui::Node::Handle box12 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::chocolate).Build(tree, box1);
@@ -58,15 +59,30 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) {
         ui::Node::Handle box3 = ui::NodeBuilder(ui::LayoutLength::hug, ui::LayoutLength::fill).Padding({ 10U, 10U }).Fill(colors::black).Build(tree, root);
     }
     {
-        ui::Node::Handle root = ui::NodeBuilder(uint2{ 100U, 100U }).Absolute({ 600U, 500U }).Padding({ 5U, 5U }).Fill(colors::cyan).Build(tree, frame);
+        ui::Node::Handle root = ui::NodeBuilder(uint2{ 100U, 100U }).Padding({ 5U, 5U }).Fill(colors::cyan).Build(tree, frame);
         ui::Node::Handle box1 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::yellow).Padding({ 5U, 5U}).Build(tree, root);
         ui::Node::Handle box2 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::red).Build(tree, root);
     }
     {
-        ui::Node::Handle root = ui::NodeBuilder(uint2{ 100U, 100U }).Absolute({ 600U, 900U }).Padding({ 5U, 5U }).Fill(colors::cyan).Build(tree, frame);
+        ui::Node::Handle root = ui::NodeBuilder(uint2{ 100U, 100U }).Padding({ 5U, 5U }).Fill(colors::cyan).Build(tree, frame);
+        ui::Node::Handle box1 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::yellow).Padding({ 5U, 5U}).Build(tree, root);
+        ui::Node::Handle box2 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::red).Build(tree, root);
+    }
+    {
+        ui::Node::Handle root = ui::NodeBuilder(uint2{ 100U, 100U }).Padding({ 5U, 5U }).Fill(colors::cyan).Build(tree, frame);
         ui::Node::Handle box1 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::yellow).Padding({ 5U, 5U}).Build(tree, root);
         ui::Node::Handle box2 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::red).Build(tree, root);
         ui::Node::Handle box3 = ui::NodeBuilder(ui::LayoutLength::hug).Padding({ 10U, 10U }).Fill(colors::black).Build(tree, root);
+    }
+    {
+        constexpr u32 width = 100U;
+        ui::Node::Handle root = ui::NodeBuilder(ui::LayoutLength::hug, 400U).Padding({ 5U, 5U }).Fill(colors::forest_green).Build(tree, frame);
+        ui::Node::Handle box1 = ui::NodeBuilder(width, ui::LayoutLength::fill).Fill(colors::yellow).Padding({ 5U, 5U}).Build(tree, root);
+        ui::Node::Handle box2 = ui::NodeBuilder(width * 2, ui::LayoutLength::fill).Fill(colors::red).Build(tree, root);
+        ui::Node::Handle box3 = ui::NodeBuilder(width * 3, ui::LayoutLength::fill).Padding({ 4U, 4U }).Gap(2U).Fill(colors::black).Build(tree, root);
+        ui::Node::Handle box31 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::red).Build(tree, box3);
+        ui::Node::Handle box32 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::chocolate).Build(tree, box3);
+        ui::Node::Handle box33 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::yellow).Build(tree, box3);
     }
 
 

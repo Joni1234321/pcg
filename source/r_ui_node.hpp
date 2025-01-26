@@ -28,7 +28,10 @@ public:
     explicit Color(const SDL_Color color) : Color(color.r, color.g, color.b, color.a) { }
     explicit Color(const SDL_FColor color) : Color(color.r, color.g, color.b, color.a) { }
 };
-inline SDL_Color darken_color(const SDL_Color color, const f32 factor) { return SDL_Color { static_cast<u8>(color.r * factor), static_cast<u8>(color.g * factor), static_cast<u8>(color.b * factor), color.a }; }
+inline SDL_Color lighten_color(const SDL_Color color, const f32 factor) {
+    auto lerp = [] (u8 channel, f32 factor, u8 target) -> u8 { return static_cast<u8>(channel + (target - channel) * factor); };
+    return SDL_Color { lerp(color.r, factor, 255), lerp(color.g, factor, 255), lerp(color.b, factor, 255), color.a };
+}
 
 struct ResolvedLayout {
     SDL_FRect layout;
@@ -47,7 +50,7 @@ struct Node {
     struct Handle {
         u32 id { U32_MAX };
         constexpr Handle() noexcept = default;
-        explicit constexpr  Handle(const u32 value) noexcept : id(value) { }
+        explicit constexpr Handle(const u32 value) noexcept : id(value) { }
         // Handle(const Handle&) = delete;
         // Handle& operator=(const Handle&) = delete;
         // Handle(Handle&&) = delete;
@@ -68,8 +71,10 @@ struct Node {
 
     SDL_Color background_color { 0, 0, 0 };
     SDL_Color background_color_hover { 0, 0, 0 };
-    uint2 position { };
-    uint2 padding { };
+
+    uint2 position { U32_MAX, U32_MAX };
+    uint2 padding { 0U, 0U};
+    u32 gap { 0U };
 
     LayoutLength width { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
     LayoutLength height { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
@@ -121,14 +126,14 @@ struct NodeTree {
     }
 
     [[nodiscard]] Node& GetNode(const Node::Handle node) { return nodes[node.id]; }
-    [[nodiscard]] Node::Handle Parent (const Node::Handle node) { return parents[node.id]; }
-    [[nodiscard]] const List<Node::Handle>& Children (const Node::Handle node) { return children[node.id]; }
-    [[nodiscard]] Node::Handle AddNode(const Node& node, const Node::Handle parent_handle ) {
+    [[nodiscard]] Node::Handle Parent(const Node::Handle node) { return parents[node.id]; }
+    [[nodiscard]] const List<Node::Handle>& Children(const Node::Handle node) { return children[node.id]; }
+    [[nodiscard]] Node::Handle AddNode(const Node& node, const Node::Handle parent_handle) {
         nodes.PushBack(node);
         parents.PushBack(parent_handle);
         children.EmplaceBack();
 
-        Node::Handle handle { nodes.Size() - 1};
+        Node::Handle handle { nodes.Size() - 1 };
         children[parent_handle.id].PushBack(handle);
         return handle;
     }
@@ -151,7 +156,7 @@ struct NodeTree {
     };
 
     Node::Handle HitNode(uint2 screen_position) {
-        if (!GetNode(Root()).IsInside(screen_position)) { return Node::Handle { };  }
+        if (!GetNode(Root()).IsInside(screen_position)) { return Node::Handle { }; }
         Node::Handle node_handle { 0U };
         const auto is_inside_node = [screen_position, this] (const Node::Handle child_handle) -> b8 { return this->GetNode(child_handle).IsInside(screen_position); };
         while (true) {
@@ -177,7 +182,7 @@ struct NodeBuilder {
     NodeBuilder(LayoutLength::RelatedConstraint width_constraint, LayoutLength::RelatedConstraint height_constraint);
     NodeBuilder& Name(const String& name);
     NodeBuilder& Fill(SDL_Color color);
-    NodeBuilder& Absolute(uint2 pos);
+    // NodeBuilder& Absolute(uint2 pos);
     NodeBuilder& Layout(LayoutLength width, LayoutLength height);
     NodeBuilder& Fixed(uint2 size);
     NodeBuilder& FixedWidth(u32 width);
@@ -187,16 +192,19 @@ struct NodeBuilder {
     NodeBuilder& FillWidth();
     NodeBuilder& FillHeight();
     NodeBuilder& Padding(uint2 padding);
+    NodeBuilder& Gap (u32 gap);
     NodeBuilder& Text(String& string);
     void Finalize() {
-        const f32 darken = 0.5F;
-        node.background_color_hover = darken_color(node.background_color, darken);
+        const f32 factor = 0.5F;
+        node.background_color_hover = lighten_color(node.background_color, factor);
+
         node.on_click = [&] (Node* node) -> void { Logger().Log("Clicked"); };
         node.on_hover = [&] (Node* node) -> void { Logger().Log("Hover"); };
         node.on_hover_out = [&] (Node* node) -> void { Logger().Log("On Hover Out"); };
     }
-    Node::Handle BuildRoot(NodeTree& node_tree) {
+    Node::Handle BuildRoot(NodeTree& node_tree, const uint2 position) {
         Finalize();
+        node.position = position;
         node_tree.SetRoot(node);
         return Node::Handle { 0U };
     };

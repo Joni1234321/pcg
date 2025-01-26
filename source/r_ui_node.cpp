@@ -6,38 +6,38 @@
 namespace pce::ui {
 // Assume node is leaf with fixed or child_constraint
 void NodeTree::RecalculateLayout() {
+    auto pixels_gap = [this] (Node::Handle node_handle, u32 gap) -> u32 { return Children(node_handle).Empty() ? 0U : gap * (Children(node_handle).Size() - 1U); };
     List<Node::Handle> node_handles { Root() };
-    for (u32 i = 0U; i < node_handles.Size(); ++i) { for (const List<Node::Handle>& children = Children(node_handles[i]); const Node::Handle child_handle : children) { node_handles.PushBack(child_handle); } }
+    for (u32 i = 0U; i < node_handles.Size(); ++i) { node_handles.AppendRange(Children(node_handles[i])); }
 
     // hug bottom up
     auto reversed_nodes = node_handles | std::views::reverse;
     for (const Node::Handle node_handle : reversed_nodes) {
-        Node& parent = GetNode(node_handle);
+        Node& node = GetNode(node_handle);
         auto children = Children(node_handle) | std::views::transform([this] (const Node::Handle handle) -> Node *{ return &GetNode(handle); });
-        const uint2 children_content_size = std::ranges::fold_left(children | std::views::transform(&Node::OuterBoxSize), parent.NonContentSize() * 2U, std::plus { });
-        if (parent.width.layout_type == LayoutLength::child_constraint) { parent.width.resolved = children_content_size.x; }
-        if (parent.height.layout_type == LayoutLength::child_constraint) { parent.height.resolved = children_content_size.y; }
+        const uint2 children_outer_size = std::ranges::fold_left(children | std::views::transform(&Node::OuterBoxSize), node.NonContentSize() * 2U, std::plus { });
+        // major
+        if (node.width.layout_type == LayoutLength::child_constraint) { node.width.resolved = children_outer_size.x + pixels_gap(node_handle, node.gap); }
+        // minor
+        if (node.height.layout_type == LayoutLength::child_constraint) { node.height.resolved = children_outer_size.y; }
     }
 
     // fill top down
-    for (const Node::Handle parent_handle : node_handles) {
-        Node& parent = GetNode(parent_handle);
+    for (const Node::Handle node_handle : node_handles) {
+        Node& node = GetNode(node_handle);
 
         // major axis
         List<Node::Handle> parent_constrained { };
-        uint2 pixels_taken { 0U, 0U };
-
-        for (const Node::Handle child_handle : Children(parent_handle)) {
-            Node& child = GetNode(child_handle);
-            if (child.width.layout_type == LayoutLength::parent_constraint) { parent_constrained.PushBack(child_handle); } else { pixels_taken.x += child.OuterBoxSize().x; }
+        uint2 pixels_taken { pixels_gap(node_handle, node.gap), 0U };
+        for (const Node::Handle child_handle : Children(node_handle)) {
+            if (Node& child = GetNode(child_handle); child.width.layout_type == LayoutLength::parent_constraint) { parent_constrained.PushBack(child_handle); } else { pixels_taken.x += child.OuterBoxSize().x; }
         }
-        u32 n_children = parent_constrained.Size();
-        if (n_children > 0U) {
-            if (pixels_taken.x >= parent.InnerBoxSize().x) {
-                for (const Node::Handle child_handle : parent_constrained) { GetNode(child_handle).width.resolved = 0U; }
+        if (parent_constrained.Size() > 0U) {
+            if (pixels_taken.x >= node.InnerBoxSize().x) {
+                for (const Node::Handle child_handle : parent_constrained) { GetNode(child_handle).width.resolved = 10U; }
                 continue;
             }
-            const auto [pixels_per, left_over] = math::Div(parent.InnerBoxSize().x - pixels_taken.x, n_children);
+            const auto [pixels_per, left_over] = math::Div(node.InnerBoxSize().x - pixels_taken.x, parent_constrained.Size());
             for (const Node::Handle child_handle : parent_constrained) {
                 Node& child = GetNode(child_handle);
                 child.width.resolved = pixels_per - child.NonContentSize().x * 2U;
@@ -46,18 +46,19 @@ void NodeTree::RecalculateLayout() {
         }
 
         // minor axis
-        auto children = Children(parent_handle) | std::views::filter([this] (const Node::Handle child_handle) -> bool { return GetNode(child_handle).height.layout_type == LayoutLength::parent_constraint; });
-        for (const Node::Handle child_handle : children) { GetNode(child_handle).height.resolved = parent.InnerBoxSize().y; }
+        auto children = Children(node_handle) | std::views::filter([this] (const Node::Handle child_handle) -> bool { return GetNode(child_handle).height.layout_type == LayoutLength::parent_constraint; });
+        for (const Node::Handle child_handle : children) { GetNode(child_handle).height.resolved = node.InnerBoxSize().y; }
     }
 
     // position top down
     for (const Node::Handle parent_handle : node_handles) {
-        uint2 position = GetNode(parent_handle).InnerBoxPosition();
+        const Node& parent = GetNode(parent_handle);
+        uint2 position = parent.InnerBoxPosition();
         for (const Node::Handle child_handle : Children(parent_handle)) {
             Node& child = GetNode(child_handle);
             child.position = position;
             // major axis
-            position.x += child.OuterBoxSize().x;
+            position.x += child.OuterBoxSize().x + parent.gap;
         }
     }
 
@@ -75,7 +76,7 @@ void NodeTree::RecalculateLayout() {
             end_position.x = std::max(child_end_position.x, end_position.x);
             end_position.y = std::max(child_end_position.y, end_position.y);
         }
-        uint2 size = end_position - start_position;
+        const uint2 size = end_position - start_position;
         node.bounding_box = { .x = static_cast<f32>(start_position.x), .y = static_cast<f32>(start_position.y), .w = static_cast<f32>(size.x), .h = static_cast<f32>(size.y) };
     }
 }
@@ -88,9 +89,10 @@ FrameElements NodeTree::CreateFrameElements() {
         const Node::Handle node_handle = nodes.top();
         const Node& node = GetNode(node_handle);
         nodes.pop();
+
         RectangleElement rectangle { .color = node.background_color, .rect = node.OuterRect(), .on_click = nullptr };
         elements.rectangles.PushBack(rectangle);
-        for (const List<Node::Handle>& children = Children(node_handle); const Node::Handle child : children) { nodes.push(child); }
+        nodes.push_range(Children(node_handle));
     }
 
     return elements;
@@ -126,10 +128,6 @@ NodeBuilder& NodeBuilder::Fill(const SDL_Color color) {
     node.background_color = color;
     return *this;
 }
-NodeBuilder& NodeBuilder::Absolute(const uint2 pos) {
-    node.position = pos;
-    return *this;
-}
 NodeBuilder& NodeBuilder::Fixed(const uint2 size) {
     node.width = { .resolved = size.x, .layout_type = LayoutLength::fixed };
     node.height = { .resolved = size.y, .layout_type = LayoutLength::fixed };
@@ -161,6 +159,10 @@ NodeBuilder& NodeBuilder::FillHeight() {
 }
 NodeBuilder& NodeBuilder::Padding(const uint2 padding) {
     node.padding = padding;
+    return *this;
+}
+NodeBuilder& NodeBuilder::Gap(u32 gap) {
+    node.gap = gap;
     return *this;
 }
 }
