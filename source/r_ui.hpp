@@ -19,7 +19,6 @@ inline b8 bb_collision(const f32 x, f32 y, const SDL_FRect rect) {
 }
 
 class UISystem {
-    TTF_TextEngine* text_renderer;
 
     std::vector<TextElement> text_elements { };
     std::vector<RectangleElement> rectangle_elements { };
@@ -31,6 +30,7 @@ public:
     enum class ListDirection { horizontal, vertical };
     u32 screen_width;
     u32 screen_height;
+    TTF_TextEngine* text_engine;
     FontCollection font;
     FontCollection font_bold;
     explicit UISystem(Engine& engine);

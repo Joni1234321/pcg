@@ -81,6 +81,24 @@ void NodeTree::RecalculateLayout() {
     }
 }
 
+TextElement NodeTree::CreateTextAligned(const String& string, const SDL_Color color, f32 x, const f32 y, const TextAlign alignment, const u32 parent_width) const {
+    TTF_Text* text = TTF_CreateText(text_engine, font, string.CString(), string.size());
+    i32 text_width;
+    (void)TTF_SetTextColor(text, color.r, color.g, color.b, color.a);
+    (void)TTF_GetTextSize(text, &text_width, nullptr);
+    switch (alignment) {
+        case TextAlign::left:
+            break;
+        case TextAlign::center:
+            x += (parent_width - static_cast<f32>(text_width)) * 0.5F;
+            break;
+        case TextAlign::right:
+            x += parent_width - static_cast<f32>(text_width);
+            break;
+    }
+    return TextElement { .text = text, .x = x, .y = y };
+}
+
 FrameElements NodeTree::CreateFrameElements() {
     FrameElements elements;
     std::stack<Node::Handle> nodes;
@@ -92,6 +110,7 @@ FrameElements NodeTree::CreateFrameElements() {
 
         RectangleElement rectangle { .color = node.background_color, .rect = node.OuterRect(), .on_click = nullptr };
         elements.rectangles.PushBack(rectangle);
+        if (!node.text.Empty()) { elements.texts.PushBack(CreateTextAligned(node.text, colors::black, rectangle.rect.x, rectangle.rect.y, TextAlign::center, node.InnerBoxSize().x)); }
         nodes.push_range(Children(node_handle));
     }
 
@@ -163,6 +182,14 @@ NodeBuilder& NodeBuilder::Padding(const uint2 padding) {
 }
 NodeBuilder& NodeBuilder::Gap(u32 gap) {
     node.gap = gap;
+    return *this;
+}
+NodeBuilder& NodeBuilder::Text(const String& string) {
+    node.text = string;
+    return *this;
+}
+NodeBuilder& NodeBuilder::Text(String&& string) {
+    node.text = string;
     return *this;
 }
 }

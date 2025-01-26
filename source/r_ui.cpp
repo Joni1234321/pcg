@@ -21,7 +21,7 @@ void UISystem::RenderTree(SDL_Renderer* renderer, NodeTree& node_tree) {
     for (const TextElement& text : frame_elements.texts) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
 }
 void UISystem::LeftClick(NodeTree& tree) { tree.Propagate(hovered_node, &Node::OnClick); }
-UISystem::UISystem(Engine& engine): text_renderer(TTF_CreateRendererTextEngine(engine.renderer)) {
+UISystem::UISystem(Engine& engine): text_engine(TTF_CreateRendererTextEngine(engine.renderer)) {
     engine.GetWindowSize(&screen_width, &screen_height);
     const RelativePath font_path = "font.ttf";
     if (!font.Load(assets::Asset(font_path))) { SDL_Log("Font not loaded (%s)", SDL_GetError()); }
@@ -43,10 +43,10 @@ void UISystem::RenderElements(SDL_Renderer* renderer) {
 UISystem::~UISystem() {
     for (const TextElement& text : text_elements) { TTF_DestroyText(text.text); }
     for (const RectangleElement& element : rectangle_elements) { }
-    TTF_DestroyRendererTextEngine(text_renderer);
+    TTF_DestroyRendererTextEngine(text_engine);
 }
 TextElement::Handle UISystem::CreateTextAligned(const String& string, TTF_Font* font, const SDL_Color color, f32 x, const f32 y, const TextAlign alignment, const u32 width) {
-    TTF_Text* text = TTF_CreateText(text_renderer, font, string.CString(), string.size());
+    TTF_Text* text = TTF_CreateText(text_engine, font, string.CString(), string.size());
     i32 text_width;
     (void)TTF_SetTextColor(text, color.r, color.g, color.b, color.a);
     (void)TTF_GetTextSize(text, &text_width, nullptr);

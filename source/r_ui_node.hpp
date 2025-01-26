@@ -6,6 +6,8 @@
 
 #include <SDL3/SDL_render.h>
 
+#include <SDL3_ttf/SDL_textengine.h>
+
 #include "r_ui_element.hpp"
 #include "u_collections.hpp"
 #include "u_types.hpp"
@@ -73,7 +75,7 @@ struct Node {
     SDL_Color background_color_hover { 0, 0, 0 };
 
     uint2 position { U32_MAX, U32_MAX };
-    uint2 padding { 0U, 0U};
+    uint2 padding { 0U, 0U };
     u32 gap { 0U };
 
     LayoutLength width { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
@@ -111,9 +113,14 @@ struct Node {
     friend NodeTree;
 };
 struct NodeTree {
-    List<Node> nodes;
-    List<Node::Handle> parents;
-    List<List<Node::Handle>> children;
+    TTF_TextEngine* text_engine;
+    TTF_Font* font;
+
+    List<Node> nodes { };
+    List<Node::Handle> parents { };
+    List<List<Node::Handle>> children { };
+
+    NodeTree(TTF_TextEngine* text_engine, TTF_Font* font) : text_engine(text_engine), font(font) { }
 
     [[nodiscard]] static constexpr Node::Handle Root() { return Node::Handle { 0U }; }
     Node::Handle SetRoot(const Node& root) {
@@ -150,6 +157,7 @@ struct NodeTree {
         if (dirty) {
             dirty = false;
             RecalculateLayout();
+            for (const auto& text : frame_elements.texts) { TTF_DestroyText(text.text); }
             frame_elements = CreateFrameElements();
         }
         return frame_elements;
@@ -172,6 +180,7 @@ private:
     FrameElements frame_elements { };
     FrameElements CreateFrameElements();
     void RecalculateLayout();
+    TextElement CreateTextAligned(const String& string, SDL_Color color, f32 x, f32 y, TextAlign alignment, u32 parent_width) const;
 };
 
 struct NodeBuilder {
@@ -192,8 +201,9 @@ struct NodeBuilder {
     NodeBuilder& FillWidth();
     NodeBuilder& FillHeight();
     NodeBuilder& Padding(uint2 padding);
-    NodeBuilder& Gap (u32 gap);
-    NodeBuilder& Text(String& string);
+    NodeBuilder& Gap(u32 gap);
+    NodeBuilder& Text(const String& string);
+    NodeBuilder& Text(String&& string);
     void Finalize() {
         const f32 factor = 0.5F;
         node.background_color_hover = lighten_color(node.background_color, factor);
