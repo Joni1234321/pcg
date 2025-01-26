@@ -66,9 +66,6 @@ struct Node {
 
     SDL_FRect bounding_box { };
 
-    Handle parent { };
-    List<Handle> children { };
-
     SDL_Color background_color { 0, 0, 0 };
     SDL_Color background_color_hover { 0, 0, 0 };
     uint2 position { };
@@ -110,31 +107,37 @@ struct Node {
 };
 struct NodeTree {
     List<Node> nodes;
+    List<Node::Handle> parents;
+    List<List<Node::Handle>> children;
 
     [[nodiscard]] static constexpr Node::Handle Root() { return Node::Handle { 0U }; }
     Node::Handle SetRoot(const Node& root) {
         ASSERT_DBG(nodes.Empty(), "Setting root non empty tree");
         nodes.PushBack(root);
+        parents.PushBack(Node::Handle { });
+        children.EmplaceBack();
+
         return Root();
     }
 
     [[nodiscard]] Node& GetNode(const Node::Handle node) { return nodes[node.id]; }
-    [[nodiscard]] auto handle_to_node_generator () { return [this] (const Node::Handle handle) -> Node *{ return &GetNode(handle); }; }
+    [[nodiscard]] Node::Handle Parent (const Node::Handle node) { return parents[node.id]; }
+    [[nodiscard]] const List<Node::Handle>& Children (const Node::Handle node) { return children[node.id]; }
     [[nodiscard]] Node::Handle AddNode(const Node& node, const Node::Handle parent_handle ) {
-        Node::Handle handle { nodes.Size() };
         nodes.PushBack(node);
-        nodes.Back().parent = parent_handle;
-        GetNode(parent_handle).children.PushBack(handle);
+        parents.PushBack(parent_handle);
+        children.EmplaceBack();
+
+        Node::Handle handle { nodes.Size() - 1};
+        children[parent_handle.id].PushBack(handle);
         return handle;
     }
 
-    void Propagate(Node::Handle handle, const std::function<void(Node&)>& proj) {
-        if (!handle.HasValue()) { return;}
-        do {
-            Node& node = GetNode(handle);
-            std::invoke(proj, node);
-            handle = node.parent;
-        } while (handle.HasValue());
+    void Propagate(Node::Handle node_handle, const std::function<void(Node&)>& proj) {
+        while (node_handle.HasValue()) {
+            std::invoke(proj, GetNode(node_handle));
+            node_handle = Parent(node_handle);
+        }
     }
 
     void MarkDirty() { dirty = true; }
@@ -149,15 +152,14 @@ struct NodeTree {
 
     Node::Handle HitNode(uint2 screen_position) {
         if (!GetNode(Root()).IsInside(screen_position)) { return Node::Handle { };  }
-        Node::Handle node { 0U };
-        auto nodes_real = GetNode(node).children | std::views::transform([&](const auto handle) -> const Node& { return GetNode(handle); });
-        const auto is_inside_node = [screen_position, this] (const Node::Handle child) -> b8 { return this->GetNode(child).IsInside(screen_position); };
+        Node::Handle node_handle { 0U };
+        const auto is_inside_node = [screen_position, this] (const Node::Handle child_handle) -> b8 { return this->GetNode(child_handle).IsInside(screen_position); };
         while (true) {
-            auto node_iterator = std::ranges::find_if(GetNode(node).children, is_inside_node, std::identity { });
-            if (node_iterator == GetNode(node).children.end()) { break; }
-            node = *node_iterator;
+            auto node_iterator = std::ranges::find_if(Children(node_handle), is_inside_node, std::identity { });
+            if (node_iterator == Children(node_handle).end()) { break; }
+            node_handle = *node_iterator;
         }
-        return node;
+        return node_handle;
     }
 
 private:
