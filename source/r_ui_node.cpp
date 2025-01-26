@@ -6,8 +6,8 @@
 namespace pce::ui {
 // Assume node is leaf with fixed or child_constraint
 void NodeTree::RecalculateLayout() {
-    auto handle_to_node = [&](const Node::Handle handle) -> Node* { return &GetNode(handle); };
-    List<Node *> parents { handle_to_node(Root()) };
+    auto handle_to_node = handle_to_node_generator();
+    List<Node*> parents { handle_to_node(Root()) };
     for (u32 i = 0U; i < parents.Size(); ++i) {
         auto children = parents[i]->children | std::views::transform(handle_to_node);
         for (Node* child : children) { parents.PushBack(child); }
@@ -29,7 +29,7 @@ void NodeTree::RecalculateLayout() {
         uint2 pixels_taken { 0U, 0U };
 
         auto children = parent->children | std::views::transform(handle_to_node);
-        for (Node* child : children) { if (child->width.layout_type == LayoutLength::parent_constraint) { (void)parent_constrained.EmplaceBack(child); } else { pixels_taken.x += child->OuterBoxSize().x; } }
+        for (Node* child : children) { if (child->width.layout_type == LayoutLength::parent_constraint) { parent_constrained.PushBack(child); } else { pixels_taken.x += child->OuterBoxSize().x; } }
         u32 n_children = parent_constrained.Size();
         if (n_children > 0U) {
             if (pixels_taken.x >= parent->InnerBoxSize().x) {
@@ -76,20 +76,17 @@ void NodeTree::RecalculateLayout() {
     }
 }
 
-
-
 FrameElements NodeTree::CreateFrameElements() {
     FrameElements elements;
     std::stack<const Node*> nodes;
-    nodes.push(&GetNode(Root()));
+    nodes.push(handle_to_node_generator()(Root()));
     while (!nodes.empty()) {
         const Node* node = nodes.top();
         nodes.pop();
         RectangleElement rectangle { .color = node->background_color, .rect = node->OuterRect(), .on_click = nullptr };
         elements.rectangles.PushBack(rectangle);
-        auto handle_to_node = [&](const Node::Handle handle) -> Node* { return &GetNode(handle); };
-        auto children = node->children | std::views::transform(handle_to_node);
-        for (const Node* child : children) { (void)nodes.emplace(child); }
+        auto children = node->children | std::views::transform(handle_to_node_generator());
+        for (const Node* child : children) { nodes.push(child); }
     }
 
     return elements;

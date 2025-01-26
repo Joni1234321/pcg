@@ -119,6 +119,7 @@ struct NodeTree {
     }
 
     [[nodiscard]] Node& GetNode(const Node::Handle node) { return nodes[node.id]; }
+    [[nodiscard]] auto handle_to_node_generator () { return [this] (const Node::Handle handle) -> Node *{ return &GetNode(handle); }; }
     [[nodiscard]] Node::Handle AddNode(const Node& node, const Node::Handle parent_handle ) {
         Node::Handle handle { nodes.Size() };
         nodes.PushBack(node);
