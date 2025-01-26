@@ -33,6 +33,7 @@ template <typename Collection> const typename Collection::value_type& RandomValu
 } // namespace pce
 
 namespace pce::math {
+constexpr std::pair<u32, u32> Div(u32 value, u32 divisor) { return { value / divisor, value % divisor }; }
 template <typename T = void> T Sub(const T& left, const T& right) { return left - right; }
 template <typename T = void> struct Minus {
     T operator()(const T& left, const T& right) const { return left - right; } // NOLINT(*-overloaded-operator)

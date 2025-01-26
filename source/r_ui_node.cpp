@@ -25,36 +25,40 @@ void NodeTree::RecalculateLayout() {
     // fill top down
     for (Node* parent : parents) {
         // major axis
-        List<Node*> parent_constrained { };
+        List<Node::Handle> parent_constrained { };
         uint2 pixels_taken { 0U, 0U };
 
-        auto children = parent->children | std::views::transform(handle_to_node);
-        for (Node* child : children) { if (child->width.layout_type == LayoutLength::parent_constraint) { parent_constrained.PushBack(child); } else { pixels_taken.x += child->OuterBoxSize().x; } }
+        for (const Node::Handle child_handle : parent->children) {
+            Node& child = GetNode(child_handle);
+            if (child.width.layout_type == LayoutLength::parent_constraint) { parent_constrained.PushBack(child_handle); } else { pixels_taken.x += child.OuterBoxSize().x; }
+        }
         u32 n_children = parent_constrained.Size();
         if (n_children > 0U) {
             if (pixels_taken.x >= parent->InnerBoxSize().x) {
-                for (Node* child : parent_constrained) { child->width.resolved = 0U; }
+                for (const Node::Handle child_handle : parent_constrained) { GetNode(child_handle).width.resolved = 0U; }
                 continue;
             }
-            u32 pixels_per = (parent->InnerBoxSize().x - pixels_taken.x) / n_children;
-            u32 left_over = (parent->InnerBoxSize().x - pixels_taken.x) % n_children;
-            for (Node* child : parent_constrained) { child->width.resolved = pixels_per - child->NonContentSize().x * 2U; }
-            parent_constrained[0U]->width.resolved += left_over;
+            const auto [pixels_per, left_over] = math::Div(parent->InnerBoxSize().x - pixels_taken.x, n_children);
+            for (const Node::Handle child_handle : parent_constrained) {
+                Node& child = GetNode(child_handle);
+                child.width.resolved = pixels_per - child.NonContentSize().x * 2U;
+            }
+            GetNode(parent_constrained[0U]).width.resolved += left_over;
         }
 
         // minor axis
-        auto children1 = parent->children | std::views::transform(handle_to_node) | std::views::filter([&] (const Node* child) -> bool { return child->height.layout_type == LayoutLength::parent_constraint; });
-        for (Node* child : children1) { child->height.resolved = parent->InnerBoxSize().y; }
+         auto children = parent->children | std::views::filter([this] (const Node::Handle child_handle) -> bool { return GetNode(child_handle).height.layout_type == LayoutLength::parent_constraint; });
+        for (const Node::Handle child_handle : children) { GetNode(child_handle).height.resolved = parent->InnerBoxSize().y; }
     }
 
     // position top down
     for (Node* parent : parents) {
         uint2 position = parent->InnerBoxPosition();
-        auto children = parent->children | std::views::transform(handle_to_node);
-        for (Node* child : children) {
-            child->position = position;
+        for (const Node::Handle child_handle : parent->children) {
+            Node& child = GetNode(child_handle);
+            child.position = position;
             // major axis
-            position.x += child->OuterBoxSize().x;
+            position.x += child.OuterBoxSize().x;
         }
     }
 
@@ -62,10 +66,10 @@ void NodeTree::RecalculateLayout() {
     for (Node* node : reversedParents) {
         uint2 start_position = node->OuterBoxPosition();
         uint2 end_position = node->OuterBoxEndPosition();
-        auto children = node->children | std::views::transform(handle_to_node);
-        for (const Node* child : children) {
-            uint2 child_start_position = child->OuterBoxPosition();
-            uint2 child_end_position = child->OuterBoxEndPosition();
+        for (const Node::Handle child_handle : node->children) {
+            Node& child = GetNode(child_handle);
+            uint2 child_start_position = child.OuterBoxPosition();
+            uint2 child_end_position = child.OuterBoxEndPosition();
             start_position.x = std::min(child_start_position.x, start_position.x);
             start_position.y = std::min(child_start_position.y, start_position.y);
             end_position.x = std::max(child_end_position.x, end_position.x);
@@ -78,15 +82,14 @@ void NodeTree::RecalculateLayout() {
 
 FrameElements NodeTree::CreateFrameElements() {
     FrameElements elements;
-    std::stack<const Node*> nodes;
-    nodes.push(handle_to_node_generator()(Root()));
+    std::stack<Node::Handle> nodes;
+    nodes.push(Root());
     while (!nodes.empty()) {
-        const Node* node = nodes.top();
+        const Node& node = GetNode(nodes.top());
         nodes.pop();
-        RectangleElement rectangle { .color = node->background_color, .rect = node->OuterRect(), .on_click = nullptr };
+        RectangleElement rectangle { .color = node.background_color, .rect = node.OuterRect(), .on_click = nullptr };
         elements.rectangles.PushBack(rectangle);
-        auto children = node->children | std::views::transform(handle_to_node_generator());
-        for (const Node* child : children) { nodes.push(child); }
+        for (const Node::Handle child : node.children) { nodes.push(child); }
     }
 
     return elements;
