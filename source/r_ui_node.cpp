@@ -65,16 +65,12 @@ void NodeTree::RecalculateLayout() {
             end_position.x = std::max(child_end_position.x, end_position.x);
             end_position.y = std::max(child_end_position.y, end_position.y);
         }
-        uint2 size = start_position - end_position;
+        uint2 size = end_position - start_position;
         node->bounding_box = { .x = static_cast<f32>(start_position.x), .y = static_cast<f32>(start_position.y), .w = static_cast<f32>(size.x), .h = static_cast<f32>(size.y) };
     }
 }
 
-constexpr b8 Node::IsInside(uint2 screen_position) const {
-    uint2 start { static_cast<u32>(bounding_box.x), static_cast<u32>(bounding_box.y) };
-    uint2 relative = screen_position - start;
-    return relative.x < static_cast<u32>(bounding_box.w) && relative.y < static_cast<u32>(bounding_box.h);
-}
+
 
 FrameElements NodeTree::CreateFrameElements() {
     FrameElements elements;
@@ -124,6 +120,10 @@ NodeBuilder::NodeBuilder(LayoutLength::RelatedConstraint width_constraint, Layou
     if (height_constraint == LayoutLength::hug) { HugHeight(); } else { FillHeight(); }
 }
 
+NodeBuilder& NodeBuilder::Name(const String& name) {
+    node.name = name;
+    return *this;
+}
 NodeBuilder& NodeBuilder::Fill(SDL_Color color) {
     node.background_color = color;
     return *this;

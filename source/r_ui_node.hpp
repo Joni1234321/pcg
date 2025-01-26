@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include <SDL3/SDL_render.h>
 
 #include "r_ui_element.hpp"
@@ -45,6 +47,7 @@ struct Node {
     String name { };
     String text { };
     SDL_Color background_color { 0, 0, 0 };
+    SDL_Color background_color_hover { 0, 0, 0 };
     uint2 position { };
     uint2 padding { };
 
@@ -52,6 +55,20 @@ struct Node {
     LayoutLength height { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
 
     SDL_FRect bounding_box { };
+
+    std::function<void(Node*)> on_click;
+    std::function<void(Node*)> on_hover;
+    std::function<void(Node*)> on_hover_out;
+
+    void OnHover() {
+        std::swap(background_color, background_color_hover);
+        if (on_hover) { on_hover(this); }
+    }
+    void OnHoverOut() {
+        std::swap(background_color, background_color_hover);
+        if (on_hover_out) { on_hover_out(this); }
+    }
+    void OnClick() { if (on_click) { on_click(this); } }
 
     [[nodiscard]] constexpr uint2 NonContentSize() const { return padding; }
     [[nodiscard]] constexpr uint2 OuterBoxPosition() const { return position; }
@@ -61,7 +78,13 @@ struct Node {
     [[nodiscard]] constexpr uint2 InnerBoxSize() const { return OuterBoxSize() - NonContentSize() * 2U; }
 
     [[nodiscard]] constexpr SDL_FRect OuterRect() const { return { .x = static_cast<f32>(position.x), .y = static_cast<f32>(position.y), .w = static_cast<f32>(width.resolved), .h = static_cast<f32>(height.resolved) }; };
-    [[nodiscard]] constexpr b8 IsInside(uint2 screen_position) const;
+    [[nodiscard]] constexpr b8 IsInside(uint2 screen_position) const {
+        uint2 start { static_cast<u32>(bounding_box.x), static_cast<u32>(bounding_box.y) };
+        uint2 relative = screen_position - start;
+        return relative.x < static_cast<u32>(bounding_box.w) && relative.y < static_cast<u32>(bounding_box.h);
+    }
+
+    void Propagate(std::function<void(Node*)> proj) { for (Node* node = this; node != nullptr; node = node->parent) { std::invoke(proj, node); } }
 
     friend NodeBuilder;
     friend NodeTree;
@@ -83,7 +106,7 @@ struct NodeTree {
         Node* node = &root;
         const auto is_inside_node = [screen_position] (const Node& child) -> b8 { return child.IsInside(screen_position); };
         while (true) {
-            auto node_iterator = std::ranges::find_if(node->children, is_inside_node);
+            auto node_iterator = std::ranges::find_if(node->children, is_inside_node, std::identity { });
             if (node_iterator == node->children.end()) { break; }
             node = &*node_iterator;
         }
@@ -103,6 +126,7 @@ struct NodeBuilder {
     NodeBuilder(LayoutLength::RelatedConstraint width_constraint, u32 height);
     NodeBuilder(LayoutLength::RelatedConstraint width_constraint, LayoutLength::RelatedConstraint height_constraint);
     explicit NodeBuilder(const Node& node) : node(node) { }
+    NodeBuilder& Name(const String& name);
     NodeBuilder& Fill(SDL_Color color);
     NodeBuilder& Absolute(uint2 pos);
     NodeBuilder& Layout(LayoutLength width, LayoutLength height);
@@ -117,11 +141,18 @@ struct NodeBuilder {
     NodeBuilder& Text(String& string);
     Node Build(NodeTree& node_tree) {
         node.parent = nullptr;
+        node.background_color_hover = colors::blue;
+        node.on_click = [&] (Node* node) -> void { Logger().Log("Clicked"); };
+        node.on_hover = [&] (Node* node) -> void { Logger().Log("Hover"); };
         node_tree.root = node;
         return node;
     };
     Node& Build(Node& parent) {
         node.parent = &parent;
+        node.background_color_hover = colors::blue;
+        node.on_click = [&] (Node* node) -> void { Logger().Log("Clicked"); };
+        node.on_hover = [&] (Node* node) -> void { Logger().Log("Hover"); };
+
         parent.children.push_back(node);
         return parent.children.Back();
     }

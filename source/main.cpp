@@ -1,3 +1,5 @@
+#include <SDL3/SDL_main.h>
+
 #include "g_components.hpp"
 #include "g_game.hpp"
 #include "m_frame.hpp"
@@ -23,6 +25,7 @@ void RunGame(Engine& engine) {
 
     Tick tick { 0U };
     bool running = true;
+    ui::Node* hovered_node = nullptr;
     while (running) {
         tick += Tick { 1U };
         constexpr u32 skip = 10U;
@@ -33,29 +36,53 @@ void RunGame(Engine& engine) {
         main_menu_frame.Tick(tick.Value(), ui_system);
         fps_frame.Tick(tick.Value(), ui_system);
 
+        // UI SYSTEM
+        f32 x, y;
+        (void)SDL_GetMouseState(&x, &y);
+
+        ui::Node* previous_hovered_node = hovered_node;
+        hovered_node = main_menu_frame.tree.HitNode({ static_cast<u32>(x), static_cast<u32>(y) });
+        if (previous_hovered_node != hovered_node) {
+            previous_hovered_node->Propagate(&ui::Node::OnHoverOut);
+            hovered_node->Propagate(&ui::Node::OnHover);
+        }
+
+
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             (void)ImGui_ImplSDL3_ProcessEvent(&event);
             switch (event.type) {
-                case SDL_EVENT_QUIT: running = false;
+                case SDL_EVENT_QUIT:
+                    running = false;
                     break;
-                case SDL_EVENT_KEY_DOWN: switch (event.key.key) {
-                        case SDLK_ESCAPE: running = false;
+                case SDL_EVENT_KEY_DOWN:
+                    switch (event.key.key) {
+                        case SDLK_ESCAPE:
+                            running = false;
                             break;
-                        default: break;
+                        default:
+                            break;
                     }
                     break;
-                default: break;
+                case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                    if (event.button.button == SDL_BUTTON_LEFT) { hovered_node->Propagate(&ui::Node::OnClick); }
+                    break;
+                default:
+                    //Logger().Log("Unhandled event {}", event.type);
+                    break;
             }
         }
+
+        if (hovered_node != nullptr) { main_menu_frame.tree.MarkDirty(); }
+
         if (!running) { break; }
+
         engine.ClearScreen();
 
         ui_system.RenderElements(engine.renderer);
-
         RenderFrameElements(engine.renderer, main_menu_frame.tree);
-        //DrawImgui(engine.renderer);
 
+        //DrawImgui(engine.renderer);
         engine.Present();
 
         if (debug) {
