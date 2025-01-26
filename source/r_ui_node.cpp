@@ -90,13 +90,13 @@ FrameElements NodeTree::CreateFrameElements() {
         nodes.pop();
         RectangleElement rectangle { .color = node.background_color, .rect = node.OuterRect(), .on_click = nullptr };
         elements.rectangles.PushBack(rectangle);
-        for (const Node::Handle child : Children(node_handle)) { nodes.push(child); }
+        for (const List<Node::Handle>& children = Children(node_handle); const Node::Handle child : children) { nodes.push(child); }
     }
 
     return elements;
 }
-NodeBuilder::NodeBuilder(uint2 size) { Fixed(size); }
-NodeBuilder::NodeBuilder(LayoutLength::RelatedConstraint constraint) {
+NodeBuilder::NodeBuilder(const uint2 size) { Fixed(size); }
+NodeBuilder::NodeBuilder(const LayoutLength::RelatedConstraint constraint) {
     if (constraint == LayoutLength::hug) {
         HugWidth();
         HugHeight();
@@ -105,15 +105,15 @@ NodeBuilder::NodeBuilder(LayoutLength::RelatedConstraint constraint) {
         FillHeight();
     }
 }
-NodeBuilder::NodeBuilder(u32 width, LayoutLength::RelatedConstraint height_constraint) {
+NodeBuilder::NodeBuilder(const u32 width, const LayoutLength::RelatedConstraint height_constraint) {
     FixedWidth(width);
     if (height_constraint == LayoutLength::hug) { HugHeight(); } else { FillHeight(); }
 }
-NodeBuilder::NodeBuilder(LayoutLength::RelatedConstraint width_constraint, u32 height) {
+NodeBuilder::NodeBuilder(const LayoutLength::RelatedConstraint width_constraint, const u32 height) {
     if (width_constraint == LayoutLength::hug) { HugWidth(); } else { FillWidth(); }
     FixedHeight(height);
 }
-NodeBuilder::NodeBuilder(LayoutLength::RelatedConstraint width_constraint, LayoutLength::RelatedConstraint height_constraint) {
+NodeBuilder::NodeBuilder(const LayoutLength::RelatedConstraint width_constraint, const LayoutLength::RelatedConstraint height_constraint) {
     if (width_constraint == LayoutLength::hug) { HugWidth(); } else { FillWidth(); }
     if (height_constraint == LayoutLength::hug) { HugHeight(); } else { FillHeight(); }
 }
@@ -122,24 +122,24 @@ NodeBuilder& NodeBuilder::Name(const String& name) {
     node.name = name;
     return *this;
 }
-NodeBuilder& NodeBuilder::Fill(SDL_Color color) {
+NodeBuilder& NodeBuilder::Fill(const SDL_Color color) {
     node.background_color = color;
     return *this;
 }
-NodeBuilder& NodeBuilder::Absolute(uint2 pos) {
+NodeBuilder& NodeBuilder::Absolute(const uint2 pos) {
     node.position = pos;
     return *this;
 }
-NodeBuilder& NodeBuilder::Fixed(uint2 size) {
+NodeBuilder& NodeBuilder::Fixed(const uint2 size) {
     node.width = { .resolved = size.x, .layout_type = LayoutLength::fixed };
     node.height = { .resolved = size.y, .layout_type = LayoutLength::fixed };
     return *this;
 }
-NodeBuilder& NodeBuilder::FixedWidth(u32 width) {
+NodeBuilder& NodeBuilder::FixedWidth(const u32 width) {
     node.width = { .resolved = width, .layout_type = LayoutLength::fixed };
     return *this;
 }
-NodeBuilder& NodeBuilder::FixedHeight(u32 height) {
+NodeBuilder& NodeBuilder::FixedHeight(const u32 height) {
     node.height = { .resolved = height, .layout_type = LayoutLength::fixed };
     return *this;
 }
@@ -159,7 +159,7 @@ NodeBuilder& NodeBuilder::FillHeight() {
     node.height = { .resolved = -1U, .layout_type = LayoutLength::parent_constraint };
     return *this;
 }
-NodeBuilder& NodeBuilder::Padding(uint2 padding) {
+NodeBuilder& NodeBuilder::Padding(const uint2 padding) {
     node.padding = padding;
     return *this;
 }

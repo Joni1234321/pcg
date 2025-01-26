@@ -63,7 +63,7 @@ TextElement::Handle UISystem::CreateTextAligned(const String& string, TTF_Font* 
     (void)text_elements.emplace_back(text, x, y);
     return TextElement::Handle { static_cast<u32>(text_elements.size() - 1) };
 }
-TextElement::Handle UISystem::CreateText(const String& string, TTF_Font* font, const SDL_Color color, f32 x, const f32 y) { return CreateTextAligned(string, font, color, x, y, TextAlign::left, 0U); }
+TextElement::Handle UISystem::CreateText(const String& string, TTF_Font* font, const SDL_Color color, const f32 x, const f32 y) { return CreateTextAligned(string, font, color, x, y, TextAlign::left, 0U); }
 RectangleElement::Handle UISystem::CreateElement(const SDL_FRect rect, const SDL_Color color, void (*on_click)()) {
     (void)rectangle_elements.emplace_back(color, rect, on_click);
     return RectangleElement::Handle { static_cast<u32>(rectangle_elements.size() - 1) };
@@ -132,7 +132,7 @@ void UISystem::IncreaseTableSize(TableElement& table_element, const Table& table
         row_info.y = y;
     }
 }
-TableElement::Handle UISystem::CreateTable(const Table& table, SDL_Color text_color, const f32 x, const f32 y) {
+TableElement::Handle UISystem::CreateTable(const Table& table, const SDL_Color text_color, const f32 x, const f32 y) {
     TableElement table_element { .x = x, .y = y, .text_color = text_color };
     IncreaseTableSize(table_element, table);
     (void)table_elements.EmplaceBack(table_element);

@@ -73,7 +73,7 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) {
 
     tree.MarkDirty();
 }
-void MainMenuFrame::Tick(u32 i, ui::UISystem& ui_system) {
+void MainMenuFrame::Tick(const u32 i, ui::UISystem& ui_system) {
     for (const ui::RectangleElement::Handle sqr : elements) { ui_system[sqr].color = SDL_Color { static_cast<u8>(i / 3U), static_cast<u8>(i / 10U), static_cast<u8>(i / 67U), 255 }; }
 }
 

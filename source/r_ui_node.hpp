@@ -46,8 +46,8 @@ struct NodeBuilder;
 struct Node {
     struct Handle {
         u32 id { U32_MAX };
-        Handle() { }
-        explicit Handle(const u32 value) : id(value) { }
+        constexpr Handle() noexcept = default;
+        explicit constexpr  Handle(const u32 value) noexcept : id(value) { }
         // Handle(const Handle&) = delete;
         // Handle& operator=(const Handle&) = delete;
         // Handle(Handle&&) = delete;
