@@ -22,6 +22,13 @@ public:
     void Tick(u32 i, pce::ui::UISystem& ui_system);
 };
 
+class UIDebuggerFrame {
+public:
+    pce::ui::NodeTree tree;
+    UIDebuggerFrame(pce::ui::UISystem& ui_system);
+    void Tick(pce::ui::UISystem& ui_system);
+};
+
 class OverviewFrame {
     pce::ui::TableElement::Handle table_handle;
 public:

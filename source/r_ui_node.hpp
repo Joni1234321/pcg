@@ -38,9 +38,9 @@ inline SDL_Color lighten_color(const SDL_Color color, const f32 factor) {
 struct ResolvedLayout {
     SDL_FRect layout;
 };
+enum RelatedConstraint { hug, fill };
 struct LayoutLength {
     enum Constraint { child_constraint, parent_constraint, fixed };
-    enum RelatedConstraint { hug, fill };
     u32 resolved;
     Constraint layout_type;
 };
@@ -93,6 +93,7 @@ struct Node {
     [[nodiscard]] constexpr uint2 OuterBoxEndPosition() const { return OuterBoxPosition() + OuterBoxSize(); }
     [[nodiscard]] constexpr uint2 InnerBoxPosition() const { return OuterBoxPosition() + NonContentSize(); }
     [[nodiscard]] constexpr uint2 InnerBoxSize() const { return OuterBoxSize() - NonContentSize() * 2U; }
+    [[nodiscard]] constexpr b8 IsText() const { return ttf_text != nullptr; }
 
     [[nodiscard]] constexpr SDL_FRect OuterRect() const { return { .x = static_cast<f32>(OuterBoxPosition().x), .y = static_cast<f32>(OuterBoxPosition().y), .w = static_cast<f32>(OuterBoxSize().x), .h = static_cast<f32>(OuterBoxSize().y) }; };
     [[nodiscard]] constexpr b8 IsInside(uint2 screen_position) const {
@@ -176,10 +177,10 @@ private:
 
 struct NodeBuilder {
     explicit NodeBuilder(uint2 size);
-    explicit NodeBuilder(LayoutLength::RelatedConstraint constraint);
-    NodeBuilder(u32 width, LayoutLength::RelatedConstraint height_constraint);
-    NodeBuilder(LayoutLength::RelatedConstraint width_constraint, u32 height);
-    NodeBuilder(LayoutLength::RelatedConstraint width_constraint, LayoutLength::RelatedConstraint height_constraint);
+    explicit NodeBuilder(RelatedConstraint constraint);
+    NodeBuilder(u32 width, RelatedConstraint height_constraint);
+    NodeBuilder(RelatedConstraint width_constraint, u32 height);
+    NodeBuilder(RelatedConstraint width_constraint, RelatedConstraint height_constraint);
     NodeBuilder& Name(const String& name);
     NodeBuilder& Fill(SDL_Color color);
     // NodeBuilder& Absolute(uint2 pos);

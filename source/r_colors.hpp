@@ -3,6 +3,7 @@
 #include <SDL3/SDL_init.h>
 
 namespace pce::colors {
+constexpr SDL_Color clear {0, 0, 0, 0};
 constexpr SDL_Color black{0, 0, 0, 255U};
 constexpr SDL_Color white{255U, 255U, 255U, 255U};
 

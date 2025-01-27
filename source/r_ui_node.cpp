@@ -6,16 +6,17 @@
 namespace pce::ui {
 // Assume node is leaf with fixed or child_constraint
 void NodeTree::RecalculateLayout() {
-    auto pixels_gap = [this] (Node::Handle node_handle, u32 gap) -> u32 { return Children(node_handle).Empty() ? 0U : gap * (Children(node_handle).Size() - 1U); };
+    auto pixels_gap = [this] (const Node::Handle node_handle, const u32 gap) -> u32 { return Children(node_handle).Empty() ? 0U : gap * (Children(node_handle).Size() - 1U); };
     List<Node::Handle> node_handles { Root() };
     for (u32 i = 0U; i < node_handles.Size(); ++i) { node_handles.AppendRange(Children(node_handles[i])); }
 
     TTF_Font* font = font_collection.large;
+    f32 font_size = TTF_GetFontSize(font);
     for (const Node::Handle node_handle : node_handles) {
         Node& node = GetNode(node_handle);
 
         if (node.text.Empty()) {
-            if (node.ttf_text != nullptr) {
+            if (node.IsText()) {
                 TTF_DestroyText(node.ttf_text);
                 node.ttf_text = nullptr;
             }
@@ -35,11 +36,17 @@ void NodeTree::RecalculateLayout() {
     for (const Node::Handle node_handle : reversed_nodes) {
         Node& node = GetNode(node_handle);
         if (node.width.layout_type != LayoutLength::child_constraint && node.height.layout_type != LayoutLength::child_constraint) { continue; }
-        auto children = Children(node_handle) | std::views::transform([this] (const Node::Handle handle) -> Node *{ return &GetNode(handle); });
-        const uint2 children_outer_size = std::ranges::fold_left(children | std::views::transform(&Node::OuterBoxSize), node.NonContentSize() * 2U, std::plus { });
 
         uint2 text_size { 0U, 0U };
-        if (node.ttf_text != nullptr) { (void)TTF_GetTextSize(node.ttf_text, reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
+        if (node.IsText()) {
+            (void)TTF_GetTextSize(node.ttf_text, reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y));
+            Logger().Log("{} {} {}", text_size.y, font_size, font_size * 1.8F);
+
+            text_size.y = static_cast<u32>(font_size * 1.8F);
+        }
+        auto children_outer_boxes = Children(node_handle) | std::views::transform([this] (const Node::Handle handle) -> Node *{ return &GetNode(handle); }) | std::views::transform(&Node::OuterBoxSize);
+        const uint2 children_outer_size = std::ranges::fold_left(children_outer_boxes, node.NonContentSize() * 2U, std::plus { });
+
         // major
         if (node.width.layout_type == LayoutLength::child_constraint) { node.width.resolved = children_outer_size.x + pixels_gap(node_handle, node.gap) + text_size.x; }
         // minor
@@ -62,10 +69,7 @@ void NodeTree::RecalculateLayout() {
                 continue;
             }
             const auto [pixels_per, left_over] = math::Div(node.InnerBoxSize().x - pixels_taken.x, parent_constrained.Size());
-            for (const Node::Handle child_handle : parent_constrained) {
-                Node& child = GetNode(child_handle);
-                child.width.resolved = pixels_per - child.NonContentSize().x * 2U;
-            }
+            for (const Node::Handle child_handle : parent_constrained) { GetNode(child_handle).width.resolved = pixels_per; }
             GetNode(parent_constrained[0U]).width.resolved += left_over;
         }
 
@@ -75,14 +79,14 @@ void NodeTree::RecalculateLayout() {
     }
 
     // position top down
-    for (const Node::Handle parent_handle : node_handles) {
-        const Node& parent = GetNode(parent_handle);
-        uint2 position = parent.InnerBoxPosition();
-        for (const Node::Handle child_handle : Children(parent_handle)) {
+    for (const Node::Handle node_handle : node_handles) {
+        const Node& node = GetNode(node_handle);
+        uint2 position = node.InnerBoxPosition();
+        for (const Node::Handle child_handle : Children(node_handle)) {
             Node& child = GetNode(child_handle);
             child.position = position;
             // major axis
-            position.x += child.OuterBoxSize().x + parent.gap;
+            position.x += child.OuterBoxSize().x + node.gap;
         }
     }
 
@@ -133,19 +137,19 @@ FrameElements NodeTree::CreateFrameElements() {
         nodes.pop();
 
         RectangleElement rectangle { .color = node.background_color, .rect = node.OuterRect(), .on_click = nullptr };
-        elements.rectangles.PushBack(rectangle);
-        if (node.ttf_text != nullptr) {
+        if (node.IsText()) {
             TextElement text { .text = node.ttf_text, .x = rectangle.rect.x, .y = rectangle.rect.y };
             elements.texts.PushBack(text);
         }
+        elements.rectangles.PushBack(rectangle);
         nodes.push_range(Children(node_handle));
     }
 
     return elements;
 }
 NodeBuilder::NodeBuilder(const uint2 size) { Fixed(size); }
-NodeBuilder::NodeBuilder(const LayoutLength::RelatedConstraint constraint) {
-    if (constraint == LayoutLength::hug) {
+NodeBuilder::NodeBuilder(const RelatedConstraint constraint) {
+    if (constraint == hug) {
         HugWidth();
         HugHeight();
     } else {
@@ -153,17 +157,17 @@ NodeBuilder::NodeBuilder(const LayoutLength::RelatedConstraint constraint) {
         FillHeight();
     }
 }
-NodeBuilder::NodeBuilder(const u32 width, const LayoutLength::RelatedConstraint height_constraint) {
+NodeBuilder::NodeBuilder(const u32 width, const RelatedConstraint height_constraint) {
     FixedWidth(width);
-    if (height_constraint == LayoutLength::hug) { HugHeight(); } else { FillHeight(); }
+    if (height_constraint == hug) { HugHeight(); } else { FillHeight(); }
 }
-NodeBuilder::NodeBuilder(const LayoutLength::RelatedConstraint width_constraint, const u32 height) {
-    if (width_constraint == LayoutLength::hug) { HugWidth(); } else { FillWidth(); }
+NodeBuilder::NodeBuilder(const RelatedConstraint width_constraint, const u32 height) {
+    if (width_constraint == hug) { HugWidth(); } else { FillWidth(); }
     FixedHeight(height);
 }
-NodeBuilder::NodeBuilder(const LayoutLength::RelatedConstraint width_constraint, const LayoutLength::RelatedConstraint height_constraint) {
-    if (width_constraint == LayoutLength::hug) { HugWidth(); } else { FillWidth(); }
-    if (height_constraint == LayoutLength::hug) { HugHeight(); } else { FillHeight(); }
+NodeBuilder::NodeBuilder(const RelatedConstraint width_constraint, const RelatedConstraint height_constraint) {
+    if (width_constraint == hug) { HugWidth(); } else { FillWidth(); }
+    if (height_constraint == hug) { HugHeight(); } else { FillHeight(); }
 }
 
 NodeBuilder& NodeBuilder::Name(const String& name) {
@@ -207,7 +211,7 @@ NodeBuilder& NodeBuilder::Padding(const uint2 padding) {
     node.padding = padding;
     return *this;
 }
-NodeBuilder& NodeBuilder::Gap(u32 gap) {
+NodeBuilder& NodeBuilder::Gap(const u32 gap) {
     node.gap = gap;
     return *this;
 }

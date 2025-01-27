@@ -15,6 +15,15 @@ void FPSFrame::Tick(u32 i, ui::UISystem& ui_system) {
     const std::string str = std::format("Tick {:6}", i);
     (void)TTF_SetTextString(ui_system[tick_text].text, str.c_str(), str.length());
 }
+UIDebuggerFrame::UIDebuggerFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font }{
+
+    ui::Node::Handle frame = ui::NodeBuilder({ 400U, 600U }).Gap(50U).Fill(colors::gray).BuildRoot(tree, { 300U, 600U });
+    ui::NodeBuilder(ui::fill, ui::hug).Text("Debug Frame").Fill(colors::light_gray).Build(tree, frame);
+    ui::NodeBuilder(ui::hug).Text("Hej").Build(tree, frame);
+}
+void UIDebuggerFrame::Tick(ui::UISystem& ui_system) {
+
+}
 
 MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font }{
     constexpr f32 title_y = 30.0F;
@@ -51,38 +60,41 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_en
 
     {
         ui::Node::Handle root = ui::NodeBuilder(uint2{ 100U, 100U }).Padding({ 5U, 5U }).Fill(colors::forest_green).Build(tree, frame);
-        ui::Node::Handle box1 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::yellow).Padding({ 5U, 5U}).Build(tree, root);
-        ui::Node::Handle box11 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::blue).Build(tree, box1);
-        ui::Node::Handle box12 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::chocolate).Build(tree, box1);
+        ui::Node::Handle box1 = ui::NodeBuilder(ui::fill).Fill(colors::yellow).Padding({ 5U, 5U}).Build(tree, root);
+        ui::Node::Handle box11 = ui::NodeBuilder(ui::fill).Fill(colors::blue).Build(tree, box1);
+        ui::Node::Handle box12 = ui::NodeBuilder(ui::fill).Fill(colors::chocolate).Build(tree, box1);
 
-        ui::Node::Handle box2 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::red).Build(tree, root);
-        ui::Node::Handle box3 = ui::NodeBuilder(ui::LayoutLength::hug, ui::LayoutLength::fill).Padding({ 10U, 10U }).Fill(colors::black).Build(tree, root);
+        ui::Node::Handle box2 = ui::NodeBuilder(ui::fill).Fill(colors::red).Build(tree, root);
+        ui::Node::Handle box3 = ui::NodeBuilder(ui::hug, ui::fill).Padding({ 10U, 10U }).Fill(colors::black).Build(tree, root);
     }
     {
         ui::Node::Handle root = ui::NodeBuilder(uint2{ 100U, 100U }).Padding({ 5U, 5U }).Fill(colors::green).Build(tree, frame);
-        ui::Node::Handle box1 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::yellow).Padding({ 5U, 5U}).Build(tree, root);
-        ui::Node::Handle box2 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::red).Build(tree, root);
+        ui::Node::Handle box1 = ui::NodeBuilder(ui::fill).Fill(colors::yellow).Padding({ 5U, 5U}).Build(tree, root);
+        ui::Node::Handle box2 = ui::NodeBuilder(ui::fill).Fill(colors::red).Build(tree, root);
     }
     {
-        ui::Node::Handle root = ui::NodeBuilder(uint2{ ui::LayoutLength::hug, 200U }).Padding({ 5U, 5U }).Fill(colors::cyan).Build(tree, frame);
-        ui::Node::Handle box1 = ui::NodeBuilder(ui::LayoutLength::hug).Fill(colors::yellow).Text(pce::String { "Start Game" }).Padding({ 5U, 5U}).Build(tree, root);
-        ui::Node::Handle box2 = ui::NodeBuilder(ui::LayoutLength::hug).Fill(colors::red).Text(pce::String { "Settings" }).Build(tree, root);
+        ui::Node::Handle root = ui::NodeBuilder(ui::hug).Padding({ 5U, 5U }).Fill(colors::cyan).Build(tree, frame);
+        ui::Node::Handle box1 = ui::NodeBuilder(ui::hug).Fill(colors::yellow).Text(pce::String { "Start Game" }).Padding({ 5U, 5U}).Build(tree, root);
+        ui::Node::Handle box2 = ui::NodeBuilder(ui::hug).Fill(colors::red).Text(pce::String { "Settings" }).Build(tree, root);
+        ui::Node::Handle box3 = ui::NodeBuilder(ui::hug).Fill(colors::green).Text(pce::String { "Exit" }).Build(tree, root);
+        ui::Node::Handle box4 = ui::NodeBuilder(ui::hug).Fill(colors::yellow).Text(pce::String { "Start Game" }).Padding({ 5U, 5U}).Build(tree, root);
+
     }
     {
         ui::Node::Handle root = ui::NodeBuilder(uint2{ 100U, 100U }).Padding({ 5U, 5U }).Fill(colors::sea_green).Build(tree, frame);
-        ui::Node::Handle box1 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::yellow).Padding({ 5U, 5U}).Build(tree, root);
-        ui::Node::Handle box2 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::red).Build(tree, root);
-        ui::Node::Handle box3 = ui::NodeBuilder(ui::LayoutLength::hug).Padding({ 10U, 10U }).Fill(colors::black).Build(tree, root);
+        ui::Node::Handle box1 = ui::NodeBuilder(ui::fill).Fill(colors::yellow).Padding({ 5U, 5U}).Build(tree, root);
+        ui::Node::Handle box2 = ui::NodeBuilder(ui::fill).Fill(colors::red).Build(tree, root);
+        ui::Node::Handle box3 = ui::NodeBuilder(ui::hug).Padding({ 10U, 10U }).Fill(colors::black).Build(tree, root);
     }
     {
         constexpr u32 width = 100U;
-        ui::Node::Handle root = ui::NodeBuilder(ui::LayoutLength::hug, 400U).Padding({ 5U, 5U }).Fill(colors::forest_green).Build(tree, frame);
-        ui::Node::Handle box1 = ui::NodeBuilder(width, ui::LayoutLength::fill).Fill(colors::yellow).Padding({ 5U, 5U}).Build(tree, root);
-        ui::Node::Handle box2 = ui::NodeBuilder(width * 2, ui::LayoutLength::fill).Fill(colors::red).Build(tree, root);
-        ui::Node::Handle box3 = ui::NodeBuilder(width * 3, ui::LayoutLength::fill).Padding({ 4U, 4U }).Gap(2U).Fill(colors::black).Build(tree, root);
-        ui::Node::Handle box31 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::cyan).Build(tree, box3);
-        ui::Node::Handle box32 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::chocolate).Build(tree, box3);
-        ui::Node::Handle box33 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::yellow).Build(tree, box3);
+        ui::Node::Handle root = ui::NodeBuilder(ui::hug, 400U).Padding({ 5U, 5U }).Fill(colors::forest_green).Build(tree, frame);
+        ui::Node::Handle box1 = ui::NodeBuilder(width, ui::fill).Fill(colors::yellow).Padding({ 5U, 5U}).Build(tree, root);
+        ui::Node::Handle box2 = ui::NodeBuilder(width * 2, ui::fill).Fill(colors::red).Build(tree, root);
+        ui::Node::Handle box3 = ui::NodeBuilder(width * 3, ui::fill).Padding({ 4U, 4U }).Gap(2U).Fill(colors::black).Build(tree, root);
+        ui::Node::Handle box31 = ui::NodeBuilder(ui::fill).Fill(colors::cyan).Build(tree, box3);
+        ui::Node::Handle box32 = ui::NodeBuilder(ui::fill).Fill(colors::chocolate).Build(tree, box3);
+        ui::Node::Handle box33 = ui::NodeBuilder(ui::fill).Fill(colors::yellow).Build(tree, box3);
     }
 }
 void MainMenuFrame::Tick(const u32 i, ui::UISystem& ui_system) {

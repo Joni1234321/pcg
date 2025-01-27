@@ -21,6 +21,7 @@ void RunGame(Engine& engine) {
     ui::UISystem ui_system(engine);
 
     MainMenuFrame main_menu_frame(ui_system);
+    UIDebuggerFrame ui_debugger_frame(ui_system);
     FPSFrame fps_frame(ui_system);
     //OverviewFrame table_test_frame(ui_system, engine.font_collection);
 
@@ -35,9 +36,11 @@ void RunGame(Engine& engine) {
 
         main_menu_frame.Tick(tick.Value(), ui_system);
         fps_frame.Tick(tick.Value(), ui_system);
+        ui_debugger_frame.Tick(ui_system);
 
         input_system.Tick();
         ui_system.Tick(input_system, main_menu_frame.tree);
+        // ui_system.Tick(input_system, ui_debugger_frame.tree);
 
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -70,6 +73,7 @@ void RunGame(Engine& engine) {
 
         ui_system.RenderElements(engine.renderer);
         ui_system.RenderTree(engine.renderer, main_menu_frame.tree);
+        // ui_system.RenderTree(engine.renderer, ui_debugger_frame.tree);
 
         //DrawImgui(engine.renderer);
         engine.Present();
