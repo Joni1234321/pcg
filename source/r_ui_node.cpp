@@ -10,16 +10,40 @@ void NodeTree::RecalculateLayout() {
     List<Node::Handle> node_handles { Root() };
     for (u32 i = 0U; i < node_handles.Size(); ++i) { node_handles.AppendRange(Children(node_handles[i])); }
 
+    TTF_Font* font = font_collection.large;
+    for (const Node::Handle node_handle : node_handles) {
+        Node& node = GetNode(node_handle);
+
+        if (node.text.Empty()) {
+            if (node.ttf_text != nullptr) {
+                TTF_DestroyText(node.ttf_text);
+                node.ttf_text = nullptr;
+            }
+            continue;
+        }
+
+        if (node.ttf_text == nullptr) { node.ttf_text = TTF_CreateText(text_engine, font, node.text.CString(), node.text.Size()); } else {
+            TTF_SetTextString(node.ttf_text, node.text.CString(), node.text.Size());
+            TTF_SetTextFont(node.ttf_text, font);
+        }
+        constexpr SDL_Color color = colors::black;
+        (void)TTF_SetTextColor(node.ttf_text, color.r, color.g, color.b, color.a);
+    }
+
     // hug bottom up
     auto reversed_nodes = node_handles | std::views::reverse;
     for (const Node::Handle node_handle : reversed_nodes) {
         Node& node = GetNode(node_handle);
+        if (node.width.layout_type != LayoutLength::child_constraint && node.height.layout_type != LayoutLength::child_constraint) { continue; }
         auto children = Children(node_handle) | std::views::transform([this] (const Node::Handle handle) -> Node *{ return &GetNode(handle); });
         const uint2 children_outer_size = std::ranges::fold_left(children | std::views::transform(&Node::OuterBoxSize), node.NonContentSize() * 2U, std::plus { });
+
+        uint2 text_size { 0U, 0U };
+        if (node.ttf_text != nullptr) { (void)TTF_GetTextSize(node.ttf_text, reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
         // major
-        if (node.width.layout_type == LayoutLength::child_constraint) { node.width.resolved = children_outer_size.x + pixels_gap(node_handle, node.gap); }
+        if (node.width.layout_type == LayoutLength::child_constraint) { node.width.resolved = children_outer_size.x + pixels_gap(node_handle, node.gap) + text_size.x; }
         // minor
-        if (node.height.layout_type == LayoutLength::child_constraint) { node.height.resolved = children_outer_size.y; }
+        if (node.height.layout_type == LayoutLength::child_constraint) { node.height.resolved = children_outer_size.y + text_size.y; }
     }
 
     // fill top down
@@ -82,9 +106,9 @@ void NodeTree::RecalculateLayout() {
 }
 
 TextElement NodeTree::CreateTextAligned(const String& string, const SDL_Color color, f32 x, const f32 y, const TextAlign alignment, const u32 parent_width) const {
-    TTF_Text* text = TTF_CreateText(text_engine, font, string.CString(), string.size());
-    i32 text_width;
+    TTF_Text* text = TTF_CreateText(text_engine, font_collection.small, string.CString(), string.size());
     (void)TTF_SetTextColor(text, color.r, color.g, color.b, color.a);
+    i32 text_width;
     (void)TTF_GetTextSize(text, &text_width, nullptr);
     switch (alignment) {
         case TextAlign::left:
@@ -110,7 +134,10 @@ FrameElements NodeTree::CreateFrameElements() {
 
         RectangleElement rectangle { .color = node.background_color, .rect = node.OuterRect(), .on_click = nullptr };
         elements.rectangles.PushBack(rectangle);
-        if (!node.text.Empty()) { elements.texts.PushBack(CreateTextAligned(node.text, colors::black, rectangle.rect.x, rectangle.rect.y, TextAlign::center, node.InnerBoxSize().x)); }
+        if (node.ttf_text != nullptr) {
+            TextElement text { .text = node.ttf_text, .x = rectangle.rect.x, .y = rectangle.rect.y };
+            elements.texts.PushBack(text);
+        }
         nodes.push_range(Children(node_handle));
     }
 

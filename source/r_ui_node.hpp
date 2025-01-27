@@ -53,21 +53,13 @@ struct Node {
         u32 id { U32_MAX };
         constexpr Handle() noexcept = default;
         explicit constexpr Handle(const u32 value) noexcept : id(value) { }
-        // Handle(const Handle&) = delete;
-        // Handle& operator=(const Handle&) = delete;
-        // Handle(Handle&&) = delete;
-        // Handle& operator=(Handle&&) = delete;
-
         [[nodiscard]] bool IsRoot() const noexcept { return id == 0U; }
         [[nodiscard]] bool HasValue() const noexcept { return id != U32_MAX; }
     };
     Node() = default;
-    // Node(const Node&) = delete;
-    // Node& operator=(const Node&) = delete;
-    // Node(Node&&) = delete;
-    // Node& operator=(Node&&) = delete;
     String name { };
     String text { };
+    TTF_Text* ttf_text { nullptr };
 
     SDL_FRect bounding_box { };
 
@@ -102,7 +94,7 @@ struct Node {
     [[nodiscard]] constexpr uint2 InnerBoxPosition() const { return OuterBoxPosition() + NonContentSize(); }
     [[nodiscard]] constexpr uint2 InnerBoxSize() const { return OuterBoxSize() - NonContentSize() * 2U; }
 
-    [[nodiscard]] constexpr SDL_FRect OuterRect() const { return { .x = static_cast<f32>(position.x), .y = static_cast<f32>(position.y), .w = static_cast<f32>(width.resolved), .h = static_cast<f32>(height.resolved) }; };
+    [[nodiscard]] constexpr SDL_FRect OuterRect() const { return { .x = static_cast<f32>(OuterBoxPosition().x), .y = static_cast<f32>(OuterBoxPosition().y), .w = static_cast<f32>(OuterBoxSize().x), .h = static_cast<f32>(OuterBoxSize().y) }; };
     [[nodiscard]] constexpr b8 IsInside(uint2 screen_position) const {
         uint2 start { static_cast<u32>(bounding_box.x), static_cast<u32>(bounding_box.y) };
         uint2 relative = screen_position - start;
@@ -114,13 +106,13 @@ struct Node {
 };
 struct NodeTree {
     TTF_TextEngine* text_engine;
-    TTF_Font* font;
+    FontCollection& font_collection;
 
     List<Node> nodes { };
     List<Node::Handle> parents { };
     List<List<Node::Handle>> children { };
 
-    NodeTree(TTF_TextEngine* text_engine, TTF_Font* font) : text_engine(text_engine), font(font) { }
+    NodeTree(TTF_TextEngine* text_engine, FontCollection& font) : text_engine(text_engine), font_collection(font) { }
 
     [[nodiscard]] static constexpr Node::Handle Root() { return Node::Handle { 0U }; }
     Node::Handle SetRoot(const Node& root) {
@@ -157,7 +149,6 @@ struct NodeTree {
         if (dirty) {
             dirty = false;
             RecalculateLayout();
-            for (const auto& text : frame_elements.texts) { TTF_DestroyText(text.text); }
             frame_elements = CreateFrameElements();
         }
         return frame_elements;
@@ -204,7 +195,9 @@ struct NodeBuilder {
     NodeBuilder& Gap(u32 gap);
     NodeBuilder& Text(const String& string);
     NodeBuilder& Text(String&& string);
-    void Finalize() {
+    void Finalize(NodeTree& node_tree) {
+        node_tree.MarkDirty();
+
         const f32 factor = 0.5F;
         node.background_color_hover = lighten_color(node.background_color, factor);
 
@@ -213,13 +206,13 @@ struct NodeBuilder {
         node.on_hover_out = [&] (Node* node) -> void { Logger().Log("On Hover Out"); };
     }
     Node::Handle BuildRoot(NodeTree& node_tree, const uint2 position) {
-        Finalize();
+        Finalize(node_tree);
         node.position = position;
         node_tree.SetRoot(node);
         return Node::Handle { 0U };
     };
     Node::Handle Build(NodeTree& node_tree, Node::Handle parent_handle) {
-        Finalize();
+        Finalize(node_tree);
         return node_tree.AddNode(node, parent_handle);
     }
 

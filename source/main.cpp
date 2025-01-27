@@ -22,7 +22,7 @@ void RunGame(Engine& engine) {
 
     MainMenuFrame main_menu_frame(ui_system);
     FPSFrame fps_frame(ui_system);
-    //OverviewFrame table_test_frame(ui_system, engine.font);
+    //OverviewFrame table_test_frame(ui_system, engine.font_collection);
 
     Tick tick { 0U };
     bool running = true;

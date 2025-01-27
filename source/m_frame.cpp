@@ -16,7 +16,7 @@ void FPSFrame::Tick(u32 i, ui::UISystem& ui_system) {
     (void)TTF_SetTextString(ui_system[tick_text].text, str.c_str(), str.length());
 }
 
-MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font.normal }{
+MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font }{
     constexpr f32 title_y = 30.0F;
     (void)ui_system.CreateTextAligned("Hey Helene!", ui_system.font_bold.h1, colors::light_sky_blue, 0, title_y, ui::TextAlign::center, ui_system.screen_width);
 
@@ -84,11 +84,6 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_en
         ui::Node::Handle box32 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::chocolate).Build(tree, box3);
         ui::Node::Handle box33 = ui::NodeBuilder(ui::LayoutLength::fill).Fill(colors::yellow).Build(tree, box3);
     }
-
-
-
-
-    tree.MarkDirty();
 }
 void MainMenuFrame::Tick(const u32 i, ui::UISystem& ui_system) {
     for (const ui::RectangleElement::Handle sqr : elements) { ui_system[sqr].color = SDL_Color { static_cast<u8>(i / 3U), static_cast<u8>(i / 10U), static_cast<u8>(i / 67U), 255 }; }
