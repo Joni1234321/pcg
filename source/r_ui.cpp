@@ -10,7 +10,7 @@ void UISystem::Tick(InputSystem& input_system, NodeTree& tree) {
         tree.Propagate(hovered_node, &Node::OnHover);
     }
 
-    if (hovered_node.HasValue() || previous_hovered_node.HasValue()) { tree.MarkDirty(); }
+    if (hovered_node.IsValid() || previous_hovered_node.IsValid()) { tree.MarkDirty(); }
 }
 void UISystem::RenderTree(SDL_Renderer* renderer, NodeTree& node_tree) {
     const FrameElements& frame_elements = node_tree.GetFrameElements();

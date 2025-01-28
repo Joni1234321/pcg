@@ -17,7 +17,7 @@ void NodeTree::RecalculateLayout() {
         Node& node = GetNode(node_handle);
 
         if (node.text.Empty()) {
-            if (node.IsText()) {
+            if (node.HasText()) {
                 TTF_DestroyText(node.ttf_text);
                 node.ttf_text = nullptr;
             }
@@ -44,7 +44,7 @@ void NodeTree::RecalculateLayout() {
         if (node.width.layout_type != LayoutLength::child_constraint && node.height.layout_type != LayoutLength::child_constraint) { continue; }
 
         uint2 text_size { 0U, 0U };
-        if (node.IsText()) { (void)TTF_GetTextSize(node.ttf_text, reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
+        if (node.HasText()) { (void)TTF_GetTextSize(node.ttf_text, reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
 
         // major
         if (node.width.layout_type == LayoutLength::child_constraint) {
@@ -144,7 +144,7 @@ FrameElements NodeTree::CreateFrameElements() {
         nodes.pop();
 
         RectangleElement rectangle { .color = node.background_color, .rect = node.OuterRect(), .on_click = nullptr };
-        if (node.IsText()) {
+        if (node.HasText()) {
             TextElement text { .text = node.ttf_text, .x = static_cast<f32>(node.InnerBoxPosition().x), .y = static_cast<f32>(node.InnerBoxPosition().y) };
             elements.texts.PushBack(text);
         }

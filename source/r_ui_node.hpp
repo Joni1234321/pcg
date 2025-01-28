@@ -54,7 +54,7 @@ struct Node {
         constexpr Handle() noexcept = default;
         explicit constexpr Handle(const u32 value) noexcept : id(value) { }
         [[nodiscard]] bool IsRoot() const noexcept { return id == 0U; }
-        [[nodiscard]] bool HasValue() const noexcept { return id != U32_MAX; }
+        [[nodiscard]] bool IsValid() const noexcept { return id != U32_MAX; }
     };
     Node() = default;
     String name { };
@@ -93,7 +93,7 @@ struct Node {
     [[nodiscard]] constexpr uint2 OuterBoxEndPosition() const { return OuterBoxPosition() + OuterBoxSize(); }
     [[nodiscard]] constexpr uint2 InnerBoxPosition() const { return OuterBoxPosition() + NonContentSize(); }
     [[nodiscard]] constexpr uint2 InnerBoxSize() const { return OuterBoxSize() - NonContentSize() * 2U; }
-    [[nodiscard]] constexpr b8 IsText() const { return ttf_text != nullptr; }
+    [[nodiscard]] constexpr b8 HasText() const { return !text.Empty(); }
 
     [[nodiscard]] constexpr SDL_FRect OuterRect() const { return { .x = static_cast<f32>(OuterBoxPosition().x), .y = static_cast<f32>(OuterBoxPosition().y), .w = static_cast<f32>(OuterBoxSize().x), .h = static_cast<f32>(OuterBoxSize().y) }; };
     [[nodiscard]] constexpr b8 IsInside(uint2 screen_position) const {
@@ -125,9 +125,11 @@ struct NodeTree {
         return Root();
     }
 
+    [[nodiscard]] const Node& GetNode(const Node::Handle node) const { return nodes[node.id]; }
     [[nodiscard]] Node& GetNode(const Node::Handle node) { return nodes[node.id]; }
     [[nodiscard]] Node::Handle Parent(const Node::Handle node) { return parents[node.id]; }
     [[nodiscard]] const List<Node::Handle>& Children(const Node::Handle node) { return children[node.id]; }
+    [[nodiscard]] const List<Node::Handle>& Children(const Node::Handle node) const { return children[node.id]; }
     [[nodiscard]] Node::Handle AddNode(const Node& node, const Node::Handle parent_handle) {
         nodes.PushBack(node);
         parents.PushBack(parent_handle);
@@ -139,7 +141,7 @@ struct NodeTree {
     }
 
     void Propagate(Node::Handle node_handle, const std::function<void(Node&)>& proj) {
-        while (node_handle.HasValue()) {
+        while (node_handle.IsValid()) {
             std::invoke(proj, GetNode(node_handle));
             node_handle = Parent(node_handle);
         }
@@ -176,15 +178,15 @@ private:
 };
 
 struct NodeBuilder {
-    explicit NodeBuilder(uint2 size);
-    explicit NodeBuilder(RelatedConstraint constraint);
-    NodeBuilder(u32 width, RelatedConstraint height_constraint);
-    NodeBuilder(RelatedConstraint width_constraint, u32 height);
-    NodeBuilder(RelatedConstraint width_constraint, RelatedConstraint height_constraint);
-    NodeBuilder& Name(const String& name);
-    NodeBuilder& Fill(SDL_Color color);
+    [[nodiscard]] explicit NodeBuilder(uint2 size);
+    [[nodiscard]] explicit NodeBuilder(RelatedConstraint constraint);
+    [[nodiscard]] NodeBuilder(u32 width, RelatedConstraint height_constraint);
+    [[nodiscard]] NodeBuilder(RelatedConstraint width_constraint, u32 height);
+    [[nodiscard]] NodeBuilder(RelatedConstraint width_constraint, RelatedConstraint height_constraint);
+    [[nodiscard]] NodeBuilder& Name(const String& name);
+    [[nodiscard]] NodeBuilder& Fill(SDL_Color color);
     // NodeBuilder& Absolute(uint2 pos);
-    NodeBuilder& Layout(LayoutLength width, LayoutLength height);
+    [[nodiscard]] NodeBuilder& Layout(LayoutLength width, LayoutLength height);
     NodeBuilder& Fixed(uint2 size);
     NodeBuilder& FixedWidth(u32 width);
     NodeBuilder& FixedHeight(u32 height);
@@ -192,10 +194,10 @@ struct NodeBuilder {
     NodeBuilder& HugHeight();
     NodeBuilder& FillWidth();
     NodeBuilder& FillHeight();
-    NodeBuilder& Padding(uint2 padding);
-    NodeBuilder& Gap(u32 gap);
-    NodeBuilder& Text(const String& string);
-    NodeBuilder& Text(String&& string);
+    [[nodiscard]] NodeBuilder& Padding(uint2 padding);
+    [[nodiscard]] NodeBuilder& Gap(u32 gap);
+    [[nodiscard]] NodeBuilder& Text(const String& string);
+    [[nodiscard]] NodeBuilder& Text(String&& string);
     void Finalize(NodeTree& node_tree) {
         node_tree.MarkDirty();
 
