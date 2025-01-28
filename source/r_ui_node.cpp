@@ -38,19 +38,17 @@ void NodeTree::RecalculateLayout() {
         if (node.width.layout_type != LayoutLength::child_constraint && node.height.layout_type != LayoutLength::child_constraint) { continue; }
 
         uint2 text_size { 0U, 0U };
-        if (node.IsText()) {
-            (void)TTF_GetTextSize(node.ttf_text, reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y));
-            Logger().Log("{} {} {}", text_size.y, font_size, font_size * 1.8F);
-
-            text_size.y = static_cast<u32>(font_size * 1.8F);
-        }
+        if (node.IsText()) { (void)TTF_GetTextSize(node.ttf_text, reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
         auto children_outer_boxes = Children(node_handle) | std::views::transform([this] (const Node::Handle handle) -> Node *{ return &GetNode(handle); }) | std::views::transform(&Node::OuterBoxSize);
         const uint2 children_outer_size = std::ranges::fold_left(children_outer_boxes, node.NonContentSize() * 2U, std::plus { });
 
         // major
         if (node.width.layout_type == LayoutLength::child_constraint) { node.width.resolved = children_outer_size.x + pixels_gap(node_handle, node.gap) + text_size.x; }
         // minor
-        if (node.height.layout_type == LayoutLength::child_constraint) { node.height.resolved = children_outer_size.y + text_size.y; }
+        if (node.height.layout_type == LayoutLength::child_constraint) {
+            const u32 max_minor = Children(node_handle).Empty() ? 0U : std::ranges::max(children_outer_boxes, std::ranges::greater { }, &uint2::y).y;
+            node.height.resolved = std::max(max_minor, text_size.y) + node.NonContentSize().y * 2U;
+        }
     }
 
     // fill top down
