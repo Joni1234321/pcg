@@ -81,6 +81,7 @@ struct Engine {
             return false;
         }
 
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
         TTF_CreateRendererTextEngine(renderer);
 
         IMGUI_CHECKVERSION();

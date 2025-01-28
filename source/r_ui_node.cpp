@@ -6,11 +6,12 @@
 namespace pce::ui {
 // Assume node is leaf with fixed or child_constraint
 void NodeTree::RecalculateLayout() {
+    auto handle_to_node = [this] (const Node::Handle handle) -> Node *{ return &GetNode(handle); };
     auto pixels_gap = [this] (const Node::Handle node_handle, const u32 gap) -> u32 { return Children(node_handle).Empty() ? 0U : gap * (Children(node_handle).Size() - 1U); };
     List<Node::Handle> node_handles { Root() };
     for (u32 i = 0U; i < node_handles.Size(); ++i) { node_handles.AppendRange(Children(node_handles[i])); }
 
-    TTF_Font* font = font_collection.large;
+    TTF_Font* font = font_collection.normal;
     f32 font_size = TTF_GetFontSize(font);
     for (const Node::Handle node_handle : node_handles) {
         Node& node = GetNode(node_handle);
@@ -32,21 +33,29 @@ void NodeTree::RecalculateLayout() {
     }
 
     // hug bottom up
+    #define BREAKPOINT 1
+    #if BREAKPOINT
+    auto reversed_nodes = node_handles | std::views::reverse | std::ranges::to<std::vector>();
+    #else
     auto reversed_nodes = node_handles | std::views::reverse;
+    #endif
     for (const Node::Handle node_handle : reversed_nodes) {
         Node& node = GetNode(node_handle);
         if (node.width.layout_type != LayoutLength::child_constraint && node.height.layout_type != LayoutLength::child_constraint) { continue; }
 
         uint2 text_size { 0U, 0U };
         if (node.IsText()) { (void)TTF_GetTextSize(node.ttf_text, reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
-        auto children_outer_boxes = Children(node_handle) | std::views::transform([this] (const Node::Handle handle) -> Node *{ return &GetNode(handle); }) | std::views::transform(&Node::OuterBoxSize);
-        const uint2 children_outer_size = std::ranges::fold_left(children_outer_boxes, node.NonContentSize() * 2U, std::plus { });
 
         // major
-        if (node.width.layout_type == LayoutLength::child_constraint) { node.width.resolved = children_outer_size.x + pixels_gap(node_handle, node.gap) + text_size.x; }
+        if (node.width.layout_type == LayoutLength::child_constraint) {
+            const u32 children_major = std::ranges::fold_left_first(Children(node_handle) | std::views::transform(handle_to_node) | std::views::transform(&Node::OuterBoxSize), std::plus { }).value_or(uint2 { 0U, 0U }).x;
+            node.width.resolved = children_major + pixels_gap(node_handle, node.gap) + text_size.x + node.NonContentSize().x * 2U;
+        }
         // minor
         if (node.height.layout_type == LayoutLength::child_constraint) {
-            const u32 max_minor = Children(node_handle).Empty() ? 0U : std::ranges::max(children_outer_boxes, std::ranges::greater { }, &uint2::y).y;
+            const u32 max_minor = Children(node_handle).Empty() ?
+                                      0U :
+                                      std::ranges::max(Children(node_handle) | std::views::transform([this] (const Node::Handle handle) -> u32 { return GetNode(handle).OuterBoxSize().y; }));
             node.height.resolved = std::max(max_minor, text_size.y) + node.NonContentSize().y * 2U;
         }
     }
@@ -136,7 +145,7 @@ FrameElements NodeTree::CreateFrameElements() {
 
         RectangleElement rectangle { .color = node.background_color, .rect = node.OuterRect(), .on_click = nullptr };
         if (node.IsText()) {
-            TextElement text { .text = node.ttf_text, .x = rectangle.rect.x, .y = rectangle.rect.y };
+            TextElement text { .text = node.ttf_text, .x = static_cast<f32>(node.InnerBoxPosition().x), .y = static_cast<f32>(node.InnerBoxPosition().y) };
             elements.texts.PushBack(text);
         }
         elements.rectangles.PushBack(rectangle);

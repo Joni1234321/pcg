@@ -26,34 +26,37 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_en
     constexpr f32 title_y = 30.0F;
     (void)ui_system.CreateTextAligned("Hey Helene!", ui_system.font_bold.h1, colors::light_sky_blue, 0, title_y, ui::TextAlign::center, ui_system.screen_width);
 
-    pce::Table main_menu = pce::Table("Main Menu");
+    if (false) {
+        pce::Table main_menu = pce::Table("Main Menu");
 
-    constexpr f32 menu_x = 200.0F;
-    constexpr f32 list_start_y = 100.0F;
-    pce::List<pce::String> buttons = { "Play", "Settings", "Exit" };
-    ui_system.CreateText("Play", ui_system.font_bold.large, colors::blue, menu_x, list_start_y);
-    ui_system.CreateText("Settings", ui_system.font.large, colors::black, menu_x, list_start_y + 50.0F);
-    ui_system.CreateText("Exit", ui_system.font.large, colors::red, menu_x, list_start_y + 100.0F);
+        constexpr f32 menu_x = 200.0F;
+        constexpr f32 list_start_y = 100.0F;
+        pce::List<pce::String> buttons = { "Play", "Settings", "Exit" };
+        ui_system.CreateText("Play", ui_system.font_bold.large, colors::blue, menu_x, list_start_y);
+        ui_system.CreateText("Settings", ui_system.font.large, colors::black, menu_x, list_start_y + 50.0F);
+        ui_system.CreateText("Exit", ui_system.font.large, colors::red, menu_x, list_start_y + 100.0F);
 
-    constexpr SDL_FRect background_rect { .x = menu_x, .y = list_start_y, .w = 100.0F, .h = 300.0F };
-    ui_system.CreateElement(background_rect, colors::gray, nullptr);
+        constexpr SDL_FRect background_rect { .x = menu_x, .y = list_start_y, .w = 100.0F, .h = 300.0F };
+        ui_system.CreateElement(background_rect, colors::gray, nullptr);
 
-    main_menu.AddColumn("Fish Column", pce::List<pce::String> { "Hej", "Fem", "Femten" });
-    ui_system.CreateTable(main_menu, colors::sea_green, ui_system.screen_width / 2.0F - 100.0F, 300.0F);
+        main_menu.AddColumn("Fish Column", pce::List<pce::String> { "Hej", "Fem", "Femten" });
+        ui_system.CreateTable(main_menu, colors::sea_green, ui_system.screen_width / 2.0F - 100.0F, 300.0F);
 
-    SDL_FRect rect { .x = 200.0F, .y = 200.0F, .w = 30.0F, .h = 30.0F };
+        SDL_FRect rect { .x = 200.0F, .y = 200.0F, .w = 30.0F, .h = 30.0F };
 
-    (void)elements.emplace_back(ui_system.CreateElement(rect, colors::black, nullptr));
+        (void)elements.emplace_back(ui_system.CreateElement(rect, colors::black, nullptr));
 
-    rect.x += 200;
-    (void)elements.emplace_back(ui_system.CreateElement(rect, colors::red, nullptr));
+        rect.x += 200;
+        (void)elements.emplace_back(ui_system.CreateElement(rect, colors::red, nullptr));
 
-    rect.y = 400;
-    ui_system.CreateList(colors::white, rect, 10U, 25.0F, ui::UISystem::ListDirection::vertical);
-    rect.h *= 2;
-    ui_system.CreateList(colors::green, rect, 10U, 25.0F, ui::UISystem::ListDirection::horizontal);
+        rect.y = 400;
+        ui_system.CreateList(colors::white, rect, 10U, 25.0F, ui::UISystem::ListDirection::vertical);
+        rect.h *= 2;
+        ui_system.CreateList(colors::green, rect, 10U, 25.0F, ui::UISystem::ListDirection::horizontal);
+    }
 
-    ui::Node::Handle frame = ui::NodeBuilder(uint2 { 100U, 100U }).Gap(50U).BuildRoot(tree, { 300U, 100U }); {
+    ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Gap(20U).Fill(colors::clear).BuildRoot(tree, { 100U, 200U });
+    {
         ui::Node::Handle root = ui::NodeBuilder(uint2 { 100U, 100U }).Padding({ 5U, 5U }).Fill(colors::forest_green).Build(tree, frame);
         ui::Node::Handle box1 = ui::NodeBuilder(ui::fill).Fill(colors::yellow).Padding({ 5U, 5U }).Build(tree, root);
         ui::Node::Handle box11 = ui::NodeBuilder(ui::fill).Fill(colors::blue).Build(tree, box1);
@@ -67,10 +70,10 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_en
         ui::Node::Handle box2 = ui::NodeBuilder(ui::fill).Fill(colors::red).Build(tree, root);
     } {
         ui::Node::Handle root = ui::NodeBuilder(ui::hug).Padding({ 5U, 5U }).Fill(colors::cyan).Build(tree, frame);
-        ui::Node::Handle box1 = ui::NodeBuilder(ui::hug).Fill(colors::yellow).Text(pce::String { "Start Game" }).Padding({ 50U, 0U }).Build(tree, root);
-        ui::Node::Handle box2 = ui::NodeBuilder(ui::hug).Fill(colors::red).Text(pce::String { "Settings" }).Build(tree, root);
-        ui::Node::Handle box3 = ui::NodeBuilder(ui::hug).Fill(colors::green).Text(pce::String { "Exit" }).Build(tree, root);
-        ui::Node::Handle box4 = ui::NodeBuilder(ui::hug).Fill(colors::yellow).Text(pce::String { "Start Game" }).Padding({ 50U, 0U }).Build(tree, root);
+        ui::Node::Handle box1 = ui::NodeBuilder(ui::hug).Fill(colors::yellow).Text(pce::String { "Play" }).Padding({ 10U, 0U }).Build(tree, root);
+        ui::Node::Handle box2 = ui::NodeBuilder(ui::hug).Fill(colors::red).Text(pce::String { "Settings" }).Padding({ 10U, 0U }).Build(tree, root);
+        ui::Node::Handle box3 = ui::NodeBuilder(ui::hug).Fill(colors::green).Text(pce::String { "Exit" }).Padding({ 10U, 0U }).Build(tree, root);
+        ui::Node::Handle box4 = ui::NodeBuilder(ui::hug).Fill(colors::yellow).Text(pce::String { "Start Game" }).Padding({ 10U, 0U }).Padding({ 50U, 0U }).Build(tree, root);
     } {
         ui::Node::Handle root = ui::NodeBuilder(uint2 { 100U, 100U }).Padding({ 5U, 5U }).Fill(colors::sea_green).Build(tree, frame);
         ui::Node::Handle box1 = ui::NodeBuilder(ui::fill).Fill(colors::yellow).Padding({ 5U, 5U }).Build(tree, root);
