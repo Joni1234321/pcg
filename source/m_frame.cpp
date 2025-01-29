@@ -19,13 +19,13 @@ void DebugNode(ui::NodeTree& output_tree, const ui::NodeTree& tree, const ui::No
     std::stack<NodeHandleLayer> node_handles;
     node_handles.push(NodeHandleLayer { root_handle.GetHandle(), 0U });
 
-    ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Fill(colors::clear).Fill(colors::white).BuildRoot(output_tree, { 0U, 30U });
+    ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Fill(colors::clear).Fill(colors::white).Direction(ui::vertical).BuildRoot(output_tree, { 0U, 30U });
 
     while (!node_handles.empty()) {
         const auto [node_handle, layer] = node_handles.top();
         node_handles.pop();
         const ui::Node& node = tree.GetNode(node_handle);
-        ui::NodeBuilder(ui::hug).Text(node.HasText() ? "Text" : "Node").Padding({ 0, 5U * layer }).Fill(node.background_color).Build(output_tree, frame);
+        ui::NodeBuilder(ui::hug).Text(node.HasText() ? "Text" : "Node").Padding({ 5U * layer, 0U }).Gap(10U).Fill(node.background_color).Build(output_tree, frame);
         for (const ui::Node::Handle child_handle : tree.Children(node_handle)) { node_handles.push(NodeHandleLayer { child_handle, layer + 1 }); }
     }
 }

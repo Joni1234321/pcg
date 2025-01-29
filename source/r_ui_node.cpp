@@ -10,11 +10,16 @@ void NodeTree::RecalculateLayout() {
 
     auto handle_to_node = [this] (const Node::Handle handle) -> Node *{ return &GetNode(handle); };
     auto pixels_gap = [this] (const Node::Handle node_handle, const u32 gap) -> u32 { return Children(node_handle).Empty() ? 0U : gap * (Children(node_handle).Size() - 1U); };
-    List<Node::Handle> node_handles { Root() };
-    for (u32 i = 0U; i < node_handles.Size(); ++i) {
-        node_handles.AppendRange(Children(node_handles[i]));
-    }
+    auto get_major = [] (const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.x : point.y; };
+    auto get_minor = [] (const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.y : point.x; };
+    auto get_major_layout = [] (Node& node, const FlexDirection direction) -> LayoutLength& { return direction == horizontal ? node.width : node.height; };
+    auto get_minor_layout = [] (Node& node, const FlexDirection direction) -> LayoutLength& { return direction == horizontal ? node.height : node.width; };
+    auto get_major_position = [] (uint2& point, const FlexDirection direction) -> u32& { return direction == horizontal ? point.x : point.y; };
 
+    List<Node::Handle> node_handles { Root() };
+    for (u32 i = 0U; i < node_handles.Size(); ++i) { node_handles.AppendRange(Children(node_handles[i])); }
+
+    // text
     TTF_Font* font = font_collection.normal;
     f32 font_size = TTF_GetFontSize(font);
     for (const Node::Handle node_handle : node_handles) {
@@ -50,43 +55,55 @@ void NodeTree::RecalculateLayout() {
         uint2 text_size { 0U, 0U };
         if (node.HasText()) { (void)TTF_GetTextSize(node.ttf_text, reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
 
-        // major
-        if (node.width.layout_type == LayoutLength::child_constraint) {
-            const u32 children_major = std::ranges::fold_left_first(Children(node_handle) | std::views::transform(handle_to_node) | std::views::transform(&Node::OuterBoxSize), std::plus { }).value_or(uint2 { 0U, 0U }).x;
-            node.width.resolved = children_major + pixels_gap(node_handle, node.gap) + text_size.x + node.NonContentSize().x * 2U;
+        auto get_major_outer_box_size = [&] (const Node::Handle child_handle) -> u32 {
+            const Node& child = GetNode(child_handle);
+            return get_major(child.OuterBoxSize(), node.direction);
+        };
+        auto get_minor_outer_box_size = [&] (const Node::Handle child_handle) -> u32 {
+            const Node& child = GetNode(child_handle);
+            return get_minor(child.OuterBoxSize(), node.direction);
+        };
+
+        LayoutLength& major_layout = get_major_layout(node, node.direction);
+        if (major_layout.layout_type == LayoutLength::child_constraint) {
+            const u32 children_major = std::ranges::fold_left_first(Children(node_handle) | std::views::transform(get_major_outer_box_size), std::plus { }).value_or(0U);
+            major_layout.resolved = children_major + pixels_gap(node_handle, node.gap) + get_major(text_size, node.direction) + get_major(node.NonContentSize(), node.direction) * 2U;
         }
-        // minor
-        if (node.height.layout_type == LayoutLength::child_constraint) {
-            const u32 max_minor = Children(node_handle).Empty() ?
-                                      0U :
-                                      std::ranges::max(Children(node_handle) | std::views::transform([this] (const Node::Handle handle) -> u32 { return GetNode(handle).OuterBoxSize().y; }));
-            node.height.resolved = std::max(max_minor, text_size.y) + node.NonContentSize().y * 2U;
+        LayoutLength& minor_layout = get_minor_layout(node, node.direction);
+        if (minor_layout.layout_type == LayoutLength::child_constraint) {
+            const u32 max_minor = Children(node_handle).Empty() ? 0U : std::ranges::max(Children(node_handle) | std::views::transform(get_minor_outer_box_size));
+            minor_layout.resolved = std::max(max_minor, get_minor(text_size, node.direction)) + get_minor(node.NonContentSize(), node.direction) * 2U;
         }
     }
 
     // fill top down
     for (const Node::Handle node_handle : node_handles) {
-        Node& node = GetNode(node_handle);
+        const Node& node = GetNode(node_handle);
 
         // major axis
         List<Node::Handle> parent_constrained { };
-        uint2 pixels_taken { pixels_gap(node_handle, node.gap), 0U };
+        u32 pixels_taken_major_axis = pixels_gap(node_handle, node.gap);
         for (const Node::Handle child_handle : Children(node_handle)) {
-            if (Node& child = GetNode(child_handle); child.width.layout_type == LayoutLength::parent_constraint) { parent_constrained.PushBack(child_handle); } else { pixels_taken.x += child.OuterBoxSize().x; }
+            Node& child = GetNode(child_handle);
+            LayoutLength& child_major_layout = get_major_layout(child, node.direction);
+            if (child_major_layout.layout_type == LayoutLength::parent_constraint) { parent_constrained.PushBack(child_handle); } else { pixels_taken_major_axis += get_major(child.OuterBoxSize(), node.direction); }
         }
         if (parent_constrained.Size() > 0U) {
-            if (pixels_taken.x >= node.InnerBoxSize().x) {
-                for (const Node::Handle child_handle : parent_constrained) { GetNode(child_handle).width.resolved = 10U; }
+            if (pixels_taken_major_axis >= get_major(node.InnerBoxSize(), node.direction)) {
+                for (const Node::Handle child_handle : parent_constrained) {
+                    constexpr u32 min_pixel_size = 10U;
+                    get_major_layout(GetNode(child_handle), node.direction).resolved = min_pixel_size;
+                }
                 continue;
             }
-            const auto [pixels_per, left_over] = math::Div(node.InnerBoxSize().x - pixels_taken.x, parent_constrained.Size());
-            for (const Node::Handle child_handle : parent_constrained) { GetNode(child_handle).width.resolved = pixels_per; }
-            GetNode(parent_constrained[0U]).width.resolved += left_over;
+            const auto [pixels_per, left_over] = math::Div(get_major(node.InnerBoxSize(), node.direction) - pixels_taken_major_axis, parent_constrained.Size());
+            for (const Node::Handle child_handle : parent_constrained) { get_major_layout(GetNode(child_handle), node.direction).resolved = pixels_per; }
+            get_major_layout(GetNode(parent_constrained[0U]), node.direction).resolved += left_over;
         }
 
         // minor axis
-        auto children = Children(node_handle) | std::views::filter([this] (const Node::Handle child_handle) -> bool { return GetNode(child_handle).height.layout_type == LayoutLength::parent_constraint; });
-        for (const Node::Handle child_handle : children) { GetNode(child_handle).height.resolved = node.InnerBoxSize().y; }
+        auto children = Children(node_handle) | std::views::filter([this, &node, &get_minor_layout] (const Node::Handle child_handle) -> bool { return get_minor_layout(GetNode(child_handle), node.direction).layout_type == LayoutLength::parent_constraint; });
+        for (const Node::Handle child_handle : children) { get_minor_layout(GetNode(child_handle), node.direction).resolved = get_minor(node.InnerBoxSize(), node.direction); }
     }
 
     // position top down
@@ -96,8 +113,7 @@ void NodeTree::RecalculateLayout() {
         for (const Node::Handle child_handle : Children(node_handle)) {
             Node& child = GetNode(child_handle);
             child.position = position;
-            // major axis
-            position.x += child.OuterBoxSize().x + node.gap;
+            get_major_position(position, node.direction) += get_major(child.OuterBoxSize(), node.direction) + node.gap;
         }
     }
 
@@ -225,6 +241,10 @@ NodeBuilder& NodeBuilder::Padding(const uint2 padding) {
 }
 NodeBuilder& NodeBuilder::Gap(const u32 gap) {
     node.gap = gap;
+    return *this;
+}
+NodeBuilder& NodeBuilder::Direction(FlexDirection direction) {
+    node.direction = direction;
     return *this;
 }
 NodeBuilder& NodeBuilder::Text(const String& string) {

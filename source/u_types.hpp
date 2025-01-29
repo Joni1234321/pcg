@@ -58,6 +58,7 @@ struct uint2 {
     constexpr b8 operator<=(const uint2& other) const { return *this < other || *this == other; }
     constexpr b8 operator>(const uint2& other) const { return !(*this <= other); }
     constexpr b8 operator>=(const uint2& other) const { return !(*this < other); }
+    constexpr u32& operator[] (u32 pos) { return pos == 0U ? this->x : this->y; }
 };
 
 constexpr u32 U32_MAX = UINT32_MAX;

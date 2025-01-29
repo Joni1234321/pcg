@@ -39,6 +39,7 @@ struct ResolvedLayout {
     SDL_FRect layout;
 };
 enum RelatedConstraint { hug, fill };
+enum FlexDirection { horizontal, vertical }; // default based on max width or height
 struct LayoutLength {
     enum Constraint { child_constraint, parent_constraint, fixed };
     u32 resolved;
@@ -76,6 +77,7 @@ struct Node {
 
     LayoutLength width { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
     LayoutLength height { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
+    FlexDirection direction { horizontal };
 
     std::function<void(Node*)> on_click { };
     std::function<void(Node*)> on_hover { };
@@ -221,6 +223,7 @@ struct NodeBuilder {
     NodeBuilder& FillHeight();
     [[nodiscard]] NodeBuilder& Padding(uint2 padding);
     [[nodiscard]] NodeBuilder& Gap(u32 gap);
+    [[nodiscard]] NodeBuilder& Direction(FlexDirection direction);
     [[nodiscard]] NodeBuilder& Text(const String& string);
     [[nodiscard]] NodeBuilder& Text(String&& string);
     void Finalize(NodeTree& node_tree) {
