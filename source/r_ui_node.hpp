@@ -53,8 +53,7 @@ struct Node {
         u32 id { U32_MAX };
         constexpr Handle() noexcept = default;
         explicit constexpr Handle(const u32 value) noexcept : id(value) { }
-        [[nodiscard]] bool IsRoot() const noexcept { return id == 0U; }
-        [[nodiscard]] bool IsValid() const noexcept { return id != U32_MAX; }
+        [[nodiscard]] constexpr bool IsValid() const noexcept { return id != U32_MAX; }
     };
     Node() = default;
     String name { };
@@ -109,13 +108,9 @@ struct NodeTree {
     TTF_TextEngine* text_engine;
     FontCollection& font_collection;
 
-    List<Node> nodes { };
-    List<Node::Handle> parents { };
-    List<List<Node::Handle>> children { };
-
     NodeTree(TTF_TextEngine* text_engine, FontCollection& font) : text_engine(text_engine), font_collection(font) { }
 
-    [[nodiscard]] static constexpr Node::Handle Root() { return Node::Handle { 0U }; }
+    [[nodiscard]] constexpr Node::Handle Root() const { return offset_handle; }
     Node::Handle SetRoot(const Node& root) {
         ASSERT_DBG(nodes.Empty(), "Setting root non empty tree");
         nodes.PushBack(root);
@@ -125,20 +120,29 @@ struct NodeTree {
         return Root();
     }
 
-    [[nodiscard]] const Node& GetNode(const Node::Handle node) const { return nodes[node.id]; }
-    [[nodiscard]] Node& GetNode(const Node::Handle node) { return nodes[node.id]; }
-    [[nodiscard]] Node::Handle Parent(const Node::Handle node) { return parents[node.id]; }
-    [[nodiscard]] const List<Node::Handle>& Children(const Node::Handle node) { return children[node.id]; }
-    [[nodiscard]] const List<Node::Handle>& Children(const Node::Handle node) const { return children[node.id]; }
+    [[nodiscard]] const Node& GetNode(const Node::Handle node_handle) const { return nodes[HandleToIndex(node_handle)]; }
+    [[nodiscard]] Node& GetNode(const Node::Handle node_handle) { return nodes[HandleToIndex(node_handle)]; }
+    [[nodiscard]] Node::Handle Parent(const Node::Handle node_handle) { return parents[HandleToIndex(node_handle)]; }
+    [[nodiscard]] const List<Node::Handle>& Children(const Node::Handle node_handle) const { return children[HandleToIndex(node_handle)]; }
     [[nodiscard]] Node::Handle AddNode(const Node& node, const Node::Handle parent_handle) {
+        ASSERT_DBG(!nodes.Empty(), "Adding node without root");
+        const Node::Handle node_handle { offset_handle.id + nodes.Size() };
+        ASSERT_DBG(node_handle.id != parent_handle.id, "Assigning node to itself recursion");
+
         nodes.PushBack(node);
         parents.PushBack(parent_handle);
         children.EmplaceBack();
 
-        Node::Handle handle { nodes.Size() - 1 };
-        children[parent_handle.id].PushBack(handle);
-        return handle;
+        Children(parent_handle).PushBack(node_handle);
+        return node_handle;
     }
+    void Clear () {
+        offset_handle.id += nodes.Size();
+
+        nodes.Clear();
+        parents.Clear();
+        children.Clear();
+    };
 
     void Propagate(Node::Handle node_handle, const std::function<void(Node&)>& proj) {
         while (node_handle.IsValid()) {
@@ -148,6 +152,7 @@ struct NodeTree {
     }
 
     void MarkDirty() { dirty = true; }
+
     const FrameElements& GetFrameElements() {
         if (dirty) {
             dirty = false;
@@ -170,11 +175,23 @@ struct NodeTree {
     }
 
 private:
+    List<Node> nodes { };
+    List<Node::Handle> parents { };
+    List<List<Node::Handle>> children { };
     bool dirty { true };
     FrameElements frame_elements { };
-    FrameElements CreateFrameElements();
+    Node::Handle offset_handle { 0U };
+    [[nodiscard]] FrameElements CreateFrameElements();
     void RecalculateLayout();
     TextElement CreateTextAligned(const String& string, SDL_Color color, f32 x, f32 y, TextAlign alignment, u32 parent_width) const;
+
+    [[nodiscard]] List<Node::Handle>& Children(const Node::Handle node_handle) { return children[HandleToIndex(node_handle)]; }
+    [[nodiscard]] b8 Empty() const { return nodes.Empty(); }
+
+    [[nodiscard]] u32 HandleToIndex(const Node::Handle node_handle) const {
+        u32 i = node_handle.id - offset_handle.id;
+        return i;
+    }
 };
 
 struct NodeBuilder {
@@ -211,8 +228,7 @@ struct NodeBuilder {
     Node::Handle BuildRoot(NodeTree& node_tree, const uint2 position) {
         Finalize(node_tree);
         node.position = position;
-        node_tree.SetRoot(node);
-        return Node::Handle { 0U };
+        return node_tree.SetRoot(node);
     };
     Node::Handle Build(NodeTree& node_tree, Node::Handle parent_handle) {
         Finalize(node_tree);

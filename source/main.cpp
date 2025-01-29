@@ -40,7 +40,6 @@ void RunGame(Engine& engine) {
 
         input_system.Tick();
         ui_system.Tick(input_system, main_menu_frame.tree);
-        // ui_system.Tick(input_system, ui_debugger_frame.tree);
 
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -52,8 +51,9 @@ void RunGame(Engine& engine) {
                 case SDL_EVENT_KEY_DOWN:
                     switch (event.key.key) {
                         case SDLK_ESCAPE:
+                            Logger().Log("Quit requested");
                             running = false;
-                            break;
+                            return;
                         default:
                             break;
                     }
@@ -73,6 +73,8 @@ void RunGame(Engine& engine) {
 
         ui_system.RenderElements(engine.renderer);
         ui_system.RenderTree(engine.renderer, main_menu_frame.tree);
+        ui_system.RenderTree(engine.renderer, main_menu_frame.debug_tree);
+
         // ui_system.RenderTree(engine.renderer, ui_debugger_frame.tree);
 
         //DrawImgui(engine.renderer);
@@ -84,6 +86,7 @@ void RunGame(Engine& engine) {
             //        (void)std::cin.ignore();
         }
     }
+
 }
 b8 Start() {
     SDL_Log("Starting Engine");
@@ -98,6 +101,8 @@ b8 Start() {
     SDL_Log("Starting game");
     RunGame(engine);
 
+    Logger().Log("Quitting main loop");
+
     return true;
 }
 } // namespace pce
@@ -107,6 +112,8 @@ i32 main(const i32 argc, char** argv) {
     (void)argv;
 
     const b8 result = pce::Start();
+
+    pce::Logger().Log("Quitting");
 
     return result ? 0 : 1;
 }

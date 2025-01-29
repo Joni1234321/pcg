@@ -6,10 +6,14 @@
 namespace pce::ui {
 // Assume node is leaf with fixed or child_constraint
 void NodeTree::RecalculateLayout() {
+    if (Empty()) { return; }
+
     auto handle_to_node = [this] (const Node::Handle handle) -> Node *{ return &GetNode(handle); };
     auto pixels_gap = [this] (const Node::Handle node_handle, const u32 gap) -> u32 { return Children(node_handle).Empty() ? 0U : gap * (Children(node_handle).Size() - 1U); };
     List<Node::Handle> node_handles { Root() };
-    for (u32 i = 0U; i < node_handles.Size(); ++i) { node_handles.AppendRange(Children(node_handles[i])); }
+    for (u32 i = 0U; i < node_handles.Size(); ++i) {
+        node_handles.AppendRange(Children(node_handles[i]));
+    }
 
     TTF_Font* font = font_collection.normal;
     f32 font_size = TTF_GetFontSize(font);
@@ -136,6 +140,7 @@ TextElement NodeTree::CreateTextAligned(const String& string, const SDL_Color co
 
 FrameElements NodeTree::CreateFrameElements() {
     FrameElements elements;
+    if (Empty()) { return elements; }
     std::stack<Node::Handle> nodes;
     nodes.push(Root());
     while (!nodes.empty()) {

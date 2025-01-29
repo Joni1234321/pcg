@@ -24,9 +24,9 @@ class UISystem {
     std::vector<RectangleElement> rectangle_elements { };
     std::vector<ListElement> list_elements { };
     List<TableElement> table_elements { };
-    Node::Handle hovered_node { };
 
 public:
+    Node::Handle hovered_node { };
     enum class ListDirection { horizontal, vertical };
     u32 screen_width;
     u32 screen_height;
