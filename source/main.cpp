@@ -41,6 +41,8 @@ void RunGame(Engine& engine) {
         input_system.Tick();
         ui_system.Tick(input_system, main_menu_frame.tree);
 
+        ui_system.left_mouse_down = false;
+
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             (void)ImGui_ImplSDL3_ProcessEvent(&event);
@@ -59,7 +61,10 @@ void RunGame(Engine& engine) {
                     }
                     break;
                 case SDL_EVENT_MOUSE_BUTTON_DOWN:
-                    if (event.button.button == SDL_BUTTON_LEFT) { ui_system.LeftClick(main_menu_frame.tree); }
+                    if (event.button.button == SDL_BUTTON_LEFT) {
+                        ui_system.left_mouse_down = true;
+                        ui_system.LeftClick(main_menu_frame.tree);
+                    }
                     break;
                 default:
                     //Logger().Log("Unhandled event {}", event.type);

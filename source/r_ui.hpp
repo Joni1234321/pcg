@@ -26,6 +26,7 @@ class UISystem {
     List<TableElement> table_elements { };
 
 public:
+    b8 left_mouse_down { false };
     Node::Handle hovered_node { };
     enum class ListDirection { horizontal, vertical };
     u32 screen_width;

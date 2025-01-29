@@ -113,10 +113,10 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_en
 }
 void MainMenuFrame::Tick(const u32 i, ui::UISystem& ui_system) {
     for (const ui::RectangleElement::Handle sqr : elements) { ui_system[sqr].color = SDL_Color { static_cast<u8>(i / 3U), static_cast<u8>(i / 10U), static_cast<u8>(i / 67U), 255 }; }
-    DebugNode(debug_tree, tree, ui_system.hovered_node);
-    debug_tree.MarkDirty();
-
-
+    if (ui_system.left_mouse_down) {
+        DebugNode(debug_tree, tree, ui_system.hovered_node);
+        debug_tree.MarkDirty();
+    }
 }
 
 pce::Table CreateFarmTable() {
