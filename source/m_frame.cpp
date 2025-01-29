@@ -9,16 +9,17 @@ namespace pcg::frame {
 namespace ui = pce::ui;
 namespace colors = pce::colors;
 
-void DebugNode(ui::NodeTree& output_tree, const ui::NodeTree& tree, const ui::Node::Handle root_handle) {
+void DebugNode(ui::NodeTree& output_tree, const ui::NodeTree& tree, const ui::Node::OptionalHandle root_handle) {
     using NodeHandleLayer = std::tuple<ui::Node::Handle, u32>;
 
     output_tree.Clear();
+
     if (!root_handle.IsValid()) { return; }
 
     std::stack<NodeHandleLayer> node_handles;
-    node_handles.push(NodeHandleLayer { root_handle, 0U });
+    node_handles.push(NodeHandleLayer { root_handle.GetHandle(), 0U });
 
-    ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Fill(colors::clear).BuildRoot(output_tree, { 0U, 30U });
+    ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Fill(colors::clear).Fill(colors::white).BuildRoot(output_tree, { 0U, 30U });
 
     while (!node_handles.empty()) {
         const auto [node_handle, layer] = node_handles.top();

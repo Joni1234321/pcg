@@ -50,10 +50,15 @@ struct NodeBuilder;
 
 struct Node {
     struct Handle {
-        u32 id { U32_MAX };
-        constexpr Handle() noexcept = default;
+        u32 id;
         explicit constexpr Handle(const u32 value) noexcept : id(value) { }
+    };
+    struct OptionalHandle {
+        [[nodiscard]] constexpr OptionalHandle() noexcept : id(U32_MAX) { }
+        [[nodiscard]] constexpr explicit OptionalHandle(const u32 value) noexcept : id(value) { }
         [[nodiscard]] constexpr bool IsValid() const noexcept { return id != U32_MAX; }
+        [[nodiscard]] constexpr Handle GetHandle() const noexcept { return Handle { id }; }
+        u32 id;
     };
     Node() = default;
     String name { };
@@ -94,7 +99,9 @@ struct Node {
     [[nodiscard]] constexpr uint2 InnerBoxSize() const { return OuterBoxSize() - NonContentSize() * 2U; }
     [[nodiscard]] constexpr b8 HasText() const { return !text.Empty(); }
 
-    [[nodiscard]] constexpr SDL_FRect OuterRect() const { return { .x = static_cast<f32>(OuterBoxPosition().x), .y = static_cast<f32>(OuterBoxPosition().y), .w = static_cast<f32>(OuterBoxSize().x), .h = static_cast<f32>(OuterBoxSize().y) }; };
+    [[nodiscard]] constexpr SDL_FRect OuterRect() const {
+        return { .x = static_cast<f32>(OuterBoxPosition().x), .y = static_cast<f32>(OuterBoxPosition().y), .w = static_cast<f32>(OuterBoxSize().x), .h = static_cast<f32>(OuterBoxSize().y) };
+    };
     [[nodiscard]] constexpr b8 IsInside(uint2 screen_position) const {
         uint2 start { static_cast<u32>(bounding_box.x), static_cast<u32>(bounding_box.y) };
         uint2 relative = screen_position - start;
@@ -114,7 +121,7 @@ struct NodeTree {
     Node::Handle SetRoot(const Node& root) {
         ASSERT_DBG(nodes.Empty(), "Setting root non empty tree");
         nodes.PushBack(root);
-        parents.PushBack(Node::Handle { });
+        parents.PushBack(Root());
         children.EmplaceBack();
 
         return Root();
@@ -136,7 +143,7 @@ struct NodeTree {
         Children(parent_handle).PushBack(node_handle);
         return node_handle;
     }
-    void Clear () {
+    void Clear() {
         offset_handle.id += nodes.Size();
 
         nodes.Clear();
@@ -145,8 +152,9 @@ struct NodeTree {
     };
 
     void Propagate(Node::Handle node_handle, const std::function<void(Node&)>& proj) {
-        while (node_handle.IsValid()) {
+        while (true) {
             std::invoke(proj, GetNode(node_handle));
+            if (node_handle.id == Root().id) { break; };
             node_handle = Parent(node_handle);
         }
     }
@@ -162,16 +170,16 @@ struct NodeTree {
         return frame_elements;
     };
 
-    Node::Handle HitNode(uint2 screen_position) {
-        if (!GetNode(Root()).IsInside(screen_position)) { return Node::Handle { }; }
-        Node::Handle node_handle { 0U };
+    Node::OptionalHandle HitNode(uint2 screen_position) {
+        if (!GetNode(Root()).IsInside(screen_position)) { return Node::OptionalHandle { }; }
+        Node::Handle node_handle = Root();
         const auto is_inside_node = [screen_position, this] (const Node::Handle child_handle) -> b8 { return this->GetNode(child_handle).IsInside(screen_position); };
         while (true) {
             auto node_iterator = std::ranges::find_if(Children(node_handle), is_inside_node, std::identity { });
             if (node_iterator == Children(node_handle).end()) { break; }
             node_handle = *node_iterator;
         }
-        return node_handle;
+        return Node::OptionalHandle { node_handle.id };
     }
 
 private:

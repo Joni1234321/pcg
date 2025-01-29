@@ -27,7 +27,7 @@ class UISystem {
 
 public:
     b8 left_mouse_down { false };
-    Node::Handle hovered_node { };
+    Node::OptionalHandle hovered_node { };
     enum class ListDirection { horizontal, vertical };
     u32 screen_width;
     u32 screen_height;

@@ -2,12 +2,12 @@
 
 namespace pce::ui {
 void UISystem::Tick(InputSystem& input_system, NodeTree& tree) {
-    Node::Handle previous_hovered_node = hovered_node;
-
+    Node::OptionalHandle previous_hovered_node { hovered_node };
     hovered_node = tree.HitNode(input_system.MousePosition());
+
     if (previous_hovered_node.id != hovered_node.id) {
-        tree.Propagate(previous_hovered_node, &Node::OnHoverOut);
-        tree.Propagate(hovered_node, &Node::OnHover);
+        if (previous_hovered_node.IsValid()) { tree.Propagate(previous_hovered_node.GetHandle(), &Node::OnHoverOut); }
+        if (hovered_node.IsValid()) { tree.Propagate(hovered_node.GetHandle(), &Node::OnHover); }
     }
 
     if (hovered_node.IsValid() || previous_hovered_node.IsValid()) { tree.MarkDirty(); }
@@ -20,7 +20,7 @@ void UISystem::RenderTree(SDL_Renderer* renderer, NodeTree& node_tree) {
     }
     for (const TextElement& text : frame_elements.texts) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
 }
-void UISystem::LeftClick(NodeTree& tree) { tree.Propagate(hovered_node, &Node::OnClick); }
+void UISystem::LeftClick(NodeTree& tree) { if (hovered_node.IsValid()) { tree.Propagate(hovered_node.GetHandle(), &Node::OnClick); } }
 UISystem::UISystem(Engine& engine): text_engine(TTF_CreateRendererTextEngine(engine.renderer)) {
     engine.GetWindowSize(&screen_width, &screen_height);
     const RelativePath font_path = "font.ttf";
