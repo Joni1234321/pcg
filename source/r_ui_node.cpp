@@ -163,14 +163,15 @@ FrameElements NodeTree::CreateFrameElements() {
         const Node::Handle node_handle = nodes.top();
         const Node& node = GetNode(node_handle);
         nodes.pop();
+        nodes.push_range(Children(node_handle));
 
         RectangleElement rectangle { .color = node.background_color, .rect = node.OuterRect(), .on_click = nullptr };
+        elements.rectangles.PushBack(rectangle);
+
         if (node.HasText()) {
             TextElement text { .text = node.ttf_text, .x = static_cast<f32>(node.InnerBoxPosition().x), .y = static_cast<f32>(node.InnerBoxPosition().y) };
             elements.texts.PushBack(text);
         }
-        elements.rectangles.PushBack(rectangle);
-        nodes.push_range(Children(node_handle));
     }
 
     return elements;
