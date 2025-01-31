@@ -20,7 +20,7 @@ void NodeTree::RecalculateLayout() {
     for (u32 i = 0U; i < node_handles.Size(); ++i) { node_handles.AppendRange(Children(node_handles[i])); }
 
     // text
-    TTF_Font* font = font_collection.normal;
+    TTF_Font* font = font_collection.GetFont(FontCollection::normal);
     f32 font_size = TTF_GetFontSize(font);
     for (const Node::Handle node_handle : node_handles) {
         Node& node = GetNode(node_handle);
@@ -80,7 +80,6 @@ void NodeTree::RecalculateLayout() {
     for (const Node::Handle node_handle : node_handles) {
         const Node& node = GetNode(node_handle);
 
-        // major axis
         List<Node::Handle> parent_constrained { };
         u32 pixels_taken_major_axis = pixels_gap(node_handle, node.gap);
         for (const Node::Handle child_handle : Children(node_handle)) {
@@ -101,7 +100,6 @@ void NodeTree::RecalculateLayout() {
             get_major_layout(GetNode(parent_constrained[0U]), node.direction).resolved += left_over;
         }
 
-        // minor axis
         auto children = Children(node_handle) | std::views::filter([this, &node, &get_minor_layout] (const Node::Handle child_handle) -> bool { return get_minor_layout(GetNode(child_handle), node.direction).layout_type == LayoutLength::parent_constraint; });
         for (const Node::Handle child_handle : children) { get_minor_layout(GetNode(child_handle), node.direction).resolved = get_minor(node.InnerBoxSize(), node.direction); }
     }
@@ -137,7 +135,7 @@ void NodeTree::RecalculateLayout() {
 }
 
 TextElement NodeTree::CreateTextAligned(const String& string, const SDL_Color color, f32 x, const f32 y, const TextAlign alignment, const u32 parent_width) const {
-    TTF_Text* text = TTF_CreateText(text_engine, font_collection.small, string.CString(), string.size());
+    TTF_Text* text = TTF_CreateText(text_engine, font_collection.GetFont(FontCollection::small), string.CString(), string.size());
     (void)TTF_SetTextColor(text, color.r, color.g, color.b, color.a);
     i32 text_width;
     (void)TTF_GetTextSize(text, &text_width, nullptr);
@@ -157,7 +155,7 @@ TextElement NodeTree::CreateTextAligned(const String& string, const SDL_Color co
 FrameElements NodeTree::CreateFrameElements() {
     FrameElements elements;
     if (Empty()) { return elements; }
-    std::stack<Node::Handle> nodes;
+    Stack<Node::Handle> nodes;
     nodes.push(Root());
     while (!nodes.empty()) {
         const Node::Handle node_handle = nodes.top();

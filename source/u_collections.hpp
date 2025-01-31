@@ -6,12 +6,18 @@
 #include <vector>
 #include <filesystem>
 #include <queue>
+#include <stack>
+#include <unordered_map>
+
+#include <SDL3_ttf/SDL_ttf.h>
 
 #include "u_types.hpp"
 #include "u_util.hpp"
 
 namespace pce {
 template <typename T> using Span = std::span<T>;
+template <typename T> using Stack = std::stack<T>;
+template <class K, class V> using UnorderedMap = std::unordered_map<K, V>;
 using AbsolutePath = std::filesystem::path;
 using RelativePath = std::filesystem::path;
 using AssetPath = std::filesystem::path;
@@ -100,6 +106,12 @@ template <typename T> struct List {
         data.pop_back();
     }
 
+    u32 IndexOf(const T& t) const {
+        u32 pos = 0;
+        for (; pos < Size(); ++pos) { if (t == data[pos]) { break; }; }
+        return pos;
+    }
+
     [[nodiscard]] List<T> Limit(const u32 limit) const {
         if (Empty()) { return List<T>(); }
         auto first = begin();
@@ -116,6 +128,34 @@ template <typename T> struct List {
 
 protected:
     std::vector<T> data;
+};
+
+template <typename K, typename V> class FlatMap {
+    List<K> keys { };
+    List<V> values { };
+
+public:
+    using ValueType = V;
+    using Pointer = V*;
+    using ConstPointer = const V*;
+    using ValueReference = V&;
+    using ConstReference = const V&;
+    using SizeType = u32;
+
+    [[nodiscard]] constexpr FlatMap() = default;
+    constexpr void PushBack(const K& key, V&& value) {
+        keys.PushBack(key);
+        values.PushBack(value);
+    };
+
+    [[nodiscard]] constexpr b8 HasKey(const K& key) const { return std::ranges::find(keys, key) != keys.end(); }
+    [[nodiscard]] constexpr V& operator[](const K& key) {
+        const u32 pos = keys.IndexOf(key);
+        return values[pos];
+    }
+
+    [[nodiscard]] constexpr const List<K>& Keys() { return keys; }
+    [[nodiscard]] constexpr const List<V>& Values() { return values; }
 };
 
 template <typename T> struct Queue : List<T> {

@@ -10,39 +10,21 @@
 
 namespace pce::ui {
 struct FontCollection {
-    TTF_Font* small = nullptr;
-    TTF_Font* normal = nullptr;
-    TTF_Font* large = nullptr;
-    TTF_Font* h1 = nullptr;
+    enum FontSizes : u8 { small = 14, normal = 22, large = 36, h1 = 72 };
+    FlatMap<u8, TTF_Font*> fonts { };
+    const String font_path;
 
-    b8 Load(const AbsolutePath& path) {
-        const String font = path.string();
-        small = TTF_OpenFont(font, 14.0F);
-        normal = TTF_OpenFont(font, 22.0F);
-        large = TTF_OpenFont(font, 36.0F);
-        h1 = TTF_OpenFont(font, 72.0F);
+    explicit FontCollection(const AbsolutePath& path) : font_path { path.string() } { }
 
-        return small && normal && large && h1;
+    [[nodiscard]] constexpr TTF_Font *GetFont(const u8 size) {
+        if (!fonts.HasKey(size)) {
+            fonts.PushBack(size, TTF_OpenFont(font_path, size));
+            if (fonts[size] == nullptr) { SDL_Log("Font not loaded (%s)", SDL_GetError());}
+        }
+        return fonts[size];
     }
 
-    ~FontCollection() {
-        if (small != nullptr) {
-            TTF_CloseFont(small);
-            small = nullptr;
-        }
-        if (normal != nullptr) {
-            TTF_CloseFont(normal);
-            normal = nullptr;
-        }
-        if (large != nullptr) {
-            TTF_CloseFont(large);
-            large = nullptr;
-        }
-        if (h1 != nullptr) {
-            TTF_CloseFont(h1);
-            h1 = nullptr;
-        }
-    }
+    ~FontCollection() { for (TTF_Font* font : fonts.Values()) { TTF_CloseFont(font); } }
 };
 enum class TextAlign { left, center, right };
 struct TextElement {
@@ -94,5 +76,4 @@ struct TableElement {
     List<RowInfo> row_meta;
     List<ColumnInfo> column_meta;
 };
-
 }
