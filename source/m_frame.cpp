@@ -42,7 +42,7 @@ void DebugNode(ui::NodeTree& output_tree, const ui::NodeTree& tree, const ui::No
 void TestNodeExample() {
 //    ui::NodeBuilder().Fill(ui::Fill (0x12, 0x12, 0x12, 0xFF));
 }
-FPSFrame::FPSFrame(ui::UISystem& ui_system) : tick_text { ui_system.CreateText("", ui_system.font.GetFont(ui::FontCollection::small), colors::blue, 10.0F, 0.0F) } { }
+FPSFrame::FPSFrame(ui::UISystem& ui_system) : tick_text { ui_system.CreateText("", ui_system.font.GetFont(ui::FontCollection::small).ToSDL(), colors::blue, 10.0F, 0.0F) } { }
 void FPSFrame::Tick(u32 i, ui::UISystem& ui_system) {
     const std::string str = std::format("Tick {:6}", i);
     (void)TTF_SetTextString(ui_system[tick_text].text, str.c_str(), str.length());
@@ -56,7 +56,7 @@ void UIDebuggerFrame::Tick(ui::UISystem& ui_system) { }
 
 MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font }, debug_tree { ui_system.text_engine, ui_system.font } {
     constexpr f32 title_y = 30.0F;
-    (void)ui_system.CreateTextAligned("Hey Helene!", ui_system.font_bold.GetFont(ui::FontCollection::h1), colors::light_sky_blue, 0, title_y, ui::TextAlign::center, ui_system.screen_width);
+    (void)ui_system.CreateTextAligned("Hey Helene!", ui_system.font_bold.GetFont(ui::FontCollection::h1).ToSDL(), colors::light_sky_blue, 0, title_y, ui::TextAlign::center, ui_system.screen_width);
 
     if (false) {
         pce::Table main_menu = pce::Table("Main Menu");
@@ -64,9 +64,9 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_en
         constexpr f32 menu_x = 200.0F;
         constexpr f32 list_start_y = 100.0F;
         pce::List<pce::String> buttons = { "Play", "Settings", "Exit" };
-        ui_system.CreateText("Play", ui_system.font_bold.GetFont(ui::FontCollection::large), colors::blue, menu_x, list_start_y);
-        ui_system.CreateText("Settings", ui_system.font.GetFont(ui::FontCollection::large), colors::black, menu_x, list_start_y + 50.0F);
-        ui_system.CreateText("Exit", ui_system.font.GetFont(ui::FontCollection::large), colors::red, menu_x, list_start_y + 100.0F);
+        ui_system.CreateText("Play", ui_system.font_bold.GetFont(ui::FontCollection::large).ToSDL(), colors::blue, menu_x, list_start_y);
+        ui_system.CreateText("Settings", ui_system.font.GetFont(ui::FontCollection::large).ToSDL(), colors::black, menu_x, list_start_y + 50.0F);
+        ui_system.CreateText("Exit", ui_system.font.GetFont(ui::FontCollection::large).ToSDL(), colors::red, menu_x, list_start_y + 100.0F);
 
         constexpr SDL_FRect background_rect { .x = menu_x, .y = list_start_y, .w = 100.0F, .h = 300.0F };
         ui_system.CreateElement(background_rect, colors::gray, nullptr);

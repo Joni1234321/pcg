@@ -20,8 +20,7 @@ void NodeTree::RecalculateLayout() {
     for (u32 i = 0U; i < node_handles.Size(); ++i) { node_handles.AppendRange(Children(node_handles[i])); }
 
     // text
-    TTF_Font* font = font_collection.GetFont(FontCollection::normal);
-    f32 font_size = TTF_GetFontSize(font);
+    const Font& font = font_collection.GetFont(FontCollection::normal);
     for (const Node::Handle node_handle : node_handles) {
         Node& node = GetNode(node_handle);
 
@@ -33,9 +32,9 @@ void NodeTree::RecalculateLayout() {
             continue;
         }
 
-        if (node.ttf_text == nullptr) { node.ttf_text = TTF_CreateText(text_engine, font, node.text.CString(), node.text.Size()); } else {
+        if (node.ttf_text == nullptr) { node.ttf_text = TTF_CreateText(text_engine, font.ToSDL(), node.text.CString(), node.text.Size()); } else {
             TTF_SetTextString(node.ttf_text, node.text.CString(), node.text.Size());
-            TTF_SetTextFont(node.ttf_text, font);
+            TTF_SetTextFont(node.ttf_text, font.ToSDL());
         }
         constexpr SDL_Color color = colors::black;
         (void)TTF_SetTextColor(node.ttf_text, color.r, color.g, color.b, color.a);
@@ -135,7 +134,7 @@ void NodeTree::RecalculateLayout() {
 }
 
 TextElement NodeTree::CreateTextAligned(const String& string, const SDL_Color color, f32 x, const f32 y, const TextAlign alignment, const u32 parent_width) const {
-    TTF_Text* text = TTF_CreateText(text_engine, font_collection.GetFont(FontCollection::small), string.CString(), string.size());
+    TTF_Text* text = TTF_CreateText(text_engine, font_collection.GetFont(FontCollection::small).ToSDL(), string.CString(), string.size());
     (void)TTF_SetTextColor(text, color.r, color.g, color.b, color.a);
     i32 text_width;
     (void)TTF_GetTextSize(text, &text_width, nullptr);
