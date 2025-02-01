@@ -103,7 +103,7 @@ struct Node {
     void OnClick() { if (on_click) { on_click(this); } }
 
     [[nodiscard]] constexpr uint4 NonContentSize4() const { return padding; }
-    [[nodiscard]] constexpr uint2 NonContentSize2() const { return { padding.x + padding.z, padding.y + padding.w}; }
+    [[nodiscard]] constexpr uint2 NonContentSize2() const { return { padding.x + padding.z, padding.y + padding.w }; }
     [[nodiscard]] constexpr uint2 OuterBoxPosition() const { return position; }
     [[nodiscard]] constexpr uint2 OuterBoxSize() const { return { width.resolved, height.resolved }; }
     [[nodiscard]] constexpr uint2 OuterBoxEndPosition() const { return OuterBoxPosition() + OuterBoxSize(); }
@@ -119,7 +119,6 @@ struct Node {
         const uint2 relative = screen_position - start;
         return relative.x < static_cast<u32>(bounding_box.w) && relative.y < static_cast<u32>(bounding_box.h);
     }
-
 
     friend NodeBuilder;
     friend NodeTree;
@@ -189,10 +188,9 @@ struct NodeTree {
         const auto is_inside_node = [screen_position, this] (const Node::Handle child_handle) -> b8 { return this->GetNode(child_handle).IsInside(screen_position); };
         while (true) {
             auto node_iterator = std::ranges::find_if(Children(node_handle), is_inside_node, std::identity { });
-            if (node_iterator == Children(node_handle).end()) { break; }
+            if (node_iterator == Children(node_handle).end()) { return GetNode(node_handle).background_color.a == 0 ? Node::OptionalHandle { } : Node::OptionalHandle { node_handle.id }; }
             node_handle = *node_iterator;
         }
-        return Node::OptionalHandle { node_handle.id };
     }
 
 private:
