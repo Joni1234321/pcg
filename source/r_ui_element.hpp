@@ -13,7 +13,6 @@ using FontSize = u8;
 enum class Fonts : FontSize { body = 16U, h1 = 34U, h2 = 30U, h3 = 24U, h4 = 20U, h5 = 18U, h6 = 16U, small = 14U, tiny = 12U, title = 52U };
 class Font {
     std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)> font;
-
 public:
     Font(const AbsolutePath& path, const FontSize size) : font(TTF_OpenFont(path.string().c_str(), size), &TTF_CloseFont) { Logger().Log("Loading Font {} {}", size, path.string()); }
     Font(const Font&) = delete;

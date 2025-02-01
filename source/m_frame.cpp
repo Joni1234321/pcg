@@ -15,7 +15,7 @@ ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const pce::String& te
     constexpr u32 gap_size { 2U };
     ui::Node::Handle component_handle = ui::NodeBuilder(ui::hug).Fill(colors::forest_green).Padding({ padding_offset * layer, 0U }).Gap(gap_size).Build(tree, frame);
     ui::NodeBuilder(color_indicator_size).Fill(color).Build(tree, component_handle);
-    ui::NodeBuilder(ui::hug).FontSize(ui::Fonts::tiny).Text(text).Build(tree, component_handle);
+    ui::NodeBuilder(ui::hug).Text(text, ui::Fonts::body).Build(tree, component_handle);
     return component_handle;
 }
 void DebugNode(ui::NodeTree& output_tree, const ui::NodeTree& tree, const ui::Node::OptionalHandle root_handle) {
@@ -36,7 +36,7 @@ void DebugNode(ui::NodeTree& output_tree, const ui::NodeTree& tree, const ui::No
         for (const ui::Node::Handle child_handle : tree.Children(node_handle)) { node_handles.push(NodeHandleLayer { child_handle, layer + 1 }); }
 
         CreateDebugNodeComponent(layer, "node", node.background_color, output_tree, frame);
-        if (node.HasText()) { CreateDebugNodeComponent(layer + 1, "text", colors::clear, output_tree, frame); }
+        if (node.IsText()) { CreateDebugNodeComponent(layer + 1, "text", colors::clear, output_tree, frame); }
     }
 }
 void TestNodeExample() {
@@ -100,11 +100,10 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_en
         ui::Node::Handle box1 = ui::NodeBuilder(ui::fill).Fill(colors::yellow).Padding({ 5U, 5U }).Build(tree, root);
         ui::Node::Handle box2 = ui::NodeBuilder(ui::fill).Fill(colors::red).Build(tree, root);
     } {
-        ui::Node::Handle root = ui::NodeBuilder(ui::hug).Padding({ 5U, 5U }).Fill(colors::cyan).Build(tree, frame);
-        ui::Node::Handle box1 = ui::NodeBuilder(ui::hug).Fill(colors::yellow).Text(pce::String { "Play" }).Padding({ 10U, 0U }).Build(tree, root);
-        ui::Node::Handle box2 = ui::NodeBuilder(ui::hug).Fill(colors::red).Text(pce::String { "Settings" }).Padding({ 10U, 0U }).Build(tree, root);
-        ui::Node::Handle box3 = ui::NodeBuilder(ui::hug).Fill(colors::green).Text(pce::String { "Exit" }).Padding({ 10U, 0U }).Build(tree, root);
-        ui::Node::Handle box4 = ui::NodeBuilder(ui::hug).Fill(colors::yellow).Text(pce::String { "Start Game" }).Padding({ 10U, 0U }).Padding({ 50U, 0U }).Build(tree, root);
+        ui::Node::Handle root = ui::NodeBuilder(ui::hug).Padding({ 5U, 5U }).Direction(ui::vertical).Fill(colors::deep_purple).Build(tree, frame);
+        ui::Node::Handle box1 = ui::NodeBuilder(ui::hug).Fill(colors::radiant_orange).Text(pce::String { "Play" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
+        ui::Node::Handle box2 = ui::NodeBuilder(ui::hug).Fill(colors::cool_teal).Text(pce::String { "Settings" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
+        ui::Node::Handle box3 = ui::NodeBuilder(ui::hug).Fill(colors::ruby_red).Text(pce::String { "Exit" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
     } {
         ui::Node::Handle root = ui::NodeBuilder(uint2 { 100U, 100U }).Padding({ 5U, 5U }).Fill(colors::sea_green).Build(tree, frame);
         ui::Node::Handle box1 = ui::NodeBuilder(ui::fill).Fill(colors::yellow).Padding({ 5U, 5U }).Build(tree, root);

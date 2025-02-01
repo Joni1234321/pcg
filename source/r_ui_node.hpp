@@ -100,7 +100,7 @@ struct Node {
     [[nodiscard]] constexpr uint2 OuterBoxEndPosition() const { return OuterBoxPosition() + OuterBoxSize(); }
     [[nodiscard]] constexpr uint2 InnerBoxPosition() const { return OuterBoxPosition() + NonContentSize(); }
     [[nodiscard]] constexpr uint2 InnerBoxSize() const { return OuterBoxSize() - NonContentSize() * 2U; }
-    [[nodiscard]] constexpr b8 HasText() const { return !text.Empty(); }
+    [[nodiscard]] constexpr b8 IsText() const { return !text.Empty(); }
 
     [[nodiscard]] constexpr SDL_FRect OuterRect() const {
         return { .x = static_cast<f32>(OuterBoxPosition().x), .y = static_cast<f32>(OuterBoxPosition().y), .w = static_cast<f32>(OuterBoxSize().x), .h = static_cast<f32>(OuterBoxSize().y) };
@@ -111,6 +111,12 @@ struct Node {
         return relative.x < static_cast<u32>(bounding_box.w) && relative.y < static_cast<u32>(bounding_box.h);
     }
 
+    ~Node() {
+        if (ttf_text != nullptr) {
+            Logger().Log("[Destroy] node text {}", text);
+            TTF_DestroyText(ttf_text);
+        }
+    }
     friend NodeBuilder;
     friend NodeTree;
 };
@@ -227,7 +233,8 @@ struct NodeBuilder {
     [[nodiscard]] NodeBuilder& Direction(FlexDirection direction);
     [[nodiscard]] NodeBuilder& Text(const String& string);
     [[nodiscard]] NodeBuilder& Text(String&& string);
-    [[nodiscard]] NodeBuilder& FontSize(Fonts font_size);
+    [[nodiscard]] NodeBuilder& Text(const String& string, Fonts font_size);
+    [[nodiscard]] NodeBuilder& Text(String&& string, Fonts font_size);
     void Finalize(NodeTree& node_tree) {
         node_tree.MarkDirty();
 
