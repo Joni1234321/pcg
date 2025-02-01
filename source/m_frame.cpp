@@ -9,52 +9,7 @@ namespace pcg::frame {
 namespace ui = pce::ui;
 namespace colors = pce::colors;
 
-ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const pce::String& text, const SDL_Color color, ui::NodeTree& tree, const ui::Node::Handle frame) {
-    constexpr u32 padding_offset = 10U;
-    constexpr uint2 color_indicator_size { 10U, 20U };
-    constexpr u32 gap_size { 2U };
-    ui::Node::Handle component_handle = ui::NodeBuilder(ui::hug).Fill(colors::forest_green).Padding4(uint4 { padding_offset * layer, 0U, 0U, 0U }).Gap(gap_size).Build(tree, frame);
-    ui::NodeBuilder(ui::hug).Text(text, ui::Fonts::body).Fill(colors::black).Build(tree, component_handle);
-    ui::NodeBuilder(color_indicator_size).Fill(color).Build(tree, component_handle);
-    return component_handle;
-}
-void DebugNode(ui::NodeTree& output_tree, const ui::NodeTree& tree, const ui::Node::OptionalHandle root_handle) {
-    using NodeHandleLayer = std::tuple<ui::Node::Handle, u32>;
-
-    output_tree.Clear();
-
-    if (!root_handle.IsValid()) { return; }
-
-    pce::Stack<NodeHandleLayer> node_handles;
-    node_handles.push(NodeHandleLayer { root_handle.GetHandle(), 0U });
-
-    ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Fill(colors::clear).Fill(colors::white).Direction(ui::vertical).BuildRoot(output_tree, { 10U, 30U });
-    while (!node_handles.empty()) {
-        const auto [node_handle, layer] = node_handles.top();
-        node_handles.pop();
-        const ui::Node& node = tree.GetNode(node_handle);
-        for (const ui::Node::Handle child_handle : tree.Children(node_handle)) { node_handles.push(NodeHandleLayer { child_handle, layer + 1 }); }
-
-        CreateDebugNodeComponent(layer, "node", node.background_color, output_tree, frame);
-        if (node.IsText()) { CreateDebugNodeComponent(layer + 1, "text", colors::clear, output_tree, frame); }
-    }
-}
-void TestNodeExample() {
-//    ui::NodeBuilder().Fill(ui::Fill (0x12, 0x12, 0x12, 0xFF));
-}
-FPSFrame::FPSFrame(ui::UISystem& ui_system) : tick_text { ui_system.CreateText("", ui_system.font.GetFont(ui::Fonts::body).ToSDL(), colors::blue, 10.0F, 0.0F) } { }
-void FPSFrame::Tick(u32 i, ui::UISystem& ui_system) {
-    const std::string str = std::format("Tick {:6}", i);
-    (void)TTF_SetTextString(ui_system[tick_text].text, str.c_str(), str.length());
-}
-UIDebuggerFrame::UIDebuggerFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
-    ui::Node::Handle frame = ui::NodeBuilder({ 400U, 600U }).Gap(50U).Fill(colors::gray).BuildRoot(tree, { 300U, 600U });
-    ui::NodeBuilder(ui::fill, ui::hug).Text("Debug Frame").Fill(colors::light_gray).Build(tree, frame);
-    ui::NodeBuilder(ui::hug).Text("Hej").Build(tree, frame);
-}
-void UIDebuggerFrame::Tick(ui::UISystem& ui_system) { }
-
-MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font }, debug_tree { ui_system.text_engine, ui_system.font } {
+MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
     constexpr f32 title_y = 30.0F;
     (void)ui_system.CreateTextAligned("Hey Helene!", ui_system.font_bold.GetFont(ui::Fonts::title).ToSDL(), colors::light_sky_blue, 0, title_y, ui::TextAlign::center, ui_system.screen_width);
 
@@ -86,7 +41,41 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_en
         rect.h *= 2;
         ui_system.CreateList(colors::green, rect, 10U, 25.0F, ui::UISystem::ListDirection::horizontal);
     }
+}
+void TestFrame::Tick(u32 tick, ui::UISystem& ui_system) { }
+ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const pce::String& text, const SDL_Color color, ui::NodeTree& tree, const ui::Node::Handle frame) {
+    constexpr u32 padding_offset = 10U;
+    constexpr uint2 color_indicator_size { 10U, 20U };
+    constexpr u32 gap_size { 2U };
+    ui::Node::Handle component_handle = ui::NodeBuilder(ui::hug).Fill(colors::forest_green).Padding4(uint4 { padding_offset * layer, 0U, 0U, 0U }).Gap(gap_size).Build(tree, frame);
+    ui::NodeBuilder(ui::hug).Text(text, ui::Fonts::body).Fill(colors::black).Build(tree, component_handle);
+    ui::NodeBuilder(color_indicator_size).Fill(color).Build(tree, component_handle);
+    return component_handle;
+}
+DebugFrame::DebugFrame(pce::ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } { }
+void DebugFrame::Tick(u32 tick, ui::UISystem& ui_system) {
+    if (ui_system.left_mouse_down) {
+        using NodeHandleLayer = std::tuple<ui::Node::Handle, u32>;
 
+        tree.MarkDirty();
+        tree.Clear();
+        if (!ui_system.hovered_node.IsValid()) { return; }
+
+        const ui::NodeTree& hovered_tree = *ui_system.hovered_tree;
+        pce::Stack<NodeHandleLayer> node_handles;
+        node_handles.push(NodeHandleLayer { ui_system.hovered_node.GetHandle(), 0U });
+
+        ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Fill(colors::clear).Fill(colors::white).Direction(ui::vertical).BuildRoot(tree, { 10U, 30U });
+        while (!node_handles.empty()) {
+            const auto [node_handle, layer] = node_handles.top();
+            node_handles.pop();
+            for (const ui::Node::Handle child_handle : hovered_tree.Children(node_handle)) { node_handles.push(NodeHandleLayer { child_handle, layer + 1 }); }
+            const ui::Node& node = hovered_tree.GetNode(node_handle);
+            CreateDebugNodeComponent(layer, node.IsText() ? "text" : "node", node.background_color, tree, frame);
+        }
+    }
+}
+TestFrame::TestFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
     ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Gap(20U).Fill(colors::clear).BuildRoot(tree, { 100U, 200U }); {
         ui::Node::Handle root = ui::NodeBuilder(uint2 { 100U, 100U }).Padding({ 5U, 5U }).Fill(colors::forest_green).Build(tree, frame);
         ui::Node::Handle box1 = ui::NodeBuilder(ui::fill).Fill(colors::yellow).Padding({ 5U, 5U }).Build(tree, root);
@@ -119,13 +108,7 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_en
         ui::Node::Handle box32 = ui::NodeBuilder(ui::fill).Fill(colors::chocolate).Build(tree, box3);
         ui::Node::Handle box33 = ui::NodeBuilder(ui::fill).Fill(colors::yellow).Build(tree, box3);
     }
-}
-void MainMenuFrame::Tick(const u32 i, ui::UISystem& ui_system) {
-    for (const ui::RectangleElement::Handle sqr : elements) { ui_system[sqr].color = SDL_Color { static_cast<u8>(i / 3U), static_cast<u8>(i / 10U), static_cast<u8>(i / 67U), 255 }; }
-    if (ui_system.left_mouse_down) {
-        DebugNode(debug_tree, tree, ui_system.hovered_node);
-        debug_tree.MarkDirty();
-    }
+    tree.MarkDirty();
 }
 
 pce::Table CreateFarmTable() {

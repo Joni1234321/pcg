@@ -21,10 +21,11 @@ void RunGame(Engine& engine) {
     ui::UISystem ui_system(engine);
 
     MainMenuFrame main_menu_frame(ui_system);
-    UIDebuggerFrame ui_debugger_frame(ui_system);
-    FPSFrame fps_frame(ui_system);
-    //OverviewFrame table_test_frame(ui_system, engine.font_collection);
+    TickFrame tick_frame(ui_system);
+    TestFrame test_frame(ui_system);
+    DebugFrame debug_frame(ui_system);
 
+    ui::NodeTree& active_tree = test_frame.tree;
     Tick tick { 0U };
     bool running = true;
     while (running) {
@@ -34,12 +35,12 @@ void RunGame(Engine& engine) {
 
         game.PlayTick(tick, ui_system, debug);
 
-        main_menu_frame.Tick(tick.Value(), ui_system);
-        fps_frame.Tick(tick.Value(), ui_system);
-        ui_debugger_frame.Tick(ui_system);
-
+        // main_menu_frame.Tick(tick.Value(), ui_system);
+        tick_frame.Tick(tick.Value());
+        test_frame.Tick(tick.Value(), ui_system);
+        debug_frame.Tick(tick.Value(), ui_system);
         input_system.Tick();
-        ui_system.Tick(input_system, main_menu_frame.tree);
+        ui_system.Tick(input_system, active_tree);
 
         ui_system.left_mouse_down = false;
 
@@ -63,7 +64,7 @@ void RunGame(Engine& engine) {
                 case SDL_EVENT_MOUSE_BUTTON_DOWN:
                     if (event.button.button == SDL_BUTTON_LEFT) {
                         ui_system.left_mouse_down = true;
-                        ui_system.LeftClick(main_menu_frame.tree);
+                        ui_system.LeftClick(active_tree);
                     }
                     break;
                 default:
@@ -78,9 +79,11 @@ void RunGame(Engine& engine) {
 
         ui_system.RenderElements(engine.renderer);
         ui_system.RenderTree(engine.renderer, main_menu_frame.tree);
-        ui_system.RenderTree(engine.renderer, main_menu_frame.debug_tree);
+        ui_system.RenderTree(engine.renderer, tick_frame.tree);
 
-        // ui_system.RenderTree(engine.renderer, ui_debugger_frame.tree);
+        ui_system.RenderTree(engine.renderer, test_frame.tree);
+        ui_system.RenderTree(engine.renderer, debug_frame.tree);
+
 
         //DrawImgui(engine.renderer);
         engine.Present();

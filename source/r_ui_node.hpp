@@ -57,6 +57,7 @@ struct Node {
     struct OptionalHandle {
         [[nodiscard]] constexpr OptionalHandle() noexcept : id(U32_MAX) { }
         [[nodiscard]] constexpr explicit OptionalHandle(const u32 value) noexcept : id(value) { }
+        [[nodiscard]] constexpr OptionalHandle(const Handle handle) noexcept : id(handle.id) { }
         [[nodiscard]] constexpr bool IsValid() const noexcept { return id != U32_MAX; }
         [[nodiscard]] constexpr Handle GetHandle() const noexcept { return Handle { id }; }
         u32 id;
@@ -183,7 +184,7 @@ struct NodeTree {
     };
 
     Node::OptionalHandle HitNode(uint2 screen_position) {
-        if (!GetNode(Root()).IsInside(screen_position)) { return Node::OptionalHandle { }; }
+        if (nodes.Empty() || !GetNode(Root()).IsInside(screen_position)) { return Node::OptionalHandle { }; }
         Node::Handle node_handle = Root();
         const auto is_inside_node = [screen_position, this] (const Node::Handle child_handle) -> b8 { return this->GetNode(child_handle).IsInside(screen_position); };
         while (true) {
@@ -204,7 +205,6 @@ private:
     [[nodiscard]] FrameElements CreateFrameElements();
     void RecalculateLayout();
     TextElement CreateTextAligned(const String& string, SDL_Color color, f32 x, f32 y, TextAlign alignment, u32 parent_width) const;
-
     [[nodiscard]] List<Node::Handle>& Children(const Node::Handle node_handle) { return children[HandleToIndex(node_handle)]; }
     [[nodiscard]] b8 Empty() const { return nodes.Empty(); }
 

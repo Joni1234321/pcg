@@ -3,14 +3,14 @@
 namespace pce::ui {
 void UISystem::Tick(InputSystem& input_system, NodeTree& tree) {
     Node::OptionalHandle previous_hovered_node { hovered_node };
+    hovered_tree = &tree;
     hovered_node = tree.HitNode(input_system.MousePosition());
 
     if (previous_hovered_node.id != hovered_node.id) {
         if (previous_hovered_node.IsValid()) { tree.Propagate(previous_hovered_node.GetHandle(), &Node::OnHoverOut); }
         if (hovered_node.IsValid()) { tree.Propagate(hovered_node.GetHandle(), &Node::OnHover); }
+        tree.MarkDirty();
     }
-
-    if (hovered_node.IsValid() || previous_hovered_node.IsValid()) { tree.MarkDirty(); }
 }
 void UISystem::RenderTree(SDL_Renderer* renderer, NodeTree& node_tree) {
     const FrameElements& frame_elements = node_tree.GetFrameElements();

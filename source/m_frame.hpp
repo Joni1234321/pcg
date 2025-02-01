@@ -5,35 +5,46 @@
 #include "u_types.hpp"
 
 namespace pcg::frame {
-
 class MainMenuFrame {
     std::vector<pce::ui::RectangleElement::Handle> elements { };
+
 public:
     pce::ui::NodeTree tree;
-    pce::ui::NodeTree debug_tree;
 
-    MainMenuFrame(pce::ui::UISystem& ui_system);
+    explicit MainMenuFrame(pce::ui::UISystem& ui_system);
     void Tick(u32 i, pce::ui::UISystem& ui_system);
 };
 
-class FPSFrame {
-    pce::ui::TextElement::Handle tick_text;
-public:
-    FPSFrame(pce::ui::UISystem& ui_system);
-    void Tick(u32 i, pce::ui::UISystem& ui_system);
-};
+class TickFrame {
+    pce::ui::Node::OptionalHandle tick_handle;
 
-class UIDebuggerFrame {
 public:
     pce::ui::NodeTree tree;
-    UIDebuggerFrame(pce::ui::UISystem& ui_system);
-    void Tick(pce::ui::UISystem& ui_system);
+    explicit TickFrame(pce::ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
+        tick_handle = pce::ui::NodeBuilder(pce::ui::hug).Text("Tick", pce::ui::Fonts::tiny).Fill(pce::colors::radiant_orange).BuildRoot(tree, { 10U, 0U });
+    }
+    void Tick(u32 i) {
+        tree.GetNode(tick_handle.GetHandle()).text = std::format("Tick {:6}", i);
+        tree.MarkDirty();
+    }
 };
-
+class TestFrame {
+public:
+    pce::ui::NodeTree tree;
+    explicit TestFrame(pce::ui::UISystem& ui_system);
+    void Tick(u32 tick, pce::ui::UISystem& ui_system);
+};
+class DebugFrame {
+public:
+    pce::ui::NodeTree tree;
+    explicit DebugFrame(pce::ui::UISystem& ui_system);
+    void Tick(u32 tick, pce::ui::UISystem& ui_system);
+};
 class OverviewFrame {
     pce::ui::TableElement::Handle table_handle;
+
 public:
-    OverviewFrame(pce::ui::UISystem& ui_system);
+    explicit OverviewFrame(pce::ui::UISystem& ui_system);
     void Tick(pce::ui::UISystem& ui_system);
 };
 }
