@@ -5,12 +5,9 @@
 #include "u_types.hpp"
 
 namespace pcg::frame {
-class MainMenuFrame {
-    std::vector<pce::ui::RectangleElement::Handle> elements { };
 
-public:
+struct MainMenuFrame {
     pce::ui::NodeTree tree;
-
     explicit MainMenuFrame(pce::ui::UISystem& ui_system);
     void Tick(u32 i, pce::ui::UISystem& ui_system);
 };
@@ -28,14 +25,13 @@ public:
         tree.MarkDirty();
     }
 };
-class TestFrame {
-public:
+struct TestFrame {
+    std::vector<pce::ui::RectangleElement::Handle> elements { };
     pce::ui::NodeTree tree;
     explicit TestFrame(pce::ui::UISystem& ui_system);
     void Tick(u32 tick, pce::ui::UISystem& ui_system);
 };
-class DebugFrame {
-public:
+struct DebugFrame {
     pce::ui::NodeTree tree;
     explicit DebugFrame(pce::ui::UISystem& ui_system);
     void Tick(u32 tick, pce::ui::UISystem& ui_system);

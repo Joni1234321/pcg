@@ -10,37 +10,13 @@ namespace ui = pce::ui;
 namespace colors = pce::colors;
 
 MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
-    constexpr f32 title_y = 30.0F;
-    (void)ui_system.CreateTextAligned("Hey Helene!", ui_system.font_bold.GetFont(ui::Fonts::title).ToSDL(), colors::light_sky_blue, 0, title_y, ui::TextAlign::center, ui_system.screen_width);
-
-    if (false) {
-        pce::Table main_menu = pce::Table("Main Menu");
-
-        constexpr f32 menu_x = 200.0F;
-        constexpr f32 list_start_y = 100.0F;
-        pce::List<pce::String> buttons = { "Play", "Settings", "Exit" };
-        ui_system.CreateText("Play", ui_system.font_bold.GetFont(ui::Fonts::h2).ToSDL(), colors::blue, menu_x, list_start_y);
-        ui_system.CreateText("Settings", ui_system.font.GetFont(ui::Fonts::h2).ToSDL(), colors::black, menu_x, list_start_y + 50.0F);
-        ui_system.CreateText("Exit", ui_system.font.GetFont(ui::Fonts::h2).ToSDL(), colors::red, menu_x, list_start_y + 100.0F);
-
-        constexpr SDL_FRect background_rect { .x = menu_x, .y = list_start_y, .w = 100.0F, .h = 300.0F };
-        ui_system.CreateElement(background_rect, colors::gray, nullptr);
-
-        main_menu.AddColumn("Fish Column", pce::List<pce::String> { "Hej", "Fem", "Femten" });
-        ui_system.CreateTable(main_menu, colors::sea_green, ui_system.screen_width / 2.0F - 100.0F, 300.0F);
-
-        SDL_FRect rect { .x = 200.0F, .y = 200.0F, .w = 30.0F, .h = 30.0F };
-
-        (void)elements.emplace_back(ui_system.CreateElement(rect, colors::black, nullptr));
-
-        rect.x += 200;
-        (void)elements.emplace_back(ui_system.CreateElement(rect, colors::red, nullptr));
-
-        rect.y = 400;
-        ui_system.CreateList(colors::white, rect, 10U, 25.0F, ui::UISystem::ListDirection::vertical);
-        rect.h *= 2;
-        ui_system.CreateList(colors::green, rect, 10U, 25.0F, ui::UISystem::ListDirection::horizontal);
-    }
+    const pce::String title = "Hey Helene!";
+    ui::Node::Handle frame = ui::NodeBuilder({ui_system.screen_height, ui_system.screen_width}).Direction(ui::vertical).BuildRoot(tree, {100U,30U});
+    ui::NodeBuilder(ui::hug).Text(title, ui::Fonts::title).Fill(colors::light_sky_blue).Build(tree, frame);
+    ui::Node::Handle root = ui::NodeBuilder(ui::hug).Padding({ 5U, 5U }).Direction(ui::vertical).Fill(colors::deep_purple).Build(tree, frame);
+    ui::Node::Handle box1 = ui::NodeBuilder(ui::hug).Fill(colors::radiant_orange).Text(pce::String { "Play" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
+    ui::Node::Handle box2 = ui::NodeBuilder(ui::hug).Fill(colors::cool_teal).Text(pce::String { "Settings" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
+    ui::Node::Handle box3 = ui::NodeBuilder(ui::hug).Fill(colors::ruby_red).Text(pce::String { "Exit" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
 }
 void TestFrame::Tick(u32 tick, ui::UISystem& ui_system) { }
 ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const pce::String& text, const SDL_Color color, ui::NodeTree& tree, const ui::Node::Handle frame) {
@@ -108,7 +84,34 @@ TestFrame::TestFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui
         ui::Node::Handle box32 = ui::NodeBuilder(ui::fill).Fill(colors::chocolate).Build(tree, box3);
         ui::Node::Handle box33 = ui::NodeBuilder(ui::fill).Fill(colors::yellow).Build(tree, box3);
     }
-    tree.MarkDirty();
+    if (false) {
+        pce::Table main_menu = pce::Table("Main Menu");
+
+        constexpr f32 menu_x = 200.0F;
+        constexpr f32 list_start_y = 100.0F;
+        pce::List<pce::String> buttons = { "Play", "Settings", "Exit" };
+        ui_system.CreateText("Play", ui_system.font_bold.GetFont(ui::Fonts::h2).ToSDL(), colors::blue, menu_x, list_start_y);
+        ui_system.CreateText("Settings", ui_system.font.GetFont(ui::Fonts::h2).ToSDL(), colors::black, menu_x, list_start_y + 50.0F);
+        ui_system.CreateText("Exit", ui_system.font.GetFont(ui::Fonts::h2).ToSDL(), colors::red, menu_x, list_start_y + 100.0F);
+
+        constexpr SDL_FRect background_rect { .x = menu_x, .y = list_start_y, .w = 100.0F, .h = 300.0F };
+        ui_system.CreateElement(background_rect, colors::gray, nullptr);
+
+        main_menu.AddColumn("Fish Column", pce::List<pce::String> { "Hej", "Fem", "Femten" });
+        ui_system.CreateTable(main_menu, colors::sea_green, ui_system.screen_width / 2.0F - 100.0F, 300.0F);
+
+        SDL_FRect rect { .x = 200.0F, .y = 200.0F, .w = 30.0F, .h = 30.0F };
+
+        (void)elements.emplace_back(ui_system.CreateElement(rect, colors::black, nullptr));
+
+        rect.x += 200;
+        (void)elements.emplace_back(ui_system.CreateElement(rect, colors::red, nullptr));
+
+        rect.y = 400;
+        ui_system.CreateList(colors::white, rect, 10U, 25.0F, ui::UISystem::ListDirection::vertical);
+        rect.h *= 2;
+        ui_system.CreateList(colors::green, rect, 10U, 25.0F, ui::UISystem::ListDirection::horizontal);
+    }
 }
 
 pce::Table CreateFarmTable() {

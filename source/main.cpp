@@ -39,6 +39,7 @@ void RunGame(Engine& engine) {
         tick_frame.Tick(tick.Value());
         test_frame.Tick(tick.Value(), ui_system);
         debug_frame.Tick(tick.Value(), ui_system);
+
         input_system.Tick();
         ui_system.Tick(input_system, active_tree);
 
@@ -78,11 +79,10 @@ void RunGame(Engine& engine) {
         engine.ClearScreen();
 
         ui_system.RenderElements(engine.renderer);
-        ui_system.RenderTree(engine.renderer, main_menu_frame.tree);
         ui_system.RenderTree(engine.renderer, tick_frame.tree);
-
         ui_system.RenderTree(engine.renderer, test_frame.tree);
         ui_system.RenderTree(engine.renderer, debug_frame.tree);
+        ui_system.RenderTree(engine.renderer, main_menu_frame.tree);
 
 
         //DrawImgui(engine.renderer);
