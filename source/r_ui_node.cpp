@@ -66,12 +66,12 @@ void NodeTree::RecalculateLayout() {
         LayoutLength& major_layout = get_major_layout(node, node.direction);
         if (major_layout.layout_type == LayoutLength::child_constraint) {
             const u32 children_major = std::ranges::fold_left_first(Children(node_handle) | std::views::transform(get_major_outer_box_size), std::plus { }).value_or(0U);
-            major_layout.resolved = children_major + pixels_gap(node_handle, node.gap) + get_major(text_size, node.direction) + get_major(node.NonContentSize(), node.direction) * 2U;
+            major_layout.resolved = children_major + pixels_gap(node_handle, node.gap) + get_major(text_size, node.direction) + get_major(node.NonContentSize2(), node.direction);
         }
         LayoutLength& minor_layout = get_minor_layout(node, node.direction);
         if (minor_layout.layout_type == LayoutLength::child_constraint) {
             const u32 max_minor = Children(node_handle).Empty() ? 0U : std::ranges::max(Children(node_handle) | std::views::transform(get_minor_outer_box_size));
-            minor_layout.resolved = std::max(max_minor, get_minor(text_size, node.direction)) + get_minor(node.NonContentSize(), node.direction) * 2U;
+            minor_layout.resolved = std::max(max_minor, get_minor(text_size, node.direction)) + get_minor(node.NonContentSize2(), node.direction);
         }
     }
 
@@ -236,6 +236,10 @@ NodeBuilder& NodeBuilder::FillHeight() {
     return *this;
 }
 NodeBuilder& NodeBuilder::Padding(const uint2 padding) {
+    node.padding = uint4 { padding.x, padding.y, padding.x, padding.y };
+    return *this;
+}
+NodeBuilder& NodeBuilder::Padding4(const uint4 padding) {
     node.padding = padding;
     return *this;
 }

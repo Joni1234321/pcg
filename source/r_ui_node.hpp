@@ -62,6 +62,13 @@ struct Node {
         u32 id;
     };
     Node() = default;
+    ~Node() {
+        if (ttf_text != nullptr) {
+            Logger().Log("[Destroy] node text {}", text);
+            TTF_DestroyText(ttf_text);
+        }
+    }
+
     String name { };
     String text { };
     TTF_Text* ttf_text { nullptr };
@@ -73,7 +80,7 @@ struct Node {
     SDL_Color background_color_hover { 0, 0, 0 };
 
     uint2 position { U32_MAX, U32_MAX };
-    uint2 padding { 0U, 0U };
+    uint4 padding { 0U, 0U, 0U, 0U };
     u32 gap { 0U };
 
     LayoutLength width { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
@@ -94,29 +101,25 @@ struct Node {
     }
     void OnClick() { if (on_click) { on_click(this); } }
 
-    [[nodiscard]] constexpr uint2 NonContentSize() const { return padding; }
+    [[nodiscard]] constexpr uint4 NonContentSize4() const { return padding; }
+    [[nodiscard]] constexpr uint2 NonContentSize2() const { return { padding.x + padding.z, padding.y + padding.w}; }
     [[nodiscard]] constexpr uint2 OuterBoxPosition() const { return position; }
     [[nodiscard]] constexpr uint2 OuterBoxSize() const { return { width.resolved, height.resolved }; }
     [[nodiscard]] constexpr uint2 OuterBoxEndPosition() const { return OuterBoxPosition() + OuterBoxSize(); }
-    [[nodiscard]] constexpr uint2 InnerBoxPosition() const { return OuterBoxPosition() + NonContentSize(); }
-    [[nodiscard]] constexpr uint2 InnerBoxSize() const { return OuterBoxSize() - NonContentSize() * 2U; }
+    [[nodiscard]] constexpr uint2 InnerBoxPosition() const { return OuterBoxPosition() + uint2 { NonContentSize4().x, NonContentSize4().y }; }
+    [[nodiscard]] constexpr uint2 InnerBoxSize() const { return OuterBoxSize() - NonContentSize2(); }
     [[nodiscard]] constexpr b8 IsText() const { return !text.Empty(); }
 
     [[nodiscard]] constexpr SDL_FRect OuterRect() const {
         return { .x = static_cast<f32>(OuterBoxPosition().x), .y = static_cast<f32>(OuterBoxPosition().y), .w = static_cast<f32>(OuterBoxSize().x), .h = static_cast<f32>(OuterBoxSize().y) };
     };
-    [[nodiscard]] constexpr b8 IsInside(uint2 screen_position) const {
-        uint2 start { static_cast<u32>(bounding_box.x), static_cast<u32>(bounding_box.y) };
-        uint2 relative = screen_position - start;
+    [[nodiscard]] constexpr b8 IsInside(const uint2 screen_position) const {
+        const uint2 start { static_cast<u32>(bounding_box.x), static_cast<u32>(bounding_box.y) };
+        const uint2 relative = screen_position - start;
         return relative.x < static_cast<u32>(bounding_box.w) && relative.y < static_cast<u32>(bounding_box.h);
     }
 
-    ~Node() {
-        if (ttf_text != nullptr) {
-            Logger().Log("[Destroy] node text {}", text);
-            TTF_DestroyText(ttf_text);
-        }
-    }
+
     friend NodeBuilder;
     friend NodeTree;
 };
@@ -229,6 +232,7 @@ struct NodeBuilder {
     NodeBuilder& FillWidth();
     NodeBuilder& FillHeight();
     [[nodiscard]] NodeBuilder& Padding(uint2 padding);
+    [[nodiscard]] NodeBuilder& Padding4(uint4 padding);
     [[nodiscard]] NodeBuilder& Gap(u32 gap);
     [[nodiscard]] NodeBuilder& Direction(FlexDirection direction);
     [[nodiscard]] NodeBuilder& Text(const String& string);

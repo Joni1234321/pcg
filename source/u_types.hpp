@@ -1,6 +1,7 @@
 // ReSharper disable CppInconsistentNaming
 #pragma once
 #include <cstdint>
+
 using i8 = int8_t;
 using u8 = uint8_t;
 using i16 = int16_t;
@@ -54,11 +55,50 @@ struct uint2 {
     }
     constexpr b8 operator==(const uint2& other) const { return x == other.x && y == other.y; }
     constexpr b8 operator!=(const uint2& other) const { return !(*this == other); }
-    constexpr b8 operator<(const uint2& other) const { return (x < other.x) || (x == other.x && y < other.y); }
-    constexpr b8 operator<=(const uint2& other) const { return *this < other || *this == other; }
-    constexpr b8 operator>(const uint2& other) const { return !(*this <= other); }
-    constexpr b8 operator>=(const uint2& other) const { return !(*this < other); }
-    constexpr u32& operator[] (u32 pos) { return pos == 0U ? this->x : this->y; }
+};
+struct uint4 {
+    u32 x;
+    u32 y;
+    u32 z;
+    u32 w;
+    constexpr uint4 operator+(const uint4& other) const { return { x + other.x, y + other.y, z + other.z, w + other.w }; }
+    constexpr uint4 operator-(const uint4& other) const { return { x - other.x, y - other.y, z - other.z, w - other.w }; }
+    constexpr uint4 operator*(const uint4& other) const { return { x * other.x, y * other.y, z * other.z, w * other.w }; }
+    constexpr uint4 operator/(const uint4& other) const { return { x / other.x, y / other.y, z / other.z, w / other.w }; }
+    constexpr uint4 operator*(const u32& k) const { return { x * k, y * k, z * k, w * k }; }
+    constexpr uint4 operator/(const u32& k) const { return { x / k, y / k, z / k, w / k }; }
+    constexpr uint4& operator+=(const uint4& other) {
+        x += other.x;
+        y += other.y;
+        z += other.z;
+        w += other.w;
+        return *this;
+    }
+    constexpr uint4& operator-=(const uint4& other) {
+        x -= other.x;
+        y -= other.y;
+        z -= other.z;
+        w -= other.w;
+        return *this;
+    }
+    constexpr uint4& operator*=(const uint4& other) {
+        x *= other.x;
+        y *= other.y;
+        z *= other.z;
+        w *= other.w;
+        return *this;
+    }
+    constexpr uint4& operator/=(const uint4& other) {
+        x /= other.x;
+        y /= other.y;
+        z /= other.z;
+        w /= other.w;
+        return *this;
+    }
+
+    constexpr b8 operator==(const uint4& other) const { return x == other.x && y == other.y && z == other.z && w == other.w; }
+    constexpr b8 operator!=(const uint4& other) const { return !(*this == other); }
+    // constexpr u32& operator[](u32 pos) { return *std::array { &x, &y, &z, &w }[pos]; }
 };
 
 constexpr u32 U32_MAX = UINT32_MAX;

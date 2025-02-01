@@ -10,12 +10,12 @@ namespace ui = pce::ui;
 namespace colors = pce::colors;
 
 ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const pce::String& text, const SDL_Color color, ui::NodeTree& tree, const ui::Node::Handle frame) {
-    constexpr u32 padding_offset = 5U;
-    constexpr uint2 color_indicator_size { 15U, 15U };
+    constexpr u32 padding_offset = 10U;
+    constexpr uint2 color_indicator_size { 10U, 20U };
     constexpr u32 gap_size { 2U };
-    ui::Node::Handle component_handle = ui::NodeBuilder(ui::hug).Fill(colors::forest_green).Padding({ padding_offset * layer, 0U }).Gap(gap_size).Build(tree, frame);
+    ui::Node::Handle component_handle = ui::NodeBuilder(ui::hug).Fill(colors::forest_green).Padding4(uint4 { padding_offset * layer, 0U, 0U, 0U }).Gap(gap_size).Build(tree, frame);
+    ui::NodeBuilder(ui::hug).Text(text, ui::Fonts::body).Fill(colors::black).Build(tree, component_handle);
     ui::NodeBuilder(color_indicator_size).Fill(color).Build(tree, component_handle);
-    ui::NodeBuilder(ui::hug).Text(text, ui::Fonts::body).Build(tree, component_handle);
     return component_handle;
 }
 void DebugNode(ui::NodeTree& output_tree, const ui::NodeTree& tree, const ui::Node::OptionalHandle root_handle) {
