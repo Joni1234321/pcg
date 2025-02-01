@@ -65,6 +65,7 @@ struct Node {
     String name { };
     String text { };
     TTF_Text* ttf_text { nullptr };
+    Fonts font_size { Fonts::body };
 
     SDL_FRect bounding_box { };
 
@@ -226,6 +227,7 @@ struct NodeBuilder {
     [[nodiscard]] NodeBuilder& Direction(FlexDirection direction);
     [[nodiscard]] NodeBuilder& Text(const String& string);
     [[nodiscard]] NodeBuilder& Text(String&& string);
+    [[nodiscard]] NodeBuilder& FontSize(Fonts font_size);
     void Finalize(NodeTree& node_tree) {
         node_tree.MarkDirty();
 

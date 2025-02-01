@@ -104,7 +104,7 @@ void UISystem::IncreaseTableSize(TableElement& table_element, const Table& table
         const String& string = table.headers[column];
         ColumnInfo& column_info = table_element.column_meta[column];
         TextElement::Handle& handle = table_element.headers[column];
-        if (recycle_text) { UpdateText(handle, string, x, y); } else { handle = CreateText(string, font.GetFont(FontCollection::small).ToSDL(), table_element.text_color, x, y); }
+        if (recycle_text) { UpdateText(handle, string, x, y); } else { handle = CreateText(string, font.GetFont(Fonts::body).ToSDL(), table_element.text_color, x, y); }
         GetTextSize(handle, &column_info.width, &table_element.header_row_meta.height);
         column_info.x = x;
         x += static_cast<f32>(column_info.width);
@@ -121,7 +121,7 @@ void UISystem::IncreaseTableSize(TableElement& table_element, const Table& table
 
             const String& string = table.columns[column][row];
             TextElement::Handle& text_handle = table_element.text_grid[i];
-            if (recycle_text) { UpdateText(text_handle, string, x, y); } else { text_handle = CreateText(string, font.GetFont(FontCollection::small).ToSDL(), table_element.text_color, x, y); }
+            if (recycle_text) { UpdateText(text_handle, string, x, y); } else { text_handle = CreateText(string, font.GetFont(Fonts::body).ToSDL(), table_element.text_color, x, y); }
         }
 
         const TextElement::Handle first_text_in_row = table_element.text_grid[row * table.ColumnCount()];

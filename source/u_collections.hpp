@@ -148,6 +148,11 @@ public:
         values.PushBack(value);
     };
 
+    template <class... Args> constexpr void EmplaceBack(const K& key, Args&&... args) {
+        keys.EmplaceBack(key);
+        values.EmplaceBack(std::forward<Args>(args)...);
+    };
+
     [[nodiscard]] constexpr b8 HasKey(const K& key) const { return std::ranges::find(keys, key) != keys.end(); }
     [[nodiscard]] constexpr V& operator[](const K& key) {
         const u32 pos = keys.IndexOf(key);

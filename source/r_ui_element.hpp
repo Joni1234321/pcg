@@ -10,28 +10,32 @@
 
 namespace pce::ui {
 using FontSize = u8;
+enum class Fonts : FontSize { body = 16U, h1 = 34U, h2 = 30U, h3 = 24U, h4 = 20U, h5 = 18U, h6 = 16U, small = 14U, tiny = 12U, title = 52U };
 class Font {
-    TTF_Font *font;
-public:
-    [[nodiscard]] Font (const AbsolutePath& path, FontSize size) : font(TTF_OpenFont(path.string().c_str(), size)) { }
-    Font(const Font&) = delete;
+    std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)> font;
 
-    b8 FailedLoading () const { return font == nullptr; }
-    ~Font() { if (font != nullptr) { TTF_CloseFont(font); } }
-    constexpr TTF_Font* ToSDL() const { return font; }
+public:
+    Font(const AbsolutePath& path, const FontSize size) : font(TTF_OpenFont(path.string().c_str(), size), &TTF_CloseFont) { Logger().Log("Loading Font {} {}", size, path.string()); }
+    Font(const Font&) = delete;
+    Font& operator=(const Font&) = delete;
+    Font(Font&&) noexcept = default;
+    Font& operator=(Font&&) noexcept = default;
+
+    b8 FailedLoading() const { return font.get() == nullptr; }
+    constexpr TTF_Font *ToSDL() const { return font.get(); }
+    FontSize GetSize() const { return TTF_GetFontSize(font.get()); }
 };
 struct FontCollection {
-    enum FontSizes : FontSize { small = 14, normal = 22, large = 36, h1 = 72 };
-    FlatMap<FontSize, Font> fonts { };
     const AbsolutePath font_path;
 
     explicit FontCollection(const AbsolutePath& path) : font_path { path } { }
 
-    [[nodiscard]] constexpr const Font& GetFont(const u8 size) {
+    FlatMap<Fonts, Font> fonts { };
+    [[nodiscard]] const Font& GetFont(const Fonts size) {
         if (!fonts.HasKey(size)) {
-            fonts.PushBack(size, Font(font_path, size));
+            fonts.EmplaceBack(size, Font { font_path, static_cast<FontSize>(size) });
             b8 failed = fonts[size].FailedLoading();
-            if (failed) { SDL_Log("Font not loaded (%s)", SDL_GetError());}
+            if (failed) { SDL_Log("Font not loaded (%s)", SDL_GetError()); }
         }
         return fonts[size];
     }
