@@ -183,7 +183,7 @@ struct NodeTree {
         return frame_elements;
     };
 
-    Node::OptionalHandle HitNode(uint2 screen_position) {
+    Node::OptionalHandle HitNode(uint2 screen_position) const {
         if (nodes.Empty() || !GetNode(Root()).IsInside(screen_position)) { return Node::OptionalHandle { }; }
         Node::Handle node_handle = Root();
         const auto is_inside_node = [screen_position, this] (const Node::Handle child_handle) -> b8 { return this->GetNode(child_handle).IsInside(screen_position); };

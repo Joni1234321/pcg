@@ -6,6 +6,7 @@
 
 namespace pcg::frame {
 
+
 struct MainMenuFrame {
     pce::ui::NodeTree tree;
     explicit MainMenuFrame(pce::ui::UISystem& ui_system);

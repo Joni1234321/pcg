@@ -24,7 +24,6 @@ class UISystem {
     std::vector<RectangleElement> rectangle_elements { };
     std::vector<ListElement> list_elements { };
     List<TableElement> table_elements { };
-
 public:
     b8 left_mouse_down { false };
     NodeTree* hovered_tree { nullptr };
@@ -35,12 +34,13 @@ public:
     TTF_TextEngine* text_engine;
     FontCollection font;
     FontCollection font_bold;
+    List<std::reference_wrapper<NodeTree>> node_trees { };
     explicit UISystem(Engine& engine);
     ~UISystem();
 
-    void Tick(InputSystem& input_system, NodeTree& tree);
-    void RenderTree(SDL_Renderer* renderer, NodeTree& node_tree);
-    void LeftClick(NodeTree& tree);
+    void Tick(InputSystem& input_system);
+    void RenderTrees(SDL_Renderer* renderer);
+    void LeftClick();
     void SetColor(Color color);
 
     void RenderElements(SDL_Renderer* renderer);

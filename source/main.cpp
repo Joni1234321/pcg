@@ -25,7 +25,11 @@ void RunGame(Engine& engine) {
     TestFrame test_frame(ui_system);
     DebugFrame debug_frame(ui_system);
 
-    ui::NodeTree& active_tree = test_frame.tree;
+    ui_system.node_trees.EmplaceBack(tick_frame.tree);
+    ui_system.node_trees.EmplaceBack(test_frame.tree);
+    ui_system.node_trees.EmplaceBack(debug_frame.tree);
+    ui_system.node_trees.EmplaceBack(main_menu_frame.tree);
+
     Tick tick { 0U };
     bool running = true;
     while (running) {
@@ -41,7 +45,7 @@ void RunGame(Engine& engine) {
         debug_frame.Tick(tick.Value(), ui_system);
 
         input_system.Tick();
-        ui_system.Tick(input_system, active_tree);
+        ui_system.Tick(input_system);
 
         ui_system.left_mouse_down = false;
 
@@ -65,7 +69,7 @@ void RunGame(Engine& engine) {
                 case SDL_EVENT_MOUSE_BUTTON_DOWN:
                     if (event.button.button == SDL_BUTTON_LEFT) {
                         ui_system.left_mouse_down = true;
-                        ui_system.LeftClick(active_tree);
+                        ui_system.LeftClick();
                     }
                     break;
                 default:
@@ -79,11 +83,7 @@ void RunGame(Engine& engine) {
         engine.ClearScreen();
 
         ui_system.RenderElements(engine.renderer);
-        ui_system.RenderTree(engine.renderer, tick_frame.tree);
-        ui_system.RenderTree(engine.renderer, test_frame.tree);
-        ui_system.RenderTree(engine.renderer, debug_frame.tree);
-        ui_system.RenderTree(engine.renderer, main_menu_frame.tree);
-
+        ui_system.RenderTrees(engine.renderer);
 
         //DrawImgui(engine.renderer);
         engine.Present();
