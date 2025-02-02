@@ -1,6 +1,7 @@
 #pragma once
 
 #include "g_components.hpp"
+#include "r_engine.hpp"
 #include "r_ui.hpp"
 #include "u_logger.hpp"
 #include "u_types.hpp"
@@ -13,7 +14,7 @@ struct NewGameSettings {
 struct Game {
     pce::Logger logger;
     explicit Game(NewGameSettings);
-    void PlayTick(Tick tick, pce::ui::UISystem& ui_system, const b8 debug);
+    void PlayTick(pce::Tick tick, pce::ui::UISystem& ui_system, const b8 debug);
 };
 
 constexpr NewGameSettings GAME_SETTINGS_CHALLENGE = { .players = 2U, .planets = 4U };

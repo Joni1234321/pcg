@@ -9,8 +9,6 @@
 #include <stack>
 #include <unordered_map>
 
-#include <SDL3_ttf/SDL_ttf.h>
-
 #include "u_types.hpp"
 #include "u_util.hpp"
 

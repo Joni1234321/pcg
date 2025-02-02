@@ -145,7 +145,7 @@ String FormatValue(const T value) { return std::format("{} ", value); }
 template<typename T>concept NamedTypeArithmetic = requires(T value)
 {
     { static_cast<f32>(value) }; // Checks if T can be cast to f32
-} && (HasASkill<T, pcg::FormatLongNumber>);
+} && (HasASkill<T, FormatLongNumber>);
 
 template<NamedTypeArithmetic T>
 String FormatValue(const T value) {

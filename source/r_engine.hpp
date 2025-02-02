@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <u_ecs.hpp>
 
 #include "r_colors.hpp"
 #include "u_collections.hpp"
@@ -41,6 +42,7 @@ public:
 }
 
 namespace pce {
+using Tick = NamedType<u32, struct TickTag, Arithmetic>;
 inline SDL_Color clear_color = colors::dark_dark_brown;
 
 inline void DrawImgui(SDL_Renderer* renderer) {

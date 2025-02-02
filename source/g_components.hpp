@@ -1,20 +1,19 @@
 #pragma once
 
 #include <unordered_map>
-
+#include <r_engine.hpp>
 #include "u_collections.hpp"
 #include "u_ecs.hpp"
 #include "u_types.hpp"
 
 namespace pcg {
-using Percentage = NamedType<f32, struct PercentageTag, Arithmetic>;
+using Percentage = pce::NamedType<f32, struct PercentageTag, pce::Arithmetic>;
 
-using Tick = NamedType<u32, struct TickTag, Arithmetic>;
-using Money = NamedType<f32, struct MoneyTag, Arithmetic, FormatLongNumber>;
-using Population = NamedType<f32, struct PopulationTag, Arithmetic, FormatLongNumber>;
-using Production = NamedType<u32, struct ProductionTag, Arithmetic>;
+using Money = pce::NamedType<f32, struct MoneyTag, pce::Arithmetic, pce::FormatLongNumber>;
+using Population = pce::NamedType<f32, struct PopulationTag, pce::Arithmetic, pce::FormatLongNumber>;
+using Production = pce::NamedType<u32, struct ProductionTag, pce::Arithmetic>;
 
-using QualityOfLife = NamedType<f32, struct QualityOfLifeTag, Arithmetic>;
+using QualityOfLife = pce::NamedType<f32, struct QualityOfLifeTag, pce::Arithmetic>;
 // theory aktiver og passiver. aktiver is the initial cost of investments
 // https://ordbog.ku.dk/pdf/financial_terminology.pdf
 // https://uwaterloo.ca/economics/sites/default/files/uploads/documents/econ-101-syllabus.pdf
@@ -110,15 +109,15 @@ struct PlayerArchetype final : Archetype {
 enum class PlanetTemplate { Agriculture, Gaia, Playground, Barren };
 struct PlanetArchetype final : Archetype {
     pce::Parent players;
-    pce::Component<Tick> ages;
+    pce::Component<pce::Tick> ages;
     pce::Component<Money> moneys;
     pce::Component<Population> employed;
     pce::Component<Population> unemployed;
     pce::Component<QualityOfLife> population_quality_of_life;
     pce::Component<ConstructionQueue> construction_queue;
-    Entity Add(Tick, Money, Population);
+    Entity Add(pce::Tick, Money, Population);
     b8 Remove(Entity entity) override;
-    Entity AddTemplate(Tick, PlanetTemplate);
+    Entity AddTemplate(pce::Tick, PlanetTemplate);
 };
 
 inline PlayerArchetype player_archetype;

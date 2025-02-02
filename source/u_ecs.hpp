@@ -6,7 +6,7 @@
 #include "u_collections.hpp"
 #include "u_types.hpp"
 
-namespace pcg {
+namespace pce {
 template <typename T, typename TagType, template<typename> class... InheritList> class NamedType : public InheritList<NamedType<T, TagType, InheritList...>>... {
 public:
     using ValueType = T;
@@ -75,8 +75,8 @@ template <typename T, typename Parameter> std::ostream& operator<<(std::ostream&
 } // namespace pcg
 
 #include "format"
-template <typename T, typename Parameter, template <typename> class... Skills> struct std::formatter<pcg::NamedType<T, Parameter, Skills...>> : std::formatter<T> {
-    auto format(const pcg::NamedType<T, Parameter, Skills...>& data, std::format_context& ctx) const { return std::formatter<T>::format(data.Value(), ctx); }
+template <typename T, typename Parameter, template <typename> class... Skills> struct std::formatter<pce::NamedType<T, Parameter, Skills...>> : std::formatter<T> {
+    auto format(const pce::NamedType<T, Parameter, Skills...>& data, std::format_context& ctx) const { return std::formatter<T>::format(data.Value(), ctx); }
 };
 template <typename EnumType> requires std::is_enum_v<EnumType>
 struct std::formatter<EnumType> : std::formatter<std::underlying_type_t<EnumType>> {

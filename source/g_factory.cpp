@@ -1,3 +1,5 @@
+#include <r_engine.hpp>
+
 #include "g_components.hpp"
 #include "u_types.hpp"
 
@@ -21,7 +23,7 @@ b8 PlayerArchetype::Remove(const Entity entity) {
 
     return true;
 }
-Entity PlanetArchetype::Add(const Tick tick, const Money money, const Population population) {
+Entity PlanetArchetype::Add(const pce::Tick tick, const Money money, const Population population) {
     const Entity entity = Archetype::Add();
 
     (void)players.EmplaceBack(Entity::NONE);
@@ -45,7 +47,7 @@ b8 PlanetArchetype::Remove(const Entity entity) {
 
     return true;
 }
-Entity PlanetArchetype::AddTemplate(const Tick tick, const PlanetTemplate planet_template) {
+Entity PlanetArchetype::AddTemplate(const pce::Tick tick, const PlanetTemplate planet_template) {
     Entity planet;
     switch (planet_template) {
         case PlanetTemplate::Agriculture: {

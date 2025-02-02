@@ -38,7 +38,7 @@ struct Planet : Entity {
     [[nodiscard]] constexpr Population& Unemployed() const { return planet_archetype.unemployed[index]; }
     [[nodiscard]] constexpr Population& Employed() const { return planet_archetype.employed[index]; }
     [[nodiscard]] constexpr QualityOfLife& QualityOfLife() const { return planet_archetype.population_quality_of_life[index]; }
-    [[nodiscard]] constexpr Tick& Age() const { return planet_archetype.ages[index]; }
+    [[nodiscard]] constexpr pce::Tick& Age() const { return planet_archetype.ages[index]; }
 
     constexpr void TransferOwnerShipToPlayer(const pcg::Player player) const { planet_archetype.players[index] = player; }
 
@@ -82,7 +82,7 @@ constexpr u16 BUILDING_TIME = 30U;
 constexpr f32 GROWTH_RATE_PER_MONTH = 0.0025F * PER_MONTH;
 
 
-void Game::PlayTick(Tick tick, pce::ui::UISystem& ui_system, const b8 debug) {
+void Game::PlayTick(pce::Tick tick, pce::ui::UISystem& ui_system, const b8 debug) {
     // Construction
     for (const Player player : player_archetype) { ProcessConstructionQueue(player); }
     for (const Planet planet : planet_archetype) { ProcessConstructionQueue(planet); }
@@ -211,7 +211,7 @@ void Game::PlayTick(Tick tick, pce::ui::UISystem& ui_system, const b8 debug) {
 }
 
 Game::Game(const NewGameSettings game) {
-    constexpr Tick start_tick = Tick { 0U };
+    constexpr pce::Tick start_tick = pce::Tick { 0U };
 
     data.farm_types[FarmType::Fish] = Stats { .input_goods = 1U, .output_goods = 3U, .employees_per_level = 10U, .property_plant_equipment_per_level = 150U, .property_plant_equipment_lifetime = 5U * TICKS_PER_YEAR };
     data.farm_types[FarmType::Cows] = Stats { .input_goods = 5U, .output_goods = 20U, .employees_per_level = 15U, .property_plant_equipment_per_level = 250U, .property_plant_equipment_lifetime = 7U * TICKS_PER_YEAR };
