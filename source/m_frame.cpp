@@ -11,19 +11,25 @@ namespace colors = pce::colors;
 
 MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
     const pce::String title = "Hey Helene!";
-    ui::Node::Handle frame = ui::NodeBuilder(ui_system.screen_size).Direction(ui::vertical).BuildRoot(tree, {100U,30U});
+    ui::Node::Handle frame = ui::NodeBuilder(ui_system.screen_size).Direction(ui::vertical).BuildRoot(tree, { 100U, 30U });
     ui::NodeBuilder(ui::hug).Text(title, ui::Fonts::title).Fill(colors::light_sky_blue).Build(tree, frame);
-    ui::Node::Handle root = ui::NodeBuilder(ui::hug).Padding({ 5U, 5U }).Direction(ui::vertical).Fill(colors::deep_purple).Build(tree, frame);
-    ui::Node::Handle box1 = ui::NodeBuilder(ui::hug).Fill(colors::radiant_orange).Text(pce::String { "Play" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
-    ui::Node::Handle box2 = ui::NodeBuilder(ui::hug).Fill(colors::cool_teal).Text(pce::String { "Settings" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
-    ui::Node::Handle box3 = ui::NodeBuilder(ui::hug).Fill(colors::ruby_red).Text(pce::String { "Exit" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
+    ui::Node::Handle root = ui::NodeBuilder(ui::hug).Padding({ 5U, 5U }).Direction(ui::vertical).Center().Fill(colors::deep_purple).Build(tree, frame);
+    ui::NodeBuilder(ui::hug).Fill(colors::radiant_orange).Text(pce::String { "Play" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
+    ui::NodeBuilder(ui::hug).Fill(colors::cool_teal).Text(pce::String { "Settings" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
+    ui::NodeBuilder(ui::hug).Fill(colors::ruby_red).Text(pce::String { "Exit" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
 }
 GameFrame::GameFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
-    const ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Fill(colors::forest_green).Direction(ui::vertical).BuildRoot(tree, {0U,30U});
-    const ui::Node::Handle root = ui::NodeBuilder(ui::hug).Direction(ui::vertical).Build(tree, frame);
+    const ui::Node::Handle frame = ui::NodeBuilder(ui_system.screen_size).Center().Direction(ui::vertical).BuildRoot(tree, { 0U, 30U });
+    const ui::Node::Handle root = ui::NodeBuilder(ui::hug).Fill(colors::forest_green).Direction(ui::vertical).Center().Build(tree, frame);
     time_label = ui::NodeBuilder(ui::hug).Text("Time: ").Build(tree, root);
     score_label = ui::NodeBuilder(ui::hug).Text("Score: ").Build(tree, root);
 }
+void GameFrame::Tick(u32 score, u32 time) {
+    tree.GetNode(time_label.GetHandle()).text = std::format("Time {:4}", score);
+    tree.GetNode(score_label.GetHandle()).text = std::format("Score {:4}", time);
+    tree.MarkDirty();
+}
+
 ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const pce::String& text, const SDL_Color color, ui::NodeTree& tree, const ui::Node::Handle frame) {
     constexpr u32 padding_offset = 10U;
     constexpr uint2 color_indicator_size { 10U, 20U };
@@ -44,7 +50,7 @@ void DebugFrame::Tick(u32 tick, ui::UISystem& ui_system) {
         const ui::Node::Handle hovered_node = ui_system.hovered.value().node_handle;
         const ui::NodeTree& hovered_tree = ui_system.hovered.value().tree;
         pce::Stack<NodeHandleLayer> node_handles;
-        node_handles.push(NodeHandleLayer {hovered_node , 0U });
+        node_handles.push(NodeHandleLayer { hovered_node, 0U });
 
         const ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Fill(colors::clear).Fill(colors::white).Direction(ui::vertical).BuildRoot(tree, { 10U, 30U });
         while (!node_handles.empty()) {

@@ -14,7 +14,17 @@ void NodeTree::RecalculateLayout() {
     auto get_minor = [] (const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.y : point.x; };
     auto get_major_layout = [] (Node& node, const FlexDirection direction) -> LayoutLength& { return direction == horizontal ? node.width : node.height; };
     auto get_minor_layout = [] (Node& node, const FlexDirection direction) -> LayoutLength& { return direction == horizontal ? node.height : node.width; };
+    auto get_minor_position = [] (uint2& point, const FlexDirection direction) -> u32& { return direction == horizontal ? point.y : point.x; };
     auto get_major_position = [] (uint2& point, const FlexDirection direction) -> u32& { return direction == horizontal ? point.x : point.y; };
+
+    auto get_major_pixels_taken_by_children = [this, &get_major] (const Node::Handle node_handle, const FlexDirection direction) -> u32 {
+        auto get_major_outer_box_size = [this, &get_major, &direction] (const Node::Handle child_handle) -> u32 { return get_major(GetNode(child_handle).OuterBoxSize(), direction); };
+        return std::ranges::fold_left_first(Children(node_handle) | std::views::transform(get_major_outer_box_size), std::plus { }).value_or(0U);
+    };
+    auto get_minor_pixels_taken_by_children = [this, &get_minor] (const Node::Handle node_handle, const FlexDirection direction) -> u32 {
+        auto get_minor_outer_box_size = [this, &get_minor, &direction] (const Node::Handle child_handle) -> u32 { return get_minor(GetNode(child_handle).OuterBoxSize(), direction); };
+        return std::ranges::fold_left_first(Children(node_handle) | std::views::transform(get_minor_outer_box_size), std::plus { }).value_or(0U);
+    };
 
     List<Node::Handle> node_handles { Root() };
     for (u32 i = 0U; i < node_handles.Size(); ++i) { node_handles.AppendRange(Children(node_handles[i])); }
@@ -53,19 +63,14 @@ void NodeTree::RecalculateLayout() {
 
         uint2 text_size { 0U, 0U };
         if (node.IsText()) { (void)TTF_GetTextSize(node.ttf_text, reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
+        auto get_minor_outer_box_size = [this, get_minor, &node] (const Node::Handle child_handle) -> u32 { return get_minor(GetNode(child_handle).OuterBoxSize(), node.direction); };
 
-        auto get_major_outer_box_size = [&] (const Node::Handle child_handle) -> u32 {
-            const Node& child = GetNode(child_handle);
-            return get_major(child.OuterBoxSize(), node.direction);
+        auto get_minor_pixels_taken = [this, get_minor_outer_box_size] (const Node::Handle node_handle)-> u32 {
+            return std::ranges::fold_left_first(Children(node_handle) | std::views::transform(get_minor_outer_box_size), std::plus { }).value_or(0U);
         };
-        auto get_minor_outer_box_size = [&] (const Node::Handle child_handle) -> u32 {
-            const Node& child = GetNode(child_handle);
-            return get_minor(child.OuterBoxSize(), node.direction);
-        };
-
         LayoutLength& major_layout = get_major_layout(node, node.direction);
         if (major_layout.layout_type == LayoutLength::child_constraint) {
-            const u32 children_major = std::ranges::fold_left_first(Children(node_handle) | std::views::transform(get_major_outer_box_size), std::plus { }).value_or(0U);
+            const u32 children_major = get_major_pixels_taken_by_children(node_handle, node.direction);
             major_layout.resolved = children_major + pixels_gap(node_handle, node.gap) + get_major(text_size, node.direction) + get_major(node.NonContentSize2(), node.direction);
         }
         LayoutLength& minor_layout = get_minor_layout(node, node.direction);
@@ -108,11 +113,53 @@ void NodeTree::RecalculateLayout() {
     // position top down
     for (const Node::Handle node_handle : node_handles) {
         const Node& node = GetNode(node_handle);
-        uint2 position = node.InnerBoxPosition();
+        u32 major_position = get_major(node.InnerBoxPosition(), node.direction);
+
+        const u32 children_major = get_major_pixels_taken_by_children(node_handle, node.direction);
         for (const Node::Handle child_handle : Children(node_handle)) {
             Node& child = GetNode(child_handle);
-            child.position = position;
-            get_major_position(position, node.direction) += get_major(child.OuterBoxSize(), node.direction) + node.gap;
+
+            if (node.direction == horizontal) {
+                u32 minor_position = node.InnerBoxPosition().y;
+                switch (node.alignment) {
+                    case top_left:
+                    case left:
+                    case bottom_left:
+                        break;
+                    case top_center:
+                    case center:
+                    case bottom_center:
+                        minor_position += (node.InnerBoxSize().y - child.OuterBoxSize().y) / 2U;
+                        break;
+                    case top_right:
+                    case right:
+                    case bottom_right:
+                        minor_position += node.InnerBoxSize().y - child.OuterBoxSize().y;
+                        break;
+                }
+                child.position = uint2 { major_position, minor_position };
+                major_position += child.OuterBoxSize().x + node.gap;
+            } else {
+                u32 minor_position = node.InnerBoxPosition().x;
+                switch (node.alignment) {
+                    case top_left:
+                    case left:
+                    case bottom_left:
+                        break;
+                    case top_center:
+                    case center:
+                    case bottom_center:
+                        minor_position += (node.InnerBoxSize().x - child.OuterBoxSize().x) / 2U;
+                        break;
+                    case top_right:
+                    case right:
+                    case bottom_right:
+                        minor_position += node.InnerBoxSize().x - child.OuterBoxSize().x;
+                        break;
+                }
+                child.position = uint2 { minor_position, major_position };
+                major_position += child.OuterBoxSize().y + node.gap;
+            }
         }
     }
 
@@ -274,4 +321,11 @@ NodeBuilder& NodeBuilder::Text(String&& string, const Fonts font_size) {
     node.font_size = font_size;
     return *this;
 }
+NodeBuilder& NodeBuilder::Alignment(ui::Alignment alignment) {
+    node.alignment = alignment;
+    return *this;
+}
+NodeBuilder& NodeBuilder::Right() { return Alignment(right); }
+NodeBuilder& NodeBuilder::Center() { return Alignment(center); }
+NodeBuilder& NodeBuilder::Left() { return Alignment(left); }
 }

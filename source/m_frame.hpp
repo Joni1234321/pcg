@@ -14,7 +14,7 @@ struct MainMenuFrame {
 struct GameFrame {
     pce::ui::NodeTree tree;
     explicit GameFrame(pce::ui::UISystem& ui_system);
-    void Tick(u32 i, pce::ui::UISystem& ui_system);
+    void Tick(u32 score, u32 time);
 private:
     pce::ui::Node::OptionalHandle time_label { };
     pce::ui::Node::OptionalHandle score_label { };

@@ -47,6 +47,7 @@ void RunGame(Engine& engine) {
         tick_frame.Tick(tick.Value());
         test_frame.Tick(tick.Value(), ui_system);
         debug_frame.Tick(tick.Value(), ui_system);
+        game_frame.Tick(tick.Value() / 60U, 30U);
 
         ui_system.left_mouse_down = false;
 

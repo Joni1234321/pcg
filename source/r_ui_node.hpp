@@ -38,10 +38,11 @@ inline SDL_Color lighten_color(const SDL_Color color, const f32 factor) {
 struct ResolvedLayout {
     SDL_FRect layout;
 };
-enum RelatedConstraint { hug, fill };
-enum FlexDirection { horizontal, vertical }; // default based on max width or height
+enum RelatedConstraint : u8 { hug, fill };
+enum FlexDirection : u8 { horizontal, vertical }; // default based on max width or height
+enum Alignment : u8 {  top_left, top_center, top_right, left, center, right, bottom_left, bottom_center, bottom_right };
 struct LayoutLength {
-    enum Constraint { child_constraint, parent_constraint, fixed };
+    enum Constraint : u8 { child_constraint, parent_constraint, fixed };
     u32 resolved;
     Constraint layout_type;
 };
@@ -87,6 +88,7 @@ struct Node {
     LayoutLength width { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
     LayoutLength height { .resolved = 0U, .layout_type = LayoutLength::child_constraint };
     FlexDirection direction { horizontal };
+    Alignment alignment { top_left };
 
     std::function<void(Node*)> on_click { };
     std::function<void(Node*)> on_hover { };
@@ -243,6 +245,10 @@ struct NodeBuilder {
     [[nodiscard]] NodeBuilder& Text(String&& string);
     [[nodiscard]] NodeBuilder& Text(const String& string, Fonts font_size);
     [[nodiscard]] NodeBuilder& Text(String&& string, Fonts font_size);
+    [[nodiscard]] NodeBuilder& Alignment(Alignment alignment);
+    [[nodiscard]] NodeBuilder& Right();
+    [[nodiscard]] NodeBuilder& Center();
+    [[nodiscard]] NodeBuilder& Left();
     void Finalize(NodeTree& node_tree) {
         node_tree.MarkDirty();
 
