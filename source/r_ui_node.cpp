@@ -251,20 +251,25 @@ NodeBuilder& NodeBuilder::Direction(FlexDirection direction) {
     node.direction = direction;
     return *this;
 }
+constexpr SDL_Color DEFAULT_TEXT_COLOR = colors::black;
 NodeBuilder& NodeBuilder::Text(const String& string) {
+    if (node.background_color.a == 0U) { node.background_color = DEFAULT_TEXT_COLOR; }
     node.text = string;
     return *this;
 }
 NodeBuilder& NodeBuilder::Text(String&& string) {
+    if (node.background_color.a == 0U) { node.background_color = DEFAULT_TEXT_COLOR; }
     node.text = string;
     return *this;
 }
 NodeBuilder& NodeBuilder::Text(const String& string, const Fonts font_size) {
+    if (node.background_color.a == 0U) { node.background_color = DEFAULT_TEXT_COLOR; }
     node.text = string;
     node.font_size = font_size;
     return *this;
 }
 NodeBuilder& NodeBuilder::Text(String&& string, const Fonts font_size) {
+    if (node.background_color.a == 0U) { node.background_color = DEFAULT_TEXT_COLOR; }
     node.text = string;
     node.font_size = font_size;
     return *this;

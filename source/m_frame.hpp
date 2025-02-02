@@ -5,16 +5,23 @@
 #include "u_types.hpp"
 
 namespace pcg::frame {
-
-
 struct MainMenuFrame {
     pce::ui::NodeTree tree;
     explicit MainMenuFrame(pce::ui::UISystem& ui_system);
     void Tick(u32 i, pce::ui::UISystem& ui_system);
 };
 
+struct GameFrame {
+    pce::ui::NodeTree tree;
+    explicit GameFrame(pce::ui::UISystem& ui_system);
+    void Tick(u32 i, pce::ui::UISystem& ui_system);
+private:
+    pce::ui::Node::OptionalHandle time_label { };
+    pce::ui::Node::OptionalHandle score_label { };
+};
+
 class TickFrame {
-    pce::ui::Node::OptionalHandle tick_handle;
+    pce::ui::Node::OptionalHandle tick_handle { };
 
 public:
     pce::ui::NodeTree tree;

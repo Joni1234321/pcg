@@ -48,7 +48,7 @@ void UISystem::LeftClick() {
 const RelativePath font_path = "font.ttf";
 const RelativePath font_bold_path = "TitilliumWeb-SemiBold.ttf";
 UISystem::UISystem(Engine& engine): text_engine(TTF_CreateRendererTextEngine(engine.renderer)), font { assets::Asset(font_path) }, font_bold { assets::Asset(font_bold_path) } {
-    engine.GetWindowSize(&screen_width, &screen_height);
+    engine.GetWindowSize(&screen_size.x, &screen_size.y);
 }
 void UISystem::RenderElements(SDL_Renderer* renderer) {
     for (const RectangleElement& element : rectangle_elements) {

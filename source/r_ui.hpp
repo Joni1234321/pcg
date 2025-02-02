@@ -29,8 +29,7 @@ public:
     using HoveredType = std::optional<NodeReference>;
     HoveredType hovered { };
     enum class ListDirection { horizontal, vertical };
-    u32 screen_width;
-    u32 screen_height;
+    uint2 screen_size;
     TTF_TextEngine* text_engine;
     FontCollection font;
     FontCollection font_bold;

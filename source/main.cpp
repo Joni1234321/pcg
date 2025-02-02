@@ -21,6 +21,7 @@ void RunGame(Engine& engine) {
     ui::UISystem ui_system(engine);
 
     MainMenuFrame main_menu_frame(ui_system);
+    GameFrame game_frame(ui_system);
     TickFrame tick_frame(ui_system);
     TestFrame test_frame(ui_system);
     DebugFrame debug_frame(ui_system);
@@ -29,6 +30,7 @@ void RunGame(Engine& engine) {
     ui_system.node_trees.EmplaceBack(test_frame.tree);
     ui_system.node_trees.EmplaceBack(debug_frame.tree);
     ui_system.node_trees.EmplaceBack(main_menu_frame.tree);
+    ui_system.node_trees.EmplaceBack(game_frame.tree);
 
     Tick tick { 0U };
     bool running = true;
@@ -42,7 +44,6 @@ void RunGame(Engine& engine) {
         input_system.Tick();
         ui_system.Tick(input_system);
 
-        // main_menu_frame.Tick(tick.Value(), ui_system);
         tick_frame.Tick(tick.Value());
         test_frame.Tick(tick.Value(), ui_system);
         debug_frame.Tick(tick.Value(), ui_system);
