@@ -228,7 +228,6 @@ struct NodeBuilder {
     [[nodiscard]] NodeBuilder(RelatedConstraint width_constraint, RelatedConstraint height_constraint);
     [[nodiscard]] NodeBuilder& Name(const String& name);
     [[nodiscard]] NodeBuilder& Fill(SDL_Color color);
-    // NodeBuilder& Absolute(uint2 pos);
     [[nodiscard]] NodeBuilder& Layout(LayoutLength width, LayoutLength height);
     NodeBuilder& Fixed(uint2 size);
     NodeBuilder& FixedWidth(u32 width);
@@ -252,7 +251,7 @@ struct NodeBuilder {
     void Finalize(NodeTree& node_tree) {
         node_tree.MarkDirty();
 
-        const f32 factor = 0.5F;
+        constexpr f32 factor = 0.5F;
         node.background_color_hover = lighten_color(node.background_color, factor);
 
         node.on_click = [&] (Node* node) -> void { Logger().Log("Clicked"); };

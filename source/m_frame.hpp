@@ -14,14 +14,16 @@ struct MainMenuFrame {
 struct GameFrame {
     pce::ui::NodeTree tree;
     explicit GameFrame(pce::ui::UISystem& ui_system);
+    [[nodiscard]] constexpr pce::ui::Node& GameArea() { return tree.GetNode(game_area.GetHandle()); }
     [[nodiscard]] constexpr pce::ui::Node& Box() { return tree.GetNode(box.GetHandle()); }
-    void SetTime(u32 time) { tree.GetNode(time_label.GetHandle()).text = std::format("Time {:4}", time); }
-    void SetScore(u32 score) { tree.GetNode(score_label.GetHandle()).text = std::format("Score {:4}", score); }
+    void SetTime(const u32 time_ms) { tree.GetNode(time_label.GetHandle()).text = std::format("Time {:02}:{:02}.{:02}", time_ms / (1000U * 60U), time_ms / 1000U % 60U, time_ms % 100U ); }
+    void SetScore(const u32 score) { tree.GetNode(score_label.GetHandle()).text = std::format("Score {:4}", score); }
 
 private:
     pce::ui::Node::OptionalHandle time_label { };
     pce::ui::Node::OptionalHandle score_label { };
     pce::ui::Node::OptionalHandle box { };
+    pce::ui::Node::OptionalHandle game_area { };
 };
 
 class TickFrame {

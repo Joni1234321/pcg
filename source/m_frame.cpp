@@ -21,10 +21,12 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_en
 GameFrame::GameFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
     const ui::Node::Handle frame = ui::NodeBuilder(ui_system.screen_size).Center().Direction(ui::vertical).BuildRoot(tree, { 0U, 30U });
     const ui::Node::Handle root = ui::NodeBuilder(ui::hug).Fill(colors::forest_green).Direction(ui::vertical).Center().Build(tree, frame);
-    time_label = ui::NodeBuilder(ui::hug).Text("Time: ").Build(tree, root);
-    score_label = ui::NodeBuilder(ui::hug).Text("Score: ").Build(tree, root);
+    time_label = ui::NodeBuilder(ui::hug).Text("Time", ui::Fonts::h1).Build(tree, root);
+    score_label = ui::NodeBuilder(ui::hug).Text("Score", ui::Fonts::h1).Build(tree, root);
+
+    game_area = ui::NodeBuilder(ui::fill).Padding(uint2{ 300U, 100U}).Build(tree, frame);
     constexpr u32 box_size = 100U;
-    box = ui::NodeBuilder(uint2 { box_size, box_size } ).Fill(colors::ruby_red).Build(tree, frame);
+    box = ui::NodeBuilder(uint2 { box_size, box_size } ).Fill(colors::ruby_red).Build(tree, game_area.GetHandle());
 }
 
 ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const pce::String& text, const SDL_Color color, ui::NodeTree& tree, const ui::Node::Handle frame) {
