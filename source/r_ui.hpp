@@ -25,7 +25,6 @@ class UISystem {
     List<TableElement> table_elements { };
 
 public:
-    b8 left_mouse_down { false };
     using HoveredType = std::optional<NodeReference>;
     HoveredType hovered { };
     enum class ListDirection { horizontal, vertical };
@@ -41,7 +40,7 @@ public:
     HoveredType GetHovered(uint2 mouse_position) const;
     void Tick(const InputSystem& input_system);
     void RenderTrees(SDL_Renderer* renderer);
-    void LeftClick();
+    void LeftClickHoveredItem();
     void SetColor(Color color);
 
     void RenderElements(SDL_Renderer* renderer);

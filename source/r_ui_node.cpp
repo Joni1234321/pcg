@@ -8,15 +8,11 @@ namespace pce::ui {
 void NodeTree::RecalculateLayout() {
     if (Empty()) { return; }
 
-    auto handle_to_node = [this] (const Node::Handle handle) -> Node *{ return &GetNode(handle); };
     auto pixels_gap = [this] (const Node::Handle node_handle, const u32 gap) -> u32 { return Children(node_handle).Empty() ? 0U : gap * (Children(node_handle).Size() - 1U); };
     auto get_major = [] (const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.x : point.y; };
     auto get_minor = [] (const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.y : point.x; };
     auto get_major_layout = [] (Node& node, const FlexDirection direction) -> LayoutLength& { return direction == horizontal ? node.width : node.height; };
     auto get_minor_layout = [] (Node& node, const FlexDirection direction) -> LayoutLength& { return direction == horizontal ? node.height : node.width; };
-    auto get_minor_position = [] (uint2& point, const FlexDirection direction) -> u32& { return direction == horizontal ? point.y : point.x; };
-    auto get_major_position = [] (uint2& point, const FlexDirection direction) -> u32& { return direction == horizontal ? point.x : point.y; };
-
     auto get_major_pixels_taken_by_children = [this, &get_major] (const Node::Handle node_handle, const FlexDirection direction) -> u32 {
         auto get_major_outer_box_size = [this, &get_major, &direction] (const Node::Handle child_handle) -> u32 { return get_major(GetNode(child_handle).OuterBoxSize(), direction); };
         return std::ranges::fold_left_first(Children(node_handle) | std::views::transform(get_major_outer_box_size), std::plus { }).value_or(0U);
@@ -63,11 +59,6 @@ void NodeTree::RecalculateLayout() {
 
         uint2 text_size { 0U, 0U };
         if (node.IsText()) { (void)TTF_GetTextSize(node.ttf_text, reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
-        auto get_minor_outer_box_size = [this, get_minor, &node] (const Node::Handle child_handle) -> u32 { return get_minor(GetNode(child_handle).OuterBoxSize(), node.direction); };
-
-        auto get_minor_pixels_taken = [this, get_minor_outer_box_size] (const Node::Handle node_handle)-> u32 {
-            return std::ranges::fold_left_first(Children(node_handle) | std::views::transform(get_minor_outer_box_size), std::plus { }).value_or(0U);
-        };
         LayoutLength& major_layout = get_major_layout(node, node.direction);
         if (major_layout.layout_type == LayoutLength::child_constraint) {
             const u32 children_major = get_major_pixels_taken_by_children(node_handle, node.direction);
@@ -75,6 +66,7 @@ void NodeTree::RecalculateLayout() {
         }
         LayoutLength& minor_layout = get_minor_layout(node, node.direction);
         if (minor_layout.layout_type == LayoutLength::child_constraint) {
+            auto get_minor_outer_box_size = [this, get_minor, &node] (const Node::Handle child_handle) -> u32 { return get_minor(GetNode(child_handle).OuterBoxSize(), node.direction); };
             const u32 max_minor = Children(node_handle).Empty() ? 0U : std::ranges::max(Children(node_handle) | std::views::transform(get_minor_outer_box_size));
             minor_layout.resolved = std::max(max_minor, get_minor(text_size, node.direction)) + get_minor(node.NonContentSize2(), node.direction);
         }
@@ -123,16 +115,16 @@ void NodeTree::RecalculateLayout() {
                 u32 minor_position = node.InnerBoxPosition().y;
                 switch (node.alignment) {
                     case top_left:
-                    case left:
-                    case bottom_left:
-                        break;
                     case top_center:
+                    case top_right:
+                        break;
+                    case left:
                     case center:
-                    case bottom_center:
+                    case right:
                         minor_position += (node.InnerBoxSize().y - child.OuterBoxSize().y) / 2U;
                         break;
-                    case top_right:
-                    case right:
+                    case bottom_left:
+                    case bottom_center:
                     case bottom_right:
                         minor_position += node.InnerBoxSize().y - child.OuterBoxSize().y;
                         break;

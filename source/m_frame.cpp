@@ -23,11 +23,8 @@ GameFrame::GameFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui
     const ui::Node::Handle root = ui::NodeBuilder(ui::hug).Fill(colors::forest_green).Direction(ui::vertical).Center().Build(tree, frame);
     time_label = ui::NodeBuilder(ui::hug).Text("Time: ").Build(tree, root);
     score_label = ui::NodeBuilder(ui::hug).Text("Score: ").Build(tree, root);
-}
-void GameFrame::Tick(u32 score, u32 time) {
-    tree.GetNode(time_label.GetHandle()).text = std::format("Time {:4}", score);
-    tree.GetNode(score_label.GetHandle()).text = std::format("Score {:4}", time);
-    tree.MarkDirty();
+    constexpr u32 box_size = 100U;
+    box = ui::NodeBuilder(uint2 { box_size, box_size } ).Fill(colors::ruby_red).Build(tree, frame);
 }
 
 ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const pce::String& text, const SDL_Color color, ui::NodeTree& tree, const ui::Node::Handle frame) {
@@ -40,26 +37,23 @@ ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const pce::String& te
     return component_handle;
 }
 DebugFrame::DebugFrame(pce::ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } { }
-void DebugFrame::Tick(u32 tick, ui::UISystem& ui_system) {
-    if (ui_system.left_mouse_down) {
-        using NodeHandleLayer = std::tuple<ui::Node::Handle, u32>;
+void DebugFrame::ShowElementStructure(const ui::UISystem::HoveredType& hovered) {
+    using NodeHandleLayer = std::tuple<ui::Node::Handle, u32>;
 
-        tree.MarkDirty();
-        tree.Clear();
-        if (!ui_system.hovered.has_value() || &ui_system.hovered.value().tree.get() == &tree) { return; }
-        const ui::Node::Handle hovered_node = ui_system.hovered.value().node_handle;
-        const ui::NodeTree& hovered_tree = ui_system.hovered.value().tree;
-        pce::Stack<NodeHandleLayer> node_handles;
-        node_handles.push(NodeHandleLayer { hovered_node, 0U });
+    tree.Clear();
+    if (!hovered.has_value() || &hovered.value().tree.get() == &tree) { return; }
+    const ui::Node::Handle hovered_node = hovered.value().node_handle;
+    const ui::NodeTree& hovered_tree = hovered.value().tree;
+    pce::Stack<NodeHandleLayer> node_handles;
+    node_handles.push(NodeHandleLayer { hovered_node, 0U });
 
-        const ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Fill(colors::clear).Fill(colors::white).Direction(ui::vertical).BuildRoot(tree, { 10U, 30U });
-        while (!node_handles.empty()) {
-            const auto [node_handle, layer] = node_handles.top();
-            node_handles.pop();
-            for (const ui::Node::Handle child_handle : hovered_tree.Children(node_handle)) { node_handles.push(NodeHandleLayer { child_handle, layer + 1 }); }
-            const ui::Node& node = hovered_tree.GetNode(node_handle);
-            CreateDebugNodeComponent(layer, node.IsText() ? "text" : "node", node.background_color, tree, frame);
-        }
+    const ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Fill(colors::clear).Fill(colors::white).Direction(ui::vertical).BuildRoot(tree, { 10U, 30U });
+    while (!node_handles.empty()) {
+        const auto [node_handle, layer] = node_handles.top();
+        node_handles.pop();
+        for (const ui::Node::Handle child_handle : hovered_tree.Children(node_handle)) { node_handles.push(NodeHandleLayer { child_handle, layer + 1 }); }
+        const ui::Node& node = hovered_tree.GetNode(node_handle);
+        CreateDebugNodeComponent(layer, node.IsText() ? "text" : "node", node.background_color, tree, frame);
     }
 }
 TestFrame::TestFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {

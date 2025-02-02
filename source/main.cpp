@@ -1,3 +1,5 @@
+#include <g_clickcore.hpp>
+
 #include <SDL3/SDL_main.h>
 
 #include "g_components.hpp"
@@ -43,12 +45,7 @@ void RunGame(Engine& engine) {
         input_system.Tick();
         ui_system.Tick(input_system);
 
-        tick_frame.Tick(tick.Value());
         test_frame.Tick(tick.Value(), ui_system);
-        debug_frame.Tick(tick.Value(), ui_system);
-        game_frame.Tick(tick.Value() / 60U, 30U);
-
-        ui_system.left_mouse_down = false;
 
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -65,12 +62,6 @@ void RunGame(Engine& engine) {
                             return;
                         default:
                             break;
-                    }
-                    break;
-                case SDL_EVENT_MOUSE_BUTTON_DOWN:
-                    if (event.button.button == SDL_BUTTON_LEFT) {
-                        ui_system.left_mouse_down = true;
-                        ui_system.LeftClick();
                     }
                     break;
                 default:
@@ -108,7 +99,8 @@ b8 Start() {
     if (!engine.InitWindow(width, height)) { return false; }
 
     SDL_Log("Starting game");
-    RunGame(engine);
+    pcg::clickcore::RunClickCore(engine);
+    //RunGame(engine);
 
     Logger().Log("Quitting main loop");
 

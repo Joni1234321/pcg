@@ -28,16 +28,22 @@ inline AbsolutePath Asset(const AssetPath& asset_path) {
 
 namespace pce {
 class InputSystem {
+    b8 left_mouse { false };
+    b8 left_mouse_down { false };
     uint2 mouse_position { };
 
 public:
     void Tick() {
         float2 mouse_position_f;
-        (void)SDL_GetMouseState(&mouse_position_f.x, &mouse_position_f.y);
+        SDL_MouseButtonFlags state = SDL_GetMouseState(&mouse_position_f.x, &mouse_position_f.y);
+        left_mouse_down = state && SDL_BUTTON_LMASK && !left_mouse;
+        left_mouse = state && SDL_BUTTON_LMASK;
         mouse_position.x = static_cast<u32>(mouse_position_f.x);
         mouse_position.y = static_cast<u32>(mouse_position_f.y);
     }
-    [[nodiscard]] uint2 MousePosition() const { return mouse_position; }
+    [[nodiscard]] constexpr uint2 MousePosition() const noexcept { return mouse_position; }
+    [[nodiscard]] constexpr b8 LeftMouseDown() const noexcept { return left_mouse_down; }
+    [[nodiscard]] constexpr b8 LeftMouse() const noexcept { return left_mouse; }
 };
 }
 

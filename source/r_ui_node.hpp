@@ -142,7 +142,7 @@ struct NodeTree {
     }
 
     [[nodiscard]] const Node& GetNode(const Node::Handle node_handle) const { return nodes[HandleToIndex(node_handle)]; }
-    [[nodiscard]] Node& GetNode(const Node::Handle node_handle) { return nodes[HandleToIndex(node_handle)]; }
+    [[nodiscard]] constexpr Node& GetNode(const Node::Handle node_handle) { return nodes[HandleToIndex(node_handle)]; }
     [[nodiscard]] Node::Handle Parent(const Node::Handle node_handle) { return parents[HandleToIndex(node_handle)]; }
     [[nodiscard]] const List<Node::Handle>& Children(const Node::Handle node_handle) const { return children[HandleToIndex(node_handle)]; }
     [[nodiscard]] Node::Handle AddNode(const Node& node, const Node::Handle parent_handle) {
@@ -173,7 +173,7 @@ struct NodeTree {
         }
     }
 
-    void MarkDirty() { dirty = true; }
+    constexpr void MarkDirty() noexcept { dirty = true; }
 
     const FrameElements& GetFrameElements() {
         if (dirty) {
