@@ -39,13 +39,13 @@ void RunGame(Engine& engine) {
 
         game.PlayTick(tick, ui_system, debug);
 
+        input_system.Tick();
+        ui_system.Tick(input_system);
+
         // main_menu_frame.Tick(tick.Value(), ui_system);
         tick_frame.Tick(tick.Value());
         test_frame.Tick(tick.Value(), ui_system);
         debug_frame.Tick(tick.Value(), ui_system);
-
-        input_system.Tick();
-        ui_system.Tick(input_system);
 
         ui_system.left_mouse_down = false;
 

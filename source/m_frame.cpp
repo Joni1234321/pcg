@@ -35,13 +35,13 @@ void DebugFrame::Tick(u32 tick, ui::UISystem& ui_system) {
 
         tree.MarkDirty();
         tree.Clear();
-        if (!ui_system.hovered_node.IsValid()) { return; }
-
-        const ui::NodeTree& hovered_tree = *ui_system.hovered_tree;
+        if (!ui_system.hovered.has_value() || &ui_system.hovered.value().tree.get() == &tree) { return; }
+        const ui::Node::Handle hovered_node = ui_system.hovered.value().node_handle;
+        const ui::NodeTree& hovered_tree = ui_system.hovered.value().tree;
         pce::Stack<NodeHandleLayer> node_handles;
-        node_handles.push(NodeHandleLayer { ui_system.hovered_node.GetHandle(), 0U });
+        node_handles.push(NodeHandleLayer {hovered_node , 0U });
 
-        ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Fill(colors::clear).Fill(colors::white).Direction(ui::vertical).BuildRoot(tree, { 10U, 30U });
+        const ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Fill(colors::clear).Fill(colors::white).Direction(ui::vertical).BuildRoot(tree, { 10U, 30U });
         while (!node_handles.empty()) {
             const auto [node_handle, layer] = node_handles.top();
             node_handles.pop();

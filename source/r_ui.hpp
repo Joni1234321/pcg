@@ -19,15 +19,15 @@ inline b8 bb_collision(const f32 x, f32 y, const SDL_FRect rect) {
 }
 
 class UISystem {
-
     std::vector<TextElement> text_elements { };
     std::vector<RectangleElement> rectangle_elements { };
     std::vector<ListElement> list_elements { };
     List<TableElement> table_elements { };
+
 public:
     b8 left_mouse_down { false };
-    NodeTree* hovered_tree { nullptr };
-    Node::OptionalHandle hovered_node { };
+    using HoveredType = std::optional<NodeReference>;
+    HoveredType hovered { };
     enum class ListDirection { horizontal, vertical };
     u32 screen_width;
     u32 screen_height;
@@ -35,10 +35,12 @@ public:
     FontCollection font;
     FontCollection font_bold;
     List<std::reference_wrapper<NodeTree>> node_trees { };
+    auto GetNodeTrees() const { return node_trees | std::views::transform(&std::reference_wrapper<NodeTree>::get); }
     explicit UISystem(Engine& engine);
     ~UISystem();
 
-    void Tick(InputSystem& input_system);
+    HoveredType GetHovered(uint2 mouse_position) const;
+    void Tick(const InputSystem& input_system);
     void RenderTrees(SDL_Renderer* renderer);
     void LeftClick();
     void SetColor(Color color);

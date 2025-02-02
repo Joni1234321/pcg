@@ -192,6 +192,7 @@ struct NodeTree {
             node_handle = *node_iterator;
         }
     }
+    [[nodiscard]] constexpr b8 ValidHandle(const Node::Handle node_handle) const { return (node_handle.id - offset_handle.id) < nodes.Size(); }
 
 private:
     List<Node> nodes { };
@@ -206,12 +207,17 @@ private:
     [[nodiscard]] List<Node::Handle>& Children(const Node::Handle node_handle) { return children[HandleToIndex(node_handle)]; }
     [[nodiscard]] b8 Empty() const { return nodes.Empty(); }
 
-    [[nodiscard]] u32 HandleToIndex(const Node::Handle node_handle) const {
-        u32 i = node_handle.id - offset_handle.id;
-        return i;
+    [[nodiscard]] constexpr u32 HandleToIndex(const Node::Handle node_handle) const {
+        ASSERT_DBG(ValidHandle(node_handle), "Out of bounds, most likely destroyed");
+        return node_handle.id - offset_handle.id;
     }
 };
 
+struct NodeReference {
+    std::reference_wrapper<NodeTree> tree;
+    Node::Handle node_handle;
+    [[nodiscard]] b8 operator==(const NodeReference other) const { return &tree.get() == &other.tree.get() && node_handle.id == other.node_handle.id; }
+};
 struct NodeBuilder {
     [[nodiscard]] explicit NodeBuilder(uint2 size);
     [[nodiscard]] explicit NodeBuilder(RelatedConstraint constraint);

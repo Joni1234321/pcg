@@ -1,29 +1,35 @@
 #include "r_ui.hpp"
 
 namespace pce::ui {
-void UISystem::Tick(InputSystem& input_system) {
-    NodeTree* previous_hovered_tree { hovered_tree };
-    Node::OptionalHandle previous_hovered_node { hovered_node };
-
-    for (std::reference_wrapper tree_ref : node_trees) {
-        NodeTree& tree = tree_ref.get();
-
-        hovered_node = tree.HitNode(input_system.MousePosition());
-        if (hovered_node.IsValid()) {
-            hovered_tree = &tree;
-            break;
-        }
+UISystem::HoveredType UISystem::GetHovered(const uint2 mouse_position) const {
+    for (NodeTree& tree : GetNodeTrees()) {
+        Node::OptionalHandle node_handle = tree.HitNode(mouse_position);
+        if (node_handle.IsValid()) { return std::optional { NodeReference { tree, node_handle.GetHandle() } }; }
     }
-    if (previous_hovered_tree != hovered_tree || previous_hovered_node.id != hovered_node.id) {
-        if (previous_hovered_node.IsValid()) { previous_hovered_tree->Propagate(previous_hovered_node.GetHandle(), &Node::OnHoverOut); }
-        if (hovered_node.IsValid()) { hovered_tree->Propagate(hovered_node.GetHandle(), &Node::OnHover); }
-        if (previous_hovered_tree != nullptr) { previous_hovered_tree->MarkDirty(); }
-        if (hovered_tree != nullptr) { hovered_tree->MarkDirty(); }
+    return std::nullopt;
+}
+void UISystem::Tick(const InputSystem& input_system) {
+    if (hovered.has_value() && !hovered.value().tree.get().ValidHandle(hovered.value().node_handle)) { hovered = std::nullopt; }
+    HoveredType previous_hovered = hovered;
+    hovered = GetHovered(input_system.MousePosition());
+
+    if (hovered.has_value() && previous_hovered.has_value() && hovered == previous_hovered) { return; }
+
+    if (previous_hovered.has_value()) {
+        NodeTree& hovered_tree = previous_hovered.value().tree;
+        const Node::Handle hovered_node = previous_hovered.value().node_handle;
+        hovered_tree.Propagate(hovered_node, &Node::OnHoverOut);
+        hovered_tree.MarkDirty();
+    }
+    if (hovered.has_value()) {
+        NodeTree& hovered_tree = hovered.value().tree;
+        const Node::Handle hovered_node = hovered.value().node_handle;
+        hovered_tree.Propagate(hovered_node, &Node::OnHover);
+        hovered_tree.MarkDirty();
     }
 }
 void UISystem::RenderTrees(SDL_Renderer* renderer) {
-    for (const std::reference_wrapper tree_ref : node_trees | std::views::reverse) {
-        const FrameElements& frame_elements = tree_ref.get().GetFrameElements();
+    for (const FrameElements& frame_elements : GetNodeTrees() | std::views::reverse | std::views::transform(&NodeTree::GetFrameElements)) {
         for (const RectangleElement& element : frame_elements.rectangles) {
             (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
             (void)SDL_RenderFillRect(renderer, &element.rect);
@@ -32,12 +38,16 @@ void UISystem::RenderTrees(SDL_Renderer* renderer) {
     }
 }
 void UISystem::LeftClick() {
-    if (hovered_node.IsValid()) { hovered_tree->Propagate(hovered_node.GetHandle(), &Node::OnClick); }
+    if (hovered.has_value()) {
+        NodeTree& hovered_tree = hovered.value().tree;
+        const Node::Handle hovered_node = hovered.value().node_handle;
+        hovered_tree.Propagate(hovered_node, &Node::OnClick);
+    }
 }
 
 const RelativePath font_path = "font.ttf";
 const RelativePath font_bold_path = "TitilliumWeb-SemiBold.ttf";
-UISystem::UISystem(Engine& engine): text_engine(TTF_CreateRendererTextEngine(engine.renderer)), font { assets::Asset(font_path)}, font_bold { assets::Asset(font_bold_path) } {
+UISystem::UISystem(Engine& engine): text_engine(TTF_CreateRendererTextEngine(engine.renderer)), font { assets::Asset(font_path) }, font_bold { assets::Asset(font_bold_path) } {
     engine.GetWindowSize(&screen_width, &screen_height);
 }
 void UISystem::RenderElements(SDL_Renderer* renderer) {
