@@ -57,4 +57,19 @@ constexpr SDL_Color cool_teal { 32, 178, 170, 255U };
 constexpr SDL_Color ruby_red { 224, 17, 95, 255U };
 constexpr SDL_Color deep_gold { 218, 165, 32, 255U };
 constexpr SDL_Color silver { 192, 192, 192, 255U };
+
+inline SDL_Color AnimateFast(const f32 t) {
+    const u8 red = static_cast<u8>((std::sin(t * 0.5F + 0.0F) * 0.5F + 0.5F) * 255U);
+    const u8 green = static_cast<u8>((std::sin(t * 0.7F + 2.0F) * 0.5F + 0.5F) * 255U);
+    const u8 blue = static_cast<u8>((std::sin(t * 1.1F + 4.0F) * 0.5F + 0.5F) * 255U);
+    return SDL_Color { red, green, blue, 255U };
+}
+inline SDL_Color AnimateDamp(const f32 t) {
+    constexpr float base = 127.0F;
+    constexpr float amp = 64.0F;
+    const u8 red = static_cast<u8>(base + amp * std::sin(t * 0.5F + 0.0F));
+    const u8 green = static_cast<u8>(base + amp * std::sin(t * 0.7F + 2.0F));
+    const u8 blue = static_cast<u8>(base + amp * std::sin(t * 1.1F + 4.0F));
+    return SDL_Color { red, green, blue, 255U };
+}
 }

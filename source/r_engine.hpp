@@ -66,11 +66,23 @@ inline void DrawImgui(SDL_Renderer* renderer) {
 struct Engine {
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
+    Tick tick { 0U };
     std::chrono::time_point<std::chrono::high_resolution_clock> last_tick_start;
     f32 tick_time { 1.0f };
     f32 delta_time { 1.0f };
 
     Engine() = default;
+
+    void MarkTickStart() {
+        using namespace std::chrono;
+        tick += Tick { 1U };
+        delta_time = duration<f32>(high_resolution_clock::now() - last_tick_start).count();
+        last_tick_start = high_resolution_clock::now();
+    }
+    void MarkTickEnd() {
+        using namespace std::chrono;
+        tick_time = duration<f32>(high_resolution_clock::now() - last_tick_start).count();
+    }
 
     static b8 Load() {
         if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -116,7 +128,6 @@ struct Engine {
         (void)SDL_SetRenderDrawColor(renderer, clear_color.r, clear_color.g, clear_color.b, clear_color.a);
         (void)SDL_RenderClear(renderer);
     }
-    static void Delay (u8 milliseconds) { SDL_Delay(milliseconds); }
     void Present() const { (void)SDL_RenderPresent(renderer); }
     void GetWindowSize(u32* width, u32* height) const { (void)SDL_GetWindowSize(window, reinterpret_cast<i32*>(width), reinterpret_cast<i32*>(height)); }
     ~Engine() {

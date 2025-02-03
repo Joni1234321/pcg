@@ -19,12 +19,12 @@ MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_en
     exit_button = ui::NodeBuilder(ui::hug).Fill(colors::ruby_red).Text(pce::String { "Exit" }, ui::Fonts::h1).Build(tree, root);
 }
 GameFrame::GameFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
-    const ui::Node::Handle frame = ui::NodeBuilder(ui_system.screen_size).Center().Direction(ui::vertical).BuildRoot(tree, { 0U, 30U });
-    const ui::Node::Handle root = ui::NodeBuilder(ui::hug).Fill(colors::forest_green).Direction(ui::vertical).Center().Build(tree, frame);
-    time_label = ui::NodeBuilder(ui::hug).Text("Time", ui::Fonts::h1).Build(tree, root);
-    score_label = ui::NodeBuilder(ui::hug).Text("Score", ui::Fonts::h1).Build(tree, root);
+    frame = ui::NodeBuilder(ui_system.screen_size).Center().Direction(ui::vertical).Padding(uint2{0U, 30U}).BuildRoot(tree, { 0U, 0U });
+    score_box = ui::NodeBuilder(ui::hug).Padding(uint2{10U, 0U}).Fill(colors::forest_green).Direction(ui::vertical).Center().Build(tree, frame.GetHandle());
+    time_label = ui::NodeBuilder(ui::hug).Text("Time", ui::Fonts::h1).Build(tree, score_box.GetHandle());
+    score_label = ui::NodeBuilder(ui::hug).Text("Score", ui::Fonts::h1).Build(tree, score_box.GetHandle());
 
-    game_area = ui::NodeBuilder(ui::fill).Padding(uint2{ 300U, 100U}).Build(tree, frame);
+    game_area = ui::NodeBuilder(ui::fill).Padding(uint2{ 300U, 100U}).Build(tree, frame.GetHandle());
     constexpr u32 box_size = 100U;
     box = ui::NodeBuilder(uint2 { box_size, box_size } ).Fill(colors::ruby_red).Build(tree, game_area.GetHandle());
 }
