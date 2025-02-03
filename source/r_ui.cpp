@@ -42,7 +42,7 @@ void NodeRenderSystem::RenderTrees(SDL_Renderer* renderer) const {
             (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
             (void)SDL_RenderFillRect(renderer, &element.rect);
         }
-        for (const TextElement& text : frame_elements.texts) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
+        for (const TextElement& text : frame_elements.texts) { (void)TTF_DrawRendererText(text.text, text.position.x, text.position.y); }
     }
 }
 }

@@ -174,25 +174,6 @@ void NodeTree::RecalculateLayout() {
         node.bounding_box = { .x = static_cast<f32>(start_position.x), .y = static_cast<f32>(start_position.y), .w = static_cast<f32>(size.x), .h = static_cast<f32>(size.y) };
     }
 }
-
-TextElement NodeTree::CreateTextAligned(const String& string, const SDL_Color color, f32 x, const f32 y, const TextAlign alignment, const u32 parent_width) const {
-    TTF_Text* text = TTF_CreateText(text_engine, font_collection.GetFont(Fonts::body).ToSDL(), string.CString(), string.size());
-    (void)TTF_SetTextColor(text, color.r, color.g, color.b, color.a);
-    i32 text_width;
-    (void)TTF_GetTextSize(text, &text_width, nullptr);
-    switch (alignment) {
-        case TextAlign::left:
-            break;
-        case TextAlign::center:
-            x += (parent_width - static_cast<f32>(text_width)) * 0.5F;
-            break;
-        case TextAlign::right:
-            x += parent_width - static_cast<f32>(text_width);
-            break;
-    }
-    return TextElement { .text = text, .x = x, .y = y };
-}
-
 FrameElements NodeTree::CreateFrameElements() {
     FrameElements elements;
     if (Empty()) { return elements; }
@@ -205,14 +186,13 @@ FrameElements NodeTree::CreateFrameElements() {
         nodes.push_range(Children(node_handle));
 
         if (node.IsText()) {
-            TextElement text { .text = node.ttf_text, .x = static_cast<f32>(node.InnerBoxPosition().x), .y = static_cast<f32>(node.InnerBoxPosition().y) };
+            TextElement text { .text = node.ttf_text, .position = float2 { static_cast<f32>(node.InnerBoxPosition().x), static_cast<f32>(node.InnerBoxPosition().y) } };
             elements.texts.PushBack(text);
         } else {
-            RectangleElement rectangle { .color = node.background_color, .rect = node.OuterRect(), .on_click = nullptr };
+            RectangleElement rectangle { .color = node.background_color, .rect = node.OuterRect() };
             elements.rectangles.PushBack(rectangle);
         }
     }
-
     return elements;
 }
 NodeBuilder::NodeBuilder(const uint2 size) { Fixed(size); }

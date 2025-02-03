@@ -1,43 +1,64 @@
 #pragma once
 
 #include <algorithm>
-#include <ranges>
 #include <functional>
 
 #include <SDL3/SDL_render.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
-#include <SDL3_ttf/SDL_textengine.h>
-
-#include "r_ui_element.hpp"
 #include "u_collections.hpp"
+#include "u_logger.hpp"
 #include "u_types.hpp"
 
 namespace pce::ui {
+using FontSize = u8;
+enum class Fonts : FontSize { body = 16U, h1 = 34U, h2 = 30U, h3 = 24U, h4 = 20U, h5 = 18U, h6 = 16U, small = 14U, tiny = 12U, title = 52U };
+class Font {
+    std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)> font;
+public:
+    Font(const AbsolutePath& path, const FontSize size) : font(TTF_OpenFont(path.string().c_str(), size), &TTF_CloseFont) { Logger().Log("Loading Font {} {}", size, path.string()); }
+    Font(const Font&) = delete;
+    Font& operator=(const Font&) = delete;
+    Font(Font&&) noexcept = default;
+    Font& operator=(Font&&) noexcept = default;
+
+    b8 FailedLoading() const { return font.get() == nullptr; }
+    constexpr TTF_Font *ToSDL() const { return font.get(); }
+    FontSize GetSize() const { return TTF_GetFontSize(font.get()); }
+};
+struct FontCollection {
+    const AbsolutePath font_path;
+
+    explicit FontCollection(const AbsolutePath& path) : font_path { path } { }
+
+    FlatMap<Fonts, Font> fonts { };
+    [[nodiscard]] const Font& GetFont(const Fonts size) {
+        if (!fonts.HasKey(size)) {
+            fonts.EmplaceBack(size, Font { font_path, static_cast<FontSize>(size) });
+            b8 failed = fonts[size].FailedLoading();
+            if (failed) { SDL_Log("Font not loaded (%s)", SDL_GetError()); }
+        }
+        return fonts[size];
+    }
+};
+struct TextElement {
+    TTF_Text* text;
+    float2 position;
+};
+struct RectangleElement {
+    SDL_Color color;
+    SDL_FRect rect;
+};
 struct FrameElements {
     List<RectangleElement> rectangles { };
     List<TextElement> texts { };
-};
-class Color {
-public:
-    u8 r;
-    u8 g;
-    u8 b;
-    u8 a;
-    Color(u8 r, u8 g, u8 b) : r(r), g(g), b(b), a(255) { }
-    Color(u8 r, u8 g, u8 b, u8 a) : r(r), g(g), b(b), a(a) { }
-    //Color(f32 r, f32 g, f32 b) : r(r * 255U), g(g * 255U), b(b * 255U), a(255) { }
-    //Color(f32 r, f32 g, f32 b, f32 a) : r(r * 255U), g(g * 255U), b(b * 255U), a(a * 255U) { }
-    explicit Color(const SDL_Color color) : Color(color.r, color.g, color.b, color.a) { }
-    explicit Color(const SDL_FColor color) : Color(color.r, color.g, color.b, color.a) { }
 };
 inline SDL_Color lighten_color(const SDL_Color color, const f32 factor) {
     auto lerp = [] (u8 channel, f32 factor, u8 target) -> u8 { return static_cast<u8>(channel + (target - channel) * factor); };
     return SDL_Color { lerp(color.r, factor, 255), lerp(color.g, factor, 255), lerp(color.b, factor, 255), color.a };
 }
 
-struct ResolvedLayout {
-    SDL_FRect layout;
-};
+enum class TextAlign { left, center, right };
 enum RelatedConstraint : u8 { hug, fill };
 enum FlexDirection : u8 { horizontal, vertical }; // default based on max width or height
 enum Alignment : u8 {  top_left, top_center, top_right, left, center, right, bottom_left, bottom_center, bottom_right };
@@ -204,7 +225,6 @@ private:
     b8 display { true };
     [[nodiscard]] FrameElements CreateFrameElements();
     void RecalculateLayout();
-    TextElement CreateTextAligned(const String& string, SDL_Color color, f32 x, f32 y, TextAlign alignment, u32 parent_width) const;
     [[nodiscard]] List<Node::Handle>& Children(const Node::Handle node_handle) { return children[HandleToIndex(node_handle)]; }
     [[nodiscard]] b8 Empty() const { return nodes.Empty(); }
 

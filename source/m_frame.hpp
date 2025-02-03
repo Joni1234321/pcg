@@ -22,9 +22,7 @@ struct InspectorFrame {
     void ShowElementStructure(const ui::NodeRenderSystem::HoveredType& hovered);
 };
 struct TestFrame {
-    std::vector<pce::ui::RectangleElement::Handle> elements { };
-    pce::ui::NodeTree tree;
+    ui::NodeTree tree;
     explicit TestFrame(pce::ui::NodeRenderSystem& ui_system);
-    void Tick(u32 tick, pce::ui::NodeRenderSystem& ui_system);
 };
 }

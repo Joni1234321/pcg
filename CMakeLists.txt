@@ -21,7 +21,6 @@ add_executable(${PROJECT_NAME}
                source/m_frame.cpp
                source/r_ui.cpp
                source/r_ui_node.cpp
-               source/r_ui_element.cpp
                ${imgui_dir}/imgui.cpp
                ${imgui_dir}/imgui_demo.cpp
                ${imgui_dir}/imgui_draw.cpp
