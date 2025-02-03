@@ -1,0 +1,210 @@
+#include "g_clickcore.hpp"
+
+#include <chrono>
+
+#include "m_frame.hpp"
+#include "r_engine.hpp"
+#include "r_ui.hpp"
+#include "r_ui_element.hpp"
+#include "r_ui_node.hpp"
+#include "u_collections.hpp"
+#include "u_util.hpp"
+
+namespace pcg::clickcore {
+using namespace pce;
+using namespace pce::frame;
+using namespace std::chrono;
+
+using Score = NamedType<u32, struct ScoreTag, Arithmetic, FormatLongNumber>;
+
+struct MainMenuFrame {
+    ui::NodeTree tree;
+    explicit MainMenuFrame(ui::NodeRenderSystem& ui_system, uint2 screen_size);
+    [[nodiscard]] constexpr ui::Node& StartButton() { return tree.GetNode(start_button.GetHandle()); }
+    [[nodiscard]] constexpr ui::Node& SettingsButton() { return tree.GetNode(settings_button.GetHandle()); }
+    [[nodiscard]] constexpr ui::Node& ExitButton() { return tree.GetNode(exit_button.GetHandle()); }
+
+private:
+    ui::Node::OptionalHandle start_button { };
+    ui::Node::OptionalHandle settings_button { };
+    ui::Node::OptionalHandle exit_button { };
+};
+struct GameFrame {
+    ui::NodeTree tree;
+    explicit GameFrame(ui::NodeRenderSystem& ui_system, uint2 screen_size);
+    [[nodiscard]] constexpr ui::Node& Frame() { return tree.GetNode(frame.GetHandle()); }
+    [[nodiscard]] constexpr ui::Node& GameArea() { return tree.GetNode(game_area.GetHandle()); }
+    [[nodiscard]] constexpr ui::Node& Box() { return tree.GetNode(box.GetHandle()); }
+    [[nodiscard]] constexpr ui::Node& ScoreBox() { return tree.GetNode(score_box.GetHandle()); }
+    void SetTime(const u32 time_ms) { tree.GetNode(time_label.GetHandle()).text = std::format("Time {:02}:{:02}.{:02}", time_ms / (1000U * 60U), time_ms / 1000U % 60U, time_ms % 100U); }
+    void SetScore(const u32 score) { tree.GetNode(score_label.GetHandle()).text = std::format("Score {:4}", score); }
+
+private:
+    ui::Node::OptionalHandle time_label { };
+    ui::Node::OptionalHandle score_label { };
+    ui::Node::OptionalHandle score_box { };
+    ui::Node::OptionalHandle box { };
+    ui::Node::OptionalHandle game_area { };
+    ui::Node::OptionalHandle frame { };
+};
+struct Game {
+    Score score { 0U };
+    time_point<high_resolution_clock> start_time;
+};
+enum class Scene { game, main_menu, game_over, quit };
+class ClickCore {
+    RenderSystem& render_system;
+    InputSystem input_system { };
+    TickSystem tick_system { };
+    ui::NodeRenderSystem node_render_system { render_system };
+
+    Game game { };
+    Scene scene { Scene::main_menu };
+
+public:
+
+    TickFrame tick_frame { node_render_system };
+    InspectorFrame debug_frame { node_render_system };
+    MainMenuFrame main_menu_frame { node_render_system, render_system.screen_size};
+    GameFrame game_frame { node_render_system, render_system.screen_size };
+
+    explicit ClickCore(RenderSystem& render_system);
+    void Tick();
+
+    [[nodiscard]] constexpr b8 IsRunning() const { return tick_system.running; }
+
+private:
+    void UserInterface();
+    void Render();
+
+    Scene MainMenuScene();
+    Scene GameScene();
+    Scene GameOverScene();
+};
+
+MainMenuFrame::MainMenuFrame(ui::NodeRenderSystem& ui_system, uint2 screen_size) : tree { ui_system.text_engine, ui_system.font } {
+    const String title = "Hey Helene!";
+    const ui::Node::Handle frame = ui::NodeBuilder(screen_size).Direction(ui::vertical).BuildRoot(tree, { 100U, 30U });
+    ui::NodeBuilder(ui::hug).Text(title, ui::Fonts::title).Fill(colors::light_sky_blue).Build(tree, frame);
+    const ui::Node::Handle root = ui::NodeBuilder(ui::hug).Padding({ 20U, 5U }).Fill(colors::deep_purple).Center().Direction(ui::vertical).Build(tree, frame);
+    start_button = ui::NodeBuilder(ui::hug).Fill(colors::radiant_orange).Text(String { "Play" }, ui::Fonts::h1).Build(tree, root);
+    settings_button = ui::NodeBuilder(ui::hug).Fill(colors::cool_teal).Text(String { "Settings" }, ui::Fonts::h1).Build(tree, root);
+    exit_button = ui::NodeBuilder(ui::hug).Fill(colors::ruby_red).Text(String { "Exit" }, ui::Fonts::h1).Build(tree, root);
+}
+GameFrame::GameFrame(ui::NodeRenderSystem& ui_system, uint2 screen_size) : tree { ui_system.text_engine, ui_system.font } {
+    frame = ui::NodeBuilder(screen_size).Center().Direction(ui::vertical).Padding(uint2 { 0U, 30U }).BuildRoot(tree, { 0U, 0U });
+    score_box = ui::NodeBuilder(ui::hug).Padding(uint2 { 10U, 0U }).Fill(colors::forest_green).Direction(ui::vertical).Center().Build(tree, frame.GetHandle());
+    time_label = ui::NodeBuilder(ui::hug).Text("Time", ui::Fonts::h1).Build(tree, score_box.GetHandle());
+    score_label = ui::NodeBuilder(ui::hug).Text("Score", ui::Fonts::h1).Build(tree, score_box.GetHandle());
+
+    game_area = ui::NodeBuilder(ui::fill).Padding(uint2 { 300U, 100U }).Build(tree, frame.GetHandle());
+    constexpr u32 box_size = 100U;
+    box = ui::NodeBuilder(uint2 { box_size, box_size }).Fill(colors::ruby_red).Build(tree, game_area.GetHandle());
+}
+
+ClickCore::ClickCore(RenderSystem& render_system) : render_system { render_system }{
+    node_render_system.node_trees.EmplaceBack(tick_frame.tree);
+    node_render_system.node_trees.EmplaceBack(debug_frame.tree);
+    node_render_system.node_trees.EmplaceBack(main_menu_frame.tree);
+    node_render_system.node_trees.EmplaceBack(game_frame.tree);
+}
+void ClickCore::Tick() {
+    tick_system();
+    input_system();
+    node_render_system.HoverClickEvents(input_system);
+    UserInterface();
+
+    render_system();
+    node_render_system.RenderTrees(render_system.renderer);
+    render_system.End();
+    tick_system.End();
+}
+void ClickCore::UserInterface() {
+
+    if (input_system.keys[SDLK_ESCAPE]) { tick_system.running = false; }
+
+    if (input_system.LeftMouseDown()) {
+        debug_frame.tree.MarkDirty();
+        debug_frame.ShowElementStructure(node_render_system.hovered);
+    }
+    tick_frame.tree.MarkDirty();
+    tick_frame.SetInfo(tick_system.tick.Value(), 1.0F / tick_system.tick_time, 1.0F / tick_system.delta_time);
+
+    switch (scene) {
+        case Scene::game:
+            scene = GameScene();
+            break;
+        case Scene::main_menu:
+            scene = MainMenuScene();
+            break;
+        case Scene::game_over:
+            scene = GameOverScene();
+            break;
+        case Scene::quit:
+            Logger().Log("Quit requested");
+            tick_system.running = false;
+            return;
+    }
+}
+
+Scene ClickCore::MainMenuScene() {
+    main_menu_frame.tree.MarkDirty();
+    if (input_system.LeftMouseDown()) {
+        if (main_menu_frame.StartButton().IsInside(input_system.MousePosition())) {
+            main_menu_frame.tree.SetDisplay(false);
+            game = Game { .score = Score { 0U }, .start_time = high_resolution_clock::now() };
+            return Scene::game;
+        }
+        if (main_menu_frame.SettingsButton().IsInside(input_system.MousePosition())) { return Scene::game_over; }
+        if (main_menu_frame.ExitButton().IsInside(input_system.MousePosition())) { return Scene::quit; }
+    }
+    return Scene::main_menu;
+}
+Scene ClickCore::GameScene() {
+    constexpr seconds game_time = 3s;
+    const nanoseconds elapsed = (high_resolution_clock::now() - game.start_time);
+    if (elapsed > game_time) {
+        main_menu_frame.tree.MarkDirty();
+        main_menu_frame.tree.SetDisplay(true);
+        main_menu_frame.StartButton().text = "Play Again";
+        game_frame.tree.MarkDirty();
+        game_frame.SetTime(0);
+        game_frame.Box().background_color.a = 0U;
+        return Scene::game_over;
+    }
+    const u32 time_left_ms = duration_cast<milliseconds>(game_time - elapsed).count();
+    game_frame.tree.MarkDirty();
+    game_frame.SetScore(game.score.Value());
+    game_frame.SetTime(time_left_ms);
+
+    if (input_system.LeftMouseDown() || input_system.LeftMouseUp()) {
+        if (game_frame.Box().IsInside(input_system.MousePosition())) {
+            constexpr Score points = Score { 50U };
+            game.score += points;
+            const uint2 area = game_frame.GameArea().OuterBoxSize() - game_frame.Box().OuterBoxSize();
+            const uint4 random_position = uint4 { Rand(area.x), Rand(area.y), 0U, 0U };
+            game_frame.GameArea().padding = random_position;
+        }
+    }
+    return Scene::game;
+}
+Scene ClickCore::GameOverScene() {
+    constexpr f32 slow_down = 1000.0F;
+    game_frame.tree.MarkDirty();
+    game_frame.Box().background_color = colors::AnimateDamp(static_cast<f32>(tick_system.tick.Value()) / slow_down);
+    game_frame.ScoreBox().background_color = colors::AnimateDamp(tick_system.tick.Value() * 1.2F / slow_down);
+
+    const Scene scene = MainMenuScene();
+    if (scene == Scene::main_menu) { return Scene::game_over; }
+    if (scene == Scene::game) {
+        game_frame.Box().background_color = colors::ruby_red;
+        game_frame.ScoreBox().background_color = colors::forest_green;
+        return Scene::game;
+    }
+    return scene;
+}
+void RunClickCore(RenderSystem& render_system) {
+    ClickCore click_core { render_system };
+    while (click_core.IsRunning()) { click_core.Tick(); }
+}
+}
