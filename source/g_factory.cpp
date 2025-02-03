@@ -30,7 +30,7 @@ Entity PlanetArchetype::Add(const pce::Tick tick, const Money money, const Popul
     (void)ages.EmplaceBack(tick);
     (void)moneys.EmplaceBack(money);
     (void)unemployed.EmplaceBack(population);
-    (void)employed.EmplaceBack(0);
+    (void)employed.EmplaceBack(0.0F);
     (void)population_quality_of_life.EmplaceBack(QualityOfLife { 0.0F });
     (void)construction_queue.EmplaceBack();
 

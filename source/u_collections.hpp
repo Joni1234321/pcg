@@ -1,6 +1,7 @@
 #pragma once
 
 #include <format>
+#include <set>
 #include <span>
 #include <utility>
 #include <vector>
@@ -16,6 +17,7 @@ namespace pce {
 template <typename T> using Span = std::span<T>;
 template <typename T> using Stack = std::stack<T>;
 template <class K, class V> using UnorderedMap = std::unordered_map<K, V>;
+template <class T, class C =  std::less<T>> using Set = std::set<T, C>;
 using AbsolutePath = std::filesystem::path;
 using RelativePath = std::filesystem::path;
 using AssetPath = std::filesystem::path;

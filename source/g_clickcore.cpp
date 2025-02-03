@@ -19,7 +19,15 @@ using Score = NamedType<u32, struct ScoreTag, Arithmetic, FormatLongNumber>;
 
 struct MainMenuFrame {
     ui::NodeTree tree;
-    explicit MainMenuFrame(ui::NodeRenderSystem& ui_system, uint2 screen_size);
+    explicit MainMenuFrame(ui::NodeRenderSystem& ui_system, const uint2 screen_size) : tree { ui_system.text_engine, ui_system.font } {
+        const String title = "Hey Helene!";
+        const ui::Node::Handle frame = ui::NodeBuilder(screen_size).Direction(ui::vertical).BuildRoot(tree, { 100U, 30U });
+        ui::NodeBuilder(ui::hug).Text(title, ui::Fonts::title).Fill(colors::light_sky_blue).Build(tree, frame);
+        const ui::Node::Handle root = ui::NodeBuilder(ui::hug).Padding({ 20U, 5U }).Fill(colors::deep_purple).Center().Direction(ui::vertical).Build(tree, frame);
+        start_button = ui::NodeBuilder(ui::hug).Fill(colors::radiant_orange).Text(String { "Play" }, ui::Fonts::h1).Build(tree, root);
+        settings_button = ui::NodeBuilder(ui::hug).Fill(colors::cool_teal).Text(String { "Settings" }, ui::Fonts::h1).Build(tree, root);
+        exit_button = ui::NodeBuilder(ui::hug).Fill(colors::ruby_red).Text(String { "Exit" }, ui::Fonts::h1).Build(tree, root);
+    }
     [[nodiscard]] constexpr ui::Node& StartButton() { return tree.GetNode(start_button.GetHandle()); }
     [[nodiscard]] constexpr ui::Node& SettingsButton() { return tree.GetNode(settings_button.GetHandle()); }
     [[nodiscard]] constexpr ui::Node& ExitButton() { return tree.GetNode(exit_button.GetHandle()); }
@@ -31,7 +39,16 @@ private:
 };
 struct GameFrame {
     ui::NodeTree tree;
-    explicit GameFrame(ui::NodeRenderSystem& ui_system, uint2 screen_size);
+    explicit GameFrame(ui::NodeRenderSystem& ui_system, const uint2 screen_size) : tree { ui_system.text_engine, ui_system.font } {
+        frame = ui::NodeBuilder(screen_size).Center().Direction(ui::vertical).Padding(uint2 { 0U, 30U }).BuildRoot(tree, { 0U, 0U });
+        score_box = ui::NodeBuilder(ui::hug).Padding(uint2 { 10U, 0U }).Fill(colors::forest_green).Direction(ui::vertical).Center().Build(tree, frame.GetHandle());
+        time_label = ui::NodeBuilder(ui::hug).Text("Time", ui::Fonts::h1).Build(tree, score_box.GetHandle());
+        score_label = ui::NodeBuilder(ui::hug).Text("Score", ui::Fonts::h1).Build(tree, score_box.GetHandle());
+
+        game_area = ui::NodeBuilder(ui::fill).Padding(uint2 { 300U, 100U }).Build(tree, frame.GetHandle());
+        constexpr u32 box_size = 100U;
+        box = ui::NodeBuilder(uint2 { box_size, box_size }).Fill(colors::ruby_red).Build(tree, game_area.GetHandle());
+    }
     [[nodiscard]] constexpr ui::Node& Frame() { return tree.GetNode(frame.GetHandle()); }
     [[nodiscard]] constexpr ui::Node& GameArea() { return tree.GetNode(game_area.GetHandle()); }
     [[nodiscard]] constexpr ui::Node& Box() { return tree.GetNode(box.GetHandle()); }
@@ -47,62 +64,42 @@ private:
     ui::Node::OptionalHandle game_area { };
     ui::Node::OptionalHandle frame { };
 };
+struct HighScore {
+    Score score;
+    std::strong_ordering operator<=>(const HighScore& other) const noexcept { return score.Value() <=> other.score.Value(); }
+};
 struct Game {
     Score score { 0U };
     time_point<high_resolution_clock> start_time;
+    Set<HighScore> high_scores;
 };
 enum class Scene { game, main_menu, game_over, quit };
 class ClickCore {
     RenderSystem& render_system;
-    InputSystem input_system { };
     TickSystem tick_system { };
+    InputSystem input_system { };
     ui::NodeRenderSystem node_render_system { render_system };
 
     Game game { };
     Scene scene { Scene::main_menu };
 
 public:
-
-    TickFrame tick_frame { node_render_system };
-    InspectorFrame debug_frame { node_render_system };
-    MainMenuFrame main_menu_frame { node_render_system, render_system.screen_size};
+    TickFrame tick_frame { node_render_system };       // move these out somehow since they are engine specific
+    InspectorFrame debug_frame { node_render_system }; // move these out somehow since they are engine specific
+    MainMenuFrame main_menu_frame { node_render_system, render_system.screen_size };
     GameFrame game_frame { node_render_system, render_system.screen_size };
-
     explicit ClickCore(RenderSystem& render_system);
     void Tick();
-
     [[nodiscard]] constexpr b8 IsRunning() const { return tick_system.running; }
 
 private:
     void UserInterface();
-    void Render();
-
     Scene MainMenuScene();
     Scene GameScene();
     Scene GameOverScene();
 };
 
-MainMenuFrame::MainMenuFrame(ui::NodeRenderSystem& ui_system, uint2 screen_size) : tree { ui_system.text_engine, ui_system.font } {
-    const String title = "Hey Helene!";
-    const ui::Node::Handle frame = ui::NodeBuilder(screen_size).Direction(ui::vertical).BuildRoot(tree, { 100U, 30U });
-    ui::NodeBuilder(ui::hug).Text(title, ui::Fonts::title).Fill(colors::light_sky_blue).Build(tree, frame);
-    const ui::Node::Handle root = ui::NodeBuilder(ui::hug).Padding({ 20U, 5U }).Fill(colors::deep_purple).Center().Direction(ui::vertical).Build(tree, frame);
-    start_button = ui::NodeBuilder(ui::hug).Fill(colors::radiant_orange).Text(String { "Play" }, ui::Fonts::h1).Build(tree, root);
-    settings_button = ui::NodeBuilder(ui::hug).Fill(colors::cool_teal).Text(String { "Settings" }, ui::Fonts::h1).Build(tree, root);
-    exit_button = ui::NodeBuilder(ui::hug).Fill(colors::ruby_red).Text(String { "Exit" }, ui::Fonts::h1).Build(tree, root);
-}
-GameFrame::GameFrame(ui::NodeRenderSystem& ui_system, uint2 screen_size) : tree { ui_system.text_engine, ui_system.font } {
-    frame = ui::NodeBuilder(screen_size).Center().Direction(ui::vertical).Padding(uint2 { 0U, 30U }).BuildRoot(tree, { 0U, 0U });
-    score_box = ui::NodeBuilder(ui::hug).Padding(uint2 { 10U, 0U }).Fill(colors::forest_green).Direction(ui::vertical).Center().Build(tree, frame.GetHandle());
-    time_label = ui::NodeBuilder(ui::hug).Text("Time", ui::Fonts::h1).Build(tree, score_box.GetHandle());
-    score_label = ui::NodeBuilder(ui::hug).Text("Score", ui::Fonts::h1).Build(tree, score_box.GetHandle());
-
-    game_area = ui::NodeBuilder(ui::fill).Padding(uint2 { 300U, 100U }).Build(tree, frame.GetHandle());
-    constexpr u32 box_size = 100U;
-    box = ui::NodeBuilder(uint2 { box_size, box_size }).Fill(colors::ruby_red).Build(tree, game_area.GetHandle());
-}
-
-ClickCore::ClickCore(RenderSystem& render_system) : render_system { render_system }{
+ClickCore::ClickCore(RenderSystem& render_system) : render_system { render_system } {
     node_render_system.node_trees.EmplaceBack(tick_frame.tree);
     node_render_system.node_trees.EmplaceBack(debug_frame.tree);
     node_render_system.node_trees.EmplaceBack(main_menu_frame.tree);
@@ -112,6 +109,7 @@ void ClickCore::Tick() {
     tick_system();
     input_system();
     node_render_system.HoverClickEvents(input_system);
+
     UserInterface();
 
     render_system();
@@ -120,7 +118,6 @@ void ClickCore::Tick() {
     tick_system.End();
 }
 void ClickCore::UserInterface() {
-
     if (input_system.keys[SDLK_ESCAPE]) { tick_system.running = false; }
 
     if (input_system.LeftMouseDown()) {
@@ -161,8 +158,8 @@ Scene ClickCore::MainMenuScene() {
     return Scene::main_menu;
 }
 Scene ClickCore::GameScene() {
-    constexpr seconds game_time = 3s;
-    const nanoseconds elapsed = (high_resolution_clock::now() - game.start_time);
+    constexpr seconds game_time = 2s;
+    const nanoseconds elapsed = high_resolution_clock::now() - game.start_time;
     if (elapsed > game_time) {
         main_menu_frame.tree.MarkDirty();
         main_menu_frame.tree.SetDisplay(true);
@@ -170,6 +167,7 @@ Scene ClickCore::GameScene() {
         game_frame.tree.MarkDirty();
         game_frame.SetTime(0);
         game_frame.Box().background_color.a = 0U;
+        game.high_scores.emplace(game.score);
         return Scene::game_over;
     }
     const u32 time_left_ms = duration_cast<milliseconds>(game_time - elapsed).count();
