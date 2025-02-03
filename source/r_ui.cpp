@@ -1,14 +1,14 @@
 #include "r_ui.hpp"
 
 namespace pce::ui {
-UISystem::HoveredType UISystem::GetHovered(const uint2 mouse_position) const {
+NodeRenderSystem::HoveredType NodeRenderSystem::GetHovered(const uint2 mouse_position) const {
     for (NodeTree& tree : GetNodeTrees()) {
         Node::OptionalHandle node_handle = tree.HitNode(mouse_position);
         if (node_handle.IsValid()) { return std::optional { NodeReference { tree, node_handle.GetHandle() } }; }
     }
     return std::nullopt;
 }
-void UISystem::Tick(const InputSystem& input_system) {
+void NodeRenderSystem::HoverClickEvents(const InputSystem& input_system) {
     if (input_system.LeftMouseDown()) { LeftClickHoveredItem(); }
     if (hovered.has_value() && !hovered.value().tree.get().ValidHandle(hovered.value().node_handle)) { hovered = std::nullopt; }
     HoveredType previous_hovered = hovered;
@@ -29,7 +29,7 @@ void UISystem::Tick(const InputSystem& input_system) {
         hovered_tree.MarkDirty();
     }
 }
-void UISystem::RenderTrees(SDL_Renderer* renderer) {
+void NodeRenderSystem::RenderTrees(SDL_Renderer* renderer) {
     for (const FrameElements& frame_elements : GetNodeTrees() | std::views::reverse | std::views::filter(&NodeTree::GetDisplay) | std::views::transform(&NodeTree::GetFrameElements)) {
         for (const RectangleElement& element : frame_elements.rectangles) {
             (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
@@ -38,7 +38,7 @@ void UISystem::RenderTrees(SDL_Renderer* renderer) {
         for (const TextElement& text : frame_elements.texts) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
     }
 }
-void UISystem::LeftClickHoveredItem() {
+void NodeRenderSystem::LeftClickHoveredItem() {
     if (hovered.has_value()) {
         NodeTree& hovered_tree = hovered.value().tree;
         const Node::Handle hovered_node = hovered.value().node_handle;
@@ -48,10 +48,8 @@ void UISystem::LeftClickHoveredItem() {
 
 const RelativePath font_path = "font.ttf";
 const RelativePath font_bold_path = "TitilliumWeb-SemiBold.ttf";
-UISystem::UISystem(Engine& engine): text_engine(TTF_CreateRendererTextEngine(engine.renderer)), font { assets::Asset(font_path) }, font_bold { assets::Asset(font_bold_path) } {
-    engine.GetWindowSize(&screen_size.x, &screen_size.y);
-}
-void UISystem::RenderElements(SDL_Renderer* renderer) {
+NodeRenderSystem::NodeRenderSystem(RenderSystem& engine): text_engine(TTF_CreateRendererTextEngine(engine.renderer)), font { assets::Asset(font_path) }, font_bold { assets::Asset(font_bold_path) } { }
+void NodeRenderSystem::RenderElements(SDL_Renderer* renderer) {
     for (const RectangleElement& element : rectangle_elements) {
         (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
         (void)SDL_RenderFillRect(renderer, &element.rect);
@@ -63,12 +61,12 @@ void UISystem::RenderElements(SDL_Renderer* renderer) {
     for (const TextElement& text : text_elements) { (void)TTF_DrawRendererText(text.text, text.x, text.y); }
 }
 
-UISystem::~UISystem() {
+NodeRenderSystem::~NodeRenderSystem() {
     for (const TextElement& text : text_elements) { TTF_DestroyText(text.text); }
     for (const RectangleElement& element : rectangle_elements) { }
     TTF_DestroyRendererTextEngine(text_engine);
 }
-TextElement::Handle UISystem::CreateTextAligned(const String& string, TTF_Font* font, const SDL_Color color, f32 x, const f32 y, const TextAlign alignment, const u32 width) {
+TextElement::Handle NodeRenderSystem::CreateTextAligned(const String& string, TTF_Font* font, const SDL_Color color, f32 x, const f32 y, const TextAlign alignment, const u32 width) {
     TTF_Text* text = TTF_CreateText(text_engine, font, string.CString(), string.size());
     i32 text_width;
     (void)TTF_SetTextColor(text, color.r, color.g, color.b, color.a);
@@ -86,12 +84,12 @@ TextElement::Handle UISystem::CreateTextAligned(const String& string, TTF_Font* 
     (void)text_elements.emplace_back(text, x, y);
     return TextElement::Handle { static_cast<u32>(text_elements.size() - 1) };
 }
-TextElement::Handle UISystem::CreateText(const String& string, TTF_Font* font, const SDL_Color color, const f32 x, const f32 y) { return CreateTextAligned(string, font, color, x, y, TextAlign::left, 0U); }
-RectangleElement::Handle UISystem::CreateElement(const SDL_FRect rect, const SDL_Color color, void (*on_click)()) {
+TextElement::Handle NodeRenderSystem::CreateText(const String& string, TTF_Font* font, const SDL_Color color, const f32 x, const f32 y) { return CreateTextAligned(string, font, color, x, y, TextAlign::left, 0U); }
+RectangleElement::Handle NodeRenderSystem::CreateElement(const SDL_FRect rect, const SDL_Color color, void (*on_click)()) {
     (void)rectangle_elements.emplace_back(color, rect, on_click);
     return RectangleElement::Handle { static_cast<u32>(rectangle_elements.size() - 1) };
 }
-ListElement::Handle UISystem::CreateList(const SDL_Color color, const SDL_FRect rect, const u32 count, const f32 gap, const ListDirection direction) {
+ListElement::Handle NodeRenderSystem::CreateList(const SDL_Color color, const SDL_FRect rect, const u32 count, const f32 gap, const ListDirection direction) {
     std::vector<SDL_FRect> rects;
     rects.reserve(count);
     if (direction == ListDirection::horizontal) {
@@ -108,7 +106,7 @@ ListElement::Handle UISystem::CreateList(const SDL_Color color, const SDL_FRect 
     (void)list_elements.emplace_back(color, std::move(rects));
     return ListElement::Handle { static_cast<u32>(list_elements.size() - 1) };
 }
-void UISystem::IncreaseTableSize(TableElement& table_element, const Table& table) {
+void NodeRenderSystem::IncreaseTableSize(TableElement& table_element, const Table& table) {
     ASSERT_DBG_RETURN(table.Size() > table_element.text_grid.Size(), "New table layout is not bigger than previous",)
     const u32 old_columns = table_element.column_meta.Size();
     const u32 old_size = table_element.text_grid.Size();
@@ -155,13 +153,13 @@ void UISystem::IncreaseTableSize(TableElement& table_element, const Table& table
         row_info.y = y;
     }
 }
-TableElement::Handle UISystem::CreateTable(const Table& table, const SDL_Color text_color, const f32 x, const f32 y) {
+TableElement::Handle NodeRenderSystem::CreateTable(const Table& table, const SDL_Color text_color, const f32 x, const f32 y) {
     TableElement table_element { .x = x, .y = y, .text_color = text_color };
     IncreaseTableSize(table_element, table);
     (void)table_elements.EmplaceBack(table_element);
     return TableElement::Handle { table_elements.Size() - 1 };
 }
-void UISystem::UpdateTable(const TableElement::Handle& handle, const Table& table) {
+void NodeRenderSystem::UpdateTable(const TableElement::Handle& handle, const Table& table) {
     TableElement& table_element = table_elements[handle.id];
     if (table.Size() > table_element.text_grid.Size()) { IncreaseTableSize(table_element, table); }
     for (u32 row = 0; row < table.RowCount(); row++) {

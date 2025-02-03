@@ -13,12 +13,7 @@
 #include <SDL3_ttf/SDL_ttf.h>
 
 namespace pce::ui {
-inline b8 bb_collision(const f32 x, f32 y, const SDL_FRect rect) {
-    // todo: make hit collision
-    return false;
-}
-
-class UISystem {
+class NodeRenderSystem {
     std::vector<TextElement> text_elements { };
     std::vector<RectangleElement> rectangle_elements { };
     std::vector<ListElement> list_elements { };
@@ -28,17 +23,16 @@ public:
     using HoveredType = std::optional<NodeReference>;
     HoveredType hovered { };
     enum class ListDirection { horizontal, vertical };
-    uint2 screen_size;
     TTF_TextEngine* text_engine;
     FontCollection font;
     FontCollection font_bold;
     List<std::reference_wrapper<NodeTree>> node_trees { };
     auto GetNodeTrees() const { return node_trees | std::views::transform(&std::reference_wrapper<NodeTree>::get); }
-    explicit UISystem(Engine& engine);
-    ~UISystem();
+    explicit NodeRenderSystem(RenderSystem& engine);
+    ~NodeRenderSystem();
 
     HoveredType GetHovered(uint2 mouse_position) const;
-    void Tick(const InputSystem& input_system);
+    void HoverClickEvents(const InputSystem& input_system);
     void RenderTrees(SDL_Renderer* renderer);
     void LeftClickHoveredItem();
     void SetColor(Color color);

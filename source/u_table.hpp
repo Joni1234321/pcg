@@ -1,6 +1,7 @@
 #pragma once
 
 #include <any>
+#include <numeric>
 #include <variant>
 
 #include "u_logger.hpp"

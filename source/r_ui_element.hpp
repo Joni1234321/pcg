@@ -1,12 +1,10 @@
 #pragma once
 
-#include "r_engine.hpp"
-#include "u_table.hpp"
-#include "u_collections.hpp"
-#include "u_types.hpp"
-
-#include <SDL3/SDL_render.h>
 #include <SDL3_ttf/SDL_ttf.h>
+
+#include "u_collections.hpp"
+#include "u_logger.hpp"
+#include "u_types.hpp"
 
 namespace pce::ui {
 using FontSize = u8;

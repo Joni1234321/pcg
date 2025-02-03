@@ -15,92 +15,15 @@ using pcg::game;
 using pcg::player_archetype;
 using pce::Reinterpret;
 using pce::List;
-using namespace pcg::frame;
+using namespace pce::frame;
 
-void RunGame(Engine& engine) {
-    InputSystem input_system { };
-    ui::UISystem ui_system(engine);
-
-    MainMenuFrame main_menu_frame(ui_system);
-    GameFrame game_frame(ui_system);
-    TickFrame tick_frame(ui_system);
-    TestFrame test_frame(ui_system);
-    DebugFrame debug_frame(ui_system);
-
-    ui_system.node_trees.EmplaceBack(tick_frame.tree);
-    ui_system.node_trees.EmplaceBack(test_frame.tree);
-    ui_system.node_trees.EmplaceBack(debug_frame.tree);
-    ui_system.node_trees.EmplaceBack(main_menu_frame.tree);
-    ui_system.node_trees.EmplaceBack(game_frame.tree);
-
-    Tick tick { 0U };
-    bool running = true;
-    while (running) {
-        tick += Tick { 1U };
-        constexpr u32 skip = 10U;
-        const bool debug = tick.Value() % skip == skip - 1U;
-
-        game.PlayTick(tick, ui_system, debug);
-
-        input_system.Tick();
-        ui_system.Tick(input_system);
-
-        test_frame.Tick(tick.Value(), ui_system);
-
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            (void)ImGui_ImplSDL3_ProcessEvent(&event);
-            switch (event.type) {
-                case SDL_EVENT_QUIT:
-                    running = false;
-                    break;
-                case SDL_EVENT_KEY_DOWN:
-                    switch (event.key.key) {
-                        case SDLK_ESCAPE:
-                            Logger().Log("Quit requested");
-                            running = false;
-                            return;
-                        default:
-                            break;
-                    }
-                    break;
-                default:
-                    //Logger().Log("Unhandled event {}", event.type);
-                    break;
-            }
-        }
-
-        if (!running) { break; }
-
-        engine.ClearScreen();
-
-        ui_system.RenderElements(engine.renderer);
-        ui_system.RenderTrees(engine.renderer);
-
-        //DrawImgui(engine.renderer);
-        engine.Present();
-
-        if (debug) {
-            //PrintListStats(game.logger, reinterpret<List<f32>>(player_archetype.moneys));
-            //game.logger.Print();
-            //        (void)std::cin.ignore();
-        }
-    }
-
-}
 b8 Start() {
-    SDL_Log("Starting Engine");
-    Engine engine;
-
-    if (!engine.Load()) { return false; }
-
-    constexpr u32 width = 1600U;
-    constexpr u32 height = 900U;
-    if (!engine.InitWindow(width, height)) { return false; }
+    SDL_Log("Loading window");
+    constexpr uint2 window_size { 1600U, 900U };
+    RenderSystem render_system { window_size };
 
     SDL_Log("Starting game");
-    pcg::clickcore::RunClickCore(engine);
-    //RunGame(engine);
+    pcg::clickcore::RunClickCore(render_system);
 
     Logger().Log("Quitting main loop");
 

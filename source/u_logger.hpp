@@ -1,9 +1,7 @@
 #pragma once
 
-#include <algorithm>
 #include <cstdio>
 #include <format>
-#include <numeric>
 #include <string>
 #include <array>
 
@@ -29,7 +27,6 @@ constexpr auto LOGGER_PREFIX_ERROR = "";
 
 #define LOGGER_ERROR_WRITE(MESSAGE) Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__)
 #define LOGGER_ERROR_WRITE_RETURN(MESSAGE, RETURN) Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__); return RETURN
-#define FAILED(MESSAGE) Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__);
 #define ASSERT_DBG(CONDITION, MESSAGE) if (!static_cast<b8>(CONDITION)) { pce::Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__); }
 #define ASSERT_DBG_RETURN(CONDITION, MESSAGE, RETURN) if (!static_cast<b8>(CONDITION)) { Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__); return RETURN; }
 

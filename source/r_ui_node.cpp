@@ -1,6 +1,7 @@
 #include "r_ui_node.hpp"
 
 #include <ranges>
+#include <r_colors.hpp>
 #include <stack>
 
 namespace pce::ui {

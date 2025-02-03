@@ -5,31 +5,12 @@
 #include <stack>
 #include <u_algorithm.hpp>
 
-namespace pcg::frame {
-namespace ui = pce::ui;
-namespace colors = pce::colors;
+namespace pce::frame {
+namespace ui = ui;
+namespace colors = colors;
 
-MainMenuFrame::MainMenuFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
-    const pce::String title = "Hey Helene!";
-    ui::Node::Handle frame = ui::NodeBuilder(ui_system.screen_size).Direction(ui::vertical).BuildRoot(tree, { 100U, 30U });
-    ui::NodeBuilder(ui::hug).Text(title, ui::Fonts::title).Fill(colors::light_sky_blue).Build(tree, frame);
-    ui::Node::Handle root = ui::NodeBuilder(ui::hug).Padding({ 20U, 5U }).Fill(colors::deep_purple).Center().Direction(ui::vertical).Build(tree, frame);
-    start_button = ui::NodeBuilder(ui::hug).Fill(colors::radiant_orange).Text(pce::String { "Play" }, ui::Fonts::h1).Build(tree, root);
-    settings_button = ui::NodeBuilder(ui::hug).Fill(colors::cool_teal).Text(pce::String { "Settings" }, ui::Fonts::h1).Build(tree, root);
-    exit_button = ui::NodeBuilder(ui::hug).Fill(colors::ruby_red).Text(pce::String { "Exit" }, ui::Fonts::h1).Build(tree, root);
-}
-GameFrame::GameFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
-    frame = ui::NodeBuilder(ui_system.screen_size).Center().Direction(ui::vertical).Padding(uint2{0U, 30U}).BuildRoot(tree, { 0U, 0U });
-    score_box = ui::NodeBuilder(ui::hug).Padding(uint2{10U, 0U}).Fill(colors::forest_green).Direction(ui::vertical).Center().Build(tree, frame.GetHandle());
-    time_label = ui::NodeBuilder(ui::hug).Text("Time", ui::Fonts::h1).Build(tree, score_box.GetHandle());
-    score_label = ui::NodeBuilder(ui::hug).Text("Score", ui::Fonts::h1).Build(tree, score_box.GetHandle());
 
-    game_area = ui::NodeBuilder(ui::fill).Padding(uint2{ 300U, 100U}).Build(tree, frame.GetHandle());
-    constexpr u32 box_size = 100U;
-    box = ui::NodeBuilder(uint2 { box_size, box_size } ).Fill(colors::ruby_red).Build(tree, game_area.GetHandle());
-}
-
-ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const pce::String& text, const SDL_Color color, ui::NodeTree& tree, const ui::Node::Handle frame) {
+ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const String& text, const SDL_Color color, ui::NodeTree& tree, const ui::Node::Handle frame) {
     constexpr u32 padding_offset = 10U;
     constexpr uint2 color_indicator_size { 10U, 20U };
     constexpr u32 gap_size { 2U };
@@ -38,15 +19,17 @@ ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const pce::String& te
     ui::NodeBuilder(color_indicator_size).Fill(color).Build(tree, component_handle);
     return component_handle;
 }
-DebugFrame::DebugFrame(pce::ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } { }
-void DebugFrame::ShowElementStructure(const ui::UISystem::HoveredType& hovered) {
+InspectorFrame::InspectorFrame(ui::NodeRenderSystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
+
+}
+void InspectorFrame::ShowElementStructure(const ui::NodeRenderSystem::HoveredType& hovered) {
     using NodeHandleLayer = std::tuple<ui::Node::Handle, u32>;
 
     tree.Clear();
     if (!hovered.has_value() || &hovered.value().tree.get() == &tree) { return; }
     const ui::Node::Handle hovered_node = hovered.value().node_handle;
     const ui::NodeTree& hovered_tree = hovered.value().tree;
-    pce::Stack<NodeHandleLayer> node_handles;
+    Stack<NodeHandleLayer> node_handles;
     node_handles.push(NodeHandleLayer { hovered_node, 0U });
 
     const ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Fill(colors::clear).Fill(colors::white).Direction(ui::vertical).BuildRoot(tree, { 10U, 30U });
@@ -58,7 +41,7 @@ void DebugFrame::ShowElementStructure(const ui::UISystem::HoveredType& hovered) 
         CreateDebugNodeComponent(layer, node.IsText() ? "text" : "node", node.background_color, tree, frame);
     }
 }
-TestFrame::TestFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
+TestFrame::TestFrame(ui::NodeRenderSystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
     ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Gap(20U).Fill(colors::clear).BuildRoot(tree, { 100U, 400U }); {
         ui::Node::Handle root = ui::NodeBuilder(uint2 { 100U, 100U }).Padding({ 5U, 5U }).Fill(colors::forest_green).Build(tree, frame);
         ui::Node::Handle box1 = ui::NodeBuilder(ui::fill).Fill(colors::yellow).Padding({ 5U, 5U }).Build(tree, root);
@@ -73,9 +56,9 @@ TestFrame::TestFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui
         ui::Node::Handle box2 = ui::NodeBuilder(ui::fill).Fill(colors::red).Build(tree, root);
     } {
         ui::Node::Handle root = ui::NodeBuilder(ui::hug).Padding({ 5U, 5U }).Direction(ui::vertical).Fill(colors::deep_purple).Build(tree, frame);
-        ui::Node::Handle box1 = ui::NodeBuilder(ui::hug).Fill(colors::radiant_orange).Text(pce::String { "Play" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
-        ui::Node::Handle box2 = ui::NodeBuilder(ui::hug).Fill(colors::cool_teal).Text(pce::String { "Settings" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
-        ui::Node::Handle box3 = ui::NodeBuilder(ui::hug).Fill(colors::ruby_red).Text(pce::String { "Exit" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
+        ui::Node::Handle box1 = ui::NodeBuilder(ui::hug).Fill(colors::radiant_orange).Text(String { "Play" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
+        ui::Node::Handle box2 = ui::NodeBuilder(ui::hug).Fill(colors::cool_teal).Text(String { "Settings" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
+        ui::Node::Handle box3 = ui::NodeBuilder(ui::hug).Fill(colors::ruby_red).Text(String { "Exit" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build(tree, root);
     } {
         ui::Node::Handle root = ui::NodeBuilder(uint2 { 100U, 100U }).Padding({ 5U, 5U }).Fill(colors::sea_green).Build(tree, frame);
         ui::Node::Handle box1 = ui::NodeBuilder(ui::fill).Fill(colors::yellow).Padding({ 5U, 5U }).Build(tree, root);
@@ -92,11 +75,11 @@ TestFrame::TestFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui
         ui::Node::Handle box33 = ui::NodeBuilder(ui::fill).Fill(colors::yellow).Build(tree, box3);
     }
     if (false) {
-        pce::Table main_menu = pce::Table("Main Menu");
+        Table main_menu = Table("Main Menu");
 
         constexpr f32 menu_x = 200.0F;
         constexpr f32 list_start_y = 100.0F;
-        pce::List<pce::String> buttons = { "Play", "Settings", "Exit" };
+        List<String> buttons = { "Play", "Settings", "Exit" };
         ui_system.CreateText("Play", ui_system.font_bold.GetFont(ui::Fonts::h2).ToSDL(), colors::blue, menu_x, list_start_y);
         ui_system.CreateText("Settings", ui_system.font.GetFont(ui::Fonts::h2).ToSDL(), colors::black, menu_x, list_start_y + 50.0F);
         ui_system.CreateText("Exit", ui_system.font.GetFont(ui::Fonts::h2).ToSDL(), colors::red, menu_x, list_start_y + 100.0F);
@@ -104,8 +87,8 @@ TestFrame::TestFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui
         constexpr SDL_FRect background_rect { .x = menu_x, .y = list_start_y, .w = 100.0F, .h = 300.0F };
         ui_system.CreateElement(background_rect, colors::gray, nullptr);
 
-        main_menu.AddColumn("Fish Column", pce::List<pce::String> { "Hej", "Fem", "Femten" });
-        ui_system.CreateTable(main_menu, colors::sea_green, ui_system.screen_size.x / 2.0F - 100.0F, 300.0F);
+        main_menu.AddColumn("Fish Column", pce::List<String> { "Hej", "Fem", "Femten" });
+        ui_system.CreateTable(main_menu, colors::sea_green, 600.0F, 300.0F);
 
         SDL_FRect rect { .x = 200.0F, .y = 200.0F, .w = 30.0F, .h = 30.0F };
 
@@ -115,15 +98,16 @@ TestFrame::TestFrame(ui::UISystem& ui_system) : tree { ui_system.text_engine, ui
         (void)elements.emplace_back(ui_system.CreateElement(rect, colors::red, nullptr));
 
         rect.y = 400;
-        ui_system.CreateList(colors::white, rect, 10U, 25.0F, ui::UISystem::ListDirection::vertical);
+        ui_system.CreateList(colors::white, rect, 10U, 25.0F, ui::NodeRenderSystem::ListDirection::vertical);
         rect.h *= 2;
-        ui_system.CreateList(colors::green, rect, 10U, 25.0F, ui::UISystem::ListDirection::horizontal);
+        ui_system.CreateList(colors::green, rect, 10U, 25.0F, ui::NodeRenderSystem::ListDirection::horizontal);
     }
 }
-void TestFrame::Tick(u32 tick, ui::UISystem& ui_system) { }
+void TestFrame::Tick(u32 tick, ui::NodeRenderSystem& ui_system) { }
 
-pce::Table CreateFarmTable() {
-    pce::Table table { "Farms" };
+Table CreateFarmTable() {
+    using namespace pcg;
+    Table table { "Farms" };
     table.AddColumn("Type ", farm_archetype.types);
     table.AddColumn("Assets       ", Select(farm_archetype.finances, [&] (const Finance& finance) -> Money { return finance.assets.Total(); }));
     table.AddColumn("Equity       ", Select(farm_archetype.finances, [&] (const Finance& finance) -> Money { return finance.equity; }));
@@ -132,14 +116,14 @@ pce::Table CreateFarmTable() {
     table.AddColumn("Population balance", farm_archetype.population_balance);
     return table;
 }
-OverviewFrame::OverviewFrame(ui::UISystem& ui_system) {
+OverviewFrame::OverviewFrame(ui::NodeRenderSystem& ui_system) {
     constexpr f32 table_x = 200.0F;
     constexpr f32 table_y = 200.0F;
-    const pce::Table table = CreateFarmTable();
+    const Table table = CreateFarmTable();
     table_handle = ui_system.CreateTable(table, colors::light_sky_blue, table_x, table_y);
 }
-void OverviewFrame::Tick(ui::UISystem& ui_system) {
-    const pce::Table table = CreateFarmTable();
+void OverviewFrame::Tick(ui::NodeRenderSystem& ui_system) {
+    const Table table = CreateFarmTable();
     ui_system.UpdateTable(table_handle, table);
 }
 }

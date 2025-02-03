@@ -82,7 +82,7 @@ constexpr u16 BUILDING_TIME = 30U;
 constexpr f32 GROWTH_RATE_PER_MONTH = 0.0025F * PER_MONTH;
 
 
-void Game::PlayTick(pce::Tick tick, pce::ui::UISystem& ui_system, const b8 debug) {
+void Game::PlayTick(pce::Tick tick, pce::ui::NodeRenderSystem& node_render_system, const b8 debug) {
     // Construction
     for (const Player player : player_archetype) { ProcessConstructionQueue(player); }
     for (const Planet planet : planet_archetype) { ProcessConstructionQueue(planet); }
@@ -177,7 +177,7 @@ void Game::PlayTick(pce::Tick tick, pce::ui::UISystem& ui_system, const b8 debug
     farm_table.AddColumn("Last result  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.last_result; }));
     farm_table.AddColumn("Population balance", farm_archetype.population_balance);
     //string = farm_table.WriteToLogger(logger, LoggerTable::COLOR_DISABLED);
-    //(void)TTF_SetTextString(ui_system[info_text].text, string.CString(), string.size());
+    //(void)TTF_SetTextString(node_render_system[info_text].text, string.CString(), string.size());
     logger.Print();
 
     return;
