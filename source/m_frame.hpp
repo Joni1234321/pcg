@@ -27,12 +27,4 @@ struct TestFrame {
     explicit TestFrame(pce::ui::NodeRenderSystem& ui_system);
     void Tick(u32 tick, pce::ui::NodeRenderSystem& ui_system);
 };
-
-class OverviewFrame {
-    pce::ui::TableElement::Handle table_handle;
-
-public:
-    explicit OverviewFrame(pce::ui::NodeRenderSystem& ui_system);
-    void Tick(pce::ui::NodeRenderSystem& ui_system);
-};
 }

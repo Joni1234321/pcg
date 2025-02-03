@@ -1,9 +1,9 @@
 #include "m_frame.hpp"
 
 #include <ranges>
-#include <g_components.hpp>
 #include <stack>
-#include <u_algorithm.hpp>
+
+#include "g_components.hpp"
 
 namespace pce::frame {
 namespace ui = ui;
@@ -14,7 +14,7 @@ ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const String& text, c
     constexpr u32 padding_offset = 10U;
     constexpr uint2 color_indicator_size { 10U, 20U };
     constexpr u32 gap_size { 2U };
-    ui::Node::Handle component_handle = ui::NodeBuilder(ui::hug).Fill(colors::forest_green).Padding4(uint4 { padding_offset * layer, 0U, 0U, 0U }).Gap(gap_size).Build(tree, frame);
+    const ui::Node::Handle component_handle = ui::NodeBuilder(ui::hug).Fill(colors::forest_green).Padding4(uint4 { padding_offset * layer, 0U, 0U, 0U }).Gap(gap_size).Build(tree, frame);
     ui::NodeBuilder(ui::hug).Text(text, ui::Fonts::body).Fill(colors::black).Build(tree, component_handle);
     ui::NodeBuilder(color_indicator_size).Fill(color).Build(tree, component_handle);
     return component_handle;
@@ -74,56 +74,5 @@ TestFrame::TestFrame(ui::NodeRenderSystem& ui_system) : tree { ui_system.text_en
         ui::Node::Handle box32 = ui::NodeBuilder(ui::fill).Fill(colors::chocolate).Build(tree, box3);
         ui::Node::Handle box33 = ui::NodeBuilder(ui::fill).Fill(colors::yellow).Build(tree, box3);
     }
-    if (false) {
-        Table main_menu = Table("Main Menu");
-
-        constexpr f32 menu_x = 200.0F;
-        constexpr f32 list_start_y = 100.0F;
-        List<String> buttons = { "Play", "Settings", "Exit" };
-        ui_system.CreateText("Play", ui_system.font_bold.GetFont(ui::Fonts::h2).ToSDL(), colors::blue, menu_x, list_start_y);
-        ui_system.CreateText("Settings", ui_system.font.GetFont(ui::Fonts::h2).ToSDL(), colors::black, menu_x, list_start_y + 50.0F);
-        ui_system.CreateText("Exit", ui_system.font.GetFont(ui::Fonts::h2).ToSDL(), colors::red, menu_x, list_start_y + 100.0F);
-
-        constexpr SDL_FRect background_rect { .x = menu_x, .y = list_start_y, .w = 100.0F, .h = 300.0F };
-        ui_system.CreateElement(background_rect, colors::gray, nullptr);
-
-        main_menu.AddColumn("Fish Column", pce::List<String> { "Hej", "Fem", "Femten" });
-        ui_system.CreateTable(main_menu, colors::sea_green, 600.0F, 300.0F);
-
-        SDL_FRect rect { .x = 200.0F, .y = 200.0F, .w = 30.0F, .h = 30.0F };
-
-        (void)elements.emplace_back(ui_system.CreateElement(rect, colors::black, nullptr));
-
-        rect.x += 200;
-        (void)elements.emplace_back(ui_system.CreateElement(rect, colors::red, nullptr));
-
-        rect.y = 400;
-        ui_system.CreateList(colors::white, rect, 10U, 25.0F, ui::NodeRenderSystem::ListDirection::vertical);
-        rect.h *= 2;
-        ui_system.CreateList(colors::green, rect, 10U, 25.0F, ui::NodeRenderSystem::ListDirection::horizontal);
-    }
-}
-void TestFrame::Tick(u32 tick, ui::NodeRenderSystem& ui_system) { }
-
-Table CreateFarmTable() {
-    using namespace pcg;
-    Table table { "Farms" };
-    table.AddColumn("Type ", farm_archetype.types);
-    table.AddColumn("Assets       ", Select(farm_archetype.finances, [&] (const Finance& finance) -> Money { return finance.assets.Total(); }));
-    table.AddColumn("Equity       ", Select(farm_archetype.finances, [&] (const Finance& finance) -> Money { return finance.equity; }));
-    table.AddColumn("Liabilities  ", Select(farm_archetype.finances, [&] (const Finance& finance) -> Money { return finance.liabilities; }));
-    table.AddColumn("Last result  ", Select(farm_archetype.finances, [&] (const Finance& finance) -> Money { return finance.last_result; }));
-    table.AddColumn("Population balance", farm_archetype.population_balance);
-    return table;
-}
-OverviewFrame::OverviewFrame(ui::NodeRenderSystem& ui_system) {
-    constexpr f32 table_x = 200.0F;
-    constexpr f32 table_y = 200.0F;
-    const Table table = CreateFarmTable();
-    table_handle = ui_system.CreateTable(table, colors::light_sky_blue, table_x, table_y);
-}
-void OverviewFrame::Tick(ui::NodeRenderSystem& ui_system) {
-    const Table table = CreateFarmTable();
-    ui_system.UpdateTable(table_handle, table);
 }
 }
