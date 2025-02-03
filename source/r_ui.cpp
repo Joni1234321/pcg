@@ -30,7 +30,7 @@ void UISystem::Tick(const InputSystem& input_system) {
     }
 }
 void UISystem::RenderTrees(SDL_Renderer* renderer) {
-    for (const FrameElements& frame_elements : GetNodeTrees() | std::views::reverse | std::views::transform(&NodeTree::GetFrameElements)) {
+    for (const FrameElements& frame_elements : GetNodeTrees() | std::views::reverse | std::views::filter(&NodeTree::GetDisplay) | std::views::transform(&NodeTree::GetFrameElements)) {
         for (const RectangleElement& element : frame_elements.rectangles) {
             (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
             (void)SDL_RenderFillRect(renderer, &element.rect);

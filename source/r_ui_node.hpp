@@ -164,7 +164,6 @@ struct NodeTree {
         parents.Clear();
         children.Clear();
     };
-
     void Propagate(Node::Handle node_handle, const std::function<void(Node&)>& proj) {
         while (true) {
             std::invoke(proj, GetNode(node_handle));
@@ -172,9 +171,9 @@ struct NodeTree {
             node_handle = Parent(node_handle);
         }
     }
-
+    constexpr void SetDisplay(const b8 value) noexcept { display = value; }
+    [[nodiscard]] constexpr b8 GetDisplay() const noexcept { return display; }
     constexpr void MarkDirty() noexcept { dirty = true; }
-
     const FrameElements& GetFrameElements() {
         if (dirty) {
             dirty = false;
@@ -183,7 +182,6 @@ struct NodeTree {
         }
         return frame_elements;
     };
-
     Node::OptionalHandle HitNode(uint2 screen_position) const {
         if (nodes.Empty() || !GetNode(Root()).IsInside(screen_position)) { return Node::OptionalHandle { }; }
         Node::Handle node_handle = Root();
@@ -203,6 +201,7 @@ private:
     bool dirty { true };
     FrameElements frame_elements { };
     Node::Handle offset_handle { 0U };
+    b8 display { true };
     [[nodiscard]] FrameElements CreateFrameElements();
     void RecalculateLayout();
     TextElement CreateTextAligned(const String& string, SDL_Color color, f32 x, f32 y, TextAlign alignment, u32 parent_width) const;
@@ -267,6 +266,7 @@ struct NodeBuilder {
         Finalize(node_tree);
         return node_tree.AddNode(node, parent_handle);
     }
+
 
 private:
     Node node { };

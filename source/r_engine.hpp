@@ -66,10 +66,13 @@ inline void DrawImgui(SDL_Renderer* renderer) {
 struct Engine {
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
+    std::chrono::time_point<std::chrono::high_resolution_clock> last_tick_start;
+    f32 tick_time { 1.0f };
+    f32 delta_time { 1.0f };
 
     Engine() = default;
 
-    b8 Load() {
+    static b8 Load() {
         if (!SDL_Init(SDL_INIT_VIDEO)) {
             SDL_Log("SDL_Init failed (%s)", SDL_GetError());
             return false;
@@ -109,16 +112,13 @@ struct Engine {
 
         return true;
     }
-
     void ClearScreen() {
         (void)SDL_SetRenderDrawColor(renderer, clear_color.r, clear_color.g, clear_color.b, clear_color.a);
         (void)SDL_RenderClear(renderer);
     }
-
-    void Present() { (void)SDL_RenderPresent(renderer); }
-
-    void GetWindowSize(u32* width, u32* height) { (void)SDL_GetWindowSize(window, reinterpret_cast<i32*>(width), reinterpret_cast<i32*>(height)); }
-
+    static void Delay (u8 milliseconds) { SDL_Delay(milliseconds); }
+    void Present() const { (void)SDL_RenderPresent(renderer); }
+    void GetWindowSize(u32* width, u32* height) const { (void)SDL_GetWindowSize(window, reinterpret_cast<i32*>(width), reinterpret_cast<i32*>(height)); }
     ~Engine() {
         ImGui_ImplSDLRenderer3_Shutdown();
         ImGui_ImplSDL3_Shutdown();

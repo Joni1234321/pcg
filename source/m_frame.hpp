@@ -8,7 +8,14 @@ namespace pcg::frame {
 struct MainMenuFrame {
     pce::ui::NodeTree tree;
     explicit MainMenuFrame(pce::ui::UISystem& ui_system);
-    void Tick(u32 i, pce::ui::UISystem& ui_system);
+    [[nodiscard]] constexpr pce::ui::Node& StartButton() { return tree.GetNode(start_button.GetHandle()); }
+    [[nodiscard]] constexpr pce::ui::Node& SettingsButton() { return tree.GetNode(settings_button.GetHandle()); }
+    [[nodiscard]] constexpr pce::ui::Node& ExitButton() { return tree.GetNode(exit_button.GetHandle()); }
+
+private:
+    pce::ui::Node::OptionalHandle start_button { };
+    pce::ui::Node::OptionalHandle settings_button { };
+    pce::ui::Node::OptionalHandle exit_button { };
 };
 
 struct GameFrame {
@@ -16,7 +23,7 @@ struct GameFrame {
     explicit GameFrame(pce::ui::UISystem& ui_system);
     [[nodiscard]] constexpr pce::ui::Node& GameArea() { return tree.GetNode(game_area.GetHandle()); }
     [[nodiscard]] constexpr pce::ui::Node& Box() { return tree.GetNode(box.GetHandle()); }
-    void SetTime(const u32 time_ms) { tree.GetNode(time_label.GetHandle()).text = std::format("Time {:02}:{:02}.{:02}", time_ms / (1000U * 60U), time_ms / 1000U % 60U, time_ms % 100U ); }
+    void SetTime(const u32 time_ms) { tree.GetNode(time_label.GetHandle()).text = std::format("Time {:02}:{:02}.{:02}", time_ms / (1000U * 60U), time_ms / 1000U % 60U, time_ms % 100U); }
     void SetScore(const u32 score) { tree.GetNode(score_label.GetHandle()).text = std::format("Score {:4}", score); }
 
 private:
@@ -34,7 +41,7 @@ public:
     explicit TickFrame(pce::ui::UISystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
         tick_handle = pce::ui::NodeBuilder(pce::ui::hug).Text("Tick", pce::ui::Fonts::tiny).Fill(pce::colors::radiant_orange).BuildRoot(tree, { 10U, 0U });
     }
-    void SetTick(u32 tick) { tree.GetNode(tick_handle.GetHandle()).text = std::format("Tick {:6}", tick); }
+    void SetInfo(u32 tick, u32 tps, u32 fps) { tree.GetNode(tick_handle.GetHandle()).text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, tps, fps); }
 };
 struct TestFrame {
     std::vector<pce::ui::RectangleElement::Handle> elements { };
