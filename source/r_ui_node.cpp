@@ -20,15 +20,16 @@ constexpr u32 NodeTree::HandleToIndex(const Node::Handle node_handle) const {
     ASSERT_DBG(ValidHandle(node_handle), "Out of bounds, most likely destroyed");
     return node_handle.id - offset_handle.id;
 }
-Node::Handle NodeTree::SetRoot(const Node& root) {
+Node::Handle NodeTree::SetRoot(Node&& root) {
     ASSERT_DBG(nodes.Empty(), "Setting root non empty tree");
     nodes.PushBack(root);
     parents.PushBack(Root());
     children.EmplaceBack();
+    texts.EmplaceBack(nullptr);
 
     return Root();
 }
-Node::Handle NodeTree::AddNode(const Node& node, const Node::Handle parent_handle) {
+Node::Handle NodeTree::AddNode(Node&& node, const Node::Handle parent_handle) {
     ASSERT_DBG(!nodes.Empty(), "Adding node without root");
     const Node::Handle node_handle { offset_handle.id + nodes.Size() };
     ASSERT_DBG(node_handle.id != parent_handle.id, "Assigning node to itself recursion");
@@ -36,6 +37,7 @@ Node::Handle NodeTree::AddNode(const Node& node, const Node::Handle parent_handl
     nodes.PushBack(node);
     parents.PushBack(parent_handle);
     children.EmplaceBack();
+    texts.EmplaceBack(nullptr);
 
     Children(parent_handle).PushBack(node_handle);
     return node_handle;
@@ -46,6 +48,7 @@ void NodeTree::Clear() {
     nodes.Clear();
     parents.Clear();
     children.Clear();
+    texts.Clear();
 }
 void NodeTree::Propagate(Node::Handle node_handle, const std::function<void(Node&)>& proj) {
     while (true) {
@@ -149,10 +152,10 @@ void NodeBuilder::Finalize(NodeTree& node_tree) {
 Node::Handle NodeBuilder::BuildRoot(NodeTree& node_tree, const uint2 position) {
     Finalize(node_tree);
     node.position = position;
-    return node_tree.SetRoot(node);
+    return node_tree.SetRoot(std::move(node));
 }
 Node::Handle NodeBuilder::Build(NodeTree& node_tree, Node::Handle parent_handle) {
     Finalize(node_tree);
-    return node_tree.AddNode(node, parent_handle);
+    return node_tree.AddNode(std::move(node), parent_handle);
 }
 }

@@ -12,32 +12,32 @@
 
 namespace pce::ui {
 struct CloseFont {
-    void operator()(TTF_Font *font) const {
-        Logger().Log("Destroying font");
+    void operator()(TTF_Font* font) const {
+        Logger().Destroyed("Font");
         TTF_CloseFont(font);
     }
 };
 struct DestroyText {
-    void operator()(TTF_Text *text) const {
-        Logger().Log("Destroying text");
+    void operator()(TTF_Text* text) const {
+        Logger().Destroyed("Text");
         TTF_DestroyText(text);
     }
 };
 using FontSize = u8;
 enum class Fonts : FontSize { body = 16U, h1 = 34U, h2 = 30U, h3 = 24U, h4 = 20U, h5 = 18U, h6 = 16U, small = 14U, tiny = 12U, title = 52U };
 class Font {
-    UniquePtr<TTF_Font, CloseFont> font;
+    UniquePointer<TTF_Font, CloseFont> font;
 
 public:
-    Font(const AbsolutePath& path, const FontSize size) : font(TTF_OpenFont(path.string().c_str(), size)) { Logger().Log("Loading Font {} {}", size, path.string()); }
+    Font(const AbsolutePath& path, const FontSize size) : font(TTF_OpenFont(path.string().c_str(), size)) { Logger().Created("Font {} {}", size, path.string()); }
     Font(const Font&) = delete;
     Font& operator=(const Font&) = delete;
     Font(Font&&) noexcept = default;
     Font& operator=(Font&&) noexcept = default;
 
-    [[nodiscard]] b8 FailedLoading() const { return font.get() == nullptr; }
-    [[nodiscard]] constexpr TTF_Font *ToSDL() const { return font.get(); }
-    [[nodiscard]] FontSize GetSize() const { return TTF_GetFontSize(font.get()); }
+    [[nodiscard]] b8 FailedLoading() const { return font.Get() == nullptr; }
+    [[nodiscard]] constexpr TTF_Font *ToSDL() const { return font.Get(); }
+    [[nodiscard]] FontSize GetSize() const { return TTF_GetFontSize(font.Get()); }
 };
 class FontCollection {
     AbsolutePath font_path;
@@ -68,7 +68,6 @@ struct LayoutLength {
     u32 resolved;
     Constraint constraint;
 };
-
 class NodeTree;
 class NodeBuilder;
 
@@ -88,7 +87,6 @@ struct Node {
 
     String name { };
     String text { };
-    TTF_Text* ttf_text { nullptr };
     Fonts font_size { Fonts::body };
 
     SDL_FRect bounding_box { };
@@ -110,12 +108,7 @@ struct Node {
     std::function<void(Node*)> on_hover_out { };
 
     Node() = default;
-    ~Node() {
-        if (ttf_text != nullptr) {
-            Logger().Log("[Destroy] node text {}", text);
-            TTF_DestroyText(ttf_text);
-        }
-    }
+    ~Node() { Logger().Destroyed("Node"); }
 
     [[nodiscard]] constexpr uint4 NonContentSize4() const { return padding; }
     [[nodiscard]] constexpr uint2 NonContentSize2() const { return { padding.x + padding.z, padding.y + padding.w }; }
@@ -151,6 +144,7 @@ class NodeTree {
     List<Node> nodes { };
     List<Node::Handle> parents { };
     List<List<Node::Handle>> children { };
+    List<UniquePointer<TTF_Text, DestroyText>> texts { };
     Node::Handle offset_handle { 0U };
     b8 display { true };
 
@@ -162,11 +156,12 @@ public:
     [[nodiscard]] constexpr Node::Handle Parent(const Node::Handle node_handle) { return parents[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr const List<Node::Handle>& Children(const Node::Handle node_handle) const { return children[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr List<Node::Handle>& Children(const Node::Handle node_handle) { return children[HandleToIndex(node_handle)]; }
+    [[nodiscard]] constexpr UniquePointer<TTF_Text, DestroyText>& Text(const Node::Handle node_handle) { return texts[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr const Node& GetNode(const Node::Handle node_handle) const { return nodes[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr Node& GetNode(const Node::Handle node_handle) { return nodes[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr b8 Empty() const { return nodes.Empty(); }
-    [[nodiscard]] Node::Handle AddNode(const Node& node, const Node::Handle parent_handle);
-    [[nodiscard]] Node::Handle SetRoot(const Node& root);
+    [[nodiscard]] Node::Handle AddNode(Node&& node, const Node::Handle parent_handle);
+    [[nodiscard]] Node::Handle SetRoot(Node&& root);
 
     void Clear();
     void Propagate(Node::Handle node_handle, const std::function<void(Node&)>& proj);

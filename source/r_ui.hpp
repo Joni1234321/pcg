@@ -12,12 +12,18 @@ namespace pce::ui {
 using HoveredType = std::optional<NodeReference>;
 static const RelativePath font_path { "font.ttf" };
 static const RelativePath font_bold_path { "TitilliumWeb-SemiBold.ttf" };
+struct DestroyRenderTextEngine {
+    void operator()(TTF_TextEngine* engine) {
+        Logger().Destroyed("RenderTextEngine");
+        TTF_DestroyRendererTextEngine(engine);
+    }
+};
 struct NodeRenderSystem {
     const RenderSystem& render_system;
     HoveredType hovered { };
     FontCollection font { assets::Asset(font_path) };
     FontCollection font_bold { assets::Asset(font_bold_path) };
-    std::unique_ptr<TTF_TextEngine, decltype(&TTF_DestroyRendererTextEngine)> text_engine { TTF_CreateRendererTextEngine(render_system.renderer), &TTF_DestroyRendererTextEngine };
+    UniquePointer<TTF_TextEngine, DestroyRenderTextEngine> text_engine { TTF_CreateRendererTextEngine(render_system.renderer) };
     List<std::reference_wrapper<NodeTree>> node_trees { };
 
     explicit NodeRenderSystem(const RenderSystem& render_system) : render_system(render_system) { }

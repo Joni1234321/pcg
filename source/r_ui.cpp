@@ -38,21 +38,19 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
     for (const Node::Handle node_handle : node_handles) {
         Node& node = tree.GetNode(node_handle);
 
+        UniquePointer<TTF_Text, DestroyText>& text = tree.Text(node_handle);
         if (!node.IsText()) {
-            if (node.ttf_text != nullptr) {
-                TTF_DestroyText(node.ttf_text);
-                node.ttf_text = nullptr;
-            }
+            text.Reset();
             continue;
         }
 
         const Font& f = font.GetFont(node.font_size);
-        if (node.ttf_text == nullptr) { node.ttf_text = TTF_CreateText(node_render_system.text_engine.get(), f.ToSDL(), node.text.CString(), node.text.Size()); } else {
-            TTF_SetTextString(node.ttf_text, node.text.CString(), node.text.Size());
-            TTF_SetTextFont(node.ttf_text, f.ToSDL());
+        if (text.Get() == nullptr) { text.Reset(TTF_CreateText(node_render_system.text_engine.Get(), f.ToSDL(), node.text.CString(), node.text.Size())); } else {
+            TTF_SetTextString(text.Get(), node.text.CString(), node.text.Size());
+            TTF_SetTextFont(text.Get(), f.ToSDL());
         }
         const SDL_Color color = node.background_color;
-        (void)TTF_SetTextColor(node.ttf_text, color.r, color.g, color.b, color.a);
+        (void)TTF_SetTextColor(text.Get(), color.r, color.g, color.b, color.a);
     }
 
     // hug bottom up
@@ -67,7 +65,7 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
         if (node.width.constraint != LayoutLength::child_constraint && node.height.constraint != LayoutLength::child_constraint) { continue; }
 
         uint2 text_size { 0U, 0U };
-        if (node.IsText()) { (void)TTF_GetTextSize(node.ttf_text, reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
+        if (node.IsText()) { (void)TTF_GetTextSize(tree.Text(node_handle).Get(), reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
         LayoutLength& major_layout = get_major_layout(node, node.direction);
         if (major_layout.constraint == LayoutLength::child_constraint) {
             const u32 children_major = get_major_pixels_taken_by_children(node_handle, node.direction);
@@ -185,27 +183,6 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
         node.bounding_box = { .x = static_cast<f32>(start_position.x), .y = static_cast<f32>(start_position.y), .w = static_cast<f32>(size.x), .h = static_cast<f32>(size.y) };
     }
 }
-FrameElements CreateFrameElements(NodeTree& tree) {
-    FrameElements elements;
-    if (tree.Empty()) { return elements; }
-    Stack<Node::Handle> nodes;
-    nodes.push(tree.Root());
-    while (!nodes.empty()) {
-        const Node::Handle node_handle = nodes.top();
-        const Node& node = tree.GetNode(node_handle);
-        nodes.pop();
-        nodes.push_range(tree.Children(node_handle));
-
-        if (node.IsText()) {
-            TextElement text { .text = node.ttf_text, .position = float2 { static_cast<f32>(node.InnerBoxPosition().x), static_cast<f32>(node.InnerBoxPosition().y) } };
-            elements.texts.PushBack(text);
-        } else {
-            RectangleElement rectangle { .color = node.background_color, .rect = node.OuterRect() };
-            elements.rectangles.PushBack(rectangle);
-        }
-    }
-    return elements;
-}
 const FrameElements& GetFrameElements(NodeRenderSystem& node_render_system, NodeTree& tree) {
     if (tree.dirty) {
         tree.dirty = false;
@@ -222,7 +199,7 @@ const FrameElements& GetFrameElements(NodeRenderSystem& node_render_system, Node
                 nodes.push_range(tree.Children(node_handle));
 
                 if (node.IsText()) {
-                    TextElement text { .text = node.ttf_text, .position = float2 { static_cast<f32>(node.InnerBoxPosition().x), static_cast<f32>(node.InnerBoxPosition().y) } };
+                    TextElement text { .text = tree.Text(node_handle).Get(), .position = float2 { static_cast<f32>(node.InnerBoxPosition().x), static_cast<f32>(node.InnerBoxPosition().y) } };
                     tree.frame_elements.texts.PushBack(text);
                 } else {
                     RectangleElement rectangle { .color = node.background_color, .rect = node.OuterRect() };

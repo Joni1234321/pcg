@@ -14,17 +14,31 @@
 #include "u_util.hpp"
 
 namespace pce {
-template <typename T, typename D> using UniquePtr = std::unique_ptr<T, D>;
 template <typename T, u32 N> using Array = std::array<T, N>;
 template <typename T> using Span = std::span<T>;
 template <typename T> using Stack = std::stack<T>;
 template <class K, class V> using UnorderedMap = std::unordered_map<K, V>;
-template <class T, class C =  std::less<T>> using Set = std::set<T, C>;
-template <class T, class C =  std::less<T>> using Multiset = std::multiset<T, C>;
+template <class T, class C = std::less<T>> using Set = std::set<T, C>;
+template <class T, class C = std::less<T>> using Multiset = std::multiset<T, C>;
 using AbsolutePath = std::filesystem::path;
 using RelativePath = std::filesystem::path;
 using AssetPath = std::filesystem::path;
 
+template <typename T, typename D> class UniquePointer {
+    T* pointer;
+    [[msvc::no_unique_address]][[no_unique_address]] D destructor { }; // man i love msvc
+public:
+    constexpr void Reset(T* new_pointer) noexcept {
+        if (pointer != nullptr) { destructor(pointer); }
+        pointer = new_pointer;
+    }
+    constexpr void Reset() noexcept { Reset(nullptr); }
+    [[nodiscard]] constexpr T *Get() const noexcept { return pointer; }
+
+    constexpr explicit UniquePointer(T* pointer) noexcept : pointer { pointer } { }
+    constexpr explicit UniquePointer(UniquePointer&& other) noexcept : pointer { std::exchange(other.pointer, nullptr) } { }
+    constexpr ~UniquePointer() noexcept { if (pointer != nullptr) { destructor(pointer); } }
+};
 struct String {
     constexpr String() = default;
     constexpr String(const char character, const u32 count) : data(count, character, std::allocator<char>()) { }
@@ -80,7 +94,7 @@ template <typename T> struct List {
     constexpr const T& operator[](u32 pos) const { return data[pos]; }
     constexpr T& operator[](u32 pos) { return data[pos]; }
 
-    template <class... Args> T& EmplaceBack(Args&&... args) { return data.emplace_back(std::forward<Args>(args)...); }
+    template <typename... Args> T& EmplaceBack(Args&&... args) { return data.emplace_back(std::forward<Args>(args)...); }
 
     [[nodiscard]] constexpr Iter begin() { return data.begin(); }
     [[nodiscard]] constexpr Iter end() { return data.end(); }
