@@ -15,6 +15,7 @@ using FontSize = u8;
 enum class Fonts : FontSize { body = 16U, h1 = 34U, h2 = 30U, h3 = 24U, h4 = 20U, h5 = 18U, h6 = 16U, small = 14U, tiny = 12U, title = 52U };
 class Font {
     std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)> font;
+
 public:
     Font(const AbsolutePath& path, const FontSize size) : font(TTF_OpenFont(path.string().c_str(), size), &TTF_CloseFont) { Logger().Log("Loading Font {} {}", size, path.string()); }
     Font(const Font&) = delete;
@@ -61,7 +62,7 @@ inline SDL_Color lighten_color(const SDL_Color color, const f32 factor) {
 enum class TextAlign { left, center, right };
 enum RelatedConstraint : u8 { hug, fill };
 enum FlexDirection : u8 { horizontal, vertical }; // default based on max width or height
-enum Alignment : u8 {  top_left, top_center, top_right, left, center, right, bottom_left, bottom_center, bottom_right };
+enum Alignment : u8 { top_left, top_center, top_right, left, center, right, bottom_left, bottom_center, bottom_right };
 struct LayoutLength {
     enum Constraint : u8 { child_constraint, parent_constraint, fixed };
     u32 resolved;
@@ -146,7 +147,17 @@ struct Node {
     friend NodeBuilder;
     friend NodeTree;
 };
-struct NodeTree {
+class NodeTree {
+    List<Node> nodes { };
+    List<Node::Handle> parents { };
+    List<List<Node::Handle>> children { };
+    Node::Handle offset_handle { 0U };
+    b8 display { true };
+
+public:
+    bool dirty { true };
+    FrameElements frame_elements { };
+
     [[nodiscard]] constexpr Node::Handle Root() const { return offset_handle; }
     Node::Handle SetRoot(const Node& root) {
         ASSERT_DBG(nodes.Empty(), "Setting root non empty tree");
@@ -203,16 +214,8 @@ struct NodeTree {
         }
     }
     [[nodiscard]] constexpr b8 ValidHandle(const Node::Handle node_handle) const { return (node_handle.id - offset_handle.id) < nodes.Size(); }
-    bool dirty { true };
-    FrameElements frame_elements { };
 
 private:
-    List<Node> nodes { };
-    List<Node::Handle> parents { };
-    List<List<Node::Handle>> children { };
-    Node::Handle offset_handle { 0U };
-    b8 display { true };
-
     [[nodiscard]] constexpr u32 HandleToIndex(const Node::Handle node_handle) const {
         ASSERT_DBG(ValidHandle(node_handle), "Out of bounds, most likely destroyed");
         return node_handle.id - offset_handle.id;
@@ -270,7 +273,6 @@ struct NodeBuilder {
         Finalize(node_tree);
         return node_tree.AddNode(node, parent_handle);
     }
-
 
 private:
     Node node { };

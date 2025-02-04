@@ -29,9 +29,9 @@ struct GameData {
 
 struct MainMenuFrame {
     ui::NodeTree tree;
-    explicit MainMenuFrame(const uint2 screen_size) {
+    explicit MainMenuFrame() {
         const String title = "Hey Helene!";
-        const ui::Node::Handle frame = ui::NodeBuilder(screen_size).Direction(ui::vertical).BuildRoot(tree, { 100U, 30U });
+        const ui::Node::Handle frame = ui::NodeBuilder(ui::fill).Direction(ui::vertical).BuildRoot(tree, { 100U, 30U });
         ui::NodeBuilder(ui::hug).Text(title, ui::Fonts::title).Fill(colors::light_sky_blue).Build(tree, frame);
         const ui::Node::Handle root = ui::NodeBuilder(ui::hug).Padding({ 20U, 5U }).Fill(colors::deep_purple).Center().Direction(ui::vertical).Build(tree, frame);
         start_button = ui::NodeBuilder(ui::hug).Fill(colors::radiant_orange).Text(String { "Play" }, ui::Fonts::h1).Build(tree, root);
@@ -49,8 +49,8 @@ private:
 };
 struct GameFrame {
     ui::NodeTree tree;
-    explicit GameFrame(const uint2 screen_size) {
-        frame = ui::NodeBuilder(screen_size).Center().Direction(ui::vertical).Padding(uint2 { 0U, 30U }).BuildRoot(tree, { 0U, 0U });
+    explicit GameFrame() {
+        frame = ui::NodeBuilder(ui::fill).Center().Direction(ui::vertical).Padding(uint2 { 0U, 30U }).BuildRoot(tree, { 0U, 0U });
         score_box = ui::NodeBuilder(ui::hug).Padding(uint2 { 10U, 0U }).Fill(colors::forest_green).Direction(ui::vertical).Center().Build(tree, frame.GetHandle());
         time_label = ui::NodeBuilder(ui::hug).Text("Time", ui::Fonts::h1).Build(tree, score_box.GetHandle());
         score_label = ui::NodeBuilder(ui::hug).Text("Score", ui::Fonts::h1).Build(tree, score_box.GetHandle());
@@ -78,7 +78,7 @@ struct HighScoreFrame {
     ui::NodeTree tree;
     void SetHighScore(Multiset<HighScore> scores) {
         tree.Clear();
-        ui::Node::Handle root = ui::NodeBuilder(ui::hug).Direction(ui::vertical).Gap(10U).Fill(colors::white).BuildRoot(tree, uint2 { 500U, 200U });
+        ui::Node::Handle root = ui::NodeBuilder(ui::fill).Direction(ui::vertical).Gap(10U).Fill(colors::white).BuildRoot(tree, uint2 { 0U, 0U });
         for (const HighScore& high_score : scores | std::views::reverse) { ui::NodeBuilder(ui::hug).Text(std::format("Score: {:>7}", high_score.score), ui::Fonts::h1).Build(tree, root); }
     }
 };
@@ -95,11 +95,11 @@ class ClickCore {
     Scene scene { Scene::main_menu };
 
 public:
-    TickFrame tick_frame { };       // move these out somehow since they are engine specific
-    InspectorFrame debug_frame {  }; // move these out somehow since they are engine specific
-    MainMenuFrame main_menu_frame { render_system.screen_size };
-    GameFrame game_frame { render_system.screen_size };
-    HighScoreFrame high_score_frame {  };
+    TickFrame tick_frame { };
+    InspectorFrame debug_frame { };
+    MainMenuFrame main_menu_frame { };
+    GameFrame game_frame { };
+    HighScoreFrame high_score_frame { };
 
     explicit ClickCore(RenderSystem& render_system);
     void Tick();

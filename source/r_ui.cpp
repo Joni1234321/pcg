@@ -9,12 +9,10 @@ NodeRenderSystem::HoveredType NodeRenderSystem::GetHovered(const uint2 mouse_pos
     return std::nullopt;
 }
 void NodeRenderSystem::HoverClickEvents(const InputSystem& input_system) {
-    if (input_system.LeftMouseDown()) {
-        if (hovered.has_value()) {
-            NodeTree& hovered_tree = hovered.value().tree;
-            const Node::Handle hovered_node = hovered.value().node_handle;
-            hovered_tree.Propagate(hovered_node, &Node::OnClick);
-        }
+    if (input_system.LeftMouseDown() && hovered.has_value()) {
+        NodeTree& hovered_tree = hovered.value().tree;
+        const Node::Handle hovered_node = hovered.value().node_handle;
+        hovered_tree.Propagate(hovered_node, &Node::OnClick);
     }
 
     if (hovered.has_value() && !hovered.value().tree.get().ValidHandle(hovered.value().node_handle)) { hovered = std::nullopt; }
@@ -46,7 +44,7 @@ void NodeRenderSystem::RenderTrees(SDL_Renderer* renderer) {
         for (const TextElement& text : frame_elements.texts) { (void)TTF_DrawRendererText(text.text, text.position.x, text.position.y); }
     }
 }
-void NodeRenderSystem::RecalculateTreeLayout(NodeTree& tree, FontCollection& font) {
+void NodeRenderSystem::RecalculateTreeLayout(NodeTree& tree, FontCollection& font) const {
     if (tree.Empty()) { return; }
 
     auto pixels_gap = [&tree] (const Node::Handle node_handle, const u32 gap) -> u32 { return tree.Children(node_handle).Empty() ? 0U : gap * (tree.Children(node_handle).Size() - 1U); };
@@ -75,7 +73,7 @@ void NodeRenderSystem::RecalculateTreeLayout(NodeTree& tree, FontCollection& fon
         }
 
         const Font& f = font.GetFont(node.font_size);
-        if (node.ttf_text == nullptr) { node.ttf_text = TTF_CreateText(text_engine, f.ToSDL(), node.text.CString(), node.text.Size()); } else {
+        if (node.ttf_text == nullptr) { node.ttf_text = TTF_CreateText(text_engine.get(), f.ToSDL(), node.text.CString(), node.text.Size()); } else {
             TTF_SetTextString(node.ttf_text, node.text.CString(), node.text.Size());
             TTF_SetTextFont(node.ttf_text, f.ToSDL());
         }
@@ -110,6 +108,9 @@ void NodeRenderSystem::RecalculateTreeLayout(NodeTree& tree, FontCollection& fon
     }
 
     // fill top down
+    Node& root_node = tree.GetNode(tree.Root());
+    if (root_node.width.layout_type == LayoutLength::parent_constraint) { root_node.width.resolved = render_system.screen_size.x - root_node.position.x; }
+    if (root_node.height.layout_type == LayoutLength::parent_constraint) { root_node.height.resolved = render_system.screen_size.y - root_node.position.y; }
     for (const Node::Handle node_handle : node_handles) {
         const Node& node = tree.GetNode(node_handle);
 
@@ -211,7 +212,7 @@ void NodeRenderSystem::RecalculateTreeLayout(NodeTree& tree, FontCollection& fon
     }
 }
 
-FrameElements NodeRenderSystem::CreateFrameElements(NodeTree& tree) {
+FrameElements NodeRenderSystem::CreateFrameElements(NodeTree& tree) const {
     FrameElements elements;
     if (tree.Empty()) { return elements; }
     Stack<Node::Handle> nodes;
