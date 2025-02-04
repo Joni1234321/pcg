@@ -22,10 +22,25 @@ struct NodeRenderSystem {
 
     [[nodiscard]] HoveredType GetHovered(uint2 mouse_position) const;
     void HoverClickEvents(const InputSystem& input_system);
-    void RenderTrees(SDL_Renderer* renderer) const;
+    void RenderTrees(SDL_Renderer* renderer);
 
     [[nodiscard]] auto GetNodeTrees() const { return node_trees | std::views::transform(&std::reference_wrapper<NodeTree>::get); }
     explicit NodeRenderSystem(RenderSystem& render_system): text_engine(TTF_CreateRendererTextEngine(render_system.renderer)) { }
     ~NodeRenderSystem() { TTF_DestroyRendererTextEngine(text_engine); }
+
+private:
+    void RecalculateTreeLayout(NodeTree& tree, FontCollection& font);
+    FrameElements CreateFrameElements(NodeTree& tree);
+
+    const FrameElements& GetFrameElements(NodeTree& tree) {
+        if (tree.dirty) {
+            tree.dirty = false;
+            RecalculateTreeLayout(tree, font);
+            tree.frame_elements = CreateFrameElements(tree);
+        }
+        return tree.frame_elements;
+    };
+
+
 };
 }

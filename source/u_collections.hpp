@@ -14,10 +14,12 @@
 #include "u_util.hpp"
 
 namespace pce {
+template <typename T, u32 N> using Array = std::array<T, N>;
 template <typename T> using Span = std::span<T>;
 template <typename T> using Stack = std::stack<T>;
 template <class K, class V> using UnorderedMap = std::unordered_map<K, V>;
 template <class T, class C =  std::less<T>> using Set = std::set<T, C>;
+template <class T, class C =  std::less<T>> using Multiset = std::multiset<T, C>;
 using AbsolutePath = std::filesystem::path;
 using RelativePath = std::filesystem::path;
 using AssetPath = std::filesystem::path;

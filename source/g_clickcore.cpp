@@ -15,10 +15,21 @@ using namespace pce::frame;
 using namespace std::chrono;
 
 using Score = NamedType<u32, struct ScoreTag, Arithmetic, FormatLongNumber>;
+struct RoundData {
+    Score score { 0U };
+    time_point<high_resolution_clock> start_time;
+};
+struct HighScore {
+    Score score;
+    std::strong_ordering operator<=>(const HighScore& other) const noexcept { return score.Value() <=> other.score.Value(); }
+};
+struct GameData {
+    Multiset<HighScore> high_scores { };
+};
 
 struct MainMenuFrame {
     ui::NodeTree tree;
-    explicit MainMenuFrame(ui::NodeRenderSystem& ui_system, const uint2 screen_size) : tree { ui_system.text_engine, ui_system.font } {
+    explicit MainMenuFrame(const uint2 screen_size) {
         const String title = "Hey Helene!";
         const ui::Node::Handle frame = ui::NodeBuilder(screen_size).Direction(ui::vertical).BuildRoot(tree, { 100U, 30U });
         ui::NodeBuilder(ui::hug).Text(title, ui::Fonts::title).Fill(colors::light_sky_blue).Build(tree, frame);
@@ -38,7 +49,7 @@ private:
 };
 struct GameFrame {
     ui::NodeTree tree;
-    explicit GameFrame(ui::NodeRenderSystem& ui_system, const uint2 screen_size) : tree { ui_system.text_engine, ui_system.font } {
+    explicit GameFrame(const uint2 screen_size) {
         frame = ui::NodeBuilder(screen_size).Center().Direction(ui::vertical).Padding(uint2 { 0U, 30U }).BuildRoot(tree, { 0U, 0U });
         score_box = ui::NodeBuilder(ui::hug).Padding(uint2 { 10U, 0U }).Fill(colors::forest_green).Direction(ui::vertical).Center().Build(tree, frame.GetHandle());
         time_label = ui::NodeBuilder(ui::hug).Text("Time", ui::Fonts::h1).Build(tree, score_box.GetHandle());
@@ -63,15 +74,15 @@ private:
     ui::Node::OptionalHandle game_area { };
     ui::Node::OptionalHandle frame { };
 };
-struct HighScore {
-    Score score;
-    std::strong_ordering operator<=>(const HighScore& other) const noexcept { return score.Value() <=> other.score.Value(); }
+struct HighScoreFrame {
+    ui::NodeTree tree;
+    void SetHighScore(Multiset<HighScore> scores) {
+        tree.Clear();
+        ui::Node::Handle root = ui::NodeBuilder(ui::hug).Direction(ui::vertical).Gap(10U).Fill(colors::white).BuildRoot(tree, uint2 { 500U, 200U });
+        for (const HighScore& high_score : scores | std::views::reverse) { ui::NodeBuilder(ui::hug).Text(std::format("Score: {:>7}", high_score.score), ui::Fonts::h1).Build(tree, root); }
+    }
 };
-struct Game {
-    Score score { 0U };
-    time_point<high_resolution_clock> start_time;
-    Set<HighScore> high_scores;
-};
+
 enum class Scene { game, main_menu, game_over, quit };
 class ClickCore {
     RenderSystem& render_system;
@@ -79,14 +90,17 @@ class ClickCore {
     InputSystem input_system { };
     ui::NodeRenderSystem node_render_system { render_system };
 
-    Game game { };
+    RoundData game { };
+    GameData game_data { };
     Scene scene { Scene::main_menu };
 
 public:
-    TickFrame tick_frame { node_render_system };       // move these out somehow since they are engine specific
-    InspectorFrame debug_frame { node_render_system }; // move these out somehow since they are engine specific
-    MainMenuFrame main_menu_frame { node_render_system, render_system.screen_size };
-    GameFrame game_frame { node_render_system, render_system.screen_size };
+    TickFrame tick_frame { };       // move these out somehow since they are engine specific
+    InspectorFrame debug_frame {  }; // move these out somehow since they are engine specific
+    MainMenuFrame main_menu_frame { render_system.screen_size };
+    GameFrame game_frame { render_system.screen_size };
+    HighScoreFrame high_score_frame {  };
+
     explicit ClickCore(RenderSystem& render_system);
     void Tick();
     [[nodiscard]] constexpr b8 IsRunning() const { return tick_system.running; }
@@ -103,6 +117,7 @@ ClickCore::ClickCore(RenderSystem& render_system) : render_system { render_syste
     node_render_system.node_trees.EmplaceBack(debug_frame.tree);
     node_render_system.node_trees.EmplaceBack(main_menu_frame.tree);
     node_render_system.node_trees.EmplaceBack(game_frame.tree);
+    node_render_system.node_trees.EmplaceBack(high_score_frame.tree);
 }
 void ClickCore::Tick() {
     tick_system();
@@ -148,7 +163,7 @@ Scene ClickCore::MainMenuScene() {
     if (input_system.LeftMouseDown()) {
         if (main_menu_frame.StartButton().IsInside(input_system.MousePosition())) {
             main_menu_frame.tree.SetDisplay(false);
-            game = Game { .score = Score { 0U }, .start_time = high_resolution_clock::now() };
+            game = RoundData { .score = Score { 0U }, .start_time = high_resolution_clock::now() };
             return Scene::game;
         }
         if (main_menu_frame.SettingsButton().IsInside(input_system.MousePosition())) { return Scene::game_over; }
@@ -160,13 +175,16 @@ Scene ClickCore::GameScene() {
     constexpr seconds game_time = 2s;
     const nanoseconds elapsed = high_resolution_clock::now() - game.start_time;
     if (elapsed > game_time) {
+        game_data.high_scores.emplace(game.score);
+
         main_menu_frame.tree.MarkDirty();
         main_menu_frame.tree.SetDisplay(true);
         main_menu_frame.StartButton().text = "Play Again";
         game_frame.tree.MarkDirty();
         game_frame.SetTime(0);
         game_frame.Box().background_color.a = 0U;
-        game.high_scores.emplace(game.score);
+        high_score_frame.tree.MarkDirty();
+        high_score_frame.SetHighScore(game_data.high_scores);
         return Scene::game_over;
     }
     const u32 time_left_ms = duration_cast<milliseconds>(game_time - elapsed).count();

@@ -9,7 +9,6 @@ namespace pce::frame {
 namespace ui = ui;
 namespace colors = colors;
 
-
 ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const String& text, const SDL_Color color, ui::NodeTree& tree, const ui::Node::Handle frame) {
     constexpr u32 padding_offset = 10U;
     constexpr uint2 color_indicator_size { 10U, 20U };
@@ -18,9 +17,6 @@ ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const String& text, c
     ui::NodeBuilder(ui::hug).Text(text, ui::Fonts::body).Fill(colors::black).Build(tree, component_handle);
     ui::NodeBuilder(color_indicator_size).Fill(color).Build(tree, component_handle);
     return component_handle;
-}
-InspectorFrame::InspectorFrame(ui::NodeRenderSystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
-
 }
 void InspectorFrame::ShowElementStructure(const ui::NodeRenderSystem::HoveredType& hovered) {
     using NodeHandleLayer = std::tuple<ui::Node::Handle, u32>;
@@ -41,7 +37,7 @@ void InspectorFrame::ShowElementStructure(const ui::NodeRenderSystem::HoveredTyp
         CreateDebugNodeComponent(layer, node.IsText() ? "text" : "node", node.background_color, tree, frame);
     }
 }
-TestFrame::TestFrame(ui::NodeRenderSystem& ui_system) : tree { ui_system.text_engine, ui_system.font } {
+TestFrame::TestFrame() {
     ui::Node::Handle frame = ui::NodeBuilder(ui::hug).Gap(20U).Fill(colors::clear).BuildRoot(tree, { 100U, 400U }); {
         ui::Node::Handle root = ui::NodeBuilder(uint2 { 100U, 100U }).Padding({ 5U, 5U }).Fill(colors::forest_green).Build(tree, frame);
         ui::Node::Handle box1 = ui::NodeBuilder(ui::fill).Fill(colors::yellow).Padding({ 5U, 5U }).Build(tree, root);

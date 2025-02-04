@@ -147,11 +147,6 @@ struct Node {
     friend NodeTree;
 };
 struct NodeTree {
-    TTF_TextEngine* text_engine;
-    FontCollection& font_collection;
-
-    NodeTree(TTF_TextEngine* text_engine, FontCollection& font) : text_engine(text_engine), font_collection(font) { }
-
     [[nodiscard]] constexpr Node::Handle Root() const { return offset_handle; }
     Node::Handle SetRoot(const Node& root) {
         ASSERT_DBG(nodes.Empty(), "Setting root non empty tree");
@@ -166,6 +161,8 @@ struct NodeTree {
     [[nodiscard]] constexpr Node& GetNode(const Node::Handle node_handle) { return nodes[HandleToIndex(node_handle)]; }
     [[nodiscard]] Node::Handle Parent(const Node::Handle node_handle) { return parents[HandleToIndex(node_handle)]; }
     [[nodiscard]] const List<Node::Handle>& Children(const Node::Handle node_handle) const { return children[HandleToIndex(node_handle)]; }
+    [[nodiscard]] List<Node::Handle>& Children(const Node::Handle node_handle) { return children[HandleToIndex(node_handle)]; }
+    [[nodiscard]] b8 Empty() const { return nodes.Empty(); }
     [[nodiscard]] Node::Handle AddNode(const Node& node, const Node::Handle parent_handle) {
         ASSERT_DBG(!nodes.Empty(), "Adding node without root");
         const Node::Handle node_handle { offset_handle.id + nodes.Size() };
@@ -195,14 +192,6 @@ struct NodeTree {
     constexpr void SetDisplay(const b8 value) noexcept { display = value; }
     [[nodiscard]] constexpr b8 GetDisplay() const noexcept { return display; }
     constexpr void MarkDirty() noexcept { dirty = true; }
-    const FrameElements& GetFrameElements() {
-        if (dirty) {
-            dirty = false;
-            RecalculateLayout();
-            frame_elements = CreateFrameElements();
-        }
-        return frame_elements;
-    };
     Node::OptionalHandle HitNode(uint2 screen_position) const {
         if (nodes.Empty() || !GetNode(Root()).IsInside(screen_position)) { return Node::OptionalHandle { }; }
         Node::Handle node_handle = Root();
@@ -214,26 +203,21 @@ struct NodeTree {
         }
     }
     [[nodiscard]] constexpr b8 ValidHandle(const Node::Handle node_handle) const { return (node_handle.id - offset_handle.id) < nodes.Size(); }
+    bool dirty { true };
+    FrameElements frame_elements { };
 
 private:
     List<Node> nodes { };
     List<Node::Handle> parents { };
     List<List<Node::Handle>> children { };
-    bool dirty { true };
-    FrameElements frame_elements { };
     Node::Handle offset_handle { 0U };
     b8 display { true };
-    [[nodiscard]] FrameElements CreateFrameElements();
-    void RecalculateLayout();
-    [[nodiscard]] List<Node::Handle>& Children(const Node::Handle node_handle) { return children[HandleToIndex(node_handle)]; }
-    [[nodiscard]] b8 Empty() const { return nodes.Empty(); }
 
     [[nodiscard]] constexpr u32 HandleToIndex(const Node::Handle node_handle) const {
         ASSERT_DBG(ValidHandle(node_handle), "Out of bounds, most likely destroyed");
         return node_handle.id - offset_handle.id;
     }
 };
-
 struct NodeReference {
     std::reference_wrapper<NodeTree> tree;
     Node::Handle node_handle;

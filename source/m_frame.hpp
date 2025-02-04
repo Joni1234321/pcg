@@ -10,19 +10,15 @@ class TickFrame {
 
 public:
     ui::NodeTree tree;
-    explicit TickFrame(ui::NodeRenderSystem& ui_system) : tree { ui_system.text_engine, ui_system.font }
-    {
-        tick_handle = ui::NodeBuilder(ui::hug).Text("Tick", ui::Fonts::tiny).Fill(colors::radiant_orange).BuildRoot(tree, { 10U, 0U });
-    }
+    TickFrame() { tick_handle = ui::NodeBuilder(ui::hug).Text("Tick", ui::Fonts::tiny).Fill(colors::radiant_orange).BuildRoot(tree, { 10U, 0U }); }
     void SetInfo(u32 tick, u32 tps, u32 fps) { tree.GetNode(tick_handle.GetHandle()).text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, tps, fps); }
 };
 struct InspectorFrame {
     ui::NodeTree tree;
-    explicit InspectorFrame(ui::NodeRenderSystem& ui_system);
     void ShowElementStructure(const ui::NodeRenderSystem::HoveredType& hovered);
 };
 struct TestFrame {
     ui::NodeTree tree;
-    explicit TestFrame(pce::ui::NodeRenderSystem& ui_system);
+    TestFrame();
 };
 }
