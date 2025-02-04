@@ -15,7 +15,7 @@ public:
 };
 struct InspectorFrame {
     ui::NodeTree tree;
-    void ShowElementStructure(const ui::NodeRenderSystem::HoveredType& hovered);
+    void ShowElementStructure(const ui::HoveredType& hovered);
 };
 struct TestFrame {
     ui::NodeTree tree;

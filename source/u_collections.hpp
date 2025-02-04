@@ -14,6 +14,7 @@
 #include "u_util.hpp"
 
 namespace pce {
+template <typename T, typename D> using UniquePtr = std::unique_ptr<T, D>;
 template <typename T, u32 N> using Array = std::array<T, N>;
 template <typename T> using Span = std::span<T>;
 template <typename T> using Stack = std::stack<T>;

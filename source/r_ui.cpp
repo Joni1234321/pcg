@@ -1,50 +1,24 @@
 #include "r_ui.hpp"
 
 namespace pce::ui {
-NodeRenderSystem::HoveredType NodeRenderSystem::GetHovered(const uint2 mouse_position) const {
-    for (NodeTree& tree : GetNodeTrees()) {
-        Node::OptionalHandle node_handle = tree.HitNode(mouse_position);
+Node::OptionalHandle HitNode(NodeTree& tree, uint2 screen_position) {
+    if (tree.Empty() || !tree.GetNode(tree.Root()).IsInside(screen_position)) { return Node::OptionalHandle { }; }
+    Node::Handle node_handle = tree.Root();
+    const auto is_inside_node = [screen_position, &tree] (const Node::Handle child_handle) -> b8 { return tree.GetNode(child_handle).IsInside(screen_position); };
+    while (true) {
+        auto node_iterator = std::ranges::find_if(tree.Children(node_handle), is_inside_node, std::identity { });
+        if (node_iterator == tree.Children(node_handle).end()) { return tree.GetNode(node_handle).background_color.a == 0 ? Node::OptionalHandle { } : Node::OptionalHandle { node_handle.id }; }
+        node_handle = *node_iterator;
+    }
+}
+HoveredType GetHovered(NodeRenderSystem& render_system, const uint2 mouse_position) {
+    for (NodeTree& tree : render_system.GetNodeTrees()) {
+        Node::OptionalHandle node_handle = HitNode(tree, mouse_position);
         if (node_handle.IsValid()) { return std::optional { NodeReference { .tree = tree, .node_handle = node_handle.GetHandle() } }; }
     }
     return std::nullopt;
 }
-void NodeRenderSystem::HoverClickEvents(const InputSystem& input_system) {
-    if (input_system.LeftMouseDown() && hovered.has_value()) {
-        NodeTree& hovered_tree = hovered.value().tree;
-        const Node::Handle hovered_node = hovered.value().node_handle;
-        hovered_tree.Propagate(hovered_node, &Node::OnClick);
-    }
-
-    if (hovered.has_value() && !hovered.value().tree.get().ValidHandle(hovered.value().node_handle)) { hovered = std::nullopt; }
-    const HoveredType previous_hovered = hovered;
-    hovered = GetHovered(input_system.MousePosition());
-
-    if (hovered.has_value() && previous_hovered.has_value() && hovered == previous_hovered) { return; }
-
-    if (previous_hovered.has_value()) {
-        NodeTree& hovered_tree = previous_hovered.value().tree;
-        const Node::Handle hovered_node = previous_hovered.value().node_handle;
-        hovered_tree.Propagate(hovered_node, &Node::OnHoverOut);
-        hovered_tree.MarkDirty();
-    }
-    if (hovered.has_value()) {
-        NodeTree& hovered_tree = hovered.value().tree;
-        const Node::Handle hovered_node = hovered.value().node_handle;
-        hovered_tree.Propagate(hovered_node, &Node::OnHover);
-        hovered_tree.MarkDirty();
-    }
-}
-void NodeRenderSystem::RenderTrees(SDL_Renderer* renderer) {
-    for (NodeTree& tree : GetNodeTrees() | std::views::reverse | std::views::filter(&NodeTree::GetDisplay)) {
-        const FrameElements& frame_elements = GetFrameElements(tree);
-        for (const RectangleElement& element : frame_elements.rectangles) {
-            (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
-            (void)SDL_RenderFillRect(renderer, &element.rect);
-        }
-        for (const TextElement& text : frame_elements.texts) { (void)TTF_DrawRendererText(text.text, text.position.x, text.position.y); }
-    }
-}
-void NodeRenderSystem::RecalculateTreeLayout(NodeTree& tree, FontCollection& font) const {
+void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree, FontCollection& font) {
     if (tree.Empty()) { return; }
 
     auto pixels_gap = [&tree] (const Node::Handle node_handle, const u32 gap) -> u32 { return tree.Children(node_handle).Empty() ? 0U : gap * (tree.Children(node_handle).Size() - 1U); };
@@ -73,7 +47,7 @@ void NodeRenderSystem::RecalculateTreeLayout(NodeTree& tree, FontCollection& fon
         }
 
         const Font& f = font.GetFont(node.font_size);
-        if (node.ttf_text == nullptr) { node.ttf_text = TTF_CreateText(text_engine.get(), f.ToSDL(), node.text.CString(), node.text.Size()); } else {
+        if (node.ttf_text == nullptr) { node.ttf_text = TTF_CreateText(node_render_system.text_engine.get(), f.ToSDL(), node.text.CString(), node.text.Size()); } else {
             TTF_SetTextString(node.ttf_text, node.text.CString(), node.text.Size());
             TTF_SetTextFont(node.ttf_text, f.ToSDL());
         }
@@ -90,17 +64,17 @@ void NodeRenderSystem::RecalculateTreeLayout(NodeTree& tree, FontCollection& fon
     #endif
     for (const Node::Handle node_handle : reversed_nodes) {
         Node& node = tree.GetNode(node_handle);
-        if (node.width.layout_type != LayoutLength::child_constraint && node.height.layout_type != LayoutLength::child_constraint) { continue; }
+        if (node.width.constraint != LayoutLength::child_constraint && node.height.constraint != LayoutLength::child_constraint) { continue; }
 
         uint2 text_size { 0U, 0U };
         if (node.IsText()) { (void)TTF_GetTextSize(node.ttf_text, reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
         LayoutLength& major_layout = get_major_layout(node, node.direction);
-        if (major_layout.layout_type == LayoutLength::child_constraint) {
+        if (major_layout.constraint == LayoutLength::child_constraint) {
             const u32 children_major = get_major_pixels_taken_by_children(node_handle, node.direction);
             major_layout.resolved = children_major + pixels_gap(node_handle, node.gap) + get_major(text_size, node.direction) + get_major(node.NonContentSize2(), node.direction);
         }
         LayoutLength& minor_layout = get_minor_layout(node, node.direction);
-        if (minor_layout.layout_type == LayoutLength::child_constraint) {
+        if (minor_layout.constraint == LayoutLength::child_constraint) {
             auto get_minor_outer_box_size = [&tree, get_minor, &node] (const Node::Handle child_handle) -> u32 { return get_minor(tree.GetNode(child_handle).OuterBoxSize(), node.direction); };
             const u32 max_minor = tree.Children(node_handle).Empty() ? 0U : std::ranges::max(tree.Children(node_handle) | std::views::transform(get_minor_outer_box_size));
             minor_layout.resolved = std::max(max_minor, get_minor(text_size, node.direction)) + get_minor(node.NonContentSize2(), node.direction);
@@ -109,8 +83,8 @@ void NodeRenderSystem::RecalculateTreeLayout(NodeTree& tree, FontCollection& fon
 
     // fill top down
     Node& root_node = tree.GetNode(tree.Root());
-    if (root_node.width.layout_type == LayoutLength::parent_constraint) { root_node.width.resolved = render_system.screen_size.x - root_node.position.x; }
-    if (root_node.height.layout_type == LayoutLength::parent_constraint) { root_node.height.resolved = render_system.screen_size.y - root_node.position.y; }
+    if (root_node.width.constraint == LayoutLength::parent_constraint) { root_node.width.resolved = node_render_system.render_system.screen_size.x - root_node.position.x; }
+    if (root_node.height.constraint == LayoutLength::parent_constraint) { root_node.height.resolved = node_render_system.render_system.screen_size.y - root_node.position.y; }
     for (const Node::Handle node_handle : node_handles) {
         const Node& node = tree.GetNode(node_handle);
 
@@ -119,7 +93,7 @@ void NodeRenderSystem::RecalculateTreeLayout(NodeTree& tree, FontCollection& fon
         for (const Node::Handle child_handle : tree.Children(node_handle)) {
             Node& child = tree.GetNode(child_handle);
             LayoutLength& child_major_layout = get_major_layout(child, node.direction);
-            if (child_major_layout.layout_type == LayoutLength::parent_constraint) { parent_constrained.PushBack(child_handle); } else { pixels_taken_major_axis += get_major(child.OuterBoxSize(), node.direction); }
+            if (child_major_layout.constraint == LayoutLength::parent_constraint) { parent_constrained.PushBack(child_handle); } else { pixels_taken_major_axis += get_major(child.OuterBoxSize(), node.direction); }
         }
         if (parent_constrained.Size() > 0U) {
             if (pixels_taken_major_axis >= get_major(node.InnerBoxSize(), node.direction)) {
@@ -135,7 +109,7 @@ void NodeRenderSystem::RecalculateTreeLayout(NodeTree& tree, FontCollection& fon
         }
 
         auto children = tree.Children(node_handle) | std::views::filter([&tree, &node, &get_minor_layout] (const Node::Handle child_handle) -> bool {
-            return get_minor_layout(tree.GetNode(child_handle), node.direction).layout_type == LayoutLength::parent_constraint;
+            return get_minor_layout(tree.GetNode(child_handle), node.direction).constraint == LayoutLength::parent_constraint;
         });
         for (const Node::Handle child_handle : children) { get_minor_layout(tree.GetNode(child_handle), node.direction).resolved = get_minor(node.InnerBoxSize(), node.direction); }
     }
@@ -211,8 +185,7 @@ void NodeRenderSystem::RecalculateTreeLayout(NodeTree& tree, FontCollection& fon
         node.bounding_box = { .x = static_cast<f32>(start_position.x), .y = static_cast<f32>(start_position.y), .w = static_cast<f32>(size.x), .h = static_cast<f32>(size.y) };
     }
 }
-
-FrameElements NodeRenderSystem::CreateFrameElements(NodeTree& tree) const {
+FrameElements CreateFrameElements(NodeTree& tree) {
     FrameElements elements;
     if (tree.Empty()) { return elements; }
     Stack<Node::Handle> nodes;
@@ -233,6 +206,68 @@ FrameElements NodeRenderSystem::CreateFrameElements(NodeTree& tree) const {
     }
     return elements;
 }
+const FrameElements& GetFrameElements(NodeRenderSystem& node_render_system, NodeTree& tree) {
+    if (tree.dirty) {
+        tree.dirty = false;
+        RecalculateTreeLayout(node_render_system, tree, node_render_system.font);
+        tree.frame_elements.rectangles.Clear();
+        tree.frame_elements.texts.Clear();
+        if (!tree.Empty()) {
+            Stack<Node::Handle> nodes;
+            nodes.push(tree.Root());
+            while (!nodes.empty()) {
+                const Node::Handle node_handle = nodes.top();
+                const Node& node = tree.GetNode(node_handle);
+                nodes.pop();
+                nodes.push_range(tree.Children(node_handle));
 
+                if (node.IsText()) {
+                    TextElement text { .text = node.ttf_text, .position = float2 { static_cast<f32>(node.InnerBoxPosition().x), static_cast<f32>(node.InnerBoxPosition().y) } };
+                    tree.frame_elements.texts.PushBack(text);
+                } else {
+                    RectangleElement rectangle { .color = node.background_color, .rect = node.OuterRect() };
+                    tree.frame_elements.rectangles.PushBack(rectangle);
+                }
+            }
+        }
+    }
+    return tree.frame_elements;
+}
 
+void NodeRenderSystem::HoverClickEvents(const InputSystem& input_system) {
+    if (input_system.LeftMouseDown() && hovered.has_value()) {
+        NodeTree& hovered_tree = hovered.value().tree;
+        const Node::Handle hovered_node = hovered.value().node_handle;
+        hovered_tree.Propagate(hovered_node, &Node::OnClick);
+    }
+
+    if (hovered.has_value() && !hovered.value().tree.get().ValidHandle(hovered.value().node_handle)) { hovered = std::nullopt; }
+    const HoveredType previous_hovered = hovered;
+    hovered = GetHovered(*this, input_system.MousePosition());
+
+    if (hovered.has_value() && previous_hovered.has_value() && hovered == previous_hovered) { return; }
+
+    if (previous_hovered.has_value()) {
+        NodeTree& hovered_tree = previous_hovered.value().tree;
+        const Node::Handle hovered_node = previous_hovered.value().node_handle;
+        hovered_tree.Propagate(hovered_node, &Node::OnHoverOut);
+        hovered_tree.MarkDirty();
+    }
+    if (hovered.has_value()) {
+        NodeTree& hovered_tree = hovered.value().tree;
+        const Node::Handle hovered_node = hovered.value().node_handle;
+        hovered_tree.Propagate(hovered_node, &Node::OnHover);
+        hovered_tree.MarkDirty();
+    }
+}
+void NodeRenderSystem::RenderTrees(SDL_Renderer* renderer) {
+    for (NodeTree& tree : GetNodeTrees() | std::views::reverse | std::views::filter(&NodeTree::GetDisplay)) {
+        const FrameElements& frame_elements = GetFrameElements(*this, tree);
+        for (const RectangleElement& element : frame_elements.rectangles) {
+            (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);
+            (void)SDL_RenderFillRect(renderer, &element.rect);
+        }
+        for (const TextElement& text : frame_elements.texts) { (void)TTF_DrawRendererText(text.text, text.position.x, text.position.y); }
+    }
+}
 }

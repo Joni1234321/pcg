@@ -15,13 +15,13 @@ using namespace pce::frame;
 using namespace std::chrono;
 
 using Score = NamedType<u32, struct ScoreTag, Arithmetic, FormatLongNumber>;
-struct RoundData {
-    Score score { 0U };
-    time_point<high_resolution_clock> start_time;
-};
 struct HighScore {
     Score score;
     std::strong_ordering operator<=>(const HighScore& other) const noexcept { return score.Value() <=> other.score.Value(); }
+};
+struct RoundData {
+    Score score { 0U };
+    time_point<high_resolution_clock> start_time;
 };
 struct GameData {
     Multiset<HighScore> high_scores { };

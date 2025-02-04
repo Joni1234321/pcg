@@ -18,7 +18,7 @@ ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const String& text, c
     ui::NodeBuilder(color_indicator_size).Fill(color).Build(tree, component_handle);
     return component_handle;
 }
-void InspectorFrame::ShowElementStructure(const ui::NodeRenderSystem::HoveredType& hovered) {
+void InspectorFrame::ShowElementStructure(const ui::HoveredType& hovered) {
     using NodeHandleLayer = std::tuple<ui::Node::Handle, u32>;
 
     tree.Clear();
