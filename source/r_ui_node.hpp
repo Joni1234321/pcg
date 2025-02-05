@@ -25,7 +25,7 @@ struct DestroyText {
     }
 };
 using FontSize = u8;
-enum class Fonts : FontSize { body = 16U, h1 = 34U, h2 = 30U, h3 = 24U, h4 = 20U, h5 = 18U, h6 = 16U, small = 14U, tiny = 12U, title = 52U };
+enum class FontSizes : FontSize { body = 16U, h1 = 34U, h2 = 30U, h3 = 24U, h4 = 20U, h5 = 18U, h6 = 16U, small = 14U, tiny = 12U, title = 52U };
 class Font {
     UniquePointer<TTF_Font, CloseFont> font;
 
@@ -42,11 +42,11 @@ public:
 };
 class FontCollection {
     AbsolutePath font_path;
-    FlatMap<Fonts, Font> fonts { };
+    FlatMap<FontSizes, Font> fonts { };
 
 public:
     explicit FontCollection(const AbsolutePath& path) : font_path { path } { }
-    [[nodiscard]] const Font& GetFont(Fonts size);
+    [[nodiscard]] const Font& GetFont(FontSizes size);
 };
 struct TextElement {
     TTF_Text* text;
@@ -71,26 +71,21 @@ struct LayoutLength {
 };
 class NodeTree;
 class NodeBuilder;
-struct Node : LogDestroyWithCount<Node> {
-    struct Handle {
+struct NodeStyle : LogDestroyWithCount<NodeStyle> {
+    struct NodeHandle {
         u32 id;
-        explicit constexpr Handle(const u32 value) noexcept : id(value) { }
+        explicit constexpr NodeHandle(const u32 value) noexcept : id(value) { }
     };
-    struct OptionalHandle {
-        [[nodiscard]] constexpr OptionalHandle() noexcept : id(U32_MAX) { }
-        [[nodiscard]] constexpr explicit OptionalHandle(const u32 value) noexcept : id(value) { }
-        [[nodiscard]] constexpr OptionalHandle(const Handle handle) noexcept : id(handle.id) { }
+    struct NodeHandleOptional {
+        [[nodiscard]] constexpr NodeHandleOptional() noexcept : id(U32_MAX) { }
+        [[nodiscard]] constexpr explicit NodeHandleOptional(const u32 value) noexcept : id(value) { }
+        [[nodiscard]] constexpr NodeHandleOptional(const NodeHandle handle) noexcept : id(handle.id) { }
         [[nodiscard]] constexpr bool IsValid() const noexcept { return id != U32_MAX; }
-        [[nodiscard]] constexpr Handle GetHandle() const noexcept { return Handle { id }; }
+        [[nodiscard]] constexpr NodeHandle GetHandle() const noexcept { return NodeHandle { id }; }
         u32 id;
     };
-
-    String name { };
-    String text { };
-    Fonts font_size { Fonts::body };
 
     SDL_FRect bounding_box { };
-
     SDL_Color background_color { 0, 0, 0 };
     SDL_Color background_color_hover { 0, 0, 0 };
 
@@ -103,7 +98,7 @@ struct Node : LogDestroyWithCount<Node> {
     FlexDirection direction { horizontal };
     Alignment alignment { top_left };
 
-    Node() = default;
+    NodeStyle() = default;
 
     [[nodiscard]] constexpr uint4 NonContentSize4() const { return padding; }
     [[nodiscard]] constexpr uint2 NonContentSize2() const { return { padding.x + padding.z, padding.y + padding.w }; }
@@ -112,7 +107,6 @@ struct Node : LogDestroyWithCount<Node> {
     [[nodiscard]] constexpr uint2 OuterBoxEndPosition() const { return OuterBoxPosition() + OuterBoxSize(); }
     [[nodiscard]] constexpr uint2 InnerBoxPosition() const { return OuterBoxPosition() + uint2 { NonContentSize4().x, NonContentSize4().y }; }
     [[nodiscard]] constexpr uint2 InnerBoxSize() const { return OuterBoxSize() - NonContentSize2(); }
-    [[nodiscard]] constexpr b8 IsText() const { return !text.Empty(); }
     [[nodiscard]] constexpr SDL_FRect OuterRect() const {
         return { .x = static_cast<f32>(OuterBoxPosition().x), .y = static_cast<f32>(OuterBoxPosition().y), .w = static_cast<f32>(OuterBoxSize().x), .h = static_cast<f32>(OuterBoxSize().y) };
     };
@@ -128,60 +122,63 @@ struct Node : LogDestroyWithCount<Node> {
 struct NodeReference;
 using NodeReaction = std::function<void(NodeReference)>;
 struct NodeProperties {
+    String text { };
+    FontSizes font_size { FontSizes::body };
+    UniquePointer<TTF_Text, DestroyText> ttf_text { nullptr };
+    String name { };
     NodeReaction on_click { };
     NodeReaction on_hover { };
     NodeReaction on_hover_out { };
 };
 class NodeTree {
-    static constexpr u32 default_count = 32U;
-    List<Node> nodes { default_count };
-    List<NodeProperties> node_properties { default_count };
-    List<UniquePointer<TTF_Text, DestroyText>> texts { default_count };
+    static constexpr u32 DEFAULT_COUNT = 32U;
+    List<NodeStyle> nodes { DEFAULT_COUNT };
+    List<NodeProperties> node_properties { DEFAULT_COUNT };
 
-    List<Node::Handle> parents { default_count };
-    List<List<Node::Handle>> children { default_count };
+    List<NodeStyle::NodeHandle> parents { DEFAULT_COUNT };
+    List<List<NodeStyle::NodeHandle>> children { DEFAULT_COUNT };
 
-    Node::Handle offset_handle { 0U };
+    NodeStyle::NodeHandle offset_handle { 0U };
     b8 display { true };
 
 public:
     bool dirty { true };
     FrameElements frame_elements { };
 
-    [[nodiscard]] constexpr Node::Handle Root() const { return offset_handle; }
-    [[nodiscard]] constexpr Node::Handle Parent(const Node::Handle node_handle) { return parents[HandleToIndex(node_handle)]; }
-    [[nodiscard]] constexpr const List<Node::Handle>& Children(const Node::Handle node_handle) const { return children[HandleToIndex(node_handle)]; }
-    [[nodiscard]] constexpr List<Node::Handle>& Children(const Node::Handle node_handle) { return children[HandleToIndex(node_handle)]; }
-    [[nodiscard]] constexpr UniquePointer<TTF_Text, DestroyText>& Text(const Node::Handle node_handle) { return texts[HandleToIndex(node_handle)]; }
-    [[nodiscard]] constexpr const Node& GetNode(const Node::Handle node_handle) const { return nodes[HandleToIndex(node_handle)]; }
-    [[nodiscard]] constexpr Node& GetNode(const Node::Handle node_handle) { return nodes[HandleToIndex(node_handle)]; }
-    [[nodiscard]] constexpr NodeProperties& GetNodeProperties(const Node::Handle node_handle) { return node_properties[HandleToIndex(node_handle)]; }
+    [[nodiscard]] constexpr NodeStyle::NodeHandle Root() const { return offset_handle; }
+    [[nodiscard]] constexpr NodeStyle::NodeHandle Parent(const NodeStyle::NodeHandle node_handle) { return parents[HandleToIndex(node_handle)]; }
+    [[nodiscard]] constexpr const List<NodeStyle::NodeHandle>& Children(const NodeStyle::NodeHandle node_handle) const { return children[HandleToIndex(node_handle)]; }
+    [[nodiscard]] constexpr List<NodeStyle::NodeHandle>& Children(const NodeStyle::NodeHandle node_handle) { return children[HandleToIndex(node_handle)]; }
+    [[nodiscard]] constexpr const NodeStyle& GetNode(const NodeStyle::NodeHandle node_handle) const { return nodes[HandleToIndex(node_handle)]; }
+    [[nodiscard]] constexpr NodeStyle& GetNode(const NodeStyle::NodeHandle node_handle) { return nodes[HandleToIndex(node_handle)]; }
+    [[nodiscard]] constexpr const NodeProperties& GetNodeProperties(const NodeStyle::NodeHandle node_handle) const { return node_properties[HandleToIndex(node_handle)]; }
+    [[nodiscard]] constexpr NodeProperties& GetNodeProperties(const NodeStyle::NodeHandle node_handle) { return node_properties[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr b8 Empty() const { return nodes.Empty(); }
-    [[nodiscard]] Node::Handle AddRoot();
-    [[nodiscard]] Node::Handle AddRoot(Node&& root);
-    [[nodiscard]] Node::Handle AddNode(Node::Handle parent_handle);
-    [[nodiscard]] Node::Handle AddNode(Node&& node, Node::Handle parent_handle);
+    [[nodiscard]] NodeStyle::NodeHandle AddRoot();
+    [[nodiscard]] NodeStyle::NodeHandle AddRoot(NodeStyle&& root);
+    [[nodiscard]] NodeStyle::NodeHandle AddNode(NodeStyle::NodeHandle parent_handle);
+    [[nodiscard]] NodeStyle::NodeHandle AddNode(NodeStyle&& node, NodeStyle::NodeHandle parent_handle);
 
     void Clear();
-    void Propagate(Node::Handle node_handle, const NodeReaction& reaction);
+    void Propagate(NodeStyle::NodeHandle node_handle, const NodeReaction& reaction);
     constexpr void MarkDirty() noexcept { dirty = true; }
     constexpr void SetDisplay(const b8 value) noexcept { display = value; }
 
     [[nodiscard]] constexpr b8 GetDisplay() const noexcept { return display; }
-    [[nodiscard]] constexpr b8 ValidHandle(const Node::Handle node_handle) const { return (node_handle.id - offset_handle.id) < nodes.Size(); }
+    [[nodiscard]] constexpr b8 ValidHandle(const NodeStyle::NodeHandle node_handle) const { return (node_handle.id - offset_handle.id) < nodes.Size(); }
 
 private:
-    [[nodiscard]] constexpr u32 HandleToIndex(Node::Handle node_handle) const;
+    [[nodiscard]] constexpr u32 HandleToIndex(NodeStyle::NodeHandle node_handle) const;
 };
 
 struct NodeReference {
     NodeTree& tree;
-    Node::Handle node_handle;
+    NodeStyle::NodeHandle node_handle;
     [[nodiscard]] b8 operator==(const NodeReference other) const { return &tree == &other.tree && node_handle.id == other.node_handle.id; }
 };
 struct WeakNodeReference {
     std::reference_wrapper<NodeTree> tree;
-    Node::Handle node_handle;
+    NodeStyle::NodeHandle node_handle;
     [[nodiscard]] b8 operator==(const WeakNodeReference other) const { return &tree.get() == &other.tree.get() && node_handle.id == other.node_handle.id; }
 };
 struct Layout {
@@ -196,11 +193,13 @@ struct Layout {
 };
 class NodeBuilder {
     NodeReference node_reference;
-    Node& node { node_reference.tree.GetNode(node_reference.node_handle) };
+    NodeStyle& style { node_reference.tree.GetNode(node_reference.node_handle) };
+    NodeProperties& properties { node_reference.tree.GetNodeProperties(node_reference.node_handle) };
+
 
 public:
-    NodeBuilder(NodeTree& node_tree, Layout layout, uint2 position);
-    NodeBuilder(NodeTree& node_tree, Node::Handle parent_handle, Layout layout);
+    NodeBuilder(NodeTree& node_tree, Layout new_layout, uint2 position);
+    NodeBuilder(NodeTree& node_tree, NodeStyle::NodeHandle parent_handle, Layout new_layout);
     [[nodiscard]] NodeBuilder& Name(const String& name);
     [[nodiscard]] NodeBuilder& Fill(SDL_Color color);
     [[nodiscard]] NodeBuilder& Padding(u32 padding);
@@ -210,13 +209,13 @@ public:
     [[nodiscard]] NodeBuilder& Direction(FlexDirection direction);
     [[nodiscard]] NodeBuilder& Text(const String& string);
     [[nodiscard]] NodeBuilder& Text(String&& string);
-    [[nodiscard]] NodeBuilder& Text(const String& string, Fonts font_size);
-    [[nodiscard]] NodeBuilder& Text(String&& string, Fonts font_size);
+    [[nodiscard]] NodeBuilder& Text(const String& string, FontSizes font_size);
+    [[nodiscard]] NodeBuilder& Text(String&& string, FontSizes font_size);
     [[nodiscard]] NodeBuilder& Alignment(Alignment alignment);
     [[nodiscard]] NodeBuilder& Right();
     [[nodiscard]] NodeBuilder& Center();
     [[nodiscard]] NodeBuilder& Left();
-    Node::Handle Build();
+    NodeStyle::NodeHandle Build();
 };
 using B = NodeBuilder;
 } // pce::ui
