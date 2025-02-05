@@ -7,7 +7,7 @@
 namespace pce::ui {
 const Font& FontCollection::GetFont(const FontSizes size) {
     if (!fonts.HasKey(size)) {
-        fonts.EmplaceBack(size, Font { font_path, static_cast<FontSize>(size) });
+        fonts.EmplaceBack(size, font_path, static_cast<FontSize>(size));
         b8 failed = fonts[size].FailedLoading();
         if (failed) { SDL_Log("Font not loaded (%s)", SDL_GetError()); }
     }

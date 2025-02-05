@@ -160,7 +160,8 @@ public:
     using ConstReference = const V&;
     using SizeType = u32;
 
-    [[nodiscard]] constexpr FlatMap() = default;
+    constexpr FlatMap() = default;
+    explicit constexpr FlatMap(const u32 initial_size) : keys(initial_size), values(initial_size) { }
     constexpr void PushBack(const K& key, V&& value) {
         keys.PushBack(key);
         values.PushBack(value);

@@ -43,17 +43,11 @@ static constexpr u32 DEFAULT_COLUMN_WIDTH = 12U;
 struct Logger {
     // NOLINT(*-struct-pack-align)
     enum class LOGGER_COLOR : u8 { ORANGE = 202U, YELLOW = 220U, WHITE = 250U, PINK = 189U, RED = 196U };
-
     Logger() = default;
-
     Logger(const Logger&) = delete;
-
     Logger& operator=(const Logger&) = delete;
-
     Logger(Logger&&) = delete;
-
     Logger& operator=(Logger&&) = delete;
-
     ~Logger() { Print(); }
 
     void Print() {
@@ -79,6 +73,8 @@ struct Logger {
     template <typename... Args> constexpr void Tagged(const char* tag, const char* text, Args... args) { Log("[{}] {}", tag, std::vformat(text, std::make_format_args(args...))); }
     template <typename... Args> constexpr void Destroyed(const char* text, Args... args) { Tagged("Destroy", text, args...); }
     template <typename... Args> constexpr void Created(const char* text, Args... args) { Tagged("Created", text, args...); }
+    template <typename... Args> constexpr void Moved(const char* text, Args... args) { Tagged("Moved", text, args...); }
+    template <typename... Args> constexpr void Copied(const char* text, Args... args) { Tagged("Copied", text, args...); }
 
     template <typename... Args> constexpr void ErrorWithFile(const char* text, Args... args) {
         SetColor(static_cast<u8>(LOGGER_COLOR::RED));
@@ -136,20 +132,24 @@ private:
 
 template <typename T> struct LogLifetime {
     LogLifetime() { Logger().Created("{}", typeid(T).name()); }
+    LogLifetime(const LogLifetime&) { Logger().Copied("{}", typeid(T).name()); }
+    LogLifetime(LogLifetime&&) noexcept { Logger().Moved("{}", typeid(T).name()); }
     ~LogLifetime() { Logger().Destroyed("{}", typeid(T).name()); }
 };
 template <typename T> struct LogLifetimeWithCount {
-    LogLifetimeWithCount() {
-        static u32 count;
-        Logger().Created("{} {}", typeid(T).name(), ++count);
-    }
-    ~LogLifetimeWithCount() {
-        static u32 count;
-        Logger().Destroyed("{} {}", typeid(T).name(), ++count);
-    }
+    LogLifetimeWithCount() { Logger().Created("{} {}", typeid(T).name(), log_id); }
+    LogLifetimeWithCount(const LogLifetimeWithCount&) noexcept { Logger().Copied("{} {}", typeid(T).name(), log_id); }
+    LogLifetimeWithCount(LogLifetimeWithCount&& other) noexcept { Logger().Moved("{} {} -> {}", typeid(T).name(), other.log_id, log_id); }
+    ~LogLifetimeWithCount() { Logger().Destroyed("{} {}", typeid(T).name(), log_id); }
+    static u32 log_counter;
+    u32 log_id { log_counter++ };
 };
+template<typename T> u32 LogLifetimeWithCount<T>::log_counter = 0U;
+
 template <typename T> struct LogLifetimeWithStack {
     LogLifetimeWithStack() { Logger().Created("{} {}\n", typeid(T).name(), std::stacktrace::current()); }
+    LogLifetimeWithStack(const LogLifetimeWithStack&) { Logger().Copied("{} {}\n", typeid(T).name(), std::stacktrace::current()); }
+    LogLifetimeWithStack(LogLifetimeWithStack&&) noexcept { Logger().Moved("{} {}\n", typeid(T).name(), std::stacktrace::current()); }
     ~LogLifetimeWithStack() { Logger().Destroyed("{} {}\n", typeid(T).name(), std::stacktrace::current()); }
 };
 template <typename T> struct LogDestroy {

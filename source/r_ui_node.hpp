@@ -42,7 +42,7 @@ public:
 };
 class FontCollection {
     AbsolutePath font_path;
-    FlatMap<FontSizes, Font> fonts { };
+    FlatMap<FontSizes, Font> fonts { 16U };
 
 public:
     explicit FontCollection(const AbsolutePath& path) : font_path { path } { }
