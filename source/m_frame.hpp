@@ -6,12 +6,12 @@
 
 namespace pce::frame {
 class TickFrame {
-    ui::NodeStyle::NodeHandleOptional tick_handle { };
+    ui::NodeHandleOptional tick_handle { };
 
 public:
     ui::NodeTree tree;
     TickFrame() { tick_handle = ui::B(tree, ui::hug, { 10U, 0U }).Text("Tick", ui::FontSizes::tiny).Fill(colors::radiant_orange).Build(); }
-    void SetInfo(u32 tick, u32 tps, u32 fps) { tree.GetNodeProperties(tick_handle.GetHandle()).text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, tps, fps); }
+    void SetInfo(u32 tick, u32 tps, u32 fps) { tree.GetProperties(tick_handle.GetHandle()).text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, tps, fps); }
 };
 struct InspectorFrame {
     ui::NodeTree tree;

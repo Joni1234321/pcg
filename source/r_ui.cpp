@@ -1,19 +1,19 @@
 #include "r_ui.hpp"
 
 namespace pce::ui {
-NodeStyle::NodeHandleOptional HitNode(NodeTree& tree, uint2 screen_position) {
-    if (tree.Empty() || !tree.GetNode(tree.Root()).IsInside(screen_position)) { return NodeStyle::NodeHandleOptional { }; }
-    NodeStyle::NodeHandle node_handle = tree.Root();
-    const auto is_inside_node = [screen_position, &tree] (const NodeStyle::NodeHandle child_handle) -> b8 { return tree.GetNode(child_handle).IsInside(screen_position); };
+NodeHandleOptional HitNode(NodeTree& tree, uint2 screen_position) {
+    if (tree.Empty() || !tree.GetStyle(tree.Root()).IsInside(screen_position)) { return NodeHandleOptional { }; }
+    NodeHandle node_handle = tree.Root();
+    const auto is_inside_node = [screen_position, &tree] (const NodeHandle child_handle) -> b8 { return tree.GetStyle(child_handle).IsInside(screen_position); };
     while (true) {
         auto node_iterator = std::ranges::find_if(tree.Children(node_handle), is_inside_node, std::identity { });
-        if (node_iterator == tree.Children(node_handle).end()) { return tree.GetNode(node_handle).background_color.a == 0 ? NodeStyle::NodeHandleOptional { } : NodeStyle::NodeHandleOptional { node_handle.id }; }
+        if (node_iterator == tree.Children(node_handle).end()) { return tree.GetStyle(node_handle).background_color.a == 0 ? NodeHandleOptional { } : NodeHandleOptional { node_handle.id }; }
         node_handle = *node_iterator;
     }
 }
 HoveredType GetHovered(NodeRenderSystem& render_system, const uint2 mouse_position) {
     for (NodeTree& tree : render_system.GetNodeTrees()) {
-        NodeStyle::NodeHandleOptional node_handle = HitNode(tree, mouse_position);
+        NodeHandleOptional node_handle = HitNode(tree, mouse_position);
         if (node_handle.IsValid()) { return std::optional { WeakNodeReference { .tree = tree, .node_handle = node_handle.GetHandle() } }; }
     }
     return std::nullopt;
@@ -21,23 +21,23 @@ HoveredType GetHovered(NodeRenderSystem& render_system, const uint2 mouse_positi
 void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree, FontCollection& font) {
     if (tree.Empty()) { return; }
 
-    auto pixels_gap = [&tree] (const NodeStyle::NodeHandle node_handle, const u32 gap) -> u32 { return tree.Children(node_handle).Empty() ? 0U : gap * (tree.Children(node_handle).Size() - 1U); };
+    auto pixels_gap = [&tree] (const NodeHandle node_handle, const u32 gap) -> u32 { return tree.Children(node_handle).Empty() ? 0U : gap * (tree.Children(node_handle).Size() - 1U); };
     auto get_major = [] (const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.x : point.y; };
     auto get_minor = [] (const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.y : point.x; };
     auto get_major_layout = [] (NodeStyle& node_style, const FlexDirection direction) -> LayoutLength& { return direction == horizontal ? node_style.width : node_style.height; };
     auto get_minor_layout = [] (NodeStyle& node_style, const FlexDirection direction) -> LayoutLength& { return direction == horizontal ? node_style.height : node_style.width; };
-    auto get_major_pixels_taken_by_children = [&tree, &get_major] (const NodeStyle::NodeHandle node_handle, const FlexDirection direction) -> u32 {
-        auto get_major_outer_box_size = [&tree, &get_major, &direction] (const NodeStyle::NodeHandle child_handle) -> u32 { return get_major(tree.GetNode(child_handle).OuterBoxSize(), direction); };
+    auto get_major_pixels_taken_by_children = [&tree, &get_major] (const NodeHandle node_handle, const FlexDirection direction) -> u32 {
+        auto get_major_outer_box_size = [&tree, &get_major, &direction] (const NodeHandle child_handle) -> u32 { return get_major(tree.GetStyle(child_handle).OuterBoxSize(), direction); };
         return std::ranges::fold_left_first(tree.Children(node_handle) | std::views::transform(get_major_outer_box_size), std::plus { }).value_or(0U);
     };
 
-    List<NodeStyle::NodeHandle> node_handles { tree.Root() };
+    List<NodeHandle> node_handles { tree.Root() };
     for (u32 i = 0U; i < node_handles.Size(); ++i) { node_handles.AppendRange(tree.Children(node_handles[i])); }
 
     // text
-    for (const NodeStyle::NodeHandle node_handle : node_handles) {
-        NodeStyle& node_style = tree.GetNode(node_handle);
-        NodeProperties& node_properties = tree.GetNodeProperties(node_handle);
+    for (const NodeHandle node_handle : node_handles) {
+        NodeStyle& node_style = tree.GetStyle(node_handle);
+        NodeProperties& node_properties = tree.GetProperties(node_handle);
 
         if (node_properties.text.Empty()) {
             node_properties.ttf_text.Reset();
@@ -60,9 +60,9 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
     #else
     auto reversed_nodes = node_handles | std::views::reverse;
     #endif
-    for (const NodeStyle::NodeHandle node_handle : reversed_nodes) {
-        NodeStyle& node_style = tree.GetNode(node_handle);
-        NodeProperties& node_properties = tree.GetNodeProperties(node_handle);
+    for (const NodeHandle node_handle : reversed_nodes) {
+        NodeStyle& node_style = tree.GetStyle(node_handle);
+        NodeProperties& node_properties = tree.GetProperties(node_handle);
         if (node_style.width.constraint != LayoutLength::child_constraint && node_style.height.constraint != LayoutLength::child_constraint) { continue; }
 
         uint2 text_size { 0U, 0U };
@@ -74,48 +74,48 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
         }
         LayoutLength& minor_layout = get_minor_layout(node_style, node_style.direction);
         if (minor_layout.constraint == LayoutLength::child_constraint) {
-            auto get_minor_outer_box_size = [&tree, get_minor, &node_style] (const NodeStyle::NodeHandle child_handle) -> u32 { return get_minor(tree.GetNode(child_handle).OuterBoxSize(), node_style.direction); };
+            auto get_minor_outer_box_size = [&tree, get_minor, &node_style] (const NodeHandle child_handle) -> u32 { return get_minor(tree.GetStyle(child_handle).OuterBoxSize(), node_style.direction); };
             const u32 max_minor = tree.Children(node_handle).Empty() ? 0U : std::ranges::max(tree.Children(node_handle) | std::views::transform(get_minor_outer_box_size));
             minor_layout.resolved = std::max(max_minor, get_minor(text_size, node_style.direction)) + get_minor(node_style.NonContentSize2(), node_style.direction);
         }
     }
 
     // fill top down
-    NodeStyle& root_node = tree.GetNode(tree.Root());
+    NodeStyle& root_node = tree.GetStyle(tree.Root());
     if (root_node.width.constraint == LayoutLength::parent_constraint) { root_node.width.resolved = node_render_system.render_system.screen_size.x - root_node.position.x; }
     if (root_node.height.constraint == LayoutLength::parent_constraint) { root_node.height.resolved = node_render_system.render_system.screen_size.y - root_node.position.y; }
-    for (const NodeStyle::NodeHandle node_handle : node_handles) {
-        const NodeStyle& node_style = tree.GetNode(node_handle);
+    for (const NodeHandle node_handle : node_handles) {
+        const NodeStyle& node_style = tree.GetStyle(node_handle);
 
-        List<NodeStyle::NodeHandle> parent_constrained { };
+        List<NodeHandle> parent_constrained { };
         u32 pixels_taken_major_axis = pixels_gap(node_handle, node_style.gap);
-        for (const NodeStyle::NodeHandle child_handle : tree.Children(node_handle)) {
-            NodeStyle& child = tree.GetNode(child_handle);
+        for (const NodeHandle child_handle : tree.Children(node_handle)) {
+            NodeStyle& child = tree.GetStyle(child_handle);
             LayoutLength& child_major_layout = get_major_layout(child, node_style.direction);
             if (child_major_layout.constraint == LayoutLength::parent_constraint) { parent_constrained.PushBack(child_handle); } else { pixels_taken_major_axis += get_major(child.OuterBoxSize(), node_style.direction); }
         }
         if (parent_constrained.Size() > 0U) {
             if (pixels_taken_major_axis >= get_major(node_style.InnerBoxSize(), node_style.direction)) {
-                for (const NodeStyle::NodeHandle child_handle : parent_constrained) {
+                for (const NodeHandle child_handle : parent_constrained) {
                     constexpr u32 min_pixel_size = 10U;
-                    get_major_layout(tree.GetNode(child_handle), node_style.direction).resolved = min_pixel_size;
+                    get_major_layout(tree.GetStyle(child_handle), node_style.direction).resolved = min_pixel_size;
                 }
                 continue;
             }
             const auto [pixels_per, left_over] = math::Div(get_major(node_style.InnerBoxSize(), node_style.direction) - pixels_taken_major_axis, parent_constrained.Size());
-            for (const NodeStyle::NodeHandle child_handle : parent_constrained) { get_major_layout(tree.GetNode(child_handle), node_style.direction).resolved = pixels_per; }
-            get_major_layout(tree.GetNode(parent_constrained[0U]), node_style.direction).resolved += left_over;
+            for (const NodeHandle child_handle : parent_constrained) { get_major_layout(tree.GetStyle(child_handle), node_style.direction).resolved = pixels_per; }
+            get_major_layout(tree.GetStyle(parent_constrained[0U]), node_style.direction).resolved += left_over;
         }
 
-        auto children = tree.Children(node_handle) | std::views::filter([&tree, &node_style, &get_minor_layout] (const NodeStyle::NodeHandle child_handle) -> bool {
-            return get_minor_layout(tree.GetNode(child_handle), node_style.direction).constraint == LayoutLength::parent_constraint;
+        auto children = tree.Children(node_handle) | std::views::filter([&tree, &node_style, &get_minor_layout] (const NodeHandle child_handle) -> bool {
+            return get_minor_layout(tree.GetStyle(child_handle), node_style.direction).constraint == LayoutLength::parent_constraint;
         });
-        for (const NodeStyle::NodeHandle child_handle : children) { get_minor_layout(tree.GetNode(child_handle), node_style.direction).resolved = get_minor(node_style.InnerBoxSize(), node_style.direction); }
+        for (const NodeHandle child_handle : children) { get_minor_layout(tree.GetStyle(child_handle), node_style.direction).resolved = get_minor(node_style.InnerBoxSize(), node_style.direction); }
     }
 
     // position top down
-    for (const NodeStyle::NodeHandle node_handle : node_handles) {
-        const NodeStyle& node_style = tree.GetNode(node_handle);
+    for (const NodeHandle node_handle : node_handles) {
+        const NodeStyle& node_style = tree.GetStyle(node_handle);
         u32 major_position = get_major(node_style.InnerBoxPosition(), node_style.direction);
         const u32 children_major = get_major_pixels_taken_by_children(node_handle, node_style.direction);
         float2 factors;
@@ -150,8 +150,8 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
         }
         if (node_style.direction == horizontal) { major_position += (node_style.InnerBoxSize().x - children_major) * factors.x; }
         else { major_position += (node_style.InnerBoxSize().y - children_major) * factors.y; }
-        for (const NodeStyle::NodeHandle child_handle : tree.Children(node_handle)) {
-            NodeStyle& child = tree.GetNode(child_handle);
+        for (const NodeHandle child_handle : tree.Children(node_handle)) {
+            NodeStyle& child = tree.GetStyle(child_handle);
             if (node_style.direction == horizontal) {
                 u32 minor_position = node_style.InnerBoxPosition().y;
                 minor_position += (node_style.InnerBoxSize().y - child.OuterBoxSize().y) * factors.y;
@@ -167,12 +167,12 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
     }
 
     // bounding box
-    for (const NodeStyle::NodeHandle node_handle : reversed_nodes) {
-        NodeStyle& node_style = tree.GetNode(node_handle);
+    for (const NodeHandle node_handle : reversed_nodes) {
+        NodeStyle& node_style = tree.GetStyle(node_handle);
         uint2 start_position = node_style.OuterBoxPosition();
         uint2 end_position = node_style.OuterBoxEndPosition();
-        for (const NodeStyle::NodeHandle child_handle : tree.Children(node_handle)) {
-            NodeStyle& child = tree.GetNode(child_handle);
+        for (const NodeHandle child_handle : tree.Children(node_handle)) {
+            NodeStyle& child = tree.GetStyle(child_handle);
             uint2 child_start_position = child.OuterBoxPosition();
             uint2 child_end_position = child.OuterBoxEndPosition();
             start_position.x = std::min(child_start_position.x, start_position.x);
@@ -191,12 +191,12 @@ const FrameElements& GetFrameElements(NodeRenderSystem& node_render_system, Node
         tree.frame_elements.rectangles.Clear();
         tree.frame_elements.texts.Clear();
         if (!tree.Empty()) {
-            Stack<NodeStyle::NodeHandle> nodes;
+            Stack<NodeHandle> nodes;
             nodes.push(tree.Root());
             while (!nodes.empty()) {
-                const NodeStyle::NodeHandle node_handle = nodes.top();
-                const NodeStyle& node_style = tree.GetNode(node_handle);
-                const NodeProperties& node_properties = tree.GetNodeProperties(node_handle);
+                const NodeHandle node_handle = nodes.top();
+                const NodeStyle& node_style = tree.GetStyle(node_handle);
+                const NodeProperties& node_properties = tree.GetProperties(node_handle);
                 nodes.pop();
                 nodes.push_range(tree.Children(node_handle));
 
@@ -215,27 +215,27 @@ const FrameElements& GetFrameElements(NodeRenderSystem& node_render_system, Node
 
 void Hover(const NodeReference& node_reference) {
     Logger().Log("Hover");
-    NodeStyle& node_style = node_reference.tree.GetNode(node_reference.node_handle);
+    NodeStyle& node_style = node_reference.tree.GetStyle(node_reference.node_handle);
     std::swap(node_style.background_color, node_style.background_color_hover);
-    NodeProperties& details = node_reference.tree.GetNodeProperties(node_reference.node_handle);
+    NodeProperties& details = node_reference.tree.GetProperties(node_reference.node_handle);
     if (details.on_hover) { details.on_hover(node_reference); }
 }
 void HoverOut(const NodeReference& node_reference) {
     Logger().Log("Hover Out");
-    NodeStyle& node_style = node_reference.tree.GetNode(node_reference.node_handle);
+    NodeStyle& node_style = node_reference.tree.GetStyle(node_reference.node_handle);
     std::swap(node_style.background_color, node_style.background_color_hover);
-    NodeProperties& details = node_reference.tree.GetNodeProperties(node_reference.node_handle);
+    NodeProperties& details = node_reference.tree.GetProperties(node_reference.node_handle);
     if (details.on_hover_out) { details.on_hover_out(node_reference); }
 }
 void Click(const NodeReference& node_reference) {
     Logger().Log("Clicked");
-    NodeProperties& properties = node_reference.tree.GetNodeProperties(node_reference.node_handle);
+    NodeProperties& properties = node_reference.tree.GetProperties(node_reference.node_handle);
     if (properties.on_click) { properties.on_click(node_reference); }
 }
 void NodeRenderSystem::HoverClickEvents(const InputSystem& input_system) {
     if (input_system.LeftMouseDown() && hovered.has_value()) {
         NodeTree& hovered_tree = hovered.value().tree;
-        const NodeStyle::NodeHandle hovered_node = hovered.value().node_handle;
+        const NodeHandle hovered_node = hovered.value().node_handle;
         hovered_tree.Propagate(hovered_node, Click);
     }
 
@@ -247,13 +247,13 @@ void NodeRenderSystem::HoverClickEvents(const InputSystem& input_system) {
 
     if (previous_hovered.has_value()) {
         NodeTree& hovered_tree = previous_hovered.value().tree;
-        const NodeStyle::NodeHandle hovered_node = previous_hovered.value().node_handle;
+        const NodeHandle hovered_node = previous_hovered.value().node_handle;
         hovered_tree.Propagate(hovered_node, HoverOut);
         hovered_tree.MarkDirty();
     }
     if (hovered.has_value()) {
         NodeTree& hovered_tree = hovered.value().tree;
-        const NodeStyle::NodeHandle hovered_node = hovered.value().node_handle;
+        const NodeHandle hovered_node = hovered.value().node_handle;
         hovered_tree.Propagate(hovered_node, Hover);
         hovered_tree.MarkDirty();
     }

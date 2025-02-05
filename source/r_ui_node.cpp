@@ -15,29 +15,29 @@ const Font& FontCollection::GetFont(const FontSizes size) {
 }
 
 // NodeTree
-constexpr u32 NodeTree::HandleToIndex(const NodeStyle::NodeHandle node_handle) const {
+constexpr u32 NodeTree::HandleToIndex(const NodeHandle node_handle) const {
     ASSERT_DBG(ValidHandle(node_handle), "Out of bounds, most likely destroyed");
     return node_handle.id - offset_handle.id;
 }
-NodeStyle::NodeHandle NodeTree::AddRoot() {
-    ASSERT_DBG(nodes.Empty(), "Setting root non empty tree");
-    nodes.EmplaceBack();
+NodeHandle NodeTree::AddRoot() {
+    ASSERT_DBG(node_styles.Empty(), "Setting root non empty tree");
+    node_styles.EmplaceBack();
     parents.EmplaceBack(Root());
     children.EmplaceBack();
     node_properties.EmplaceBack();
 
     return Root();
 }
-NodeStyle::NodeHandle NodeTree::AddRoot(NodeStyle&& root) {
-    const NodeStyle::NodeHandle node_handle = AddRoot();
-    nodes[HandleToIndex(node_handle)] = std::move(root);
+NodeHandle NodeTree::AddRoot(NodeStyle&& root) {
+    const NodeHandle node_handle = AddRoot();
+    node_styles[HandleToIndex(node_handle)] = std::move(root);
     return node_handle;
 }
-NodeStyle::NodeHandle NodeTree::AddNode(NodeStyle::NodeHandle parent_handle) {
-    ASSERT_DBG(!nodes.Empty(), "Adding node without root");
-    const NodeStyle::NodeHandle node_handle { offset_handle.id + nodes.Size() };
+NodeHandle NodeTree::AddNode(NodeHandle parent_handle) {
+    ASSERT_DBG(!node_styles.Empty(), "Adding node without root");
+    const NodeHandle node_handle { offset_handle.id + node_styles.Size() };
     ASSERT_DBG(node_handle.id != parent_handle.id, "Assigning node to itself recursion");
-    nodes.EmplaceBack();
+    node_styles.EmplaceBack();
     parents.PushBack(parent_handle);
     children.EmplaceBack();
     node_properties.EmplaceBack();
@@ -45,20 +45,20 @@ NodeStyle::NodeHandle NodeTree::AddNode(NodeStyle::NodeHandle parent_handle) {
     Children(parent_handle).PushBack(node_handle);
     return node_handle;
 }
-NodeStyle::NodeHandle NodeTree::AddNode(NodeStyle&& node, const NodeStyle::NodeHandle parent_handle) {
-    const NodeStyle::NodeHandle node_handle = AddNode(parent_handle);
-    nodes[HandleToIndex(node_handle)] = std::move(node);
+NodeHandle NodeTree::AddNode(NodeStyle&& node, const NodeHandle parent_handle) {
+    const NodeHandle node_handle = AddNode(parent_handle);
+    node_styles[HandleToIndex(node_handle)] = std::move(node);
     return node_handle;
 }
 void NodeTree::Clear() {
-    offset_handle.id += nodes.Size();
+    offset_handle.id += node_styles.Size();
 
-    nodes.Clear();
+    node_styles.Clear();
     parents.Clear();
     children.Clear();
     node_properties.Clear();
 }
-void NodeTree::Propagate(NodeStyle::NodeHandle node_handle, const NodeReaction& reaction) {
+void NodeTree::Propagate(NodeHandle node_handle, const NodeReaction& reaction) {
     while (true) {
         std::invoke(reaction, NodeReference { *this, node_handle });
         if (node_handle.id == Root().id) { break; };
@@ -70,7 +70,7 @@ NodeBuilder::NodeBuilder(NodeTree &node_tree, Layout new_layout, uint2 position)
     style.width = new_layout.width;
     style.height = new_layout.height;
 }
-NodeBuilder::NodeBuilder(NodeTree &node_tree, NodeStyle::NodeHandle parent_handle, Layout new_layout) : node_reference{ node_tree, node_tree.AddNode(parent_handle) } {
+NodeBuilder::NodeBuilder(NodeTree &node_tree, NodeHandle parent_handle, Layout new_layout) : node_reference{ node_tree, node_tree.AddNode(parent_handle) } {
     style.width = new_layout.width;
     style.height = new_layout.height;
 }
@@ -136,7 +136,7 @@ inline SDL_Color lighten_color(const SDL_Color color, const f32 factor) {
     auto lerp = [] (u8 channel, f32 factor, u8 target) -> u8 { return static_cast<u8>(channel + (target - channel) * factor); };
     return SDL_Color { lerp(color.r, factor, 255), lerp(color.g, factor, 255), lerp(color.b, factor, 255), color.a };
 }
-NodeStyle::NodeHandle NodeBuilder::Build() {
+NodeHandle NodeBuilder::Build() {
     node_reference.tree.MarkDirty();
     constexpr f32 factor = 0.5F;
     style.background_color_hover = lighten_color(style.background_color, factor);
