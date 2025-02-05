@@ -25,6 +25,7 @@ Node::Handle NodeTree::AddRoot() {
     parents.EmplaceBack(Root());
     children.EmplaceBack();
     texts.EmplaceBack(nullptr);
+    node_details.EmplaceBack();
 
     return Root();
 }
@@ -41,6 +42,7 @@ Node::Handle NodeTree::AddNode(Node::Handle parent_handle) {
     parents.PushBack(parent_handle);
     children.EmplaceBack();
     texts.EmplaceBack(nullptr);
+    node_details.EmplaceBack();
 
     Children(parent_handle).PushBack(node_handle);
     return node_handle;
@@ -57,10 +59,11 @@ void NodeTree::Clear() {
     parents.Clear();
     children.Clear();
     texts.Clear();
+    node_details.Clear();
 }
-void NodeTree::Propagate(Node::Handle node_handle, const std::function<void(Node&)>& proj) {
+void NodeTree::Propagate(Node::Handle node_handle, const NodeReaction& reaction) {
     while (true) {
-        std::invoke(proj, GetNode(node_handle));
+        std::invoke(reaction, NodeReference { *this, node_handle });
         if (node_handle.id == Root().id) { break; };
         node_handle = Parent(node_handle);
     }
@@ -140,10 +143,6 @@ Node::Handle NodeBuilder::Build() {
     node_reference.tree.get().MarkDirty();
     constexpr f32 factor = 0.5F;
     node.background_color_hover = lighten_color(node.background_color, factor);
-
-    node.on_click = [&] (Node* node) -> void { Logger().Log("Clicked"); };
-    node.on_hover = [&] (Node* node) -> void { Logger().Log("Hover"); };
-    node.on_hover_out = [&] (Node* node) -> void { Logger().Log("On Hover Out"); };
     return node_reference.node_handle;
 }
 }

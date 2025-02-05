@@ -103,12 +103,7 @@ struct Node : LogDestroyWithCount<Node> {
     FlexDirection direction { horizontal };
     Alignment alignment { top_left };
 
-    std::function<void(Node*)> on_click { };
-    std::function<void(Node*)> on_hover { };
-    std::function<void(Node*)> on_hover_out { };
-
     Node() = default;
-    ~Node() { }
 
     [[nodiscard]] constexpr uint4 NonContentSize4() const { return padding; }
     [[nodiscard]] constexpr uint2 NonContentSize2() const { return { padding.x + padding.z, padding.y + padding.w }; }
@@ -130,19 +125,18 @@ struct Node : LogDestroyWithCount<Node> {
     friend NodeBuilder;
     friend NodeTree;
 
-    void OnHover() {
-        std::swap(background_color, background_color_hover);
-        if (on_hover) { on_hover(this); }
-    }
-    void OnHoverOut() {
-        std::swap(background_color, background_color_hover);
-        if (on_hover_out) { on_hover_out(this); }
-    }
-    void OnClick() { if (on_click) { on_click(this); } }
+};
+struct NodeReference;
+using NodeReaction = std::function<void(const NodeReference)>;
+struct NodeDetail {
+    NodeReaction on_click { };
+    NodeReaction on_hover { };
+    NodeReaction on_hover_out { };
 };
 class NodeTree {
     static constexpr u32 default_count = 32U;
     List<Node> nodes { default_count };
+    List<NodeDetail> node_details { default_count };
     List<Node::Handle> parents { default_count };
     List<List<Node::Handle>> children { default_count };
     List<UniquePointer<TTF_Text, DestroyText>> texts { default_count };
@@ -160,6 +154,7 @@ public:
     [[nodiscard]] constexpr UniquePointer<TTF_Text, DestroyText>& Text(const Node::Handle node_handle) { return texts[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr const Node& GetNode(const Node::Handle node_handle) const { return nodes[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr Node& GetNode(const Node::Handle node_handle) { return nodes[HandleToIndex(node_handle)]; }
+    [[nodiscard]] constexpr NodeDetail& GetNodeDetails(const Node::Handle node_handle) { return node_details[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr b8 Empty() const { return nodes.Empty(); }
     [[nodiscard]] Node::Handle AddRoot();
     [[nodiscard]] Node::Handle AddRoot(Node&& root);
@@ -167,7 +162,7 @@ public:
     [[nodiscard]] Node::Handle AddNode(Node&& node, Node::Handle parent_handle);
 
     void Clear();
-    void Propagate(Node::Handle node_handle, const std::function<void(Node&)>& proj);
+    void Propagate(Node::Handle node_handle, const NodeReaction& reaction);
     constexpr void MarkDirty() noexcept { dirty = true; }
     constexpr void SetDisplay(const b8 value) noexcept { display = value; }
 

@@ -246,11 +246,32 @@ const FrameElements& GetFrameElements(NodeRenderSystem& node_render_system, Node
     return tree.frame_elements;
 }
 
+void Hover (const NodeReference& node_reference) {
+    Logger().Log("Hover");
+    Node& node = node_reference.tree.get().GetNode(node_reference.node_handle);
+    std::swap(node.background_color, node.background_color_hover);
+    NodeDetail& details = node_reference.tree.get().GetNodeDetails(node_reference.node_handle);
+    if (details.on_hover) { details.on_hover(node_reference); }
+}
+void HoverOut (const NodeReference& node_reference) {
+    Logger().Log("Hover Out");
+    Node& node = node_reference.tree.get().GetNode(node_reference.node_handle);
+    std::swap(node.background_color, node.background_color_hover);
+    NodeDetail& details = node_reference.tree.get().GetNodeDetails(node_reference.node_handle);
+    if (details.on_hover_out) { details.on_hover_out(node_reference); }
+}
+void Click (const NodeReference& node_reference) {
+    Logger().Log("Clicked");
+    Node& node = node_reference.tree.get().GetNode(node_reference.node_handle);
+    NodeDetail& details = node_reference.tree.get().GetNodeDetails(node_reference.node_handle);
+    if (details.on_click) { details.on_click(node_reference); }
+}
 void NodeRenderSystem::HoverClickEvents(const InputSystem& input_system) {
     if (input_system.LeftMouseDown() && hovered.has_value()) {
         NodeTree& hovered_tree = hovered.value().tree;
         const Node::Handle hovered_node = hovered.value().node_handle;
-        hovered_tree.Propagate(hovered_node, &Node::OnClick);
+        auto on_click = [](const NodeReference node_reference) -> void { node_reference.tree.get().GetNodeDetails(node_reference.node_handle).on_click(node_reference); };
+        hovered_tree.Propagate(hovered_node, Click);
     }
 
     if (hovered.has_value() && !hovered.value().tree.get().ValidHandle(hovered.value().node_handle)) { hovered = std::nullopt; }
@@ -262,13 +283,13 @@ void NodeRenderSystem::HoverClickEvents(const InputSystem& input_system) {
     if (previous_hovered.has_value()) {
         NodeTree& hovered_tree = previous_hovered.value().tree;
         const Node::Handle hovered_node = previous_hovered.value().node_handle;
-        hovered_tree.Propagate(hovered_node, &Node::OnHoverOut);
+        hovered_tree.Propagate(hovered_node, HoverOut);
         hovered_tree.MarkDirty();
     }
     if (hovered.has_value()) {
         NodeTree& hovered_tree = hovered.value().tree;
         const Node::Handle hovered_node = hovered.value().node_handle;
-        hovered_tree.Propagate(hovered_node, &Node::OnHover);
+        hovered_tree.Propagate(hovered_node, Hover);
         hovered_tree.MarkDirty();
     }
 }
