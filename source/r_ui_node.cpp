@@ -65,69 +65,73 @@ void NodeTree::Propagate(Node::Handle node_handle, const std::function<void(Node
         node_handle = Parent(node_handle);
     }
 }
-NodeBuilder::NodeBuilder(NodeTree& node_tree, Layout layout, uint2 position) : node_reference { node_tree, node_tree.AddRoot() }  {
+NodeBuilder::NodeBuilder(NodeTree &node_tree, Layout layout, uint2 position) : node_reference{ node_tree, node_tree.AddRoot() } {
     node.position = position;
     node.width = layout.width;
     node.height = layout.height;
 }
-NodeBuilder::NodeBuilder(NodeTree& node_tree, Layout layout, Node::Handle parent_handle) : node_reference { node_tree, node_tree.AddNode(parent_handle) } {
+NodeBuilder::NodeBuilder(NodeTree &node_tree, Node::Handle parent_handle, Layout layout) : node_reference{ node_tree, node_tree.AddNode(parent_handle) } {
     node.width = layout.width;
     node.height = layout.height;
 }
-NodeBuilder& NodeBuilder::Name(const String& name) {
+NodeBuilder &NodeBuilder::Name(const String &name) {
     node.name = name;
     return *this;
 }
-NodeBuilder& NodeBuilder::Fill(const SDL_Color color) {
+NodeBuilder &NodeBuilder::Fill(const SDL_Color color) {
     node.background_color = color;
     return *this;
 }
-NodeBuilder& NodeBuilder::Padding(const uint2 padding) {
+NodeBuilder &NodeBuilder::Padding(const u32 padding) {
+    node.padding = uint4 { padding, padding, padding, padding };
+    return *this;
+}
+NodeBuilder &NodeBuilder::Padding2(const uint2 padding) {
     node.padding = uint4 { padding.x, padding.y, padding.x, padding.y };
     return *this;
 }
-NodeBuilder& NodeBuilder::Padding4(const uint4 padding) {
+NodeBuilder &NodeBuilder::Padding4(const uint4 padding) {
     node.padding = padding;
     return *this;
 }
-NodeBuilder& NodeBuilder::Gap(const u32 gap) {
+NodeBuilder &NodeBuilder::Gap(const u32 gap) {
     node.gap = gap;
     return *this;
 }
-NodeBuilder& NodeBuilder::Direction(FlexDirection direction) {
+NodeBuilder &NodeBuilder::Direction(FlexDirection direction) {
     node.direction = direction;
     return *this;
 }
 constexpr SDL_Color DEFAULT_TEXT_COLOR = colors::black;
-NodeBuilder& NodeBuilder::Text(const String& string) {
+NodeBuilder &NodeBuilder::Text(const String &string) {
     if (node.background_color.a == 0U) { node.background_color = DEFAULT_TEXT_COLOR; }
     node.text = string;
     return *this;
 }
-NodeBuilder& NodeBuilder::Text(String&& string) {
+NodeBuilder &NodeBuilder::Text(String &&string) {
     if (node.background_color.a == 0U) { node.background_color = DEFAULT_TEXT_COLOR; }
     node.text = string;
     return *this;
 }
-NodeBuilder& NodeBuilder::Text(const String& string, const Fonts font_size) {
-    if (node.background_color.a == 0U) { node.background_color = DEFAULT_TEXT_COLOR; }
-    node.text = string;
-    node.font_size = font_size;
-    return *this;
-}
-NodeBuilder& NodeBuilder::Text(String&& string, const Fonts font_size) {
+NodeBuilder &NodeBuilder::Text(const String &string, const Fonts font_size) {
     if (node.background_color.a == 0U) { node.background_color = DEFAULT_TEXT_COLOR; }
     node.text = string;
     node.font_size = font_size;
     return *this;
 }
-NodeBuilder& NodeBuilder::Alignment(ui::Alignment alignment) {
+NodeBuilder &NodeBuilder::Text(String &&string, const Fonts font_size) {
+    if (node.background_color.a == 0U) { node.background_color = DEFAULT_TEXT_COLOR; }
+    node.text = string;
+    node.font_size = font_size;
+    return *this;
+}
+NodeBuilder &NodeBuilder::Alignment(ui::Alignment alignment) {
     node.alignment = alignment;
     return *this;
 }
-NodeBuilder& NodeBuilder::Right() { return Alignment(right); }
-NodeBuilder& NodeBuilder::Center() { return Alignment(center); }
-NodeBuilder& NodeBuilder::Left() { return Alignment(left); }
+NodeBuilder &NodeBuilder::Right() { return Alignment(right); }
+NodeBuilder &NodeBuilder::Center() { return Alignment(center); }
+NodeBuilder &NodeBuilder::Left() { return Alignment(left); }
 inline SDL_Color lighten_color(const SDL_Color color, const f32 factor) {
     auto lerp = [] (u8 channel, f32 factor, u8 target) -> u8 { return static_cast<u8>(channel + (target - channel) * factor); };
     return SDL_Color { lerp(color.r, factor, 255), lerp(color.g, factor, 255), lerp(color.b, factor, 255), color.a };

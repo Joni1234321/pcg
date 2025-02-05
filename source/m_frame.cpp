@@ -13,9 +13,9 @@ ui::Node::Handle CreateDebugNodeComponent(const u32 layer, const String& text, c
     constexpr u32 padding_offset = 10U;
     constexpr uint2 color_indicator_size { 10U, 20U };
     constexpr u32 gap_size { 2U };
-    const ui::Node::Handle component_handle = ui::B(tree, ui::hug, frame).Fill(colors::forest_green).Padding4(uint4 { padding_offset * layer, 0U, 0U, 0U }).Gap(gap_size).Build();
-    ui::B(tree, ui::hug, component_handle).Text(text, ui::Fonts::body).Fill(colors::black).Build();
-    ui::B(tree, color_indicator_size, component_handle).Fill(color).Build();
+    const ui::Node::Handle component_handle = ui::B(tree, frame, ui::hug).Fill(colors::forest_green).Padding4(uint4 { padding_offset * layer, 0U, 0U, 0U }).Gap(gap_size).Build();
+    ui::B(tree, component_handle, ui::hug).Text(text, ui::Fonts::body).Fill(colors::black).Build();
+    ui::B(tree, component_handle, color_indicator_size).Fill(color).Build();
     return component_handle;
 }
 void InspectorFrame::ShowElementStructure(const ui::HoveredType& hovered) {
@@ -39,36 +39,36 @@ void InspectorFrame::ShowElementStructure(const ui::HoveredType& hovered) {
 }
 TestFrame::TestFrame() {
     ui::Node::Handle frame = ui::B(tree, ui::hug, { 100U, 400U }).Gap(20U).Fill(colors::clear).Build(); {
-        ui::Node::Handle root = ui::B(tree, uint2 { 100U, 100U }, frame).Padding({ 5U, 5U }).Fill(colors::forest_green).Build();
-        ui::Node::Handle box1 = ui::B(tree, ui::fill, root).Fill(colors::yellow).Padding({ 5U, 5U }).Build();
-        ui::Node::Handle box11 = ui::B(tree, ui::fill, box1).Fill(colors::blue).Build();
-        ui::Node::Handle box12 = ui::B(tree, ui::fill, box1).Fill(colors::chocolate).Build();
+        ui::Node::Handle root = ui::B(tree, frame, uint2 { 100U, 100U }).Padding2({ 5U, 5U }).Fill(colors::forest_green).Build();
+        ui::Node::Handle box1 = ui::B(tree, root, ui::fill).Fill(colors::yellow).Padding2({ 5U, 5U }).Build();
+        ui::Node::Handle box11 = ui::B(tree, box1, ui::fill).Fill(colors::blue).Build();
+        ui::Node::Handle box12 = ui::B(tree, box1, ui::fill).Fill(colors::chocolate).Build();
 
-        ui::Node::Handle box2 = ui::B(tree, ui::fill, root).Fill(colors::red).Build();
-        ui::Node::Handle box3 = ui::B(tree, { ui::hug, ui::fill }, root).Padding({ 10U, 10U }).Fill(colors::black).Build();
+        ui::Node::Handle box2 = ui::B(tree, root, ui::fill).Fill(colors::red).Build();
+        ui::Node::Handle box3 = ui::B(tree, root, { ui::hug, ui::fill }).Padding2({ 10U, 10U }).Fill(colors::black).Build();
     } {
-        ui::Node::Handle root = ui::B(tree, uint2 { 100U, 100U }, frame).Padding({ 5U, 5U }).Fill(colors::green).Build();
-        ui::Node::Handle box1 = ui::B(tree, ui::fill, root).Fill(colors::yellow).Padding({ 5U, 5U }).Build();
-        ui::Node::Handle box2 = ui::B(tree, ui::fill, root).Fill(colors::red).Build();
+        ui::Node::Handle root = ui::B(tree, frame, uint2 { 100U, 100U }).Padding2({ 5U, 5U }).Fill(colors::green).Build();
+        ui::Node::Handle box1 = ui::B(tree, root, ui::fill).Fill(colors::yellow).Padding2({ 5U, 5U }).Build();
+        ui::Node::Handle box2 = ui::B(tree, root, ui::fill).Fill(colors::red).Build();
     } {
-        ui::Node::Handle root = ui::B(tree, ui::hug, frame).Padding({ 5U, 5U }).Direction(ui::vertical).Fill(colors::deep_purple).Build();
-        ui::Node::Handle box1 = ui::B(tree, ui::hug, root).Fill(colors::radiant_orange).Text(String { "Play" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build();
-        ui::Node::Handle box2 = ui::B(tree, ui::hug, root).Fill(colors::cool_teal).Text(String { "Settings" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build();
-        ui::Node::Handle box3 = ui::B(tree, ui::hug, root).Fill(colors::ruby_red).Text(String { "Exit" }, ui::Fonts::h1).Padding({ 10U, 0U }).Build();
+        ui::Node::Handle root = ui::B(tree, frame, ui::hug).Padding2({ 5U, 5U }).Direction(ui::vertical).Fill(colors::deep_purple).Build();
+        ui::Node::Handle box1 = ui::B(tree, root, ui::hug).Fill(colors::radiant_orange).Text(String { "Play" }, ui::Fonts::h1).Padding2({ 10U, 0U }).Build();
+        ui::Node::Handle box2 = ui::B(tree, root, ui::hug).Fill(colors::cool_teal).Text(String { "Settings" }, ui::Fonts::h1).Padding2({ 10U, 0U }).Build();
+        ui::Node::Handle box3 = ui::B(tree, root, ui::hug).Fill(colors::ruby_red).Text(String { "Exit" }, ui::Fonts::h1).Padding2({ 10U, 0U }).Build();
     } {
-        ui::Node::Handle root = ui::B(tree, uint2 { 100U, 100U }, frame).Padding({ 5U, 5U }).Fill(colors::sea_green).Build();
-        ui::Node::Handle box1 = ui::B(tree, ui::fill, root).Fill(colors::yellow).Padding({ 5U, 5U }).Build();
-        ui::Node::Handle box2 = ui::B(tree, ui::fill, root).Fill(colors::red).Build();
-        ui::Node::Handle box3 = ui::B(tree, ui::hug, root).Padding({ 10U, 10U }).Fill(colors::black).Build();
+        ui::Node::Handle root = ui::B(tree, frame, uint2 { 100U, 100U }).Padding2({ 5U, 5U }).Fill(colors::sea_green).Build();
+        ui::Node::Handle box1 = ui::B(tree, root, ui::fill).Fill(colors::yellow).Padding2({ 5U, 5U }).Build();
+        ui::Node::Handle box2 = ui::B(tree, root, ui::fill).Fill(colors::red).Build();
+        ui::Node::Handle box3 = ui::B(tree, root, ui::hug).Padding2({ 10U, 10U }).Fill(colors::black).Build();
     } {
         constexpr u32 width = 100U;
-        ui::Node::Handle root = ui::B(tree, {ui::hug, 400U}, frame).Padding({ 5U, 5U }).Fill(colors::forest_green).Build();
-        ui::Node::Handle box1 = ui::B(tree, {width, ui::fill}, root).Fill(colors::yellow).Padding({ 5U, 5U }).Build();
-        ui::Node::Handle box2 = ui::B(tree, {width * 2, ui::fill}, root).Fill(colors::red).Build();
-        ui::Node::Handle box3 = ui::B(tree, {width * 3, ui::fill}, root).Padding({ 4U, 4U }).Gap(2U).Fill(colors::black).Build();
-        ui::Node::Handle box31 = ui::B(tree, ui::fill, box3).Fill(colors::cyan).Build();
-        ui::Node::Handle box32 = ui::B(tree, ui::fill, box3).Fill(colors::chocolate).Build();
-        ui::Node::Handle box33 = ui::B(tree, ui::fill, box3).Fill(colors::yellow).Build();
+        ui::Node::Handle root = ui::B(tree, frame, {ui::hug, 400U}).Padding2({ 5U, 5U }).Fill(colors::forest_green).Build();
+        ui::Node::Handle box1 = ui::B(tree, root, {width, ui::fill}).Fill(colors::yellow).Padding2({ 5U, 5U }).Build();
+        ui::Node::Handle box2 = ui::B(tree, root, {width * 2, ui::fill}).Fill(colors::red).Build();
+        ui::Node::Handle box3 = ui::B(tree, root,  {width * 3, ui::fill}).Padding2({ 4U, 4U }).Gap(2U).Fill(colors::black).Build();
+        ui::Node::Handle box31 = ui::B(tree, box3, ui::fill).Fill(colors::cyan).Build();
+        ui::Node::Handle box32 = ui::B(tree, box3, ui::fill).Fill(colors::chocolate).Build();
+        ui::Node::Handle box33 = ui::B(tree, box3, ui::fill).Fill(colors::yellow).Build();
     }
 
 }

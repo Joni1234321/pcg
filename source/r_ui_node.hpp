@@ -197,23 +197,24 @@ class NodeBuilder {
     NodeReference node_reference;
     Node& node { node_reference.tree.get().GetNode(node_reference.node_handle) };
 public:
-    NodeBuilder(NodeTree& node_tree, Layout layout, uint2 position);
-    NodeBuilder(NodeTree& node_tree, Layout layout, Node::Handle parent_handle);
-    [[nodiscard]] NodeBuilder& Name(const String& name);
-    [[nodiscard]] NodeBuilder& Fill(SDL_Color color);
-    [[nodiscard]] NodeBuilder& Padding(uint2 padding);
-    [[nodiscard]] NodeBuilder& Padding4(uint4 padding);
-    [[nodiscard]] NodeBuilder& Gap(u32 gap);
-    [[nodiscard]] NodeBuilder& Direction(FlexDirection direction);
-    [[nodiscard]] NodeBuilder& Text(const String& string);
-    [[nodiscard]] NodeBuilder& Text(String&& string);
-    [[nodiscard]] NodeBuilder& Text(const String& string, Fonts font_size);
-    [[nodiscard]] NodeBuilder& Text(String&& string, Fonts font_size);
-    [[nodiscard]] NodeBuilder& Alignment(Alignment alignment);
-    [[nodiscard]] NodeBuilder& Right();
-    [[nodiscard]] NodeBuilder& Center();
-    [[nodiscard]] NodeBuilder& Left();
+    NodeBuilder(NodeTree &node_tree, Layout layout, uint2 position);
+    NodeBuilder(NodeTree &node_tree, Node::Handle parent_handle, Layout layout);
+    [[nodiscard]] NodeBuilder &Name(const String &name);
+     [[nodiscard]] NodeBuilder &Fill(SDL_Color color);
+    [[nodiscard]] NodeBuilder &Padding(u32 padding);
+    [[nodiscard]] NodeBuilder &Padding2(uint2 padding);
+    [[nodiscard]] NodeBuilder &Padding4(uint4 padding);
+    [[nodiscard]] NodeBuilder &Gap(u32 gap);
+    [[nodiscard]] NodeBuilder &Direction(FlexDirection direction);
+    [[nodiscard]] NodeBuilder &Text(const String &string);
+    [[nodiscard]] NodeBuilder &Text(String &&string);
+    [[nodiscard]] NodeBuilder &Text(const String &string, Fonts font_size);
+    [[nodiscard]] NodeBuilder &Text(String &&string, Fonts font_size);
+    [[nodiscard]] NodeBuilder &Alignment(Alignment alignment);
+    [[nodiscard]] NodeBuilder &Right();
+    [[nodiscard]] NodeBuilder &Center();
+    [[nodiscard]] NodeBuilder &Left();
     Node::Handle Build();
 };
-using B = NodeBuilder;
-} // pce::ui
+ using B = NodeBuilder;
+ } // pce::ui
