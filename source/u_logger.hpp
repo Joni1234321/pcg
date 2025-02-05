@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <format>
 #include <string>
+#include <ranges>
 #include <array>
 
 #include "u_collections.hpp"
@@ -133,6 +134,41 @@ private:
     String string;
 };
 
+template <typename T> struct LogLifetime {
+    LogLifetime() { Logger().Created("{}", typeid(T).name()); }
+    ~LogLifetime() { Logger().Destroyed("{}", typeid(T).name()); }
+};
+template <typename T> struct LogLifetimeWithCount {
+    LogLifetimeWithCount() {
+        static u32 count;
+        Logger().Created("{} {}", typeid(T).name(), ++count);
+    }
+    ~LogLifetimeWithCount() {
+        static u32 count;
+        Logger().Destroyed("{} {}", typeid(T).name(), ++count);
+    }
+};
+template <typename T> struct LogLifetimeWithStack {
+    LogLifetimeWithStack() { Logger().Created("{} {}\n", typeid(T).name(), std::stacktrace::current()); }
+    ~LogLifetimeWithStack() { Logger().Destroyed("{} {}\n", typeid(T).name(), std::stacktrace::current()); }
+};
+template <typename T> struct LogDestroy {
+    ~LogDestroy() { Logger().Destroyed("{}", typeid(T).name()); }
+};
+template <typename T> struct LogDestroyWithStack {
+    ~LogDestroyWithStack() {
+        auto filtered_frames = std::stacktrace::current() | std::views::filter([] (const std::stacktrace_entry& frame) -> bool { return frame.description().contains("pcg") || frame.description().contains("pce"); });
+        String result;
+        for (const std::stacktrace_entry& frame : filtered_frames) { result += frame.description() + "\n"; }
+        Logger().Destroyed("{} {}\n", typeid(T).name(), result);
+    }
+};
+template <typename T> struct LogDestroyWithCount {
+    ~LogDestroyWithCount() {
+        static u32 count;
+        Logger().Destroyed("{} {}", typeid(T).name(), ++count);
+    }
+};
 template <typename T> String FormatValue(const T value) { return std::format("{} ", value); }
 
 template <typename T>concept NamedTypeArithmetic = requires (T value)
@@ -154,6 +190,5 @@ template <NamedTypeArithmetic T> String FormatValue(const T value) {
     const char prefix { number < 0.0F ? '-' : ' ' };
     return std::format("{}{:.2f}{}", prefix, abs_number, suffix);
 }
-
 template < > inline String FormatValue<Entity>(const Entity value) { return value == Entity::NONE ? String { "NONE" } : std::format("{} ", value); }
 } // namespace pce

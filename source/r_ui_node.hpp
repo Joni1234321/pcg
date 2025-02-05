@@ -14,13 +14,13 @@
 namespace pce::ui {
 struct CloseFont {
     void operator()(TTF_Font* font) const {
-        Logger().Destroyed("Font");
+        Logger().Destroyed("TTF_Font");
         TTF_CloseFont(font);
     }
 };
 struct DestroyText {
     void operator()(TTF_Text* text) const {
-        Logger().Destroyed("Text");
+        Logger().Destroyed("TTF_Text");
         TTF_DestroyText(text);
     }
 };
@@ -71,7 +71,7 @@ struct LayoutLength {
 };
 class NodeTree;
 class NodeBuilder;
-struct Node {
+struct Node : LogDestroyWithCount<Node> {
     struct Handle {
         u32 id;
         explicit constexpr Handle(const u32 value) noexcept : id(value) { }
@@ -108,7 +108,9 @@ struct Node {
     std::function<void(Node*)> on_hover_out { };
 
     Node() = default;
-    ~Node() { Logger().Destroyed("Node {}\n", std::stacktrace::current()); }
+    ~Node() {
+
+    }
 
     [[nodiscard]] constexpr uint4 NonContentSize4() const { return padding; }
     [[nodiscard]] constexpr uint2 NonContentSize2() const { return { padding.x + padding.z, padding.y + padding.w }; }
@@ -141,10 +143,11 @@ struct Node {
     void OnClick() { if (on_click) { on_click(this); } }
 };
 class NodeTree {
-    List<Node> nodes { };
-    List<Node::Handle> parents { };
-    List<List<Node::Handle>> children { };
-    List<UniquePointer<TTF_Text, DestroyText>> texts { };
+    static constexpr u32 default_count = 32U;
+    List<Node> nodes { default_count };
+    List<Node::Handle> parents { default_count };
+    List<List<Node::Handle>> children { default_count };
+    List<UniquePointer<TTF_Text, DestroyText>> texts { default_count };
     Node::Handle offset_handle { 0U };
     b8 display { true };
 
