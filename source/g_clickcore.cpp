@@ -32,11 +32,11 @@ struct MainMenuFrame {
     explicit MainMenuFrame() {
         const String title = "Hey Helene!";
         const ui::Node::Handle frame = ui::B(tree, ui::fill, { 100U, 30U }).Direction(ui::vertical).Build();
-        ui::B(tree, ui::hug, frame).Text(title, ui::Fonts::title).Fill(colors::light_sky_blue).Build();
-        const ui::Node::Handle root = ui::B(tree, ui::hug, frame).Padding({ 20U, 5U }).Fill(colors::deep_purple).Center().Direction(ui::vertical).Build();
-        start_button = ui::B(tree, ui::hug, root).Fill(colors::radiant_orange).Text(String { "Play" }, ui::Fonts::h1).Build();
-        settings_button = ui::B(tree, ui::hug, root).Fill(colors::cool_teal).Text(String { "Settings" }, ui::Fonts::h1).Build();
-        exit_button = ui::B(tree, ui::hug, root).Fill(colors::ruby_red).Text(String { "Exit" }, ui::Fonts::h1).Build();
+        ui::B(tree, frame, ui::hug).Text(title, ui::Fonts::title).Fill(colors::light_sky_blue).Build();
+        const ui::Node::Handle root = ui::B(tree, frame, ui::hug).Padding2({ 20U, 5U }).Fill(colors::deep_purple).Center().Direction(ui::vertical).Build();
+        start_button = ui::B(tree, root, ui::hug).Fill(colors::radiant_orange).Text(String { "Play" }, ui::Fonts::h1).Build();
+        settings_button = ui::B(tree, root, ui::hug).Fill(colors::cool_teal).Text(String { "Settings" }, ui::Fonts::h1).Build();
+        exit_button = ui::B(tree, root, ui::hug).Fill(colors::ruby_red).Text(String { "Exit" }, ui::Fonts::h1).Build();
     }
     [[nodiscard]] constexpr ui::Node& StartButton() { return tree.GetNode(start_button.GetHandle()); }
     [[nodiscard]] constexpr ui::Node& SettingsButton() { return tree.GetNode(settings_button.GetHandle()); }
@@ -50,14 +50,14 @@ private:
 struct GameFrame {
     ui::NodeTree tree;
     explicit GameFrame() {
-        frame = ui::B(tree, ui::fill, { 0U, 0U }).Center().Direction(ui::vertical).Padding(uint2 { 0U, 30U }).Build();
-        score_box = ui::B(tree, ui::hug, frame.GetHandle()).Padding(uint2 { 10U, 0U }).Fill(colors::forest_green).Direction(ui::vertical).Center().Build();
-        time_label = ui::B(tree, ui::hug, score_box.GetHandle()).Text("Time", ui::Fonts::h1).Build();
-        score_label = ui::B(tree, ui::hug, score_box.GetHandle()).Text("Score", ui::Fonts::h1).Build();
-
-        game_area = ui::B(tree, ui::fill, frame.GetHandle()).Padding(uint2 { 300U, 100U }).Build();
+        frame = ui::B(tree, ui::fill, { 0U, 0U }).Center().Direction(ui::vertical).Padding2(uint2 { 0U, 30U }).Build();
+        ui::B(tree, frame.GetHandle(), ui::hug).Text("🎮 GAME TIME 🎮", ui::Fonts::h1).Padding2(uint2 { 20U, 10U }).Fill(colors::navy_blue).Center().Build();
+        score_box = ui::B(tree, frame.GetHandle(), ui::hug).Padding2(uint2 { 10U, 5U }).Fill(colors::forest_green).Direction(ui::vertical).Center().Build();
+        time_label = ui::B(tree, score_box.GetHandle(), ui::hug).Text("Time: 00:00.00", ui::Fonts::h2).Padding(5U).Fill(colors::light_gray).Build();
+        score_label = ui::B(tree, score_box.GetHandle(), ui::hug).Text("Score: 0000", ui::Fonts::h2).Padding(5U).Fill(colors::gold).Build();
+        game_area = ui::B(tree, frame.GetHandle(), ui::fill).Padding2(uint2 { 300U, 100U }).Build();
         constexpr u32 box_size = 100U;
-        box = ui::B(tree, uint2 { box_size, box_size }, game_area.GetHandle()).Fill(colors::ruby_red).Build();
+        box = ui::B(tree, game_area.GetHandle(), uint2 { box_size, box_size }).Fill(colors::ruby_red).Padding(5U).Build();
     }
     [[nodiscard]] constexpr ui::Node& Frame() { return tree.GetNode(frame.GetHandle()); }
     [[nodiscard]] constexpr ui::Node& GameArea() { return tree.GetNode(game_area.GetHandle()); }
@@ -79,8 +79,16 @@ struct HighScoreFrame {
     void SetHighScore(Multiset<HighScore> scores) {
         tree.Clear();
         ui::Node::Handle frame = ui::B(tree, ui::fill, uint2 { 0U, 0U }).Direction(ui::vertical).Center().Build();
-        ui::Node::Handle root = ui::B(tree, ui::hug, frame).Direction(ui::vertical).Gap(10U).Center().Fill(colors::white).Build();
-        for (const HighScore& high_score : scores | std::views::reverse) { ui::B(tree, ui::hug, root).Text(std::format("Score: {:>7}", high_score.score), ui::Fonts::h1).Build(); }
+        ui::Node::Handle root = ui::B(tree, frame, ui::hug ).Direction(ui::vertical).Center().Build();
+        ui::Node::Handle title = ui::B(tree, root, ui::hug).Text("High Scores", ui::Fonts::h1).Fill(colors::deep_purple).Build();
+        bool alternate = false;
+        for (const HighScore& high_score : scores | std::views::reverse) {
+            const SDL_Color primary = alternate ? colors::deep_purple : colors::radiant_orange;
+            const SDL_Color secondary = !alternate ? colors::deep_purple : colors::radiant_orange;
+            ui::Node::Handle row = ui::B(tree, root, {150U, ui::hug}).Fill(primary).Center().Build();
+            ui::B(tree, row, ui::hug).Text(std::format("{:05}", high_score.score), ui::Fonts::h2).Fill(secondary).Build();
+            alternate = !alternate;
+        }
     }
 };
 
@@ -186,6 +194,7 @@ Scene ClickCore::GameScene() {
         game_frame.Box().background_color.a = 0U;
         high_score_frame.tree.MarkDirty();
         high_score_frame.SetHighScore(game_data.high_scores);
+        high_score_frame.tree.SetDisplay(true);
         return Scene::game_over;
     }
     const u32 time_left_ms = duration_cast<milliseconds>(game_time - elapsed).count();
@@ -215,6 +224,8 @@ Scene ClickCore::GameOverScene() {
     if (scene == Scene::game) {
         game_frame.Box().background_color = colors::ruby_red;
         game_frame.ScoreBox().background_color = colors::forest_green;
+        high_score_frame.tree.MarkDirty();
+        high_score_frame.tree.SetDisplay(false);
         return Scene::game;
     }
     return scene;
