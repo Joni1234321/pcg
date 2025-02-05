@@ -117,83 +117,48 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
         const Node& node = tree.GetNode(node_handle);
         u32 major_position = get_major(node.InnerBoxPosition(), node.direction);
         const u32 children_major = get_major_pixels_taken_by_children(node_handle, node.direction);
-        if (node.direction == horizontal) {
-            switch (node.alignment) {
-                case top_left:
-                case left:
-                case bottom_left:
-                    break;
-                case top_center:
-                case center:
-                case bottom_center:
-                    major_position += (node.InnerBoxSize().x - children_major) / 2U;
+        float2 factors;
+        switch (node.alignment) {
+            case top_left:
+                factors = float2 { 0.0F, 0.0F };
                 break;
-                case top_right:
-                case right:
-                case bottom_right:
-                    major_position += node.InnerBoxSize().x - children_major;
+            case top_center:
+                factors = float2 { 0.5F, 0.0F };
                 break;
-            }
+            case top_right:
+                factors = float2 { 1.0F, 0.0F };
+                break;
+            case left:
+                factors = float2 { 0.0F, 0.5F };
+                break;
+            case center:
+                factors = float2 { 0.5F, 0.5F };
+                break;
+            case right:
+                factors = float2 { 1.0F, 0.5F };
+                break;
+            case bottom_left:
+                factors = float2 { 0.0F, 1.0F };
+                break;
+            case bottom_center:
+                factors = float2 { 0.5F, 1.0F };
+                break;
+            case bottom_right:
+                factors = float2 { 1.0F, 1.0F };
+                break;
         }
-        else {
-            switch (node.alignment) {
-                case top_left:
-                case top_center:
-                case top_right:
-                    break;
-                case left:
-                case center:
-                case right:
-                    major_position += (node.InnerBoxSize().y - children_major) / 2U;
-                break;
-                case bottom_left:
-                case bottom_center:
-                case bottom_right:
-                    major_position += node.InnerBoxSize().y - children_major;
-                break;
-            }
-        }
+        if (node.direction == horizontal) { major_position += (node.InnerBoxSize().x - children_major) * factors.x; }
+        else { major_position += (node.InnerBoxSize().y - children_major) * factors.y; }
         for (const Node::Handle child_handle : tree.Children(node_handle)) {
             Node& child = tree.GetNode(child_handle);
-
             if (node.direction == horizontal) {
                 u32 minor_position = node.InnerBoxPosition().y;
-                switch (node.alignment) {
-                    case top_left:
-                    case top_center:
-                    case top_right:
-                        break;
-                    case left:
-                    case center:
-                    case right:
-                        minor_position += (node.InnerBoxSize().y - child.OuterBoxSize().y) / 2U;
-                        break;
-                    case bottom_left:
-                    case bottom_center:
-                    case bottom_right:
-                        minor_position += node.InnerBoxSize().y - child.OuterBoxSize().y;
-                        break;
-                }
+                minor_position += (node.InnerBoxSize().y - child.OuterBoxSize().y) * factors.y;
                 child.position = uint2 { major_position, minor_position };
                 major_position += child.OuterBoxSize().x + node.gap;
             } else {
                 u32 minor_position = node.InnerBoxPosition().x;
-                switch (node.alignment) {
-                    case top_left:
-                    case left:
-                    case bottom_left:
-                        break;
-                    case top_center:
-                    case center:
-                    case bottom_center:
-                        minor_position += (node.InnerBoxSize().x - child.OuterBoxSize().x) / 2U;
-                        break;
-                    case top_right:
-                    case right:
-                    case bottom_right:
-                        minor_position += node.InnerBoxSize().x - child.OuterBoxSize().x;
-                        break;
-                }
+                minor_position += (node.InnerBoxSize().x - child.OuterBoxSize().x) * factors.x;
                 child.position = uint2 { minor_position, major_position };
                 major_position += child.OuterBoxSize().y + node.gap;
             }
@@ -246,21 +211,21 @@ const FrameElements& GetFrameElements(NodeRenderSystem& node_render_system, Node
     return tree.frame_elements;
 }
 
-void Hover (const NodeReference& node_reference) {
+void Hover(const NodeReference& node_reference) {
     Logger().Log("Hover");
     Node& node = node_reference.tree.GetNode(node_reference.node_handle);
     std::swap(node.background_color, node.background_color_hover);
     NodeProperties& details = node_reference.tree.GetNodeProperties(node_reference.node_handle);
     if (details.on_hover) { details.on_hover(node_reference); }
 }
-void HoverOut (const NodeReference& node_reference) {
+void HoverOut(const NodeReference& node_reference) {
     Logger().Log("Hover Out");
     Node& node = node_reference.tree.GetNode(node_reference.node_handle);
     std::swap(node.background_color, node.background_color_hover);
     NodeProperties& details = node_reference.tree.GetNodeProperties(node_reference.node_handle);
     if (details.on_hover_out) { details.on_hover_out(node_reference); }
 }
-void Click (const NodeReference& node_reference) {
+void Click(const NodeReference& node_reference) {
     Logger().Log("Clicked");
     Node& node = node_reference.tree.GetNode(node_reference.node_handle);
     NodeProperties& details = node_reference.tree.GetNodeProperties(node_reference.node_handle);
