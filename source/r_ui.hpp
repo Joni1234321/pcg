@@ -30,6 +30,7 @@ struct NodeRenderSystem {
     void HoverClickEvents(const InputSystem& input_system);
     void RenderTrees(SDL_Renderer* renderer);
 
+    [[nodiscard]] NodeTree& AddNodeTree(NodeTree& node_tree);
     [[nodiscard]] auto GetNodeTrees() const { return node_trees | std::views::transform(&std::reference_wrapper<NodeTree>::get); }
 };
 }

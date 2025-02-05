@@ -108,9 +108,7 @@ struct Node : LogDestroyWithCount<Node> {
     std::function<void(Node*)> on_hover_out { };
 
     Node() = default;
-    ~Node() {
-
-    }
+    ~Node() { }
 
     [[nodiscard]] constexpr uint4 NonContentSize4() const { return padding; }
     [[nodiscard]] constexpr uint2 NonContentSize2() const { return { padding.x + padding.z, padding.y + padding.w }; }

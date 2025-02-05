@@ -78,7 +78,8 @@ struct HighScoreFrame {
     ui::NodeTree tree;
     void SetHighScore(Multiset<HighScore> scores) {
         tree.Clear();
-        ui::Node::Handle root = ui::B(tree, ui::fill, uint2 { 0U, 0U }).Direction(ui::vertical).Gap(10U).Fill(colors::white).Build();
+        ui::Node::Handle frame = ui::B(tree, ui::fill, uint2 { 0U, 0U }).Direction(ui::vertical).Center().Build();
+        ui::Node::Handle root = ui::B(tree, ui::hug, frame).Direction(ui::vertical).Gap(10U).Center().Fill(colors::white).Build();
         for (const HighScore& high_score : scores | std::views::reverse) { ui::B(tree, ui::hug, root).Text(std::format("Score: {:>7}", high_score.score), ui::Fonts::h1).Build(); }
     }
 };

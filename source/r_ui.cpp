@@ -116,8 +116,44 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
     for (const Node::Handle node_handle : node_handles) {
         const Node& node = tree.GetNode(node_handle);
         u32 major_position = get_major(node.InnerBoxPosition(), node.direction);
-
         const u32 children_major = get_major_pixels_taken_by_children(node_handle, node.direction);
+
+        if (node.direction == horizontal) {
+            switch (node.alignment) {
+                case top_left:
+                case left:
+                case bottom_left:
+                    break;
+                case top_center:
+                case center:
+                case bottom_center:
+                    major_position += (node.OuterBoxSize().x - children_major) / 2U;
+                break;
+                case top_right:
+                case right:
+                case bottom_right:
+                    major_position += node.OuterBoxSize().x - children_major;
+                break;
+            }
+        }
+        else {
+            switch (node.alignment) {
+                case top_left:
+                case top_center:
+                case top_right:
+                    break;
+                case left:
+                case center:
+                case right:
+                    major_position += (node.OuterBoxSize().y - children_major) / 2U;
+                break;
+                case bottom_left:
+                case bottom_center:
+                case bottom_right:
+                    major_position += node.OuterBoxSize().y - children_major;
+                break;
+            }
+        }
         for (const Node::Handle child_handle : tree.Children(node_handle)) {
             Node& child = tree.GetNode(child_handle);
 

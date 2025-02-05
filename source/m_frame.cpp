@@ -34,7 +34,7 @@ void InspectorFrame::ShowElementStructure(const ui::HoveredType& hovered) {
         node_handles.pop();
         for (const ui::Node::Handle child_handle : hovered_tree.Children(node_handle)) { node_handles.push(NodeHandleLayer { child_handle, layer + 1 }); }
         const ui::Node& node = hovered_tree.GetNode(node_handle);
-        CreateDebugNodeComponent(layer, node.IsText() ? "text" : "node", node.background_color, tree, frame);
+        CreateDebugNodeComponent(layer, node.IsText() ? std::format("text [{}, {}]", node.position.x, node.position.y) : "node", node.background_color, tree, frame);
     }
 }
 TestFrame::TestFrame() {
