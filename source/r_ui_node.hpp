@@ -124,11 +124,10 @@ struct Node : LogDestroyWithCount<Node> {
 
     friend NodeBuilder;
     friend NodeTree;
-
 };
 struct NodeReference;
-using NodeReaction = std::function<void(const NodeReference)>;
-struct NodeDetail {
+using NodeReaction = std::function<void(NodeReference)>;
+struct NodeProperties {
     NodeReaction on_click { };
     NodeReaction on_hover { };
     NodeReaction on_hover_out { };
@@ -136,10 +135,12 @@ struct NodeDetail {
 class NodeTree {
     static constexpr u32 default_count = 32U;
     List<Node> nodes { default_count };
-    List<NodeDetail> node_details { default_count };
+    List<NodeProperties> node_properties { default_count };
+    List<UniquePointer<TTF_Text, DestroyText>> texts { default_count };
+
     List<Node::Handle> parents { default_count };
     List<List<Node::Handle>> children { default_count };
-    List<UniquePointer<TTF_Text, DestroyText>> texts { default_count };
+
     Node::Handle offset_handle { 0U };
     b8 display { true };
 
@@ -154,7 +155,7 @@ public:
     [[nodiscard]] constexpr UniquePointer<TTF_Text, DestroyText>& Text(const Node::Handle node_handle) { return texts[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr const Node& GetNode(const Node::Handle node_handle) const { return nodes[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr Node& GetNode(const Node::Handle node_handle) { return nodes[HandleToIndex(node_handle)]; }
-    [[nodiscard]] constexpr NodeDetail& GetNodeDetails(const Node::Handle node_handle) { return node_details[HandleToIndex(node_handle)]; }
+    [[nodiscard]] constexpr NodeProperties& GetNodeProperties(const Node::Handle node_handle) { return node_properties[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr b8 Empty() const { return nodes.Empty(); }
     [[nodiscard]] Node::Handle AddRoot();
     [[nodiscard]] Node::Handle AddRoot(Node&& root);
@@ -174,9 +175,14 @@ private:
 };
 
 struct NodeReference {
+    NodeTree& tree;
+    Node::Handle node_handle;
+    [[nodiscard]] b8 operator==(const NodeReference other) const { return &tree == &other.tree && node_handle.id == other.node_handle.id; }
+};
+struct WeakNodeReference {
     std::reference_wrapper<NodeTree> tree;
     Node::Handle node_handle;
-    [[nodiscard]] b8 operator==(const NodeReference other) const { return &tree.get() == &other.tree.get() && node_handle.id == other.node_handle.id; }
+    [[nodiscard]] b8 operator==(const WeakNodeReference other) const { return &tree.get() == &other.tree.get() && node_handle.id == other.node_handle.id; }
 };
 struct Layout {
     LayoutLength width;
@@ -190,26 +196,27 @@ struct Layout {
 };
 class NodeBuilder {
     NodeReference node_reference;
-    Node& node { node_reference.tree.get().GetNode(node_reference.node_handle) };
+    Node& node { node_reference.tree.GetNode(node_reference.node_handle) };
+
 public:
-    NodeBuilder(NodeTree &node_tree, Layout layout, uint2 position);
-    NodeBuilder(NodeTree &node_tree, Node::Handle parent_handle, Layout layout);
-    [[nodiscard]] NodeBuilder &Name(const String &name);
-     [[nodiscard]] NodeBuilder &Fill(SDL_Color color);
-    [[nodiscard]] NodeBuilder &Padding(u32 padding);
-    [[nodiscard]] NodeBuilder &Padding2(uint2 padding);
-    [[nodiscard]] NodeBuilder &Padding4(uint4 padding);
-    [[nodiscard]] NodeBuilder &Gap(u32 gap);
-    [[nodiscard]] NodeBuilder &Direction(FlexDirection direction);
-    [[nodiscard]] NodeBuilder &Text(const String &string);
-    [[nodiscard]] NodeBuilder &Text(String &&string);
-    [[nodiscard]] NodeBuilder &Text(const String &string, Fonts font_size);
-    [[nodiscard]] NodeBuilder &Text(String &&string, Fonts font_size);
-    [[nodiscard]] NodeBuilder &Alignment(Alignment alignment);
-    [[nodiscard]] NodeBuilder &Right();
-    [[nodiscard]] NodeBuilder &Center();
-    [[nodiscard]] NodeBuilder &Left();
+    NodeBuilder(NodeTree& node_tree, Layout layout, uint2 position);
+    NodeBuilder(NodeTree& node_tree, Node::Handle parent_handle, Layout layout);
+    [[nodiscard]] NodeBuilder& Name(const String& name);
+    [[nodiscard]] NodeBuilder& Fill(SDL_Color color);
+    [[nodiscard]] NodeBuilder& Padding(u32 padding);
+    [[nodiscard]] NodeBuilder& Padding2(uint2 padding);
+    [[nodiscard]] NodeBuilder& Padding4(uint4 padding);
+    [[nodiscard]] NodeBuilder& Gap(u32 gap);
+    [[nodiscard]] NodeBuilder& Direction(FlexDirection direction);
+    [[nodiscard]] NodeBuilder& Text(const String& string);
+    [[nodiscard]] NodeBuilder& Text(String&& string);
+    [[nodiscard]] NodeBuilder& Text(const String& string, Fonts font_size);
+    [[nodiscard]] NodeBuilder& Text(String&& string, Fonts font_size);
+    [[nodiscard]] NodeBuilder& Alignment(Alignment alignment);
+    [[nodiscard]] NodeBuilder& Right();
+    [[nodiscard]] NodeBuilder& Center();
+    [[nodiscard]] NodeBuilder& Left();
     Node::Handle Build();
 };
- using B = NodeBuilder;
- } // pce::ui
+using B = NodeBuilder;
+} // pce::ui

@@ -25,7 +25,7 @@ Node::Handle NodeTree::AddRoot() {
     parents.EmplaceBack(Root());
     children.EmplaceBack();
     texts.EmplaceBack(nullptr);
-    node_details.EmplaceBack();
+    node_properties.EmplaceBack();
 
     return Root();
 }
@@ -42,7 +42,7 @@ Node::Handle NodeTree::AddNode(Node::Handle parent_handle) {
     parents.PushBack(parent_handle);
     children.EmplaceBack();
     texts.EmplaceBack(nullptr);
-    node_details.EmplaceBack();
+    node_properties.EmplaceBack();
 
     Children(parent_handle).PushBack(node_handle);
     return node_handle;
@@ -59,7 +59,7 @@ void NodeTree::Clear() {
     parents.Clear();
     children.Clear();
     texts.Clear();
-    node_details.Clear();
+    node_properties.Clear();
 }
 void NodeTree::Propagate(Node::Handle node_handle, const NodeReaction& reaction) {
     while (true) {
@@ -140,7 +140,7 @@ inline SDL_Color lighten_color(const SDL_Color color, const f32 factor) {
     return SDL_Color { lerp(color.r, factor, 255), lerp(color.g, factor, 255), lerp(color.b, factor, 255), color.a };
 }
 Node::Handle NodeBuilder::Build() {
-    node_reference.tree.get().MarkDirty();
+    node_reference.tree.MarkDirty();
     constexpr f32 factor = 0.5F;
     node.background_color_hover = lighten_color(node.background_color, factor);
     return node_reference.node_handle;

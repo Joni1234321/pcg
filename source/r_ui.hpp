@@ -8,7 +8,7 @@
 #include <SDL3_ttf/SDL_ttf.h>
 
 namespace pce::ui {
-using HoveredType = std::optional<NodeReference>;
+using HoveredType = std::optional<WeakNodeReference>;
 static const RelativePath font_path { "font.ttf" };
 static const RelativePath font_bold_path { "TitilliumWeb-SemiBold.ttf" };
 struct DestroyRenderTextEngine {
