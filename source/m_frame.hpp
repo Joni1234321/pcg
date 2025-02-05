@@ -10,7 +10,7 @@ class TickFrame {
 
 public:
     ui::NodeTree tree;
-    TickFrame() { tick_handle = ui::NodeBuilder(ui::hug).Text("Tick", ui::Fonts::tiny).Fill(colors::radiant_orange).BuildRoot(tree, { 10U, 0U }); }
+    TickFrame() { tick_handle = ui::B(tree, ui::hug, { 10U, 0U }).Text("Tick", ui::Fonts::tiny).Fill(colors::radiant_orange).Build(); }
     void SetInfo(u32 tick, u32 tps, u32 fps) { tree.GetNode(tick_handle.GetHandle()).text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, tps, fps); }
 };
 struct InspectorFrame {

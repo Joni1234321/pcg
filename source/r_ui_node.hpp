@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stacktrace>
 #include <algorithm>
 #include <functional>
 
@@ -70,7 +71,6 @@ struct LayoutLength {
 };
 class NodeTree;
 class NodeBuilder;
-
 struct Node {
     struct Handle {
         u32 id;
@@ -108,7 +108,7 @@ struct Node {
     std::function<void(Node*)> on_hover_out { };
 
     Node() = default;
-    ~Node() { Logger().Destroyed("Node"); }
+    ~Node() { Logger().Destroyed("Node {}\n", std::stacktrace::current()); }
 
     [[nodiscard]] constexpr uint4 NonContentSize4() const { return padding; }
     [[nodiscard]] constexpr uint2 NonContentSize2() const { return { padding.x + padding.z, padding.y + padding.w }; }
@@ -160,8 +160,10 @@ public:
     [[nodiscard]] constexpr const Node& GetNode(const Node::Handle node_handle) const { return nodes[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr Node& GetNode(const Node::Handle node_handle) { return nodes[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr b8 Empty() const { return nodes.Empty(); }
-    [[nodiscard]] Node::Handle AddNode(Node&& node, const Node::Handle parent_handle);
-    [[nodiscard]] Node::Handle SetRoot(Node&& root);
+    [[nodiscard]] Node::Handle AddRoot();
+    [[nodiscard]] Node::Handle AddRoot(Node&& root);
+    [[nodiscard]] Node::Handle AddNode(Node::Handle parent_handle);
+    [[nodiscard]] Node::Handle AddNode(Node&& node, Node::Handle parent_handle);
 
     void Clear();
     void Propagate(Node::Handle node_handle, const std::function<void(Node&)>& proj);
@@ -180,15 +182,22 @@ struct NodeReference {
     Node::Handle node_handle;
     [[nodiscard]] b8 operator==(const NodeReference other) const { return &tree.get() == &other.tree.get() && node_handle.id == other.node_handle.id; }
 };
+struct Layout {
+    LayoutLength width;
+    LayoutLength height;
+    [[nodiscard]] constexpr LayoutLength::Constraint ToConstraint(const RelativeConstraint related_constraint) { return related_constraint == hug ? LayoutLength::child_constraint : LayoutLength::parent_constraint; }
+    Layout(uint2 size) : width { size.x, LayoutLength::fixed }, height { size.y, LayoutLength::fixed } { }
+    Layout(RelativeConstraint relative_constraint) : width { -1U, ToConstraint(relative_constraint) }, height { -1U, ToConstraint(relative_constraint) } { }
+    Layout(u32 width, RelativeConstraint height_constraint) : width { width, LayoutLength::fixed }, height { -1U, ToConstraint(height_constraint) } { }
+    Layout(RelativeConstraint width_constraint, u32 height) : width { -1U, ToConstraint(width_constraint) }, height { height, LayoutLength::fixed } { }
+    Layout(RelativeConstraint width_constraint, RelativeConstraint height_constraint) : width { -1U, ToConstraint(width_constraint) }, height { -1U, ToConstraint(height_constraint) } { }
+};
 class NodeBuilder {
-    Node node { };
-
+    NodeReference node_reference;
+    Node& node { node_reference.tree.get().GetNode(node_reference.node_handle) };
 public:
-    [[nodiscard]] explicit NodeBuilder(uint2 size);
-    [[nodiscard]] explicit NodeBuilder(RelativeConstraint relative_constraint);
-    [[nodiscard]] NodeBuilder(u32 width, RelativeConstraint height_constraint);
-    [[nodiscard]] NodeBuilder(RelativeConstraint width_constraint, u32 height);
-    [[nodiscard]] NodeBuilder(RelativeConstraint width_constraint, RelativeConstraint height_constraint);
+    NodeBuilder(NodeTree& node_tree, Layout layout, uint2 position);
+    NodeBuilder(NodeTree& node_tree, Layout layout, Node::Handle parent_handle);
     [[nodiscard]] NodeBuilder& Name(const String& name);
     [[nodiscard]] NodeBuilder& Fill(SDL_Color color);
     [[nodiscard]] NodeBuilder& Padding(uint2 padding);
@@ -203,8 +212,7 @@ public:
     [[nodiscard]] NodeBuilder& Right();
     [[nodiscard]] NodeBuilder& Center();
     [[nodiscard]] NodeBuilder& Left();
-    void Finalize(NodeTree& node_tree);
-    Node::Handle BuildRoot(NodeTree& node_tree, const uint2 position);;
-    Node::Handle Build(NodeTree& node_tree, Node::Handle parent_handle);
+    Node::Handle Build();
 };
+using B = NodeBuilder;
 } // pce::ui

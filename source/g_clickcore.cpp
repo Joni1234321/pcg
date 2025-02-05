@@ -31,12 +31,12 @@ struct MainMenuFrame {
     ui::NodeTree tree;
     explicit MainMenuFrame() {
         const String title = "Hey Helene!";
-        const ui::Node::Handle frame = ui::NodeBuilder(ui::fill).Direction(ui::vertical).BuildRoot(tree, { 100U, 30U });
-        ui::NodeBuilder(ui::hug).Text(title, ui::Fonts::title).Fill(colors::light_sky_blue).Build(tree, frame);
-        const ui::Node::Handle root = ui::NodeBuilder(ui::hug).Padding({ 20U, 5U }).Fill(colors::deep_purple).Center().Direction(ui::vertical).Build(tree, frame);
-        start_button = ui::NodeBuilder(ui::hug).Fill(colors::radiant_orange).Text(String { "Play" }, ui::Fonts::h1).Build(tree, root);
-        settings_button = ui::NodeBuilder(ui::hug).Fill(colors::cool_teal).Text(String { "Settings" }, ui::Fonts::h1).Build(tree, root);
-        exit_button = ui::NodeBuilder(ui::hug).Fill(colors::ruby_red).Text(String { "Exit" }, ui::Fonts::h1).Build(tree, root);
+        const ui::Node::Handle frame = ui::B(tree, ui::fill, { 100U, 30U }).Direction(ui::vertical).Build();
+        ui::B(tree, ui::hug, frame).Text(title, ui::Fonts::title).Fill(colors::light_sky_blue).Build();
+        const ui::Node::Handle root = ui::B(tree, ui::hug, frame).Padding({ 20U, 5U }).Fill(colors::deep_purple).Center().Direction(ui::vertical).Build();
+        start_button = ui::B(tree, ui::hug, root).Fill(colors::radiant_orange).Text(String { "Play" }, ui::Fonts::h1).Build();
+        settings_button = ui::B(tree, ui::hug, root).Fill(colors::cool_teal).Text(String { "Settings" }, ui::Fonts::h1).Build();
+        exit_button = ui::B(tree, ui::hug, root).Fill(colors::ruby_red).Text(String { "Exit" }, ui::Fonts::h1).Build();
     }
     [[nodiscard]] constexpr ui::Node& StartButton() { return tree.GetNode(start_button.GetHandle()); }
     [[nodiscard]] constexpr ui::Node& SettingsButton() { return tree.GetNode(settings_button.GetHandle()); }
@@ -50,14 +50,14 @@ private:
 struct GameFrame {
     ui::NodeTree tree;
     explicit GameFrame() {
-        frame = ui::NodeBuilder(ui::fill).Center().Direction(ui::vertical).Padding(uint2 { 0U, 30U }).BuildRoot(tree, { 0U, 0U });
-        score_box = ui::NodeBuilder(ui::hug).Padding(uint2 { 10U, 0U }).Fill(colors::forest_green).Direction(ui::vertical).Center().Build(tree, frame.GetHandle());
-        time_label = ui::NodeBuilder(ui::hug).Text("Time", ui::Fonts::h1).Build(tree, score_box.GetHandle());
-        score_label = ui::NodeBuilder(ui::hug).Text("Score", ui::Fonts::h1).Build(tree, score_box.GetHandle());
+        frame = ui::B(tree, ui::fill, { 0U, 0U }).Center().Direction(ui::vertical).Padding(uint2 { 0U, 30U }).Build();
+        score_box = ui::B(tree, ui::hug, frame.GetHandle()).Padding(uint2 { 10U, 0U }).Fill(colors::forest_green).Direction(ui::vertical).Center().Build();
+        time_label = ui::B(tree, ui::hug, score_box.GetHandle()).Text("Time", ui::Fonts::h1).Build();
+        score_label = ui::B(tree, ui::hug, score_box.GetHandle()).Text("Score", ui::Fonts::h1).Build();
 
-        game_area = ui::NodeBuilder(ui::fill).Padding(uint2 { 300U, 100U }).Build(tree, frame.GetHandle());
+        game_area = ui::B(tree, ui::fill, frame.GetHandle()).Padding(uint2 { 300U, 100U }).Build();
         constexpr u32 box_size = 100U;
-        box = ui::NodeBuilder(uint2 { box_size, box_size }).Fill(colors::ruby_red).Build(tree, game_area.GetHandle());
+        box = ui::B(tree, uint2 { box_size, box_size }, game_area.GetHandle()).Fill(colors::ruby_red).Build();
     }
     [[nodiscard]] constexpr ui::Node& Frame() { return tree.GetNode(frame.GetHandle()); }
     [[nodiscard]] constexpr ui::Node& GameArea() { return tree.GetNode(game_area.GetHandle()); }
@@ -78,8 +78,8 @@ struct HighScoreFrame {
     ui::NodeTree tree;
     void SetHighScore(Multiset<HighScore> scores) {
         tree.Clear();
-        ui::Node::Handle root = ui::NodeBuilder(ui::fill).Direction(ui::vertical).Gap(10U).Fill(colors::white).BuildRoot(tree, uint2 { 0U, 0U });
-        for (const HighScore& high_score : scores | std::views::reverse) { ui::NodeBuilder(ui::hug).Text(std::format("Score: {:>7}", high_score.score), ui::Fonts::h1).Build(tree, root); }
+        ui::Node::Handle root = ui::B(tree, ui::fill, uint2 { 0U, 0U }).Direction(ui::vertical).Gap(10U).Fill(colors::white).Build();
+        for (const HighScore& high_score : scores | std::views::reverse) { ui::B(tree, ui::hug, root).Text(std::format("Score: {:>7}", high_score.score), ui::Fonts::h1).Build(); }
     }
 };
 
