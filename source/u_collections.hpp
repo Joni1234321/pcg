@@ -47,6 +47,7 @@ struct String {
     template <typename... Args> constexpr String(const char* text, Args... args) : data(std::vformat(text, std::make_format_args(args...))) { }
 
     operator const char*() const { return data.c_str(); }
+    constexpr b8 operator ==(const String& other) const { return data == other.data; }
     constexpr String& operator +=(const String& other) {
         data += other.data;
         return *this;

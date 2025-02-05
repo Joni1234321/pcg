@@ -117,7 +117,6 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
         const Node& node = tree.GetNode(node_handle);
         u32 major_position = get_major(node.InnerBoxPosition(), node.direction);
         const u32 children_major = get_major_pixels_taken_by_children(node_handle, node.direction);
-
         if (node.direction == horizontal) {
             switch (node.alignment) {
                 case top_left:
@@ -127,12 +126,12 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
                 case top_center:
                 case center:
                 case bottom_center:
-                    major_position += (node.OuterBoxSize().x - children_major) / 2U;
+                    major_position += (node.InnerBoxSize().x - children_major) / 2U;
                 break;
                 case top_right:
                 case right:
                 case bottom_right:
-                    major_position += node.OuterBoxSize().x - children_major;
+                    major_position += node.InnerBoxSize().x - children_major;
                 break;
             }
         }
@@ -145,12 +144,12 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
                 case left:
                 case center:
                 case right:
-                    major_position += (node.OuterBoxSize().y - children_major) / 2U;
+                    major_position += (node.InnerBoxSize().y - children_major) / 2U;
                 break;
                 case bottom_left:
                 case bottom_center:
                 case bottom_right:
-                    major_position += node.OuterBoxSize().y - children_major;
+                    major_position += node.InnerBoxSize().y - children_major;
                 break;
             }
         }
