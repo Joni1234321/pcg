@@ -2,7 +2,6 @@
 
 #include <chrono>
 
-#include "m_frame.hpp"
 #include "r_engine.hpp"
 #include "r_ui.hpp"
 #include "r_ui_node.hpp"
@@ -11,7 +10,6 @@
 
 namespace pcg::clickcore {
 using namespace pce;
-using namespace pce::frame;
 using namespace std::chrono;
 
 using Score = NamedType<u32, struct ScoreTag, Arithmetic, FormatLongNumber>;
@@ -99,14 +97,13 @@ class ClickCore {
     TickSystem tick_system { };
     InputSystem input_system { };
     ui::NodeRenderSystem node_render_system { render_system };
+    ui::DebugSystem debug_system { node_render_system };
 
     RoundData game { };
     GameData game_data { };
     Scene scene { Scene::main_menu };
 
 public:
-    TickFrame tick_frame { };
-    InspectorFrame debug_frame { };
     MainMenuFrame main_menu_frame { };
     GameFrame game_frame { };
     HighScoreFrame high_score_frame { };
@@ -123,8 +120,6 @@ private:
 };
 
 ClickCore::ClickCore(RenderSystem& render_system) : render_system { render_system } {
-    node_render_system.node_trees.EmplaceBack(tick_frame.tree);
-    node_render_system.node_trees.EmplaceBack(debug_frame.tree);
     node_render_system.node_trees.EmplaceBack(main_menu_frame.tree);
     node_render_system.node_trees.EmplaceBack(game_frame.tree);
     node_render_system.node_trees.EmplaceBack(high_score_frame.tree);
@@ -132,7 +127,9 @@ ClickCore::ClickCore(RenderSystem& render_system) : render_system { render_syste
 void ClickCore::Tick() {
     tick_system();
     input_system();
+    debug_system(input_system, tick_system);
     node_render_system.HoverClickEvents(input_system);
+    if (input_system.keys[SDLK_ESCAPE]) { tick_system.running = false; }
 
     GameLoop();
 
@@ -142,14 +139,6 @@ void ClickCore::Tick() {
     tick_system.End();
 }
 void ClickCore::GameLoop() {
-    if (input_system.keys[SDLK_ESCAPE]) { tick_system.running = false; }
-
-    if (input_system.LeftMouseDown()) {
-        debug_frame.tree.MarkDirty();
-        debug_frame.ShowElementStructure(node_render_system.hovered);
-    }
-    tick_frame.tree.MarkDirty();
-    tick_frame.SetInfo(tick_system.tick.Value(), 1.0F / tick_system.tick_time, 1.0F / tick_system.delta_time);
 
     switch (scene) {
         case Scene::game:

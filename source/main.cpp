@@ -4,7 +4,6 @@
 #include "g_arcade.hpp"
 #include "g_components.hpp"
 #include "g_game.hpp"
-#include "m_frame.hpp"
 #include "r_engine.hpp"
 #include "u_collections.hpp"
 #include "u_logger.hpp"
@@ -15,7 +14,6 @@ using pcg::game;
 using pcg::player_archetype;
 using pce::Reinterpret;
 using pce::List;
-using namespace pce::frame;
 
 b8 Start() {
     SDL_Log("Loading window");
