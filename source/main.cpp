@@ -1,7 +1,7 @@
-#include <g_clickcore.hpp>
 
 #include <SDL3/SDL_main.h>
 
+#include "g_arcade.hpp"
 #include "g_components.hpp"
 #include "g_game.hpp"
 #include "m_frame.hpp"
@@ -23,7 +23,7 @@ b8 Start() {
     RenderSystem render_system { window_size };
 
     SDL_Log("Starting game");
-    pcg::clickcore::RunClickCore(render_system);
+    pcg::arcade::RunClickCore(render_system);
 
     Logger().Log("Quitting main loop");
 

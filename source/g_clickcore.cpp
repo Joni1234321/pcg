@@ -1,4 +1,4 @@
-#include "g_clickcore.hpp"
+#include "g_arcade.hpp"
 
 #include <chrono>
 
@@ -116,7 +116,7 @@ public:
     [[nodiscard]] constexpr b8 IsRunning() const { return tick_system.running; }
 
 private:
-    void UserInterface();
+    void GameLoop();
     Scene MainMenuScene();
     Scene GameScene();
     Scene GameOverScene();
@@ -134,14 +134,14 @@ void ClickCore::Tick() {
     input_system();
     node_render_system.HoverClickEvents(input_system);
 
-    UserInterface();
+    GameLoop();
 
     render_system();
     node_render_system.RenderTrees(render_system.renderer);
     render_system.End();
     tick_system.End();
 }
-void ClickCore::UserInterface() {
+void ClickCore::GameLoop() {
     if (input_system.keys[SDLK_ESCAPE]) { tick_system.running = false; }
 
     if (input_system.LeftMouseDown()) {
@@ -231,8 +231,9 @@ Scene ClickCore::GameOverScene() {
     }
     return scene;
 }
-void RunClickCore(RenderSystem& render_system) {
-    ClickCore click_core { render_system };
+} // namespace pcg::clickcore
+
+void pcg::arcade::RunClickCore(pce::RenderSystem& render_system) {
+    clickcore::ClickCore click_core { render_system };
     while (click_core.IsRunning()) { click_core.Tick(); }
-}
 }

@@ -127,13 +127,17 @@ struct WeakNodeReference {
 };
 using NodeReaction = std::function<void(NodeReference)>;
 struct NodeProperties {
+    String name { };
     String text { };
     FontSizes font_size { FontSizes::body };
     UniquePointer<TTF_Text, DestroyText> ttf_text { nullptr };
-    String name { };
+
     NodeReaction on_click { };
     NodeReaction on_hover { };
     NodeReaction on_hover_out { };
+};
+struct Animation {
+
 };
 class NodeTree {
     static constexpr u32 DEFAULT_COUNT = 32U;

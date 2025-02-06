@@ -16,6 +16,7 @@ set(resources_dir ${CMAKE_SOURCE_DIR}/resources)
 add_executable(${PROJECT_NAME}
                source/main.cpp
                source/g_clickcore.cpp
+               source/g_cosmoclick.cpp
                source/g_factory.cpp
                source/g_game.cpp
                source/m_frame.cpp
