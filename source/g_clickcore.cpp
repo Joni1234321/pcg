@@ -24,7 +24,6 @@ struct RoundData {
 struct GameData {
     Multiset<HighScore> high_scores { };
 };
-
 struct MainMenuFrame {
     ui::NodeTree tree;
     explicit MainMenuFrame();
@@ -60,7 +59,6 @@ struct HighScoreFrame {
     ui::NodeTree tree;
     void SetHighScore(Multiset<HighScore> scores);
 };
-
 enum class Scene { game, main_menu, game_over, quit };
 class ClickCoreFrames {
     MainMenuFrame main_menu_frame { };
@@ -145,7 +143,6 @@ void ClickCore::GameLoop() {
             return;
     }
 }
-
 Scene ClickCore::MainMenuScene() {
     if (input_system.LeftMouseDown()) {
         MainMenuFrame& main_menu_frame = frames.MainMenuFrame();

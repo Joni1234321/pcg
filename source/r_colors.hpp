@@ -59,11 +59,14 @@ constexpr SDL_Color deep_gold { 218, 165, 32, 255U };
 constexpr SDL_Color silver { 192, 192, 192, 255U };
 constexpr SDL_Color navy_blue { 0, 0, 128, 255U };
 constexpr SDL_Color white_smoke { 245, 245, 245, 255U };
-constexpr SDL_Color midnight_navy { 25, 25, 112, 255U };  // Deep blue, immersive and sleek
-constexpr SDL_Color cosmic_purple { 50, 0, 90, 255U };  // Deep purple with a space-like glow
-constexpr SDL_Color dark_slate { 47, 79, 79, 255U };  // Cool, dark, and slightly muted teal
+constexpr SDL_Color midnight_navy { 25, 25, 112, 255U }; // Deep blue, immersive and sleek
+constexpr SDL_Color cosmic_purple { 50, 0, 90, 255U };   // Deep purple with a space-like glow
+constexpr SDL_Color dark_slate { 47, 79, 79, 255U };     // Cool, dark, and slightly muted teal
 
-
+// CosmoClicker
+constexpr SDL_Color faded_green { 204U, 238U, 204U, 255U }; // #CEC // close to tea green
+constexpr SDL_Color gray_tint { 218U, 218U, 218U, 255U };   // #DA
+constexpr SDL_Color dark_navy_blue { 0U, 0U, 107U, 255U };
 
 inline SDL_Color AnimateFast(const f32 t) {
     const u8 red = static_cast<u8>((std::sin(t * 0.5F + 0.0F) * 0.5F + 0.5F) * 255U);

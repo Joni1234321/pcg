@@ -21,7 +21,7 @@ b8 Start() {
     RenderSystem render_system { window_size };
 
     SDL_Log("Starting game");
-    pcg::arcade::RunClickCore(render_system);
+    pcg::arcade::RunCosmoClick(render_system);
 
     Logger().Log("Quitting main loop");
 
