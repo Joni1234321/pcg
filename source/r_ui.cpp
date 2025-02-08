@@ -115,17 +115,16 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
 
     // position top down
     for (const NodeHandle node_handle : node_handles) {
-        const NodeStyle& node_style = tree.GetStyle(node_handle);
+        NodeStyle& node_style = tree.GetStyle(node_handle);
         const u32 minor_position = get_minor(node_style.InnerBoxPosition(), node_style.direction);
         u32 major_position = get_major(node_style.InnerBoxPosition(), node_style.direction);
         const u32 node_major_size = get_major(node_style.InnerBoxSize(), node_style.direction);
         const u32 children_major_size = get_major_pixels_taken_by_children(node_handle, node_style.direction);
         if (node_style.gap_auto) {
             if (children_major_size < node_major_size) {
-                const auto [gap, left_over] = math::Div(node_major_size - children_major_size, tree.Children(node_handle).Size());
-                for (const NodeHandle child_handle : tree.Children(node_handle)) { tree.GetStyle(child_handle).resolved_gap = gap; }
-                tree.GetStyle(tree.Children(node_handle)[0U]).resolved_gap += left_over;
-            } else { for (const NodeHandle child_handle : tree.Children(node_handle)) { tree.GetStyle(child_handle).resolved_gap = 0U; } }
+                const auto [gap, left_over] = math::Div(node_major_size - children_major_size, tree.Children(node_handle).Size() - 1U);
+                node_style.resolved_gap = gap;
+            } else { node_style.resolved_gap = 0U; }
         }
         float2 factor;
         switch (node_style.alignment) {
@@ -159,7 +158,8 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
         }
         const f32 factor_major = node_style.direction == horizontal ? factor.x : factor.y;
         const f32 factor_minor = node_style.direction == horizontal ? factor.y : factor.x;
-        major_position += (node_major_size - children_major_size) * factor_major;
+        const u32 major_pixels_left = node_major_size - children_major_size - node_style.resolved_gap * (tree.Children(node_handle).Size() - 1U);
+        major_position += major_pixels_left * factor_major;
         for (const NodeHandle child_handle : tree.Children(node_handle)) {
             NodeStyle& child = tree.GetStyle(child_handle);
             if (node_style.direction == horizontal) {
