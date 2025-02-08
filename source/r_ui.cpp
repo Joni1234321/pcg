@@ -121,10 +121,8 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
         const u32 node_major_size = get_major(node_style.InnerBoxSize(), node_style.direction);
         const u32 children_major_size = get_major_pixels_taken_by_children(node_handle, node_style.direction);
         if (node_style.gap_auto) {
-            if (children_major_size < node_major_size) {
-                const auto [gap, left_over] = math::Div(node_major_size - children_major_size, tree.Children(node_handle).Size() - 1U);
-                node_style.resolved_gap = gap;
-            } else { node_style.resolved_gap = 0U; }
+            if (children_major_size < node_major_size && tree.Children(node_handle).Size() > 1) { node_style.resolved_gap = (node_major_size - children_major_size) / (tree.Children(node_handle).Size() - 1U); }
+            else { node_style.resolved_gap = 0U; }
         }
         float2 factor;
         switch (node_style.alignment) {
