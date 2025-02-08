@@ -23,10 +23,12 @@ template <class T, class C = std::less<T>> using Multiset = std::multiset<T, C>;
 
 using namespace std::chrono_literals;
 using TimePoint = std::chrono::time_point<std::chrono::high_resolution_clock>;
+using Duration = std::chrono::duration;
 using Seconds = std::chrono::seconds;
 using Milliseconds = std::chrono::milliseconds;
 using Nanoseconds = std::chrono::nanoseconds;
 [[nodiscard]] inline TimePoint TimeNow() noexcept { return std::chrono::high_resolution_clock::now(); };
+// template <typename T> [[nodiscard]] Duration DurationCast (Duration duration) { return std::chrono::duration_cast<T>(duration); }
 
 using AbsolutePath = std::filesystem::path;
 using RelativePath = std::filesystem::path;

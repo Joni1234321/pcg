@@ -71,13 +71,14 @@ struct GameFrame {
     NodeTree tree;
     GameFrame();
     [[nodiscard]] constexpr b8 InsidePlanet(uint2 screen_position);
+    [[nodiscard]] constexpr NodeHandle PlanetHandle();
     [[nodiscard]] constexpr ValueUnit<Money>& GetMoneyValueUnit();
     [[nodiscard]] constexpr ValueUnit<Income>& GetIncomeValueUnit();
     [[nodiscard]] constexpr std::optional<u32> GetBuildItemAtPosition(uint2 screen_position);
     constexpr void UpdateBuildItemsCount(const List<Count>& building_counts);;
 
 private:
-    NodeHandleOptional planet;
+    NodeHandleOptional planet_handle;
     std::unique_ptr<ValueUnit<Money>> money;
     std::unique_ptr<ValueUnit<Income>> income;
     List<BuildItem> shop;
@@ -134,15 +135,22 @@ void CosmoClick::GameLoop() {
             break;
     }
 }
+constexpr u32 planet_size = 200U;
+constexpr u32 planet_border_size = 10U;
 Scene CosmoClick::GameScene() {
-    TimePoint update_time = TimeNow();
-    u32 seconds_since_start = duration_cast<Seconds>(update_time - game_data.start_time).count();
-    u32 delta_seconds = seconds_since_start - game_data.seconds_since_start;
+    const TimePoint update_time = TimeNow();
+    const Duration time_since_start = update_time - game_data.start_time;
+    const Milliseconds ms_since_start = std::chrono::duration_cast<Milliseconds>(time_since_start);
+    const u32 seconds_since_start = std::chrono::duration_cast<Seconds>(time_since_start).count();
+    const u32 delta_seconds = seconds_since_start - game_data.seconds_since_start;
+    const f32 animation_sine = std::sinf(static_cast<f32>(ms_since_start.count()) / 100.0F);
+    const u32 padding_value = planet_border_size * animation_sine;
+    Logger().Log("{} {}", animation_sine, padding_value);
+    game_frame.tree.GetStyle(game_frame.PlanetHandle()).padding = uint4 { padding_value, padding_value,padding_value, padding_value };
     if (delta_seconds > 0U) {
         game_data.money += Money { game_data.income.Value() * delta_seconds };
         game_data.seconds_since_start = seconds_since_start;
     }
-
     if (input_system.LeftMouseDown() || input_system.LeftMouseUp()) {
         if (game_frame.InsidePlanet(input_system.MousePosition())) {
             constexpr Money click_money = Money { 5U };
@@ -150,7 +158,7 @@ Scene CosmoClick::GameScene() {
         }
     }
     if (input_system.LeftMouseDown()) {
-        std::optional<u32> building_index = game_frame.GetBuildItemAtPosition(input_system.MousePosition());
+        const std::optional<u32> building_index = game_frame.GetBuildItemAtPosition(input_system.MousePosition());
         if (building_index.has_value()) {
             const Building& building = buildings[building_index.value()];
             if (game_data.money >= building.cost) {
@@ -177,14 +185,17 @@ template <class T> constexpr void ValueUnit<T>::SetValue(const T& value) { tree.
 template <class T> constexpr void ValueUnit<T>::SetUnit(Unit unit) { tree.GetProperties(value_handle.GetHandle()).text = UnitToString(unit); }
 constexpr NodeHandle BuildItem::Handle() const { return build_item.GetHandle(); }
 constexpr NodeHandle BuildItem::CountHandle() const { return count_handle.GetHandle(); }
-constexpr b8 GameFrame::InsidePlanet(uint2 screen_position) { return tree.GetStyle(planet.GetHandle()).IsInside(screen_position); }
+constexpr b8 GameFrame::InsidePlanet(uint2 screen_position) { return tree.GetStyle(planet_handle.GetHandle()).IsInside(screen_position); }
+constexpr NodeHandle GameFrame::PlanetHandle() { return planet_handle.GetHandle(); }
 constexpr ValueUnit<Money>& GameFrame::GetMoneyValueUnit() { return *money.get(); }
 constexpr ValueUnit<Income>& GameFrame::GetIncomeValueUnit() { return *income.get(); }
 constexpr std::optional<u32> GameFrame::GetBuildItemAtPosition(const uint2 screen_position) {
     for (u32 i = 0U; i < shop.Size(); ++i) { if (tree.GetStyle(shop[i].Handle()).IsInside(screen_position)) { return i; } }
     return std::nullopt;
 }
-constexpr void GameFrame::UpdateBuildItemsCount(const List<Count>& building_counts) { for (u32 i = 0U; i < building_counts.Size(); ++i) { tree.GetProperties(shop[i].CountHandle()).text = std::format("{:04}", building_counts[i]); } }
+constexpr void GameFrame::UpdateBuildItemsCount(const List<Count>& building_counts) {
+    for (u32 i = 0U; i < building_counts.Size(); ++i) { tree.GetProperties(shop[i].CountHandle()).text = std::format("{:04}", building_counts[i]); }
+}
 constexpr b8 CosmoClick::IsRunning() const { return tick_system.running; }
 GameFrame::GameFrame() {
     const NodeHandle frame = B(tree, fill, uint2 { 0U, 0U }).Build();
@@ -193,10 +204,8 @@ GameFrame::GameFrame() {
     money = std::make_unique<ValueUnit<Money>>(tree, game, Money { 0U }, Unit::cosmos, colors::white, FontSizes::h1);
     income = std::make_unique<ValueUnit<Income>>(tree, game, Income { 0U }, Unit::cosmos_per_second, colors::white, FontSizes::h4);
     const NodeHandle click = B(tree, game, fill).Padding2(uint2 { 0U, 100U }).Fill(colors::dark_grey).Alignment(top_center).Build();
-    constexpr u32 planet_size = 200U;
-    constexpr u32 planet_border_size = 10U;
-    planet = B(tree, click, Layout { uint2 { planet_size + planet_border_size, planet_size + planet_border_size } }).Padding(5U).Fill(colors::white).Build();
-    const NodeHandle planet_intra = B(tree, planet.GetHandle(), fill).Fill(colors::dark_navy_blue).Build();
+    planet_handle = B(tree, click, Layout { uint2 { planet_size + planet_border_size, planet_size + planet_border_size } }).Padding(planet_border_size).Fill(colors::white).Build();
+    const NodeHandle planet_intra = B(tree, planet_handle.GetHandle(), fill).Fill(colors::dark_navy_blue).Build();
     const NodeHandle build_menu = B(tree, frame, { 600U, hug }).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::faded_green).Build();
     for (const Building& building : buildings) { shop.EmplaceBack(tree, build_menu, building); }
 }
