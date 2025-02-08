@@ -141,7 +141,7 @@ struct Animation {
 
 };
 class NodeTree {
-    static constexpr u32 DEFAULT_COUNT = 32U;
+    static constexpr u32 DEFAULT_COUNT = 64U;
     List<NodeStyle> node_styles { DEFAULT_COUNT };
     List<NodeProperties> node_properties { DEFAULT_COUNT };
 

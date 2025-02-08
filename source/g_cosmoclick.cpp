@@ -15,8 +15,11 @@ using Income = NamedType<u32, struct IncomeTag, Arithmetic, FormatLongNumber>;
 struct Building {
     String name;
     Cost cost;
-    Income production;
+    Income income;
 };
+
+List<Building> buildings = {
+    { "Mine", Cost { 100 }, Income { 1 } }, { "Factory", Cost { 500 }, Income { 10 } }, { "Spaceport", Cost { 2000 }, Income { 60 } }, { "Off World Colony", Cost { 10000 }, Income { 500 } } };
 struct GameData {
     Money money;
 };
@@ -128,14 +131,14 @@ template <class T> ValueUnit<T>::ValueUnit(NodeTree& tree, NodeHandle parent_han
     SetValue(value);
 }
 
-NodeHandle BuildItem(NodeTree& tree, NodeHandle parent_handle, const String& name) {
+NodeHandle BuildItem(NodeTree& tree, NodeHandle parent_handle, const Building& building) {
     const NodeHandle build_item = B(tree, parent_handle, { fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build();
     const NodeHandle upper = B(tree, build_item, { fill, hug }).Center().GapAuto().Build();
     const NodeHandle lower = B(tree, build_item, { fill, hug }).Center().GapAuto().Build();
     B(tree, upper, hug).Text("0000", FontSizes::title).Fill(colors::black).Build();
-    ValueUnit<Cost>(tree, upper, Cost { 0U }, Unit::cosmos, colors::black, FontSizes::h1);
-    B(tree, lower, hug).Text(name, FontSizes::title).Fill(colors::black).Build();
-    ValueUnit<Income>(tree, lower, Income { 0U }, Unit::cosmos_per_second, colors::black, FontSizes::h1);
+    ValueUnit(tree, upper, building.cost, Unit::cosmos, colors::black, FontSizes::h1);
+    B(tree, lower, hug).Text(building.name, FontSizes::title).Fill(colors::black).Build();
+    ValueUnit(tree, lower, building.income, Unit::cosmos_per_second, colors::black, FontSizes::h1);
     return build_item;
 }
 constexpr b8 GameFrame::InsidePlanet(uint2 screen_position) { return tree.GetStyle(planet.GetHandle()).IsInside(screen_position); }
@@ -153,10 +156,7 @@ GameFrame::GameFrame() {
     planet = B(tree, click, Layout { uint2 { planet_size + planet_border_size, planet_size + planet_border_size } }).Padding(5U).Fill(colors::white).Build();
     const NodeHandle planet_intra = B(tree, planet.GetHandle(), fill).Fill(colors::dark_navy_blue).Build();
     const NodeHandle build_menu = B(tree, frame, { 600U, hug }).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::faded_green).Build();
-    BuildItem(tree, build_menu, "Mine");
-    BuildItem(tree, build_menu, "Factory");
-    BuildItem(tree, build_menu, "Spaceport");
-    BuildItem(tree, build_menu, "Off World Colony");
+    for (const Building& building : buildings) { BuildItem(tree, build_menu, building); }
 }
 } // namespace pcg::cosmoclick
 
