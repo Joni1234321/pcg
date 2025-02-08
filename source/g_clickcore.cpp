@@ -77,6 +77,7 @@ class ClickCore {
     InputSystem input_system { };
     ui::NodeRenderSystem node_render_system { render_system };
     ui::DebugSystem debug_system { node_render_system };
+
     ClickCoreFrames frames { node_render_system };
 
     RoundData game { };
@@ -96,6 +97,7 @@ private:
 };
 
 ClickCoreFrames::ClickCoreFrames(ui::NodeRenderSystem& node_render_system) {
+    clear_color = colors::dark_slate;
     node_render_system.node_trees.EmplaceBack(main_menu_frame.tree);
     node_render_system.node_trees.EmplaceBack(game_frame.tree);
     node_render_system.node_trees.EmplaceBack(high_score_frame.tree);
@@ -140,7 +142,7 @@ void ClickCore::GameLoop() {
         case Scene::quit:
             Logger().Log("Quit requested");
             tick_system.running = false;
-            return;
+            break;
     }
 }
 Scene ClickCore::MainMenuScene() {
@@ -157,7 +159,7 @@ Scene ClickCore::MainMenuScene() {
     return Scene::main_menu;
 }
 Scene ClickCore::GameScene() {
-    constexpr seconds game_time = 2s;
+    constexpr seconds game_time = 20s;
     const nanoseconds elapsed = high_resolution_clock::now() - game.start_time;
     GameFrame& game_frame = frames.GameFrame();
     if (elapsed > game_time) {
@@ -170,13 +172,11 @@ Scene ClickCore::GameScene() {
         main_menu_frame.SetStartButtonText("Play Again");
         game_frame.SetTime(0);
         game_frame.Box().background_color.a = 0U;
-        high_score_frame.tree.MarkDirty();
         high_score_frame.SetHighScore(game_data.high_scores);
         high_score_frame.tree.SetDisplay(true);
         return Scene::game_over;
     }
     const u32 time_left_ms = duration_cast<milliseconds>(game_time - elapsed).count();
-    game_frame.tree.MarkDirty();
     game_frame.SetScore(game.score.Value());
     game_frame.SetTime(time_left_ms);
 
