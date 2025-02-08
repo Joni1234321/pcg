@@ -1,7 +1,5 @@
 #include "g_arcade.hpp"
 
-#include <chrono>
-
 #include "r_engine.hpp"
 #include "r_ui.hpp"
 #include "r_ui_node.hpp"
@@ -10,7 +8,6 @@
 
 namespace pcg::clickcore {
 using namespace pce;
-using namespace std::chrono;
 
 using Score = NamedType<u32, struct ScoreTag, Arithmetic, FormatLongNumber>;
 struct HighScore {
@@ -19,7 +16,7 @@ struct HighScore {
 };
 struct RoundData {
     Score score { 0U };
-    time_point<high_resolution_clock> start_time;
+    TimePoint start_time;
 };
 struct GameData {
     Multiset<HighScore> high_scores { };
@@ -150,7 +147,7 @@ Scene ClickCore::MainMenuScene() {
         MainMenuFrame& main_menu_frame = frames.MainMenuFrame();
         if (main_menu_frame.StartButton().IsInside(input_system.MousePosition())) {
             main_menu_frame.tree.SetDisplay(false);
-            game = RoundData { .score = Score { 0U }, .start_time = high_resolution_clock::now() };
+            game = RoundData { .score = Score { 0U }, .start_time = TimeNow() };
             return Scene::game;
         }
         if (main_menu_frame.SettingsButton().IsInside(input_system.MousePosition())) { return Scene::game_over; }
@@ -159,8 +156,8 @@ Scene ClickCore::MainMenuScene() {
     return Scene::main_menu;
 }
 Scene ClickCore::GameScene() {
-    constexpr seconds game_time = 20s;
-    const nanoseconds elapsed = high_resolution_clock::now() - game.start_time;
+    constexpr Seconds game_time = 20s;
+    const Nanoseconds elapsed = TimeNow() - game.start_time;
     GameFrame& game_frame = frames.GameFrame();
     if (elapsed > game_time) {
         MainMenuFrame& main_menu_frame = frames.MainMenuFrame();
@@ -176,7 +173,7 @@ Scene ClickCore::GameScene() {
         high_score_frame.tree.SetDisplay(true);
         return Scene::game_over;
     }
-    const u32 time_left_ms = duration_cast<milliseconds>(game_time - elapsed).count();
+    const u32 time_left_ms = duration_cast<Milliseconds>(game_time - elapsed).count();
     game_frame.SetScore(game.score.Value());
     game_frame.SetTime(time_left_ms);
 

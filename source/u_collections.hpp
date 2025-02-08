@@ -20,6 +20,14 @@ template <typename T> using Stack = std::stack<T>;
 template <class K, class V> using UnorderedMap = std::unordered_map<K, V>;
 template <class T, class C = std::less<T>> using Set = std::set<T, C>;
 template <class T, class C = std::less<T>> using Multiset = std::multiset<T, C>;
+
+using namespace std::chrono_literals;
+using TimePoint = std::chrono::time_point<std::chrono::high_resolution_clock>;
+using Seconds = std::chrono::seconds;
+using Milliseconds = std::chrono::milliseconds;
+using Nanoseconds = std::chrono::nanoseconds;
+[[nodiscard]] inline TimePoint TimeNow() noexcept { return std::chrono::high_resolution_clock::now(); };
+
 using AbsolutePath = std::filesystem::path;
 using RelativePath = std::filesystem::path;
 using AssetPath = std::filesystem::path;
