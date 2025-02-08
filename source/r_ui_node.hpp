@@ -90,7 +90,8 @@ struct NodeStyle : LogDestroyWithCount<NodeStyle> {
 
     uint2 position { U32_MAX, U32_MAX };
     uint4 padding { 0U, 0U, 0U, 0U };
-    u32 gap { 0U };
+    u32 resolved_gap { 0U };
+    b8 gap_auto { false };
 
     LayoutLength width { .resolved = 0U, .constraint = LayoutLength::child_constraint };
     LayoutLength height { .resolved = 0U, .constraint = LayoutLength::child_constraint };
@@ -203,6 +204,7 @@ public:
     [[nodiscard]] NodeBuilder& Padding2(uint2 padding);
     [[nodiscard]] NodeBuilder& Padding4(uint4 padding);
     [[nodiscard]] NodeBuilder& Gap(u32 gap);
+    [[nodiscard]] NodeBuilder& GapAuto();
     [[nodiscard]] NodeBuilder& Direction(FlexDirection direction);
     [[nodiscard]] NodeBuilder& Text(const String& string);
     [[nodiscard]] NodeBuilder& Text(String&& string);

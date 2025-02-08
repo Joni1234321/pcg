@@ -24,7 +24,7 @@ inline AbsolutePath Asset(const AssetPath& asset_path) {
 
 namespace pce {
 using Tick = NamedType<u32, struct TickTag, Arithmetic>;
-static SDL_Color clear_color = colors::dark_slate;
+static SDL_Color clear_color;
 
 struct RenderSystem {
     SDL_Window* window { nullptr };

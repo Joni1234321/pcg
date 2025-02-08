@@ -70,7 +70,7 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
         LayoutLength& major_layout = get_major_layout(node_style, node_style.direction);
         if (major_layout.constraint == LayoutLength::child_constraint) {
             const u32 children_major = get_major_pixels_taken_by_children(node_handle, node_style.direction);
-            major_layout.resolved = children_major + pixels_gap(node_handle, node_style.gap) + get_major(text_size, node_style.direction) + get_major(node_style.NonContentSize2(), node_style.direction);
+            major_layout.resolved = children_major + pixels_gap(node_handle, node_style.resolved_gap) + get_major(text_size, node_style.direction) + get_major(node_style.NonContentSize2(), node_style.direction);
         }
         LayoutLength& minor_layout = get_minor_layout(node_style, node_style.direction);
         if (minor_layout.constraint == LayoutLength::child_constraint) {
@@ -88,7 +88,7 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
         const NodeStyle& node_style = tree.GetStyle(node_handle);
 
         List<NodeHandle> parent_constrained { };
-        u32 pixels_taken_major_axis = pixels_gap(node_handle, node_style.gap);
+        u32 pixels_taken_major_axis = pixels_gap(node_handle, node_style.resolved_gap);
         for (const NodeHandle child_handle : tree.Children(node_handle)) {
             NodeStyle& child = tree.GetStyle(child_handle);
             LayoutLength& child_major_layout = get_major_layout(child, node_style.direction);
@@ -116,52 +116,60 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
     // position top down
     for (const NodeHandle node_handle : node_handles) {
         const NodeStyle& node_style = tree.GetStyle(node_handle);
+        const u32 minor_position = get_minor(node_style.InnerBoxPosition(), node_style.direction);
         u32 major_position = get_major(node_style.InnerBoxPosition(), node_style.direction);
-        const u32 children_major = get_major_pixels_taken_by_children(node_handle, node_style.direction);
-        float2 factors;
+        const u32 node_major_size = get_major(node_style.InnerBoxSize(), node_style.direction);
+        const u32 children_major_size = get_major_pixels_taken_by_children(node_handle, node_style.direction);
+        if (node_style.gap_auto) {
+            if (children_major_size < node_major_size) {
+                const auto [gap, left_over] = math::Div(node_major_size - children_major_size, tree.Children(node_handle).Size());
+                for (const NodeHandle child_handle : tree.Children(node_handle)) { tree.GetStyle(child_handle).resolved_gap = gap; }
+                tree.GetStyle(tree.Children(node_handle)[0U]).resolved_gap += left_over;
+            } else { for (const NodeHandle child_handle : tree.Children(node_handle)) { tree.GetStyle(child_handle).resolved_gap = 0U; } }
+        }
+        float2 factor;
         switch (node_style.alignment) {
             case top_left:
-                factors = float2 { 0.0F, 0.0F };
+                factor = float2 { 0.0F, 0.0F };
                 break;
             case top_center:
-                factors = float2 { 0.5F, 0.0F };
+                factor = float2 { 0.5F, 0.0F };
                 break;
             case top_right:
-                factors = float2 { 1.0F, 0.0F };
+                factor = float2 { 1.0F, 0.0F };
                 break;
             case left:
-                factors = float2 { 0.0F, 0.5F };
+                factor = float2 { 0.0F, 0.5F };
                 break;
             case center:
-                factors = float2 { 0.5F, 0.5F };
+                factor = float2 { 0.5F, 0.5F };
                 break;
             case right:
-                factors = float2 { 1.0F, 0.5F };
+                factor = float2 { 1.0F, 0.5F };
                 break;
             case bottom_left:
-                factors = float2 { 0.0F, 1.0F };
+                factor = float2 { 0.0F, 1.0F };
                 break;
             case bottom_center:
-                factors = float2 { 0.5F, 1.0F };
+                factor = float2 { 0.5F, 1.0F };
                 break;
             case bottom_right:
-                factors = float2 { 1.0F, 1.0F };
+                factor = float2 { 1.0F, 1.0F };
                 break;
         }
-        if (node_style.direction == horizontal) { major_position += (node_style.InnerBoxSize().x - children_major) * factors.x; }
-        else { major_position += (node_style.InnerBoxSize().y - children_major) * factors.y; }
+        const f32 factor_major = node_style.direction == horizontal ? factor.x : factor.y;
+        const f32 factor_minor = node_style.direction == horizontal ? factor.y : factor.x;
+        major_position += (node_major_size - children_major_size) * factor_major;
         for (const NodeHandle child_handle : tree.Children(node_handle)) {
             NodeStyle& child = tree.GetStyle(child_handle);
             if (node_style.direction == horizontal) {
-                u32 minor_position = node_style.InnerBoxPosition().y;
-                minor_position += (node_style.InnerBoxSize().y - child.OuterBoxSize().y) * factors.y;
-                child.position = uint2 { major_position, minor_position };
-                major_position += child.OuterBoxSize().x + node_style.gap;
+                const u32 child_minor_position = minor_position + static_cast<u32>((node_style.InnerBoxSize().y - child.OuterBoxSize().y) * factor_minor);
+                child.position = uint2 { major_position, child_minor_position };
+                major_position += child.OuterBoxSize().x + node_style.resolved_gap;
             } else {
-                u32 minor_position = node_style.InnerBoxPosition().x;
-                minor_position += (node_style.InnerBoxSize().x - child.OuterBoxSize().x) * factors.x;
-                child.position = uint2 { minor_position, major_position };
-                major_position += child.OuterBoxSize().y + node_style.gap;
+                const u32 child_minor_position = minor_position + static_cast<u32>((node_style.InnerBoxSize().x - child.OuterBoxSize().x) * factor_minor);
+                child.position = uint2 { child_minor_position, major_position };
+                major_position += child.OuterBoxSize().y + node_style.resolved_gap;
             }
         }
     }

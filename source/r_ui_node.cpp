@@ -95,7 +95,13 @@ NodeBuilder &NodeBuilder::Padding4(const uint4 padding) {
     return *this;
 }
 NodeBuilder &NodeBuilder::Gap(const u32 gap) {
-    style.gap = gap;
+    style.resolved_gap = gap;
+    style.gap_auto = false;
+    return *this;
+}
+NodeBuilder& NodeBuilder::GapAuto() {
+    style.resolved_gap = 0U;
+    style.gap_auto = true;
     return *this;
 }
 NodeBuilder &NodeBuilder::Direction(FlexDirection direction) {

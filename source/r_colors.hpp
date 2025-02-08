@@ -67,6 +67,7 @@ constexpr SDL_Color dark_slate { 47, 79, 79, 255U };     // Cool, dark, and slig
 constexpr SDL_Color faded_green { 204U, 238U, 204U, 255U }; // #CEC // close to tea green
 constexpr SDL_Color gray_tint { 218U, 218U, 218U, 255U };   // #DA
 constexpr SDL_Color dark_navy_blue { 0U, 0U, 107U, 255U };
+constexpr SDL_Color dark_grey { 15U, 15U, 15U, 255U };
 
 inline SDL_Color AnimateFast(const f32 t) {
     const u8 red = static_cast<u8>((std::sin(t * 0.5F + 0.0F) * 0.5F + 0.5F) * 255U);
