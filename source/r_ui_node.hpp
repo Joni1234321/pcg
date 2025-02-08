@@ -155,6 +155,12 @@ public:
     bool dirty { true };
     FrameElements frame_elements { };
 
+    NodeTree() = default;
+    NodeTree(const NodeTree& other) = delete;
+    NodeTree(NodeTree&& other) noexcept = delete;
+    NodeTree& operator=(const NodeTree& other) = delete;
+    NodeTree& operator=(NodeTree&& other) noexcept = delete;
+
     [[nodiscard]] constexpr NodeHandle Root() const { return offset_handle; }
     [[nodiscard]] constexpr NodeHandle Parent(const NodeHandle node_handle) { return parents[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr const List<NodeHandle>& Children(const NodeHandle node_handle) const { return children[HandleToIndex(node_handle)]; }
