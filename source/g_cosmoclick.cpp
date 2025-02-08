@@ -9,6 +9,7 @@ namespace pcg::cosmoclick {
 using namespace pce;
 using namespace pce::ui;
 
+using Count = NamedType<u32, struct CountTag, Arithmetic, FormatLongNumber>;
 using Money = NamedType<u32, struct MoneyTag, Arithmetic, FormatLongNumber>;
 using Income = NamedType<u32, struct IncomeTag, Arithmetic, FormatLongNumber>;
 struct Building {
@@ -17,11 +18,15 @@ struct Building {
     Income income;
 };
 struct GameData {
+    List<Count> building_counts;
+    TimePoint start_time;
+    u32 seconds_since_start;
     Money money;
     Income income;
 };
 List<Building> buildings = {
-    { "Mine", Money { 100 }, Income { 1 } }, { "Factory", Money { 500 }, Income { 10 } }, { "Spaceport", Money { 2000 }, Income { 60 } }, { "Off World Colony", Money { 10000 }, Income { 500 } } };
+    { "Mine", Money { 100U }, Income { 1U } }, { "Factory", Money { 500U }, Income { 10U } }, { "Spaceport", Money { 2000U }, Income { 60U } }, { "Off World Colony", Money { 10000U }, Income { 500U } } };
+
 enum class ValueUnitTextSize : u8 { small, normal, larger };
 enum class Unit : u8 { cosmos, cosmos_per_second };
 constexpr String UnitToString(const Unit unit) {
@@ -49,16 +54,18 @@ struct BuildItem {
         build_item = B(tree, parent_handle, { fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build();
         const NodeHandle upper = B(tree, build_item.GetHandle(), { fill, hug }).Center().GapAuto().Build();
         const NodeHandle lower = B(tree, build_item.GetHandle(), { fill, hug }).Center().GapAuto().Build();
-        B(tree, upper, hug).Text("0000", FontSizes::title).Fill(colors::black).Build();
+        count_handle = B(tree, upper, hug).Text("0000", FontSizes::title).Fill(colors::black).Build();
         ValueUnit(tree, upper, building.cost, Unit::cosmos, colors::black, FontSizes::h1);
         B(tree, lower, hug).Text(building.name, FontSizes::title).Fill(colors::black).Build();
         ValueUnit(tree, lower, building.income, Unit::cosmos_per_second, colors::black, FontSizes::h1);
     }
 
-    [[nodiscard]] constexpr NodeHandle Handle() const { return build_item.GetHandle(); }
+    [[nodiscard]] constexpr NodeHandle Handle() const;
+    [[nodiscard]] constexpr NodeHandle CountHandle() const;
 
 private:
     NodeHandleOptional build_item { };
+    NodeHandleOptional count_handle { };
 };
 struct GameFrame {
     NodeTree tree;
@@ -66,7 +73,8 @@ struct GameFrame {
     [[nodiscard]] constexpr b8 InsidePlanet(uint2 screen_position);
     [[nodiscard]] constexpr ValueUnit<Money>& GetMoneyValueUnit();
     [[nodiscard]] constexpr ValueUnit<Income>& GetIncomeValueUnit();
-    [[nodiscard]] constexpr std::optional<u32> GetBuildItemAtPosition(const uint2 screen_position);
+    [[nodiscard]] constexpr std::optional<u32> GetBuildItemAtPosition(uint2 screen_position);
+    constexpr void UpdateBuildItemsCount(const List<Count>& building_counts);;
 
 private:
     NodeHandleOptional planet;
@@ -84,14 +92,14 @@ class CosmoClick {
 
     GameFrame game_frame { };
 
-    GameData game_data { .money = Money { 100U }, .income = Income { 0U } };
+    GameData game_data { .building_counts = List { buildings.Size(), Count { 0U } }, .start_time = TimeNow(), .seconds_since_start = 0U, .money = Money { 100U }, .income = Income { 0U } };
 
     Scene scene { Scene::game };
 
 public:
     explicit CosmoClick(RenderSystem& render_system);
     void Tick();
-    [[nodiscard]] constexpr b8 IsRunning() const { return tick_system.running; }
+    [[nodiscard]] constexpr b8 IsRunning() const;
 
 private:
     void GameLoop();
@@ -127,7 +135,13 @@ void CosmoClick::GameLoop() {
     }
 }
 Scene CosmoClick::GameScene() {
-    game_data.money += Money { game_data.income.Value() };
+    TimePoint update_time = TimeNow();
+    u32 seconds_since_start = duration_cast<Seconds>(update_time - game_data.start_time).count();
+    u32 delta_seconds = seconds_since_start - game_data.seconds_since_start;
+    if (delta_seconds > 0U) {
+        game_data.money += Money { game_data.income.Value() * delta_seconds };
+        game_data.seconds_since_start = seconds_since_start;
+    }
 
     if (input_system.LeftMouseDown() || input_system.LeftMouseUp()) {
         if (game_frame.InsidePlanet(input_system.MousePosition())) {
@@ -140,8 +154,10 @@ Scene CosmoClick::GameScene() {
         if (building_index.has_value()) {
             const Building& building = buildings[building_index.value()];
             if (game_data.money >= building.cost) {
+                ++game_data.building_counts[building_index.value()];
                 game_data.money -= building.cost;
                 game_data.income += building.income;
+                game_frame.UpdateBuildItemsCount(game_data.building_counts);
             }
         }
     }
@@ -159,13 +175,17 @@ template <class T> ValueUnit<T>::ValueUnit(NodeTree& tree, NodeHandle parent_han
 }
 template <class T> constexpr void ValueUnit<T>::SetValue(const T& value) { tree.GetProperties(value_handle.GetHandle()).text = std::format("{}", value); }
 template <class T> constexpr void ValueUnit<T>::SetUnit(Unit unit) { tree.GetProperties(value_handle.GetHandle()).text = UnitToString(unit); }
+constexpr NodeHandle BuildItem::Handle() const { return build_item.GetHandle(); }
+constexpr NodeHandle BuildItem::CountHandle() const { return count_handle.GetHandle(); }
 constexpr b8 GameFrame::InsidePlanet(uint2 screen_position) { return tree.GetStyle(planet.GetHandle()).IsInside(screen_position); }
 constexpr ValueUnit<Money>& GameFrame::GetMoneyValueUnit() { return *money.get(); }
 constexpr ValueUnit<Income>& GameFrame::GetIncomeValueUnit() { return *income.get(); }
 constexpr std::optional<u32> GameFrame::GetBuildItemAtPosition(const uint2 screen_position) {
-    for (u32 i = 0U; i < shop.Size(); i++) { if (tree.GetStyle(shop[i].Handle()).IsInside(screen_position)) { return i; } }
+    for (u32 i = 0U; i < shop.Size(); ++i) { if (tree.GetStyle(shop[i].Handle()).IsInside(screen_position)) { return i; } }
     return std::nullopt;
 }
+constexpr void GameFrame::UpdateBuildItemsCount(const List<Count>& building_counts) { for (u32 i = 0U; i < building_counts.Size(); ++i) { tree.GetProperties(shop[i].CountHandle()).text = std::format("{:04}", building_counts[i]); } }
+constexpr b8 CosmoClick::IsRunning() const { return tick_system.running; }
 GameFrame::GameFrame() {
     const NodeHandle frame = B(tree, fill, uint2 { 0U, 0U }).Build();
     const NodeHandle game = B(tree, frame, fill).Direction(vertical).Center().Build();
