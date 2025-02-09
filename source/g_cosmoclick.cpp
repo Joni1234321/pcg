@@ -89,7 +89,7 @@ private:
 };
 enum class Scene { game, quit };
 class CosmoClick {
-    RenderSystem& render_system;
+    RenderSystem render_system {  };
     TickSystem tick_system { };
     InputSystem input_system { };
     NodeRenderSystem node_render_system {  };
@@ -103,7 +103,7 @@ class CosmoClick {
     Scene scene { Scene::game };
 
 public:
-    explicit CosmoClick(RenderSystem& render_system);
+    CosmoClick();
     void Tick();
     [[nodiscard]] constexpr b8 IsRunning() const;
 
@@ -114,7 +114,7 @@ private:
 
 constexpr u32 planet_size = 400U;
 constexpr u32 planet_border_size = 40U;
-CosmoClick::CosmoClick(RenderSystem& render_system) : render_system(render_system) {
+CosmoClick::CosmoClick() {
     clear_color = colors::yellow;
     node_render_system.node_trees.EmplaceBack(game_frame.tree);
 }
@@ -129,9 +129,9 @@ void CosmoClick::Tick() {
 
     animation_system();
     render_system();
-    node_render_system.RenderTrees(render_system.renderer);
-    render_system.End();
-    tick_system.End();
+    node_render_system.RenderTrees(globals.renderer);
+    render_system.Present();
+    tick_system.CaptureTime();
 }
 void CosmoClick::GameLoop() {
     switch (scene) {
@@ -228,7 +228,7 @@ GameFrame::GameFrame(AnimationSystem& animation_system) : animation_system { ani
 }
 } // namespace pcg::cosmoclick
 
-void pcg::arcade::RunCosmoClick(pce::RenderSystem& render_system) {
-    cosmoclick::CosmoClick cosmo_click { render_system };
+void pcg::arcade::RunCosmoClick() {
+    cosmoclick::CosmoClick cosmo_click { };
     while (cosmo_click.IsRunning()) { cosmo_click.Tick(); }
 }

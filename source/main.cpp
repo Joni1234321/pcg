@@ -18,11 +18,11 @@ using pce::List;
 b8 Start() {
     SDL_Log("Loading window");
     constexpr uint2 window_size { 1600U, 900U };
-    RenderSystem render_system { window_size };
+    Window window { window_size };
 
     SDL_Log("Starting game");
-    pcg::arcade::RunCosmoClick(render_system);
-    pcg::arcade::RunClickCore(render_system);
+    pcg::arcade::RunCosmoClick();
+    pcg::arcade::RunClickCore();
 
     Logger().Log("Quitting main loop");
 

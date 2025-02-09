@@ -69,7 +69,7 @@ public:
     [[nodiscard]] constexpr HighScoreFrame& HighScoreFrame();
 };
 class ClickCore {
-    RenderSystem& render_system;
+    RenderSystem render_system { };
     TickSystem tick_system { };
     InputSystem input_system { };
     ui::NodeRenderSystem node_render_system {  };
@@ -82,7 +82,6 @@ class ClickCore {
     Scene scene { Scene::main_menu };
 
 public:
-    explicit ClickCore(RenderSystem& render_system): render_system(render_system) { }
     [[nodiscard]] constexpr b8 IsRunning() const { return tick_system.running; }
     void Tick();
 
@@ -121,9 +120,9 @@ void ClickCore::Tick() {
     GameLoop();
 
     render_system();
-    node_render_system.RenderTrees(render_system.renderer);
-    render_system.End();
-    tick_system.End();
+    node_render_system.RenderTrees(globals.renderer);
+    render_system.Present();
+    tick_system.CaptureTime();
 }
 void ClickCore::GameLoop() {
     switch (scene) {
@@ -240,7 +239,7 @@ void HighScoreFrame::SetHighScore(Multiset<HighScore> scores) {
 }
 } // namespace pcg::clickcore
 
-void pcg::arcade::RunClickCore(pce::RenderSystem& render_system) {
-    clickcore::ClickCore click_core { render_system };
+void pcg::arcade::RunClickCore() {
+    clickcore::ClickCore click_core { };
     while (click_core.IsRunning()) { click_core.Tick(); }
 }
