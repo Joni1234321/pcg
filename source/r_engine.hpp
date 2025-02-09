@@ -4,7 +4,6 @@
 #include <ranges>
 #include <u_ecs.hpp>
 
-#include "r_colors.hpp"
 #include "u_collections.hpp"
 #include "u_types.hpp"
 
@@ -26,17 +25,14 @@ namespace pce {
 using Tick = NamedType<u32, struct TickTag, Arithmetic>;
 static SDL_Color clear_color;
 
-struct Globals {
-    SDL_Window* window;
-    SDL_Renderer* renderer;
-    uint2 screen_size;
-};
-inline Globals globals;
-
 struct Window {
+    static SDL_Window* window;
+    static SDL_Renderer* renderer;
+    static uint2 screen_size;
+
     explicit Window(const uint2 size) {
         constexpr u32 window_flags = SDL_WINDOW_RESIZABLE;
-        if (!SDL_CreateWindowAndRenderer("Video Game", static_cast<i32>(size.x), static_cast<i32>(size.y), window_flags, &globals.window, &globals.renderer)) {
+        if (!SDL_CreateWindowAndRenderer("Video Game", static_cast<i32>(size.x), static_cast<i32>(size.y), window_flags, &window, &renderer)) {
             SDL_Log("SDL_CreateWindowAndRenderer failed (%s)", SDL_GetError());
             SDL_Quit();
         }
@@ -48,25 +44,30 @@ struct Window {
             SDL_Log("SDL_ttf failed (%s)", SDL_GetError());
             SDL_Quit();
         }
-        SDL_SetRenderDrawBlendMode(globals.renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
-        globals.screen_size = size;
+        screen_size = size;
     }
     ~Window() {
-        SDL_DestroyRenderer(globals.renderer);
-        SDL_DestroyWindow(globals.window);
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
         TTF_Quit();
         SDL_Quit();
     }
 };
+inline SDL_Window* Window::window;
+inline SDL_Renderer* Window::renderer;
+inline uint2 Window::screen_size;
+
+
 struct RenderSystem {
     void operator()() {
-        (void)SDL_SetRenderDrawColor(globals.renderer, clear_color.r, clear_color.g, clear_color.b, clear_color.a);
-        (void)SDL_RenderClear(globals.renderer);
+        (void)SDL_SetRenderDrawColor(Window::renderer, clear_color.r, clear_color.g, clear_color.b, clear_color.a);
+        (void)SDL_RenderClear(Window::renderer);
     }
     void Present() {
-        (void)SDL_GetWindowSize(globals.window, reinterpret_cast<i32*>(&globals.screen_size.x), reinterpret_cast<i32*>(&globals.screen_size.y));
-        (void)SDL_RenderPresent(globals.renderer);
+        (void)SDL_GetWindowSize(Window::window, reinterpret_cast<i32*>(&Window::screen_size.x), reinterpret_cast<i32*>(&Window::screen_size.y));
+        (void)SDL_RenderPresent(Window::renderer);
     }
 };
 struct TickSystem {

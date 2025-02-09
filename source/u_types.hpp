@@ -1,6 +1,7 @@
 // ReSharper disable CppInconsistentNaming
 #pragma once
 #include <cstdint>
+#include <type_traits>
 
 using i8 = int8_t;
 using u8 = uint8_t;
@@ -103,7 +104,7 @@ struct uint4 {
 
 constexpr u32 U32_MAX = UINT32_MAX;
 
-template <class T, class U>concept Derived = std::is_base_of_v<U, T>;
+template <class T, class U> concept Derived = std::is_base_of_v<U, T>;
 
 struct Entity {
     explicit constexpr Entity(const u32 index) : index(index) { }

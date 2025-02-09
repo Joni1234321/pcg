@@ -82,8 +82,8 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
 
     // fill top down
     NodeStyle& root_node = tree.GetStyle(tree.Root());
-    if (root_node.width.constraint == LayoutLength::parent_constraint) { root_node.width.resolved = globals.screen_size.x - root_node.position.x; }
-    if (root_node.height.constraint == LayoutLength::parent_constraint) { root_node.height.resolved = globals.screen_size.y - root_node.position.y; }
+    if (root_node.width.constraint == LayoutLength::parent_constraint) { root_node.width.resolved = Window::screen_size.x - root_node.position.x; }
+    if (root_node.height.constraint == LayoutLength::parent_constraint) { root_node.height.resolved = Window::screen_size.y - root_node.position.y; }
     for (const NodeHandle node_handle : node_handles) {
         const NodeStyle& node_style = tree.GetStyle(node_handle);
 
@@ -234,6 +234,7 @@ void Click(const NodeReference& node_reference) {
     NodeProperties& properties = node_reference.tree.GetProperties(node_reference.node_handle);
     if (properties.on_click) { properties.on_click(node_reference); }
 }
+List<std::reference_wrapper<NodeTree>> NodeRenderSystem::node_trees { 120U };
 void NodeRenderSystem::HoverClickEvents(const InputSystem& input_system) {
     if (input_system.LeftMouseDown() && hovered.has_value()) {
         NodeTree& hovered_tree = hovered.value().tree;

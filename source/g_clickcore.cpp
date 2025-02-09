@@ -120,7 +120,7 @@ void ClickCore::Tick() {
     GameLoop();
 
     render_system();
-    node_render_system.RenderTrees(globals.renderer);
+    node_render_system.RenderTrees(Window::renderer);
     render_system.Present();
     tick_system.CaptureTime();
 }

@@ -9,6 +9,67 @@ namespace pcg::cosmoclick {
 using namespace pce;
 using namespace pce::ui;
 
+// struct EngineStructure {
+//     List<std::function<void()>> systems;
+//
+//     void RunSystems() {
+//         for (std::function<void()>& system : systems) {
+//             auto start = std::chrono::high_resolution_clock::now();
+//             system();  // Run the system
+//             auto end = std::chrono::high_resolution_clock::now();
+//             std::chrono::duration<double, std::milli> elapsed = end - start;
+//             Logger().Log("System took {}ms", elapsed.count());
+//         }
+//     }
+//     template<typename T> T& Get () { return systems | std::views::filter([](std::function<void()> f) {  return true; }); }
+//
+// };
+//
+// struct InputDirectory {
+//     InputSystem input_system;
+//     void operator()() {
+//         input_system();
+//     }
+// };
+// struct UpdateDirectory {
+//     void operator()() {
+//         input_system();
+//     }
+// };
+// struct RenderDirectory {
+//     RenderSystem render_system;
+//     AnimationSystem animation_system;
+//     NodeRenderSystem node_render_system;
+//
+//     void operator()() {
+//         render_system();
+//         animation_system();
+//         node_render_system.RenderTrees(render_system.renderer);
+//     }
+// };
+// void CreateEngine () {
+//     EngineStructure engine;
+//
+//     engine.systems.PushBack(InputSystem {  });
+//     engine.systems.PushBack(RenderSystem { uint2(100, 100) });
+//
+// }
+//
+// void CosmoClick::Tick() {
+//     tick_system();
+//     input_system();
+//     debug_system(input_system, tick_system);
+//     node_render_system.HoverClickEvents(input_system);
+//     if (input_system.keys[SDLK_ESCAPE]) { tick_system.running = false; }
+//
+//     GameLoop();
+//
+//     animation_system();
+//     render_system();
+//     node_render_system.RenderTrees(render_system.renderer);
+//     render_system.End();
+//     tick_system.End();
+// }
 using Count = NamedType<u32, struct CountTag, Arithmetic, FormatLongNumber>;
 using Money = NamedType<u32, struct MoneyTag, Arithmetic, FormatLongNumber>;
 using Income = NamedType<u32, struct IncomeTag, Arithmetic, FormatLongNumber>;
@@ -129,7 +190,7 @@ void CosmoClick::Tick() {
 
     animation_system();
     render_system();
-    node_render_system.RenderTrees(globals.renderer);
+    node_render_system.RenderTrees(Window::renderer);
     render_system.Present();
     tick_system.CaptureTime();
 }

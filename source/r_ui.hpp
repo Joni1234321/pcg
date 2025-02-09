@@ -1,5 +1,7 @@
 #pragma once
 
+#include <r_colors.hpp>
+
 #include "r_engine.hpp"
 #include "r_ui_node.hpp"
 #include "u_collections.hpp"
@@ -12,7 +14,7 @@ using HoveredType = std::optional<WeakNodeReference>;
 static const RelativePath font_path { "font.ttf" };
 static const RelativePath font_bold_path { "TitilliumWeb-SemiBold.ttf" };
 struct DestroyRenderTextEngine {
-    void operator()(TTF_TextEngine* engine) {
+    void operator()(TTF_TextEngine* engine) const {
         Logger().Destroyed("TTF_TextEngine");
         TTF_DestroyRendererTextEngine(engine);
     }
@@ -21,16 +23,15 @@ struct NodeRenderSystem {
     HoveredType hovered { };
     FontCollection font { assets::Asset(font_path) };
     FontCollection font_bold { assets::Asset(font_bold_path) };
-    UniquePointer<TTF_TextEngine, DestroyRenderTextEngine> text_engine { TTF_CreateRendererTextEngine(globals.renderer) };
-    List<std::reference_wrapper<NodeTree>> node_trees { };
-
+    UniquePointer<TTF_TextEngine, DestroyRenderTextEngine> text_engine { TTF_CreateRendererTextEngine(Window::renderer) };
+    static List<std::reference_wrapper<NodeTree>> node_trees;
+    NodeRenderSystem() { node_trees.Clear(); };
     void HoverClickEvents(const InputSystem& input_system);
     void RenderTrees(SDL_Renderer* renderer);
 
     [[nodiscard]] NodeTree& AddNodeTree(NodeTree& node_tree);
     [[nodiscard]] auto GetNodeTrees() const { return node_trees | std::views::transform(&std::reference_wrapper<NodeTree>::get); }
 };
-
 class TickFrame {
     NodeHandleOptional tick_handle { };
 
