@@ -274,4 +274,33 @@ void NodeRenderSystem::RenderTrees(SDL_Renderer* renderer) {
         for (const TextElement& text : frame_elements.texts) { (void)TTF_DrawRendererText(text.text, text.position.x, text.position.y); }
     }
 }
+f32 EasingSin(f32 t) { return math::Sin(t) * 0.5F + 0.5F; }
+f32 EasingCos(f32 t) { return math::Cos(t) * 0.5F + 0.5F; }
+AnimationHandle AnimationSystem::Register(const u32 duration_ms, const std::function<void(f32)>& action, const b8 keep_alive) {
+    Logger().Log("Size of action {}", sizeof(action));
+    const Animation animation { .action = action, .offset_ms = static_cast<u32>(SDL_GetTicks()), .duration_ms = duration_ms, .keep_alive = keep_alive, .alive = true };
+    for (u32 i = 0U; i < animations.Size(); ++i) {
+        if (!animations[i].alive) {
+            animations[i] = animation;
+            return AnimationHandle { i };
+        }
+    }
+    animations.PushBack(animation);
+    return AnimationHandle { animations.Size() - 1U };
+}
+Animation& AnimationSystem::GetAnimation(const AnimationHandle animation_handle) { return animations[animation_handle.id]; }
+void AnimationSystem::operator()() {
+    const u32 current_ms = SDL_GetTicks();
+    for (Animation& animation : animations) {
+        if (!animation.alive) { continue; }
+        const f32 t = static_cast<f32>(current_ms - animation.offset_ms) / static_cast<f32>(animation.duration_ms);
+        if (t < 1.0F || animation.keep_alive) {
+            const f32 value = EasingSin(t);
+            animation.action(value);
+        } else {
+            animation.action(1.0F);
+            animation.alive = false;
+        }
+    }
+}
 }

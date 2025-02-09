@@ -33,6 +33,8 @@ template <typename Collection> const typename Collection::value_type& RandomValu
 } // namespace pce
 
 namespace pce::math {
+inline f32 Sin (f32 t) { return std::sinf(t); }
+inline f32 Cos (f32 t) { return std::cosf(t); }
 constexpr std::pair<u32, u32> Div(u32 value, u32 divisor) { return { value / divisor, value % divisor }; }
 template <typename T = void> T Sub(const T& left, const T& right) { return left - right; }
 template <typename T = void> struct Minus {

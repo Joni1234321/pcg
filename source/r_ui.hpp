@@ -70,4 +70,24 @@ struct DebugSystem {
         tick_frame.SetInfo(tick_system.tick.Value(), 1.0F / tick_system.tick_time, 1.0F / tick_system.delta_time);
     }
 };
-}
+inline f32 EasingSin(f32 t);
+inline f32 EasingCos(f32 t);
+struct Animation {
+    std::function<void(f32)> action;
+    u32 offset_ms;
+    u32 duration_ms;
+    b8 keep_alive;
+    b8 alive;
+};
+struct AnimationHandle {
+    u32 id;
+};
+struct AnimationSystem {
+    static constexpr u32 DEFAULT_COUNT = 128U;
+    List<Animation> animations { DEFAULT_COUNT };
+
+    AnimationHandle Register(u32 duration_ms, const std::function<void(f32)>& action, b8 keep_alive);
+    [[nodiscard]] Animation& GetAnimation(AnimationHandle animation_handle);
+    void operator()();
+};
+} // namespace pce::ui

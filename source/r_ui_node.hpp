@@ -137,9 +137,6 @@ struct NodeProperties {
     NodeReaction on_hover { };
     NodeReaction on_hover_out { };
 };
-struct Animation {
-
-};
 class NodeTree {
     static constexpr u32 DEFAULT_COUNT = 64U;
     List<NodeStyle> node_styles { DEFAULT_COUNT };

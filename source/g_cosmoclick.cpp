@@ -90,6 +90,7 @@ class CosmoClick {
     InputSystem input_system { };
     NodeRenderSystem node_render_system { render_system };
     DebugSystem debug_system { node_render_system };
+    AnimationSystem animation_system { };
 
     GameFrame game_frame { };
 
@@ -106,9 +107,18 @@ private:
     void GameLoop();
     Scene GameScene();
 };
+
+constexpr u32 planet_size = 400U;
+constexpr u32 planet_border_size = 40U;
 CosmoClick::CosmoClick(RenderSystem& render_system) : render_system(render_system) {
     clear_color = colors::yellow;
     node_render_system.node_trees.EmplaceBack(game_frame.tree);
+    constexpr u32 animation_duration_ms = 300U;
+    constexpr u32 padding_start = 4U;
+    animation_system.Register(animation_duration_ms, [this](f32 t) {
+        const u32 padding_value = padding_start + t * planet_border_size;
+        game_frame.tree.GetStyle(game_frame.PlanetHandle()).padding = uint4 { padding_value, padding_value,padding_value, padding_value };
+    }, true);
 }
 void CosmoClick::Tick() {
     tick_system();
@@ -119,6 +129,7 @@ void CosmoClick::Tick() {
 
     GameLoop();
 
+    animation_system();
     render_system();
     node_render_system.RenderTrees(render_system.renderer);
     render_system.End();
@@ -135,18 +146,11 @@ void CosmoClick::GameLoop() {
             break;
     }
 }
-constexpr u32 planet_size = 200U;
-constexpr u32 planet_border_size = 10U;
 Scene CosmoClick::GameScene() {
     const TimePoint update_time = TimeNow();
     const Duration time_since_start = update_time - game_data.start_time;
-    const Milliseconds ms_since_start = std::chrono::duration_cast<Milliseconds>(time_since_start);
     const u32 seconds_since_start = std::chrono::duration_cast<Seconds>(time_since_start).count();
     const u32 delta_seconds = seconds_since_start - game_data.seconds_since_start;
-    const f32 animation_sine = std::sinf(static_cast<f32>(ms_since_start.count()) / 100.0F);
-    const u32 padding_value = planet_border_size * animation_sine;
-    Logger().Log("{} {}", animation_sine, padding_value);
-    game_frame.tree.GetStyle(game_frame.PlanetHandle()).padding = uint4 { padding_value, padding_value,padding_value, padding_value };
     if (delta_seconds > 0U) {
         game_data.money += Money { game_data.income.Value() * delta_seconds };
         game_data.seconds_since_start = seconds_since_start;
