@@ -72,12 +72,19 @@ struct DebugSystem {
 };
 inline f32 EasingSin(f32 t);
 inline f32 EasingCos(f32 t);
+enum class AnimationState : u8 {
+    run_once, recycle, repeat, keep_alive, keep_alive_stopped
+};
+struct AnimationDesc {
+    std::function<void(f32)> action;
+    u32 duration_ms;
+    AnimationState state;
+};
 struct Animation {
     std::function<void(f32)> action;
     u32 offset_ms;
     u32 duration_ms;
-    b8 keep_alive;
-    b8 alive;
+    AnimationState state;
 };
 struct AnimationHandle {
     u32 id;
@@ -86,8 +93,9 @@ struct AnimationSystem {
     static constexpr u32 DEFAULT_COUNT = 128U;
     List<Animation> animations { DEFAULT_COUNT };
 
-    AnimationHandle Register(u32 duration_ms, const std::function<void(f32)>& action, b8 keep_alive);
+    AnimationHandle Register(const AnimationDesc& animation_desc);
     [[nodiscard]] Animation& GetAnimation(AnimationHandle animation_handle);
+    void StartAnimation(AnimationHandle animation_handle);
     void operator()();
 };
 } // namespace pce::ui

@@ -220,4 +220,6 @@ public:
     NodeHandle Build();
 };
 using B = NodeBuilder;
+inline SDL_Color LightenColor(SDL_Color color, f32 factor);
+
 } // pce::ui

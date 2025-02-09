@@ -276,11 +276,11 @@ void NodeRenderSystem::RenderTrees(SDL_Renderer* renderer) {
 }
 f32 EasingSin(f32 t) { return math::Sin(t) * 0.5F + 0.5F; }
 f32 EasingCos(f32 t) { return math::Cos(t) * 0.5F + 0.5F; }
-AnimationHandle AnimationSystem::Register(const u32 duration_ms, const std::function<void(f32)>& action, const b8 keep_alive) {
-    Logger().Log("Size of action {}", sizeof(action));
-    const Animation animation { .action = action, .offset_ms = static_cast<u32>(SDL_GetTicks()), .duration_ms = duration_ms, .keep_alive = keep_alive, .alive = true };
+AnimationHandle AnimationSystem::Register(const AnimationDesc& animation_desc) {
+    Logger().Log("Size of action {} and action {} size {}", sizeof(animation_desc), sizeof(animation_desc.action), animations.Size());
+    const Animation animation { .action = animation_desc.action, .offset_ms = static_cast<u32>(SDL_GetTicks()), .duration_ms = animation_desc.duration_ms, .state = animation_desc.state };
     for (u32 i = 0U; i < animations.Size(); ++i) {
-        if (!animations[i].alive) {
+        if (animations[i].state == AnimationState::recycle) {
             animations[i] = animation;
             return AnimationHandle { i };
         }
@@ -289,18 +289,49 @@ AnimationHandle AnimationSystem::Register(const u32 duration_ms, const std::func
     return AnimationHandle { animations.Size() - 1U };
 }
 Animation& AnimationSystem::GetAnimation(const AnimationHandle animation_handle) { return animations[animation_handle.id]; }
+void AnimationSystem::StartAnimation(AnimationHandle animation_handle) {
+    Animation& animation = GetAnimation(animation_handle);
+    animation.offset_ms = static_cast<u32>(SDL_GetTicks());
+    switch (animation.state) {
+        case AnimationState::run_once:
+            break;
+        case AnimationState::recycle:
+            break;
+        case AnimationState::repeat:
+            break;
+        case AnimationState::keep_alive:
+            break;
+        case AnimationState::keep_alive_stopped:
+            animation.state = AnimationState::keep_alive;
+            break;
+    }
+}
 void AnimationSystem::operator()() {
     const u32 current_ms = SDL_GetTicks();
     for (Animation& animation : animations) {
-        if (!animation.alive) { continue; }
-        const f32 t = static_cast<f32>(current_ms - animation.offset_ms) / static_cast<f32>(animation.duration_ms);
-        if (t < 1.0F || animation.keep_alive) {
-            const f32 value = EasingSin(t);
-            animation.action(value);
-        } else {
-            animation.action(1.0F);
-            animation.alive = false;
+        f32 t = static_cast<f32>(current_ms - animation.offset_ms) / static_cast<f32>(animation.duration_ms);
+        switch (animation.state) {
+            case AnimationState::run_once:
+                if (t >= 1.0F) {
+                    t = 1.0F;
+                    animation.state = AnimationState::recycle;
+                }
+                break;
+            case AnimationState::recycle:
+                continue;
+            case AnimationState::repeat:
+                break;
+            case AnimationState::keep_alive:
+                if (t >= 1.0F) {
+                    t = 1.0F;
+                    animation.state = AnimationState::keep_alive_stopped;
+                }
+                break;
+            case AnimationState::keep_alive_stopped:
+                continue;
         }
+        const f32 value = EasingSin(t);
+        animation.action(value);
     }
 }
 }

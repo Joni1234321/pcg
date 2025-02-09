@@ -69,19 +69,23 @@ private:
 };
 struct GameFrame {
     NodeTree tree;
-    GameFrame();
+    AnimationSystem& animation_system;
+    GameFrame(AnimationSystem& animation_system);
     [[nodiscard]] constexpr b8 InsidePlanet(uint2 screen_position);
     [[nodiscard]] constexpr NodeHandle PlanetHandle();
     [[nodiscard]] constexpr ValueUnit<Money>& GetMoneyValueUnit();
     [[nodiscard]] constexpr ValueUnit<Income>& GetIncomeValueUnit();
     [[nodiscard]] constexpr std::optional<u32> GetBuildItemAtPosition(uint2 screen_position);
-    constexpr void UpdateBuildItemsCount(const List<Count>& building_counts);;
+    constexpr void UpdateBuildItemsCount(const List<Count>& building_counts);
+    void RestartClickAnimation() const;
 
 private:
     NodeHandleOptional planet_handle;
     std::unique_ptr<ValueUnit<Money>> money;
     std::unique_ptr<ValueUnit<Income>> income;
     List<BuildItem> shop;
+    AnimationHandle planet_animation_handle;
+    AnimationHandle click_animation_handle;
 };
 enum class Scene { game, quit };
 class CosmoClick {
@@ -92,7 +96,7 @@ class CosmoClick {
     DebugSystem debug_system { node_render_system };
     AnimationSystem animation_system { };
 
-    GameFrame game_frame { };
+    GameFrame game_frame { animation_system };
 
     GameData game_data { .building_counts = List { buildings.Size(), Count { 0U } }, .start_time = TimeNow(), .seconds_since_start = 0U, .money = Money { 100U }, .income = Income { 0U } };
 
@@ -113,12 +117,6 @@ constexpr u32 planet_border_size = 40U;
 CosmoClick::CosmoClick(RenderSystem& render_system) : render_system(render_system) {
     clear_color = colors::yellow;
     node_render_system.node_trees.EmplaceBack(game_frame.tree);
-    constexpr u32 animation_duration_ms = 300U;
-    constexpr u32 padding_start = 4U;
-    animation_system.Register(animation_duration_ms, [this](f32 t) {
-        const u32 padding_value = padding_start + t * planet_border_size;
-        game_frame.tree.GetStyle(game_frame.PlanetHandle()).padding = uint4 { padding_value, padding_value,padding_value, padding_value };
-    }, true);
 }
 void CosmoClick::Tick() {
     tick_system();
@@ -159,6 +157,7 @@ Scene CosmoClick::GameScene() {
         if (game_frame.InsidePlanet(input_system.MousePosition())) {
             constexpr Money click_money = Money { 5U };
             game_data.money += click_money;
+            game_frame.RestartClickAnimation();
         }
     }
     if (input_system.LeftMouseDown()) {
@@ -200,8 +199,9 @@ constexpr std::optional<u32> GameFrame::GetBuildItemAtPosition(const uint2 scree
 constexpr void GameFrame::UpdateBuildItemsCount(const List<Count>& building_counts) {
     for (u32 i = 0U; i < building_counts.Size(); ++i) { tree.GetProperties(shop[i].CountHandle()).text = std::format("{:04}", building_counts[i]); }
 }
+void GameFrame::RestartClickAnimation() const { animation_system.StartAnimation(click_animation_handle); }
 constexpr b8 CosmoClick::IsRunning() const { return tick_system.running; }
-GameFrame::GameFrame() {
+GameFrame::GameFrame(AnimationSystem& animation_system) : animation_system { animation_system } {
     const NodeHandle frame = B(tree, fill, uint2 { 0U, 0U }).Build();
     const NodeHandle game = B(tree, frame, fill).Direction(vertical).Center().Build();
     const NodeHandle title = B(tree, game, hug).Fill(colors::white).Text("Cosmo Click", FontSizes::title).Build();
@@ -212,6 +212,19 @@ GameFrame::GameFrame() {
     const NodeHandle planet_intra = B(tree, planet_handle.GetHandle(), fill).Fill(colors::dark_navy_blue).Build();
     const NodeHandle build_menu = B(tree, frame, { 600U, hug }).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::faded_green).Build();
     for (const Building& building : buildings) { shop.EmplaceBack(tree, build_menu, building); }
+
+    // animation
+    constexpr u32 planet_padding_start = 10U;
+    const AnimationDesc planet_animation_desc {
+        .action = [this] (const f32 t) {
+            const u32 padding_value = planet_padding_start + t * planet_border_size;
+            tree.GetStyle(planet_handle.GetHandle()).padding = uint4 { padding_value, padding_value, padding_value, padding_value };
+        },
+        .duration_ms = 500U, .state = AnimationState::repeat };
+    const AnimationDesc click_animation_desc {
+        .action = [this] (const f32 t) { tree.GetStyle(planet_handle.GetHandle()).background_color = LightenColor(colors::blue, t);  }, .duration_ms = 300U, .state = AnimationState::keep_alive_stopped };
+    planet_animation_handle = animation_system.Register(planet_animation_desc);
+    click_animation_handle = animation_system.Register(click_animation_desc);
 }
 } // namespace pcg::cosmoclick
 
