@@ -7,7 +7,7 @@ NodeHandleOptional HitNode(NodeTree& tree, uint2 screen_position) {
     const auto is_inside_node = [screen_position, &tree] (const NodeHandle child_handle) -> b8 { return tree.GetStyle(child_handle).IsInside(screen_position); };
     while (true) {
         auto node_iterator = std::ranges::find_if(tree.Children(node_handle), is_inside_node, std::identity { });
-        if (node_iterator == tree.Children(node_handle).end()) { return tree.GetStyle(node_handle).background_color.a == 0 ? NodeHandleOptional { } : NodeHandleOptional { node_handle.id }; }
+        if (node_iterator == tree.Children(node_handle).end()) { return NodeHandleOptional { node_handle.id }; }
         node_handle = *node_iterator;
     }
 }
@@ -82,8 +82,8 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
 
     // fill top down
     NodeStyle& root_node = tree.GetStyle(tree.Root());
-    if (root_node.width.constraint == LayoutLength::parent_constraint) { root_node.width.resolved = node_render_system.render_system.screen_size.x - root_node.position.x; }
-    if (root_node.height.constraint == LayoutLength::parent_constraint) { root_node.height.resolved = node_render_system.render_system.screen_size.y - root_node.position.y; }
+    if (root_node.width.constraint == LayoutLength::parent_constraint) { root_node.width.resolved = globals.screen_size.x - root_node.position.x; }
+    if (root_node.height.constraint == LayoutLength::parent_constraint) { root_node.height.resolved = globals.screen_size.y - root_node.position.y; }
     for (const NodeHandle node_handle : node_handles) {
         const NodeStyle& node_style = tree.GetStyle(node_handle);
 
@@ -220,21 +220,17 @@ const FrameElements& GetFrameElements(NodeRenderSystem& node_render_system, Node
 }
 
 void Hover(const NodeReference& node_reference) {
-    Logger().Log("Hover");
-    NodeStyle& node_style = node_reference.tree.GetStyle(node_reference.node_handle);
-    std::swap(node_style.background_color, node_style.background_color_hover);
-    NodeProperties& details = node_reference.tree.GetProperties(node_reference.node_handle);
-    if (details.on_hover) { details.on_hover(node_reference); }
+    Logger().Log("Hover {}", node_reference.tree.GetProperties(node_reference.node_handle).text);
+    NodeProperties& properties = node_reference.tree.GetProperties(node_reference.node_handle);
+    if (properties.on_hover) { properties.on_hover(node_reference); }
 }
 void HoverOut(const NodeReference& node_reference) {
-    Logger().Log("Hover Out");
-    NodeStyle& node_style = node_reference.tree.GetStyle(node_reference.node_handle);
-    std::swap(node_style.background_color, node_style.background_color_hover);
-    NodeProperties& details = node_reference.tree.GetProperties(node_reference.node_handle);
-    if (details.on_hover_out) { details.on_hover_out(node_reference); }
+    Logger().Log("Hover Out {}", node_reference.tree.GetProperties(node_reference.node_handle).text);
+    NodeProperties& properties = node_reference.tree.GetProperties(node_reference.node_handle);
+    if (properties.on_hover_out) { properties.on_hover_out(node_reference); }
 }
 void Click(const NodeReference& node_reference) {
-    Logger().Log("Clicked");
+    Logger().Log("Clicked {}", node_reference.tree.GetProperties(node_reference.node_handle).text);
     NodeProperties& properties = node_reference.tree.GetProperties(node_reference.node_handle);
     if (properties.on_click) { properties.on_click(node_reference); }
 }

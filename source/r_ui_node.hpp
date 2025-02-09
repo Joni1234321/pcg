@@ -86,7 +86,6 @@ struct NodeHandleOptional {
 struct NodeStyle : LogDestroyWithCount<NodeStyle> {
     SDL_FRect bounding_box { };
     SDL_Color background_color { 0, 0, 0 };
-    SDL_Color background_color_hover { 0, 0, 0 };
 
     uint2 position { U32_MAX, U32_MAX };
     uint4 padding { 0U, 0U, 0U, 0U };
@@ -217,9 +216,9 @@ public:
     [[nodiscard]] NodeBuilder& Right();
     [[nodiscard]] NodeBuilder& Center();
     [[nodiscard]] NodeBuilder& Left();
-    NodeHandle Build();
+    NodeHandle Build() const;
 };
 using B = NodeBuilder;
-inline SDL_Color LightenColor(SDL_Color color, f32 factor);
+SDL_Color LightenColor(SDL_Color color, f32 factor);
 
 } // pce::ui

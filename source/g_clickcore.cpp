@@ -72,7 +72,7 @@ class ClickCore {
     RenderSystem& render_system;
     TickSystem tick_system { };
     InputSystem input_system { };
-    ui::NodeRenderSystem node_render_system { render_system };
+    ui::NodeRenderSystem node_render_system {  };
     ui::DebugSystem debug_system { node_render_system };
 
     ClickCoreFrames frames { node_render_system };

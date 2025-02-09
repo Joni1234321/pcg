@@ -92,7 +92,7 @@ class CosmoClick {
     RenderSystem& render_system;
     TickSystem tick_system { };
     InputSystem input_system { };
-    NodeRenderSystem node_render_system { render_system };
+    NodeRenderSystem node_render_system {  };
     DebugSystem debug_system { node_render_system };
     AnimationSystem animation_system { };
 

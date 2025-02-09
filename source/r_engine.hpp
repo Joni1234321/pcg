@@ -26,11 +26,16 @@ namespace pce {
 using Tick = NamedType<u32, struct TickTag, Arithmetic>;
 static SDL_Color clear_color;
 
+struct Globals {
+    SDL_Renderer* renderer;
+    uint2 screen_size;
+};
+inline Globals globals;
+
 struct RenderSystem {
     SDL_Window* window { nullptr };
     SDL_Renderer* renderer { nullptr };
-    uint2 screen_size;
-    explicit RenderSystem(const uint2 size) : screen_size { size } {
+    explicit RenderSystem(const uint2 size) {
         constexpr u32 window_flags = SDL_WINDOW_RESIZABLE;
         if (!SDL_CreateWindowAndRenderer("Video Game", static_cast<i32>(size.x), static_cast<i32>(size.y), window_flags, &window, &renderer)) {
             SDL_Log("SDL_CreateWindowAndRenderer failed (%s)", SDL_GetError());
@@ -45,13 +50,16 @@ struct RenderSystem {
             SDL_Quit();
         }
         SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+        globals.renderer = renderer;
+        globals.screen_size = size;
     }
     void operator()() {
         (void)SDL_SetRenderDrawColor(renderer, clear_color.r, clear_color.g, clear_color.b, clear_color.a);
         (void)SDL_RenderClear(renderer);
     }
     void End() {
-        (void)SDL_GetWindowSize(window, reinterpret_cast<i32*>(&screen_size.x), reinterpret_cast<i32*>(&screen_size.y));
+        (void)SDL_GetWindowSize(window, reinterpret_cast<i32*>(&globals.screen_size.x), reinterpret_cast<i32*>(&globals.screen_size.y));
         (void)SDL_RenderPresent(renderer);
     }
     ~RenderSystem() {
@@ -61,6 +69,7 @@ struct RenderSystem {
         SDL_Quit();
     }
 };
+
 
 struct TickSystem {
     b8 running { true };

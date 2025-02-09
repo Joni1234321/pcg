@@ -18,14 +18,11 @@ struct DestroyRenderTextEngine {
     }
 };
 struct NodeRenderSystem {
-    const RenderSystem& render_system;
     HoveredType hovered { };
     FontCollection font { assets::Asset(font_path) };
     FontCollection font_bold { assets::Asset(font_bold_path) };
-    UniquePointer<TTF_TextEngine, DestroyRenderTextEngine> text_engine { TTF_CreateRendererTextEngine(render_system.renderer) };
+    UniquePointer<TTF_TextEngine, DestroyRenderTextEngine> text_engine { TTF_CreateRendererTextEngine(globals.renderer) };
     List<std::reference_wrapper<NodeTree>> node_trees { };
-
-    explicit NodeRenderSystem(const RenderSystem& render_system) : render_system(render_system) { }
 
     void HoverClickEvents(const InputSystem& input_system);
     void RenderTrees(SDL_Renderer* renderer);
@@ -72,9 +69,7 @@ struct DebugSystem {
 };
 inline f32 EasingSin(f32 t);
 inline f32 EasingCos(f32 t);
-enum class AnimationState : u8 {
-    run_once, recycle, repeat, keep_alive, keep_alive_stopped
-};
+enum class AnimationState : u8 { run_once, recycle, repeat, keep_alive, keep_alive_stopped };
 struct AnimationDesc {
     std::function<void(f32)> action;
     u32 duration_ms;
@@ -97,5 +92,34 @@ struct AnimationSystem {
     [[nodiscard]] Animation& GetAnimation(AnimationHandle animation_handle);
     void StartAnimation(AnimationHandle animation_handle);
     void operator()();
+};
+
+struct Particle {
+    uint2 position;
+};
+struct ParticleProtocol {
+    int count;
+    uint2 velocity;
+};
+struct ParticleProtocolHandle {
+    u32 id;
+};
+struct ParticleSystem {
+    static constexpr u32 DEFAULT_COUNT = 128U;
+    List<ParticleProtocol> protocols { DEFAULT_COUNT };
+    List<List<Particle>> particles { DEFAULT_COUNT };
+
+    ParticleProtocolHandle Register(const ParticleProtocol& protocol) {
+        protocols.PushBack(protocol);
+        particles.EmplaceBack(DEFAULT_COUNT);
+        return ParticleProtocolHandle { particles.Size() - 1U };
+    }
+    [[nodiscard]] ParticleProtocol& GetParticleProtocol(const ParticleProtocolHandle protocol_handle) { return protocols[protocol_handle.id]; }
+    [[nodiscard]] List<Particle>& GetParticles(const ParticleProtocolHandle protocol_handle) { return particles[protocol_handle.id]; }
+    void NewParticle(ParticleProtocolHandle protocol_handle, Particle&& particle) { GetParticles(protocol_handle).PushBack(particle); }
+    void operator()() {
+        for (u32 i = 0; i < particles.Size(); i++) {
+        }
+    }
 };
 } // namespace pce::ui
