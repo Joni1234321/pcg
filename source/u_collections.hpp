@@ -89,18 +89,17 @@ template <typename T> struct List {
     explicit constexpr List(u32 size) : data() { data.reserve(size); }
     explicit constexpr List(u32 size, const T& val) : data(size, val, std::allocator<T>()) { }
     constexpr ~List() = default;
-
     template <class Iter> constexpr List(Iter first, Iter last) : data(first, last) { }
-
-    [[nodiscard]] constexpr u32 Size() const { return data.size(); }
-
-    operator Span<T>() { return Span<T>(*this); }
 
     // Generic collection converter  CREDIT goes the bot for this madness
     template <typename Container> explicit List(const Container& container) requires std::is_constructible_v<
         std::vector<T>, typename Container::iterator, typename Container::iterator> : data(container.begin(), container.end()) { }
     template <typename Container> explicit List(Container&& container) requires std::is_constructible_v<
         std::vector<T>, typename Container::iterator, typename Container::iterator> : data(std::make_move_iterator(container.begin()), std::make_move_iterator(container.end())) { }
+
+    [[nodiscard]] constexpr u32 Size() const { return data.size(); }
+
+    operator Span<T>() { return Span<T>(*this); }
 
     constexpr const T& operator[](u32 pos) const { return data[pos]; }
     constexpr T& operator[](u32 pos) { return data[pos]; }

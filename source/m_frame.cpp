@@ -38,7 +38,7 @@ void InspectorFrame::ShowElementStructure(const HoveredType& hovered) {
         CreateDebugNodeComponent(layer, node_properties.text.Empty() ? "node" : std::format("text [{}, {}]", node.position.x, node.position.y), node.background_color, tree, frame);
     }
 }
-TestFrame::TestFrame() {
+TestFrame::TestFrame() : tree { NodeRenderSystem::node_trees.EmplaceBack() } {
     NodeHandle frame = B(tree, hug, { 100U, 400U }).Gap(20U).Fill(colors::clear).Build(); {
         NodeHandle root = B(tree, frame, uint2 { 100U, 100U }).Padding2({ 5U, 5U }).Fill(colors::forest_green).Build();
         NodeHandle box1 = B(tree, root, fill).Fill(colors::yellow).Padding2({ 5U, 5U }).Build();

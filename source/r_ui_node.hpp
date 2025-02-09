@@ -130,7 +130,6 @@ struct NodeProperties {
     String name { };
     String text { };
     FontSizes font_size { FontSizes::body };
-    UniquePointer<TTF_Text, DestroyText> ttf_text { nullptr };
 
     NodeReaction on_click { };
     NodeReaction on_hover { };
@@ -140,7 +139,7 @@ class NodeTree {
     static constexpr u32 DEFAULT_COUNT = 64U;
     List<NodeStyle> node_styles { DEFAULT_COUNT };
     List<NodeProperties> node_properties { DEFAULT_COUNT };
-
+    std::vector<std::unique_ptr<TTF_Text, DestroyText>> node_ttf_texts { };
     List<NodeHandle> parents { DEFAULT_COUNT };
     List<List<NodeHandle>> children { DEFAULT_COUNT };
 
@@ -152,10 +151,10 @@ public:
     FrameElements frame_elements { };
 
     NodeTree() = default;
-    NodeTree(const NodeTree& other) = delete;
-    NodeTree(NodeTree&& other) noexcept = delete;
-    NodeTree& operator=(const NodeTree& other) = delete;
-    NodeTree& operator=(NodeTree&& other) noexcept = delete;
+    NodeTree(const NodeTree&) = delete;
+    NodeTree& operator=(const NodeTree&) = delete;
+    NodeTree(NodeTree&&) noexcept = default;
+    NodeTree& operator=(NodeTree&&) noexcept = default;
 
     [[nodiscard]] constexpr NodeHandle Root() const { return offset_handle; }
     [[nodiscard]] constexpr NodeHandle Parent(const NodeHandle node_handle) { return parents[HandleToIndex(node_handle)]; }
@@ -165,6 +164,8 @@ public:
     [[nodiscard]] constexpr NodeStyle& GetStyle(const NodeHandle node_handle) { return node_styles[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr const NodeProperties& GetProperties(const NodeHandle node_handle) const { return node_properties[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr NodeProperties& GetProperties(const NodeHandle node_handle) { return node_properties[HandleToIndex(node_handle)]; }
+    [[nodiscard]] constexpr const std::unique_ptr<TTF_Text, DestroyText>& GetTTFText(const NodeHandle node_handle) const { return node_ttf_texts[HandleToIndex(node_handle)]; }
+    [[nodiscard]] constexpr std::unique_ptr<TTF_Text, DestroyText>& GetTTFText(const NodeHandle node_handle) { return node_ttf_texts[HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr b8 Empty() const { return node_styles.Empty(); }
     [[nodiscard]] NodeHandle AddRoot();
     [[nodiscard]] NodeHandle AddRoot(NodeStyle&& root);

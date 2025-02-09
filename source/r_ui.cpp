@@ -12,7 +12,7 @@ NodeHandleOptional HitNode(NodeTree& tree, uint2 screen_position) {
     }
 }
 HoveredType GetHovered(NodeRenderSystem& render_system, const uint2 mouse_position) {
-    for (NodeTree& tree : render_system.GetNodeTrees()) {
+    for (NodeTree& tree : render_system.node_trees) {
         NodeHandleOptional node_handle = HitNode(tree, mouse_position);
         if (node_handle.IsValid()) { return std::optional { WeakNodeReference { .tree = tree, .node_handle = node_handle.GetHandle() } }; }
     }
@@ -38,19 +38,19 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
     for (const NodeHandle node_handle : node_handles) {
         NodeStyle& node_style = tree.GetStyle(node_handle);
         NodeProperties& node_properties = tree.GetProperties(node_handle);
-
+        auto& ttf_text = tree.GetTTFText(node_handle);
         if (node_properties.text.Empty()) {
-            node_properties.ttf_text.Reset();
+            ttf_text.reset();
             continue;
         }
 
         const Font& f = font.GetFont(node_properties.font_size);
-        if (node_properties.ttf_text.Get() == nullptr) { node_properties.ttf_text.Reset(TTF_CreateText(node_render_system.text_engine.Get(), f.ToSDL(), node_properties.text.CString(), node_properties.text.Size())); } else {
-            TTF_SetTextString(node_properties.ttf_text.Get(), node_properties.text.CString(), node_properties.text.Size());
-            TTF_SetTextFont(node_properties.ttf_text.Get(), f.ToSDL());
+        if (ttf_text.get() == nullptr) { ttf_text.reset(TTF_CreateText(node_render_system.text_engine.Get(), f.ToSDL(), node_properties.text.CString(), node_properties.text.Size())); } else {
+            TTF_SetTextString(ttf_text.get(), node_properties.text.CString(), node_properties.text.Size());
+            TTF_SetTextFont(ttf_text.get(), f.ToSDL());
         }
         const SDL_Color color = node_style.background_color;
-        (void)TTF_SetTextColor(node_properties.ttf_text.Get(), color.r, color.g, color.b, color.a);
+        (void)TTF_SetTextColor(ttf_text.get(), color.r, color.g, color.b, color.a);
     }
 
     // hug bottom up
@@ -66,7 +66,7 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
         if (node_style.width.constraint != LayoutLength::child_constraint && node_style.height.constraint != LayoutLength::child_constraint) { continue; }
 
         uint2 text_size { 0U, 0U };
-        if (!node_properties.text.Empty()) { (void)TTF_GetTextSize(node_properties.ttf_text.Get(), reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
+        if (!node_properties.text.Empty()) { (void)TTF_GetTextSize(tree.GetTTFText(node_handle).get(), reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
         LayoutLength& major_layout = get_major_layout(node_style, node_style.direction);
         if (major_layout.constraint == LayoutLength::child_constraint) {
             const u32 children_major = get_major_pixels_taken_by_children(node_handle, node_style.direction);
@@ -210,7 +210,7 @@ const FrameElements& GetFrameElements(NodeRenderSystem& node_render_system, Node
                     RectangleElement rectangle { .color = node_style.background_color, .rect = node_style.OuterRect() };
                     tree.frame_elements.rectangles.PushBack(rectangle);
                 } else {
-                    TextElement text { .text = node_properties.ttf_text.Get(), .position = float2 { static_cast<f32>(node_style.InnerBoxPosition().x), static_cast<f32>(node_style.InnerBoxPosition().y) } };
+                    TextElement text { .text = tree.GetTTFText(node_handle).get(), .position = float2 { static_cast<f32>(node_style.InnerBoxPosition().x), static_cast<f32>(node_style.InnerBoxPosition().y) } };
                     tree.frame_elements.texts.PushBack(text);
                 }
             }
@@ -234,7 +234,7 @@ void Click(const NodeReference& node_reference) {
     NodeProperties& properties = node_reference.tree.GetProperties(node_reference.node_handle);
     if (properties.on_click) { properties.on_click(node_reference); }
 }
-List<std::reference_wrapper<NodeTree>> NodeRenderSystem::node_trees { 120U };
+List<NodeTree> NodeRenderSystem::node_trees { 120U };
 void NodeRenderSystem::HoverClickEvents(const InputSystem& input_system) {
     if (input_system.LeftMouseDown() && hovered.has_value()) {
         NodeTree& hovered_tree = hovered.value().tree;
@@ -262,7 +262,7 @@ void NodeRenderSystem::HoverClickEvents(const InputSystem& input_system) {
     }
 }
 void NodeRenderSystem::RenderTrees(SDL_Renderer* renderer) {
-    for (NodeTree& tree : GetNodeTrees() | std::views::reverse | std::views::filter(&NodeTree::GetDisplay)) {
+    for (NodeTree& tree : node_trees | std::views::reverse | std::views::filter(&NodeTree::GetDisplay)) {
         const FrameElements& frame_elements = GetFrameElements(*this, tree);
         for (const RectangleElement& element : frame_elements.rectangles) {
             (void)SDL_SetRenderDrawColor(renderer, element.color.r, element.color.g, element.color.b, element.color.a);

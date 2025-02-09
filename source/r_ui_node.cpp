@@ -25,6 +25,7 @@ NodeHandle NodeTree::AddRoot() {
     parents.EmplaceBack(Root());
     children.EmplaceBack();
     node_properties.EmplaceBack();
+    node_ttf_texts.emplace_back();
 
     return Root();
 }
@@ -41,6 +42,7 @@ NodeHandle NodeTree::AddNode(NodeHandle parent_handle) {
     parents.PushBack(parent_handle);
     children.EmplaceBack();
     node_properties.EmplaceBack();
+    node_ttf_texts.emplace_back();
 
     Children(parent_handle).PushBack(node_handle);
     return node_handle;
@@ -57,6 +59,7 @@ void NodeTree::Clear() {
     parents.Clear();
     children.Clear();
     node_properties.Clear();
+    node_ttf_texts.clear();
 }
 void NodeTree::Propagate(NodeHandle node_handle, const NodeReaction& reaction) {
     while (true) {

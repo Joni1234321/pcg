@@ -129,7 +129,7 @@ private:
     NodeHandleOptional count_handle { };
 };
 struct GameFrame {
-    NodeTree tree;
+    NodeTree& tree;
     AnimationSystem& animation_system;
     GameFrame(AnimationSystem& animation_system);
     [[nodiscard]] constexpr b8 InsidePlanet(uint2 screen_position);
@@ -177,7 +177,6 @@ constexpr u32 planet_size = 400U;
 constexpr u32 planet_border_size = 40U;
 CosmoClick::CosmoClick() {
     clear_color = colors::yellow;
-    node_render_system.node_trees.EmplaceBack(game_frame.tree);
 }
 void CosmoClick::Tick() {
     tick_system();
@@ -198,11 +197,11 @@ void CosmoClick::GameLoop() {
     switch (scene) {
         case Scene::game:
             scene = GameScene();
-            break;
+        break;
         case Scene::quit:
             Logger().Log("Quit requested");
-            tick_system.running = false;
-            break;
+        tick_system.running = false;
+        break;
     }
 }
 Scene CosmoClick::GameScene() {
@@ -262,7 +261,7 @@ constexpr void GameFrame::UpdateBuildItemsCount(const List<Count>& building_coun
 }
 void GameFrame::RestartClickAnimation() const { animation_system.StartAnimation(click_animation_handle); }
 constexpr b8 CosmoClick::IsRunning() const { return tick_system.running; }
-GameFrame::GameFrame(AnimationSystem& animation_system) : animation_system { animation_system } {
+GameFrame::GameFrame(AnimationSystem& animation_system) : tree { NodeRenderSystem::node_trees.EmplaceBack() }, animation_system { animation_system } {
     const NodeHandle frame = B(tree, fill, uint2 { 0U, 0U }).Build();
     const NodeHandle game = B(tree, frame, fill).Direction(vertical).Center().Build();
     const NodeHandle title = B(tree, game, hug).Fill(colors::white).Text("Cosmo Click", FontSizes::title).Build();

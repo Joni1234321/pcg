@@ -22,7 +22,7 @@ struct GameData {
     Multiset<HighScore> high_scores { };
 };
 struct MainMenuFrame {
-    ui::NodeTree tree;
+    ui::NodeTree& tree;
     explicit MainMenuFrame();
     [[nodiscard]] constexpr ui::NodeStyle& StartButton() { return tree.GetStyle(start_button.GetHandle()); }
     constexpr void SetStartButtonText(String&& string) { tree.GetProperties(start_button.GetHandle()).text = string; }
@@ -35,7 +35,7 @@ private:
     ui::NodeHandleOptional exit_button { };
 };
 struct GameFrame {
-    ui::NodeTree tree;
+    ui::NodeTree& tree;
     explicit GameFrame();
     [[nodiscard]] constexpr ui::NodeStyle& Frame() { return tree.GetStyle(frame.GetHandle()); }
     [[nodiscard]] constexpr ui::NodeStyle& GameArea() { return tree.GetStyle(game_area.GetHandle()); }
@@ -53,7 +53,8 @@ private:
     ui::NodeHandleOptional frame { };
 };
 struct HighScoreFrame {
-    ui::NodeTree tree;
+    ui::NodeTree& tree;
+    HighScoreFrame() : tree { ui::NodeRenderSystem::node_trees.EmplaceBack() } { }
     void SetHighScore(Multiset<HighScore> scores);
 };
 enum class Scene { game, main_menu, game_over, quit };
@@ -63,7 +64,6 @@ class ClickCoreFrames {
     HighScoreFrame high_score_frame { };
 
 public:
-    explicit ClickCoreFrames(ui::NodeRenderSystem& node_render_system);
     [[nodiscard]] constexpr MainMenuFrame& MainMenuFrame();
     [[nodiscard]] constexpr GameFrame& GameFrame();
     [[nodiscard]] constexpr HighScoreFrame& HighScoreFrame();
@@ -75,13 +75,14 @@ class ClickCore {
     ui::NodeRenderSystem node_render_system { };
     ui::DebugSystem debug_system { };
 
-    ClickCoreFrames frames { node_render_system };
+    ClickCoreFrames frames { };
 
     RoundData game { };
     GameData game_data { };
     Scene scene { Scene::main_menu };
 
 public:
+    ClickCore() { clear_color = colors::dark_slate; }
     [[nodiscard]] constexpr b8 IsRunning() const { return tick_system.running; }
     void Tick();
 
@@ -91,13 +92,6 @@ private:
     Scene GameScene();
     Scene GameOverScene();
 };
-
-ClickCoreFrames::ClickCoreFrames(ui::NodeRenderSystem& node_render_system) {
-    clear_color = colors::dark_slate;
-    node_render_system.node_trees.EmplaceBack(main_menu_frame.tree);
-    node_render_system.node_trees.EmplaceBack(game_frame.tree);
-    node_render_system.node_trees.EmplaceBack(high_score_frame.tree);
-}
 constexpr MainMenuFrame& ClickCoreFrames::MainMenuFrame() {
     main_menu_frame.tree.MarkDirty();
     return main_menu_frame;
@@ -204,7 +198,7 @@ Scene ClickCore::GameOverScene() {
     }
     return scene;
 }
-GameFrame::GameFrame() {
+GameFrame::GameFrame() : tree { ui::NodeRenderSystem::node_trees.EmplaceBack() } {
     frame = ui::B(tree, ui::fill, { 0U, 0U }).Center().Direction(ui::vertical).Padding2(uint2 { 0U, 30U }).Build();
     ui::B(tree, frame.GetHandle(), ui::hug).Text("🎮 GAME TIME 🎮", ui::FontSizes::h1).Padding2(uint2 { 20U, 10U }).Fill(colors::navy_blue).Center().Build();
     score_box = ui::B(tree, frame.GetHandle(), ui::hug).Padding2(uint2 { 10U, 5U }).Fill(colors::forest_green).Direction(ui::vertical).Center().Build();
@@ -214,7 +208,7 @@ GameFrame::GameFrame() {
     constexpr u32 box_size = 100U;
     box = ui::B(tree, game_area.GetHandle(), uint2 { box_size, box_size }).Fill(colors::ruby_red).Padding(5U).Build();
 }
-MainMenuFrame::MainMenuFrame() {
+MainMenuFrame::MainMenuFrame() : tree { ui::NodeRenderSystem::node_trees.EmplaceBack() } {
     const String title = "Hey Helene!";
     const ui::NodeHandle frame = ui::B(tree, ui::fill, { 100U, 30U }).Direction(ui::vertical).Build();
     ui::B(tree, frame, ui::hug).Text(title, ui::FontSizes::title).Fill(colors::light_sky_blue).Build();
