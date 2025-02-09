@@ -72,8 +72,8 @@ class ClickCore {
     RenderSystem render_system { };
     TickSystem tick_system { };
     InputSystem input_system { };
-    ui::NodeRenderSystem node_render_system {  };
-    ui::DebugSystem debug_system { node_render_system };
+    ui::NodeRenderSystem node_render_system { };
+    ui::DebugSystem debug_system { };
 
     ClickCoreFrames frames { node_render_system };
 
@@ -113,7 +113,7 @@ constexpr HighScoreFrame& ClickCoreFrames::HighScoreFrame() {
 void ClickCore::Tick() {
     tick_system();
     input_system();
-    debug_system(input_system, tick_system);
+    debug_system(input_system, tick_system, node_render_system);
     node_render_system.HoverClickEvents(input_system);
     if (input_system.keys[SDLK_ESCAPE]) { tick_system.running = false; }
 

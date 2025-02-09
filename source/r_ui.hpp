@@ -50,16 +50,14 @@ struct TestFrame {
 };
 
 struct DebugSystem {
-    NodeRenderSystem& node_render_system;
-
     TickFrame tick_frame { };
     InspectorFrame debug_frame { };
 
-    explicit DebugSystem(NodeRenderSystem& node_render_system) : node_render_system { node_render_system } {
-        node_render_system.node_trees.EmplaceBack(tick_frame.tree);
-        node_render_system.node_trees.EmplaceBack(debug_frame.tree);
+    explicit DebugSystem() {
+        NodeRenderSystem::node_trees.EmplaceBack(tick_frame.tree);
+        NodeRenderSystem::node_trees.EmplaceBack(debug_frame.tree);
     }
-    void operator()(const InputSystem& input_system, const TickSystem& tick_system) {
+    void operator()(const InputSystem& input_system, const TickSystem& tick_system, const NodeRenderSystem& node_render_system) {
         if (input_system.LeftMouseDown()) {
             debug_frame.tree.MarkDirty();
             debug_frame.ShowElementStructure(node_render_system.hovered);

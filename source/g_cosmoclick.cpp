@@ -150,11 +150,11 @@ private:
 };
 enum class Scene { game, quit };
 class CosmoClick {
-    RenderSystem render_system {  };
+    RenderSystem render_system { };
     TickSystem tick_system { };
     InputSystem input_system { };
-    NodeRenderSystem node_render_system {  };
-    DebugSystem debug_system { node_render_system };
+    NodeRenderSystem node_render_system { };
+    DebugSystem debug_system { };
     AnimationSystem animation_system { };
 
     GameFrame game_frame { animation_system };
@@ -182,12 +182,12 @@ CosmoClick::CosmoClick() {
 void CosmoClick::Tick() {
     tick_system();
     input_system();
-    debug_system(input_system, tick_system);
     node_render_system.HoverClickEvents(input_system);
     if (input_system.keys[SDLK_ESCAPE]) { tick_system.running = false; }
 
     GameLoop();
 
+    debug_system(input_system, tick_system, node_render_system);
     animation_system();
     render_system();
     node_render_system.RenderTrees(Window::renderer);
@@ -283,7 +283,7 @@ GameFrame::GameFrame(AnimationSystem& animation_system) : animation_system { ani
         },
         .duration_ms = 500U, .state = AnimationState::repeat };
     const AnimationDesc click_animation_desc {
-        .action = [this] (const f32 t) { tree.GetStyle(planet_handle.GetHandle()).background_color = LightenColor(colors::blue, t);  }, .duration_ms = 300U, .state = AnimationState::keep_alive_stopped };
+        .action = [this] (const f32 t) { tree.GetStyle(planet_handle.GetHandle()).background_color = LightenColor(colors::blue, t); }, .duration_ms = 300U, .state = AnimationState::keep_alive_stopped };
     planet_animation_handle = animation_system.Register(planet_animation_desc);
     click_animation_handle = animation_system.Register(click_animation_desc);
 }
