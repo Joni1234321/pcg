@@ -146,8 +146,8 @@ private:
     std::unique_ptr<ValueUnit<Money>> money;
     std::unique_ptr<ValueUnit<Income>> income;
     List<BuildItem> shop;
-    AnimationHandle planet_animation_handle;
-    AnimationHandle click_animation_handle;
+    HandleOptional<AnimationSystem> planet_animation_handle;
+    HandleOptional<AnimationSystem> click_animation_handle;
 };
 enum class Scene { game, quit };
 class CosmoClick {
@@ -262,7 +262,7 @@ constexpr std::optional<u32> GameFrame::GetBuildItemAtPosition(const uint2 scree
 constexpr void GameFrame::UpdateBuildItemsCount(const List<Count>& building_counts) {
     for (u32 i = 0U; i < building_counts.Size(); ++i) { tree.GetProperties(shop[i].CountHandle()).text = std::format("{:04}", building_counts[i]); }
 }
-void GameFrame::RestartClickAnimation() const { animation_system.StartAnimation(click_animation_handle); }
+void GameFrame::RestartClickAnimation() const { animation_system.StartAnimation(click_animation_handle.GetHandle()); }
 constexpr b8 CosmoClick::IsRunning() const { return tick_system.running; }
 GameFrame::GameFrame(AnimationSystem& animation_system) : tree { NodeRenderSystem::node_trees.EmplaceBack() }, animation_system { animation_system } {
     const Handle<NodeTree> frame = B(tree, fill, uint2 { 0U, 0U }).Build();

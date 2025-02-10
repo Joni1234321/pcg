@@ -75,16 +75,13 @@ struct Animation {
     u32 duration_ms;
     AnimationState state;
 };
-struct AnimationHandle {
-    u32 id;
-};
 struct AnimationSystem {
     static constexpr u32 DEFAULT_COUNT = 128U;
     List<Animation> animations { DEFAULT_COUNT };
 
-    AnimationHandle Register(const AnimationDesc& animation_desc);
-    [[nodiscard]] Animation& GetAnimation(AnimationHandle animation_handle);
-    void StartAnimation(AnimationHandle animation_handle);
+    Handle<AnimationSystem> Register(const AnimationDesc& animation_desc);
+    [[nodiscard]] Animation& GetAnimation(Handle<AnimationSystem> animation_handle);
+    void StartAnimation(Handle<AnimationSystem> animation_handle);
     void operator()();
 };
 

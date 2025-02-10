@@ -274,20 +274,20 @@ void NodeRenderSystem::RenderTrees(SDL_Renderer* renderer) {
 }
 f32 EasingSin(const f32 t) { return math::Sin(t) * 0.5F + 0.5F; }
 f32 EasingCos(const f32 t) { return math::Cos(t) * 0.5F + 0.5F; }
-AnimationHandle AnimationSystem::Register(const AnimationDesc& animation_desc) {
+Handle<AnimationSystem> AnimationSystem::Register(const AnimationDesc& animation_desc) {
     Logger().Log("Size of action {} and action {} size {}", sizeof(animation_desc), sizeof(animation_desc.action), animations.Size());
     const Animation animation { .action = animation_desc.action, .offset_ms = static_cast<u32>(SDL_GetTicks()), .duration_ms = animation_desc.duration_ms, .state = animation_desc.state };
     for (u32 i = 0U; i < animations.Size(); ++i) {
         if (animations[i].state == AnimationState::recycle) {
             animations[i] = animation;
-            return AnimationHandle { i };
+            return Handle<AnimationSystem> { i };
         }
     }
     animations.PushBack(animation);
-    return AnimationHandle { animations.Size() - 1U };
+    return Handle<AnimationSystem> { animations.Size() - 1U };
 }
-Animation& AnimationSystem::GetAnimation(const AnimationHandle animation_handle) { return animations[animation_handle.id]; }
-void AnimationSystem::StartAnimation(const AnimationHandle animation_handle) {
+Animation& AnimationSystem::GetAnimation(const Handle<AnimationSystem> animation_handle) { return animations[animation_handle.id]; }
+void AnimationSystem::StartAnimation(const Handle<AnimationSystem> animation_handle) {
     Animation& animation = GetAnimation(animation_handle);
     animation.offset_ms = static_cast<u32>(SDL_GetTicks());
     switch (animation.state) {
