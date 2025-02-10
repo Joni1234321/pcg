@@ -5,6 +5,7 @@
 #include "r_ui_node.hpp"
 #include "u_collections.hpp"
 #include "u_util.hpp"
+#include "u_types.hpp"
 
 namespace pcg::clickcore {
 using namespace pce;
@@ -30,9 +31,9 @@ struct MainMenuFrame {
     [[nodiscard]] constexpr ui::NodeStyle& ExitButton() { return tree.GetStyle(exit_button.GetHandle()); }
 
 private:
-    ui::NodeHandleOptional start_button { };
-    ui::NodeHandleOptional settings_button { };
-    ui::NodeHandleOptional exit_button { };
+    HandleOptional<ui::NodeTree> start_button { };
+    HandleOptional<ui::NodeTree> settings_button { };
+    HandleOptional<ui::NodeTree> exit_button { };
 };
 struct GameFrame {
     ui::NodeTree& tree;
@@ -45,12 +46,12 @@ struct GameFrame {
     void SetScore(const u32 score) { tree.GetProperties(score_label.GetHandle()).text = std::format("Score {:4}", score); }
 
 private:
-    ui::NodeHandleOptional time_label { };
-    ui::NodeHandleOptional score_label { };
-    ui::NodeHandleOptional score_box { };
-    ui::NodeHandleOptional box { };
-    ui::NodeHandleOptional game_area { };
-    ui::NodeHandleOptional frame { };
+    HandleOptional<ui::NodeTree> time_label { };
+    HandleOptional<ui::NodeTree> score_label { };
+    HandleOptional<ui::NodeTree> score_box { };
+    HandleOptional<ui::NodeTree> box { };
+    HandleOptional<ui::NodeTree> game_area { };
+    HandleOptional<ui::NodeTree> frame { };
 };
 struct HighScoreFrame {
     ui::NodeTree& tree;
@@ -210,23 +211,23 @@ GameFrame::GameFrame() : tree { ui::NodeRenderSystem::node_trees.EmplaceBack() }
 }
 MainMenuFrame::MainMenuFrame() : tree { ui::NodeRenderSystem::node_trees.EmplaceBack() } {
     const String title = "Hey Helene!";
-    const ui::NodeHandle frame = ui::B(tree, ui::fill, { 100U, 30U }).Direction(ui::vertical).Build();
+    const Handle<ui::NodeTree> frame = ui::B(tree, ui::fill, { 100U, 30U }).Direction(ui::vertical).Build();
     ui::B(tree, frame, ui::hug).Text(title, ui::FontSizes::title).Fill(colors::light_sky_blue).Build();
-    const ui::NodeHandle root = ui::B(tree, frame, ui::hug).Padding2({ 20U, 5U }).Fill(colors::deep_purple).Center().Direction(ui::vertical).Build();
+    const Handle<ui::NodeTree> root = ui::B(tree, frame, ui::hug).Padding2({ 20U, 5U }).Fill(colors::deep_purple).Center().Direction(ui::vertical).Build();
     start_button = ui::B(tree, root, ui::hug).Fill(colors::radiant_orange).Text(String { "Play" }, ui::FontSizes::h1).Build();
     settings_button = ui::B(tree, root, ui::hug).Fill(colors::cool_teal).Text(String { "Settings" }, ui::FontSizes::h1).Build();
     exit_button = ui::B(tree, root, ui::hug).Fill(colors::ruby_red).Text(String { "Exit" }, ui::FontSizes::h1).Build();
 }
 void HighScoreFrame::SetHighScore(Multiset<HighScore> scores) {
     tree.Clear();
-    ui::NodeHandle frame = ui::B(tree, ui::fill, uint2 { 0U, 0U }).Direction(ui::vertical).Center().Build();
-    ui::NodeHandle root = ui::B(tree, frame, ui::hug).Direction(ui::vertical).Center().Build();
-    ui::NodeHandle title = ui::B(tree, root, ui::hug).Text("High Scores", ui::FontSizes::h1).Fill(colors::deep_purple).Build();
+    Handle<ui::NodeTree> frame = ui::B(tree, ui::fill, uint2 { 0U, 0U }).Direction(ui::vertical).Center().Build();
+    Handle<ui::NodeTree> root = ui::B(tree, frame, ui::hug).Direction(ui::vertical).Center().Build();
+    Handle<ui::NodeTree> title = ui::B(tree, root, ui::hug).Text("High Scores", ui::FontSizes::h1).Fill(colors::deep_purple).Build();
     bool alternate = false;
     for (const HighScore& high_score : scores | std::views::reverse) {
         const SDL_Color primary = alternate ? colors::deep_purple : colors::radiant_orange;
         const SDL_Color secondary = !alternate ? colors::deep_purple : colors::radiant_orange;
-        ui::NodeHandle row = ui::B(tree, root, { 150U, ui::hug }).Fill(primary).Center().Build();
+        Handle<ui::NodeTree> row = ui::B(tree, root, { 150U, ui::hug }).Fill(primary).Center().Build();
         ui::B(tree, row, ui::hug).Text(std::format("{:05}", high_score.score), ui::FontSizes::h2).Fill(secondary).Build();
         alternate = !alternate;
     }

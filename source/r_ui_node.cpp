@@ -1,5 +1,7 @@
 #include "r_ui_node.hpp"
 
+#include "u_types.hpp"
+
 #include <ranges>
 #include <r_colors.hpp>
 #include <stack>
@@ -15,11 +17,11 @@ const Font& FontCollection::GetFont(const FontSizes size) {
 }
 
 // NodeTree
-constexpr u32 NodeTree::HandleToIndex(const NodeHandle node_handle) const {
+constexpr u32 NodeTree::HandleToIndex(const Handle<NodeTree> node_handle) const {
     ASSERT_DBG(ValidHandle(node_handle), "Out of bounds, most likely destroyed");
     return node_handle.id - offset_handle.id;
 }
-NodeHandle NodeTree::AddRoot() {
+Handle<NodeTree> NodeTree::AddRoot() {
     ASSERT_DBG(node_styles.Empty(), "Setting root non empty tree");
     node_styles.EmplaceBack();
     parents.EmplaceBack(Root());
@@ -29,14 +31,14 @@ NodeHandle NodeTree::AddRoot() {
 
     return Root();
 }
-NodeHandle NodeTree::AddRoot(NodeStyle&& root) {
-    const NodeHandle node_handle = AddRoot();
+Handle<NodeTree> NodeTree::AddRoot(NodeStyle&& root) {
+    const Handle<NodeTree> node_handle = AddRoot();
     node_styles[HandleToIndex(node_handle)] = std::move(root);
     return node_handle;
 }
-NodeHandle NodeTree::AddNode(NodeHandle parent_handle) {
+Handle<NodeTree> NodeTree::AddNode(const Handle<NodeTree> parent_handle) {
     ASSERT_DBG(!node_styles.Empty(), "Adding node without root");
-    const NodeHandle node_handle { offset_handle.id + node_styles.Size() };
+    const Handle<NodeTree> node_handle { offset_handle.id + node_styles.Size() };
     ASSERT_DBG(node_handle.id != parent_handle.id, "Assigning node to itself recursion");
     node_styles.EmplaceBack();
     parents.PushBack(parent_handle);
@@ -47,8 +49,8 @@ NodeHandle NodeTree::AddNode(NodeHandle parent_handle) {
     Children(parent_handle).PushBack(node_handle);
     return node_handle;
 }
-NodeHandle NodeTree::AddNode(NodeStyle&& node, const NodeHandle parent_handle) {
-    const NodeHandle node_handle = AddNode(parent_handle);
+Handle<NodeTree> NodeTree::AddNode(NodeStyle&& node, const Handle<NodeTree> parent_handle) {
+    const Handle<NodeTree> node_handle = AddNode(parent_handle);
     node_styles[HandleToIndex(node_handle)] = std::move(node);
     return node_handle;
 }
@@ -61,19 +63,19 @@ void NodeTree::Clear() {
     node_properties.Clear();
     node_ttf_texts.clear();
 }
-void NodeTree::Propagate(NodeHandle node_handle, const NodeReaction& reaction) {
+void NodeTree::Propagate(Handle<NodeTree> node_handle, const NodeReaction& reaction) {
     while (true) {
         std::invoke(reaction, NodeReference { *this, node_handle });
         if (node_handle.id == Root().id) { break; };
         node_handle = Parent(node_handle);
     }
 }
-NodeBuilder::NodeBuilder(NodeTree &node_tree, Layout new_layout, uint2 position) : node_reference{ node_tree, node_tree.AddRoot() } {
+NodeBuilder::NodeBuilder(NodeTree &node_tree, const Layout new_layout, const uint2 position) : node_reference{ node_tree, node_tree.AddRoot() } {
     style.position = position;
     style.width = new_layout.width;
     style.height = new_layout.height;
 }
-NodeBuilder::NodeBuilder(NodeTree &node_tree, NodeHandle parent_handle, Layout new_layout) : node_reference{ node_tree, node_tree.AddNode(parent_handle) } {
+NodeBuilder::NodeBuilder(NodeTree &node_tree, const Handle<NodeTree> parent_handle, const Layout new_layout) : node_reference{ node_tree, node_tree.AddNode(parent_handle) } {
     style.width = new_layout.width;
     style.height = new_layout.height;
 }
@@ -107,7 +109,7 @@ NodeBuilder& NodeBuilder::GapAuto() {
     style.gap_auto = true;
     return *this;
 }
-NodeBuilder &NodeBuilder::Direction(FlexDirection direction) {
+NodeBuilder &NodeBuilder::Direction(const FlexDirection direction) {
     style.direction = direction;
     return *this;
 }
@@ -134,7 +136,7 @@ NodeBuilder &NodeBuilder::Text(String &&string, const FontSizes font_size) {
     properties.font_size = font_size;
     return *this;
 }
-NodeBuilder &NodeBuilder::Alignment(ui::Alignment alignment) {
+NodeBuilder &NodeBuilder::Alignment(const ui::Alignment alignment) {
     style.alignment = alignment;
     return *this;
 }
@@ -142,10 +144,10 @@ NodeBuilder &NodeBuilder::Right() { return Alignment(right); }
 NodeBuilder &NodeBuilder::Center() { return Alignment(center); }
 NodeBuilder &NodeBuilder::Left() { return Alignment(left); }
 SDL_Color LightenColor(const SDL_Color color, const f32 factor) {
-    auto lerp = [] (u8 channel, f32 factor, u8 target) -> u8 { return static_cast<u8>(channel + (target - channel) * factor); };
+    auto lerp = [] (const u8 channel, const f32 factor, const u8 target) -> u8 { return static_cast<u8>(channel + (target - channel) * factor); };
     return SDL_Color { lerp(color.r, factor, 255), lerp(color.g, factor, 255), lerp(color.b, factor, 255), color.a };
 }
-NodeHandle NodeBuilder::Build() const {
+Handle<NodeTree> NodeBuilder::Build() const {
     node_reference.tree.MarkDirty();
     return node_reference.node_handle;
 }

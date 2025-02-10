@@ -125,6 +125,20 @@ protected:
     u32 index;
 };
 
+template<class T> struct Handle {
+    u32 id;
+    explicit constexpr Handle(const u32 value) noexcept : id(value) { }
+};
+
+template<class T> struct HandleOptional {
+    [[nodiscard]] constexpr HandleOptional() noexcept : id(U32_MAX) { }
+    [[nodiscard]] constexpr explicit HandleOptional(const u32 value) noexcept : id(value) { }
+    [[nodiscard]] constexpr HandleOptional(const Handle<T> handle) noexcept : id(handle.id) { }
+    [[nodiscard]] constexpr bool IsValid() const noexcept { return id != U32_MAX; }
+    [[nodiscard]] constexpr Handle<T> GetHandle() const noexcept { return Handle<T> { id }; }
+    u32 id;
+};
+
 inline const Entity Entity::NONE = Entity { };
 
 template <Derived<Entity> T = Entity> struct OptionalEntity {

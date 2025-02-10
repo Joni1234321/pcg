@@ -5,6 +5,7 @@
 #include "r_engine.hpp"
 #include "r_ui_node.hpp"
 #include "u_collections.hpp"
+#include "u_types.hpp"
 
 #include <SDL3/SDL_render.h>
 #include <SDL3_ttf/SDL_ttf.h>
@@ -30,7 +31,7 @@ struct NodeRenderSystem {
     void RenderTrees(SDL_Renderer* renderer);
 };
 class TickFrame {
-    NodeHandleOptional tick_handle { };
+    HandleOptional<ui::NodeTree> tick_handle { };
 
 public:
     NodeTree& tree;
