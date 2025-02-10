@@ -36,7 +36,7 @@ class TickFrame {
 public:
     NodeTree& tree;
     TickFrame() : tree { NodeRenderSystem::node_trees.EmplaceBack() } { tick_handle = B(tree, hug, { 10U, 0U }).Text("Tick", FontSizes::tiny).Fill(colors::radiant_orange).Build(); }
-    void SetInfo(u32 tick, u32 tps, u32 fps) { tree.GetProperties(tick_handle.GetHandle()).text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, tps, fps); }
+    void SetInfo(u32 tick, u32 tps, u32 fps) { tree.node_properties[tick_handle.GetHandle()].text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, tps, fps); }
 };
 struct InspectorFrame {
     NodeTree& tree;

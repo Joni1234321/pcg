@@ -25,10 +25,10 @@ struct GameData {
 struct MainMenuFrame {
     ui::NodeTree& tree;
     explicit MainMenuFrame();
-    [[nodiscard]] constexpr ui::NodeStyle& StartButton() { return tree.GetStyle(start_button.GetHandle()); }
-    constexpr void SetStartButtonText(String&& string) { tree.GetProperties(start_button.GetHandle()).text = string; }
-    [[nodiscard]] constexpr ui::NodeStyle& SettingsButton() { return tree.GetStyle(settings_button.GetHandle()); }
-    [[nodiscard]] constexpr ui::NodeStyle& ExitButton() { return tree.GetStyle(exit_button.GetHandle()); }
+    [[nodiscard]] constexpr ui::NodeStyle& StartButton() { return tree.node_styles[start_button.GetHandle()]; }
+    constexpr void SetStartButtonText(String&& string) { tree.node_properties[start_button.GetHandle()].text = string; }
+    [[nodiscard]] constexpr ui::NodeStyle& SettingsButton() { return tree.node_styles[settings_button.GetHandle()]; }
+    [[nodiscard]] constexpr ui::NodeStyle& ExitButton() { return tree.node_styles[exit_button.GetHandle()]; }
 
 private:
     HandleOptional<ui::Node> start_button { };
@@ -38,12 +38,12 @@ private:
 struct GameFrame {
     ui::NodeTree& tree;
     explicit GameFrame();
-    [[nodiscard]] constexpr ui::NodeStyle& Frame() { return tree.GetStyle(frame.GetHandle()); }
-    [[nodiscard]] constexpr ui::NodeStyle& GameArea() { return tree.GetStyle(game_area.GetHandle()); }
-    [[nodiscard]] constexpr ui::NodeStyle& Box() { return tree.GetStyle(box.GetHandle()); }
-    [[nodiscard]] constexpr ui::NodeStyle& ScoreBox() { return tree.GetStyle(score_box.GetHandle()); }
-    void SetTime(const u32 time_ms) { tree.GetProperties(time_label.GetHandle()).text = std::format("Time {:02}:{:02}.{:02}", time_ms / (1000U * 60U), time_ms / 1000U % 60U, time_ms % 100U); }
-    void SetScore(const u32 score) { tree.GetProperties(score_label.GetHandle()).text = std::format("Score {:4}", score); }
+    [[nodiscard]] constexpr ui::NodeStyle& Frame() { return tree.node_styles[frame.GetHandle()]; }
+    [[nodiscard]] constexpr ui::NodeStyle& GameArea() { return tree.node_styles[game_area.GetHandle()]; }
+    [[nodiscard]] constexpr ui::NodeStyle& Box() { return tree.node_styles[box.GetHandle()]; }
+    [[nodiscard]] constexpr ui::NodeStyle& ScoreBox() { return tree.node_styles[score_box.GetHandle()]; }
+    void SetTime(const u32 time_ms) { tree.node_properties[time_label.GetHandle()].text = std::format("Time {:02}:{:02}.{:02}", time_ms / (1000U * 60U), time_ms / 1000U % 60U, time_ms % 100U); }
+    void SetScore(const u32 score) { tree.node_properties[score_label.GetHandle()].text = std::format("Score {:4}", score); }
 
 private:
     HandleOptional<ui::Node> time_label { };

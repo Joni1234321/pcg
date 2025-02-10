@@ -41,7 +41,7 @@ Handle<Node> NodeTree::AddNode(const Handle<Node> parent_handle) {
     node_properties.EmplaceBack();
     node_ttf_texts.emplace_back();
 
-    Children(parent_handle).PushBack(node_handle);
+    children[parent_handle].PushBack(node_handle);
     return node_handle;
 }
 Handle<Node> NodeTree::AddNode(NodeStyle&& node, const Handle<Node> parent_handle) {
@@ -60,7 +60,7 @@ void NodeTree::Propagate(Handle<Node> node_handle, const NodeReaction& reaction)
     while (true) {
         std::invoke(reaction, NodeReference { *this, node_handle });
         if (node_handle.id == Root().id) { break; };
-        node_handle = Parent(node_handle);
+        node_handle = parents[node_handle];
     }
 }
 NodeBuilder::NodeBuilder(NodeTree &node_tree, const Layout new_layout, const uint2 position) : node_reference{ node_tree, node_tree.AddRoot() } {

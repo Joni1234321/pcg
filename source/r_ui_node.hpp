@@ -144,14 +144,6 @@ struct NodeTree {
     NodeTree& operator=(NodeTree&&) noexcept = default;
 
     [[nodiscard]] constexpr Handle<Node> Root() const { return node_styles.First(); }
-    [[nodiscard]] constexpr Handle<Node> Parent(const Handle<Node> node_handle) { return parents[node_handle]; }
-    [[nodiscard]] constexpr const List<Handle<Node>>& Children(const Handle<Node> node_handle) const { return children[node_handle]; }
-    [[nodiscard]] constexpr List<Handle<Node>>& Children(const Handle<Node> node_handle) { return children[node_handle]; }
-    [[nodiscard]] constexpr const NodeStyle& GetStyle(const Handle<Node> node_handle) const { return node_styles[node_handle]; }
-    [[nodiscard]] constexpr NodeStyle& GetStyle(const Handle<Node> node_handle) { return node_styles[node_handle]; }
-    [[nodiscard]] constexpr const NodeProperties& GetProperties(const Handle<Node> node_handle) const { return node_properties[node_handle]; }
-    [[nodiscard]] constexpr NodeProperties& GetProperties(const Handle<Node> node_handle) { return node_properties[node_handle]; }
-    [[nodiscard]] constexpr const std::unique_ptr<TTF_Text, DestroyText>& GetTTFText(const Handle<Node> node_handle) const { return node_ttf_texts[node_styles.HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr std::unique_ptr<TTF_Text, DestroyText>& GetTTFText(const Handle<Node> node_handle) { return node_ttf_texts[node_styles.HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr b8 Empty() const { return node_styles.Empty(); }
     [[nodiscard]] Handle<Node> AddRoot();
@@ -178,8 +170,8 @@ struct Layout {
 };
 class NodeBuilder {
     NodeReference node_reference;
-    NodeStyle& style { node_reference.tree.GetStyle(node_reference.node_handle) };
-    NodeProperties& properties { node_reference.tree.GetProperties(node_reference.node_handle) };
+    NodeStyle& style { node_reference.tree.node_styles[node_reference.node_handle] };
+    NodeProperties& properties { node_reference.tree.node_properties[node_reference.node_handle] };
 
 public:
     NodeBuilder(NodeTree& node_tree, Layout new_layout, uint2 position);
