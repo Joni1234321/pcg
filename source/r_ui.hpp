@@ -80,7 +80,6 @@ struct AnimationSystem {
     HandleList<Animation> animations { DEFAULT_COUNT };
 
     Handle<Animation> Register(const AnimationDesc& animation_desc);
-    [[nodiscard]] Animation& GetAnimation(Handle<Animation> animation_handle);
     void StartAnimation(Handle<Animation> animation_handle);
     void operator()();
 };
@@ -102,7 +101,6 @@ struct ParticleSystem {
 
     ParticleProtocolHandle Register(const ParticleProtocol& protocol) {
         protocols.PushBack(protocol);
-        particles.EmplaceBack(DEFAULT_COUNT);
         return ParticleProtocolHandle { particles.Size() - 1U };
     }
     [[nodiscard]] ParticleProtocol& GetParticleProtocol(const ParticleProtocolHandle protocol_handle) { return protocols[protocol_handle.id]; }

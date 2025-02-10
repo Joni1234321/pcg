@@ -277,17 +277,16 @@ f32 EasingCos(const f32 t) { return math::Cos(t) * 0.5F + 0.5F; }
 Handle<Animation> AnimationSystem::Register(const AnimationDesc& animation_desc) {
     Logger().Log("Size of action {} and action {} size {}", sizeof(animation_desc), sizeof(animation_desc.action), animations.Size());
     const Animation animation { .action = animation_desc.action, .offset_ms = static_cast<u32>(SDL_GetTicks()), .duration_ms = animation_desc.duration_ms, .state = animation_desc.state };
-    for (u32 i = 0U; i < animations.Size(); ++i) {
-        if (animations[i].state == AnimationState::recycle) {
-            animations[i] = animation;
-            return Handle<Animation> { i };
+    for (Handle<Animation> handle { 0U }; handle.id < animations.Size(); ++handle.id) {
+        if (animations[handle].state == AnimationState::recycle) {
+            animations[handle] = animation;
+            return handle;
         }
     }
     return animations.PushBack(animation);
 }
-Animation& AnimationSystem::GetAnimation(const Handle<Animation> animation_handle) { return animations[animation_handle.id]; }
 void AnimationSystem::StartAnimation(const Handle<Animation> animation_handle) {
-    Animation& animation = GetAnimation(animation_handle);
+    Animation& animation = animations[animation_handle];
     animation.offset_ms = static_cast<u32>(SDL_GetTicks());
     switch (animation.state) {
         case AnimationState::run_once:

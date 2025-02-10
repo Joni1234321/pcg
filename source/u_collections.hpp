@@ -183,8 +183,8 @@ template <typename T> struct HandleList {
     [[nodiscard]] constexpr b8 Empty() const { return data.Empty(); }
     [[nodiscard]] constexpr u32 Size() const { return data.Size(); }
 
-    constexpr const T& operator[](u32 pos) const { return data[pos]; }
-    constexpr T& operator[](u32 pos) { return data[pos]; }
+    constexpr const T& operator[](const Handle<T> pos) const { return data[pos.id]; }
+    constexpr T& operator[](const Handle<T> pos) { return data[pos.id]; }
 
     [[nodiscard]] constexpr Iter begin() { return data.begin(); }
     [[nodiscard]] constexpr Iter end() { return data.end(); }
