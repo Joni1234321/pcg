@@ -77,11 +77,11 @@ struct Animation {
 };
 struct AnimationSystem {
     static constexpr u32 DEFAULT_COUNT = 128U;
-    List<Animation> animations { DEFAULT_COUNT };
+    HandleList<Animation> animations { DEFAULT_COUNT };
 
-    Handle<AnimationSystem> Register(const AnimationDesc& animation_desc);
-    [[nodiscard]] Animation& GetAnimation(Handle<AnimationSystem> animation_handle);
-    void StartAnimation(Handle<AnimationSystem> animation_handle);
+    Handle<Animation> Register(const AnimationDesc& animation_desc);
+    [[nodiscard]] Animation& GetAnimation(Handle<Animation> animation_handle);
+    void StartAnimation(Handle<Animation> animation_handle);
     void operator()();
 };
 

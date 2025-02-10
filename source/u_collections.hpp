@@ -159,19 +159,29 @@ protected:
 
 template <typename T> struct HandleList {
     using Iter = typename List<T>::Iter;
-    using CIter = typename List<T>::Iter::const_iterator;
+    using CIter = typename List<T>::CIter;
 
     constexpr HandleList() : data() { }
     constexpr HandleList(std::initializer_list<T> init_list) : data(init_list) { }
-    explicit constexpr HandleList(u32 size) : data() { data.reserve(size); }
-    explicit constexpr HandleList(u32 size, const T& val) : data(size, val, std::allocator<T>()) { }
+    explicit constexpr HandleList(u32 size) : data() { data.Reserve(size); }
+    explicit constexpr HandleList(u32 size, const T& val) : data(size, val) { }
     constexpr ~HandleList() = default;
 
-    template <typename... Args> Handle<T> EmplaceBack(Args&&... args) {
+    template <typename... Args> Handle<T> [[nodiscard]] EmplaceBack(Args&&... args) {
         data.emplace_back(std::forward<Args>(args)...);
         return Handle<T> { data.Size() - 1U };
     }
-    constexpr void Clear() { data.clear(); }
+    [[nodiscard]] constexpr Handle<T> PushBack(const T& t) {
+        data.PushBack(t);
+        return Handle<T> { data.Size() - 1U };
+    }
+    [[nodiscard]] constexpr Handle<T> PushBack(T&& t) {
+        data.PushBack(std::move(t));
+        return Handle<T> { data.Size() - 1U };
+    }
+    constexpr void Clear() { data.Clear(); }
+    [[nodiscard]] constexpr b8 Empty() const { return data.Empty(); }
+    [[nodiscard]] constexpr u32 Size() const { return data.Size(); }
 
     constexpr const T& operator[](u32 pos) const { return data[pos]; }
     constexpr T& operator[](u32 pos) { return data[pos]; }
@@ -185,6 +195,7 @@ template <typename T> struct HandleList {
     [[nodiscard]] constexpr CIter end() const { return data.end(); }
     [[nodiscard]] constexpr const T& Front() const { return data.front(); }
     [[nodiscard]] constexpr const T& Back() const { return data.back(); }
+
 private:
     List<T> data;
 };

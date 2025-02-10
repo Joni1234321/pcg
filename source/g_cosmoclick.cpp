@@ -146,8 +146,8 @@ private:
     std::unique_ptr<ValueUnit<Money>> money;
     std::unique_ptr<ValueUnit<Income>> income;
     List<BuildItem> shop;
-    HandleOptional<AnimationSystem> planet_animation_handle;
-    HandleOptional<AnimationSystem> click_animation_handle;
+    HandleOptional<Animation> planet_animation_handle;
+    HandleOptional<Animation> click_animation_handle;
 };
 enum class Scene { game, quit };
 class CosmoClick {
