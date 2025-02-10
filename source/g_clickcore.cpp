@@ -83,7 +83,7 @@ class ClickCore {
     Scene scene { Scene::main_menu };
 
 public:
-    ClickCore() { clear_color = colors::dark_slate; }
+    ClickCore() { Window::clear_color = colors::dark_slate; }
     [[nodiscard]] constexpr b8 IsRunning() const { return tick_system.running; }
     void Tick();
 

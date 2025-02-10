@@ -35,11 +35,12 @@ Handle<Node> NodeTree::AddRoot(NodeStyle&& root) {
 Handle<Node> NodeTree::AddNode(const Handle<Node> parent_handle) {
     ASSERT_DBG(!node_styles.Empty(), "Adding node without root");
     const Handle<Node> node_handle = node_styles.EmplaceBack();
-    ASSERT_DBG(node_handle.id != parent_handle.id, "Assigning node to itself recursion");
     parents.PushBack(parent_handle);
     children.EmplaceBack();
     node_properties.EmplaceBack();
     node_ttf_texts.EmplaceBack( nullptr );
+
+    ASSERT_DBG(node_handle.id != parent_handle.id, "Assigning node to itself recursion");
 
     children[parent_handle].PushBack(node_handle);
     return node_handle;

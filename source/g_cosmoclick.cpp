@@ -177,7 +177,7 @@ private:
 constexpr u32 planet_size = 400U;
 constexpr u32 planet_border_size = 40U;
 CosmoClick::CosmoClick() {
-    clear_color = colors::yellow;
+    Window::clear_color = colors::dark_grey;
 }
 void CosmoClick::Tick() {
     tick_system();

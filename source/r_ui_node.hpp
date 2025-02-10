@@ -129,7 +129,7 @@ struct NodeTree {
     static constexpr u32 DEFAULT_COUNT = 64U;
     HandleList<NodeStyle> node_styles { DEFAULT_COUNT };
     HandleList<NodeProperties> node_properties { DEFAULT_COUNT };
-    HandleList<UniquePointer<TTF_Text, DestroyText>> node_ttf_texts {  };
+    HandleList<UniquePointer<TTF_Text, DestroyText>> node_ttf_texts { DEFAULT_COUNT };
     HandleList<Handle<Node>> parents { DEFAULT_COUNT };
     HandleList<List<Handle<Node>>> children { DEFAULT_COUNT };
 

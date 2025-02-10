@@ -23,12 +23,12 @@ inline AbsolutePath Asset(const AssetPath& asset_path) {
 
 namespace pce {
 using Tick = NamedType<u32, struct TickTag, Arithmetic>;
-static SDL_Color clear_color;
 
 struct Window {
     static SDL_Window* window;
     static SDL_Renderer* renderer;
     static uint2 screen_size;
+    static SDL_Color clear_color;
 
     explicit Window(const uint2 size) {
         constexpr u32 window_flags = SDL_WINDOW_RESIZABLE;
@@ -58,11 +58,11 @@ struct Window {
 inline SDL_Window* Window::window;
 inline SDL_Renderer* Window::renderer;
 inline uint2 Window::screen_size;
-
+inline SDL_Color Window::clear_color;
 
 struct RenderSystem {
     void operator()() {
-        (void)SDL_SetRenderDrawColor(Window::renderer, clear_color.r, clear_color.g, clear_color.b, clear_color.a);
+        (void)SDL_SetRenderDrawColor(Window::renderer, Window::clear_color.r, Window::clear_color.g, Window::clear_color.b, Window::clear_color.a);
         (void)SDL_RenderClear(Window::renderer);
     }
     void Present() {
