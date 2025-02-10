@@ -157,6 +157,37 @@ protected:
     std::vector<T> data;
 };
 
+template <typename T> struct HandleList {
+    using Iter = typename List<T>::Iter;
+    using CIter = typename List<T>::Iter::const_iterator;
+
+    constexpr HandleList() : data() { }
+    constexpr HandleList(std::initializer_list<T> init_list) : data(init_list) { }
+    explicit constexpr HandleList(u32 size) : data() { data.reserve(size); }
+    explicit constexpr HandleList(u32 size, const T& val) : data(size, val, std::allocator<T>()) { }
+    constexpr ~HandleList() = default;
+
+    template <typename... Args> Handle<T> EmplaceBack(Args&&... args) {
+        data.emplace_back(std::forward<Args>(args)...);
+        return Handle<T> { data.Size() - 1U };
+    }
+    constexpr void Clear() { data.clear(); }
+
+    constexpr const T& operator[](u32 pos) const { return data[pos]; }
+    constexpr T& operator[](u32 pos) { return data[pos]; }
+
+    [[nodiscard]] constexpr Iter begin() { return data.begin(); }
+    [[nodiscard]] constexpr Iter end() { return data.end(); }
+    [[nodiscard]] constexpr T& Front() { return data.front(); }
+    [[nodiscard]] constexpr T& Back() { return data.back(); }
+
+    [[nodiscard]] constexpr CIter begin() const { return data.begin(); }
+    [[nodiscard]] constexpr CIter end() const { return data.end(); }
+    [[nodiscard]] constexpr const T& Front() const { return data.front(); }
+    [[nodiscard]] constexpr const T& Back() const { return data.back(); }
+private:
+    List<T> data;
+};
 template <typename K, typename V> class FlatMap {
     List<K> keys { };
     List<V> values { };

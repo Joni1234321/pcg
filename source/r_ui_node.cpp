@@ -17,11 +17,11 @@ const Font& FontCollection::GetFont(const FontSizes size) {
 }
 
 // NodeTree
-constexpr u32 NodeTree::HandleToIndex(const Handle<NodeTree> node_handle) const {
+constexpr u32 NodeTree::HandleToIndex(const Handle<Node> node_handle) const {
     ASSERT_DBG(ValidHandle(node_handle), "Out of bounds, most likely destroyed");
     return node_handle.id - offset_handle.id;
 }
-Handle<NodeTree> NodeTree::AddRoot() {
+Handle<Node> NodeTree::AddRoot() {
     ASSERT_DBG(node_styles.Empty(), "Setting root non empty tree");
     node_styles.EmplaceBack();
     parents.EmplaceBack(Root());
@@ -31,14 +31,14 @@ Handle<NodeTree> NodeTree::AddRoot() {
 
     return Root();
 }
-Handle<NodeTree> NodeTree::AddRoot(NodeStyle&& root) {
-    const Handle<NodeTree> node_handle = AddRoot();
+Handle<Node> NodeTree::AddRoot(NodeStyle&& root) {
+    const Handle<Node> node_handle = AddRoot();
     node_styles[HandleToIndex(node_handle)] = std::move(root);
     return node_handle;
 }
-Handle<NodeTree> NodeTree::AddNode(const Handle<NodeTree> parent_handle) {
+Handle<Node> NodeTree::AddNode(const Handle<Node> parent_handle) {
     ASSERT_DBG(!node_styles.Empty(), "Adding node without root");
-    const Handle<NodeTree> node_handle { offset_handle.id + node_styles.Size() };
+    const Handle<Node> node_handle { offset_handle.id + node_styles.Size() };
     ASSERT_DBG(node_handle.id != parent_handle.id, "Assigning node to itself recursion");
     node_styles.EmplaceBack();
     parents.PushBack(parent_handle);
@@ -49,8 +49,8 @@ Handle<NodeTree> NodeTree::AddNode(const Handle<NodeTree> parent_handle) {
     Children(parent_handle).PushBack(node_handle);
     return node_handle;
 }
-Handle<NodeTree> NodeTree::AddNode(NodeStyle&& node, const Handle<NodeTree> parent_handle) {
-    const Handle<NodeTree> node_handle = AddNode(parent_handle);
+Handle<Node> NodeTree::AddNode(NodeStyle&& node, const Handle<Node> parent_handle) {
+    const Handle<Node> node_handle = AddNode(parent_handle);
     node_styles[HandleToIndex(node_handle)] = std::move(node);
     return node_handle;
 }
@@ -63,7 +63,7 @@ void NodeTree::Clear() {
     node_properties.Clear();
     node_ttf_texts.clear();
 }
-void NodeTree::Propagate(Handle<NodeTree> node_handle, const NodeReaction& reaction) {
+void NodeTree::Propagate(Handle<Node> node_handle, const NodeReaction& reaction) {
     while (true) {
         std::invoke(reaction, NodeReference { *this, node_handle });
         if (node_handle.id == Root().id) { break; };
@@ -75,7 +75,7 @@ NodeBuilder::NodeBuilder(NodeTree &node_tree, const Layout new_layout, const uin
     style.width = new_layout.width;
     style.height = new_layout.height;
 }
-NodeBuilder::NodeBuilder(NodeTree &node_tree, const Handle<NodeTree> parent_handle, const Layout new_layout) : node_reference{ node_tree, node_tree.AddNode(parent_handle) } {
+NodeBuilder::NodeBuilder(NodeTree &node_tree, const Handle<Node> parent_handle, const Layout new_layout) : node_reference{ node_tree, node_tree.AddNode(parent_handle) } {
     style.width = new_layout.width;
     style.height = new_layout.height;
 }
@@ -147,7 +147,7 @@ SDL_Color LightenColor(const SDL_Color color, const f32 factor) {
     auto lerp = [] (const u8 channel, const f32 factor, const u8 target) -> u8 { return static_cast<u8>(channel + (target - channel) * factor); };
     return SDL_Color { lerp(color.r, factor, 255), lerp(color.g, factor, 255), lerp(color.b, factor, 255), color.a };
 }
-Handle<NodeTree> NodeBuilder::Build() const {
+Handle<Node> NodeBuilder::Build() const {
     node_reference.tree.MarkDirty();
     return node_reference.node_handle;
 }

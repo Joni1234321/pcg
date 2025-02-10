@@ -31,7 +31,7 @@ struct NodeRenderSystem {
     void RenderTrees(SDL_Renderer* renderer);
 };
 class TickFrame {
-    HandleOptional<ui::NodeTree> tick_handle { };
+    HandleOptional<Node> tick_handle { };
 
 public:
     NodeTree& tree;
