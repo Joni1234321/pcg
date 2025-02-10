@@ -157,9 +157,10 @@ protected:
     std::vector<T> data;
 };
 
-template <typename T> struct HandleList {
+template <typename T, typename H = Handle<T>> struct HandleList {
     using Iter = typename List<T>::Iter;
     using CIter = typename List<T>::CIter;
+    using Handle = H;
 
     constexpr HandleList() : data() { }
     constexpr HandleList(std::initializer_list<T> init_list) : data(init_list) { }
@@ -167,24 +168,30 @@ template <typename T> struct HandleList {
     explicit constexpr HandleList(u32 size, const T& val) : data(size, val) { }
     constexpr ~HandleList() = default;
 
-    template <typename... Args> Handle<T> [[nodiscard]] EmplaceBack(Args&&... args) {
-        data.emplace_back(std::forward<Args>(args)...);
-        return Handle<T> { data.Size() - 1U };
+    template <typename... Args> Handle [[nodiscard]] EmplaceBack(Args&&... args) {
+        data.EmplaceBack(std::forward<Args>(args)...);
+        return Handle { offset_handle.id + data.Size() - 1U };
     }
-    [[nodiscard]] constexpr Handle<T> PushBack(const T& t) {
+    [[nodiscard]] constexpr Handle PushBack(const T& t) {
         data.PushBack(t);
-        return Handle<T> { data.Size() - 1U };
+        return Handle { offset_handle.id + data.Size() - 1U };
     }
-    [[nodiscard]] constexpr Handle<T> PushBack(T&& t) {
+    [[nodiscard]] constexpr Handle PushBack(T&& t) {
         data.PushBack(std::move(t));
-        return Handle<T> { data.Size() - 1U };
+        return Handle { offset_handle.id + data.Size() - 1U };
     }
-    constexpr void Clear() { data.Clear(); }
     [[nodiscard]] constexpr b8 Empty() const { return data.Empty(); }
     [[nodiscard]] constexpr u32 Size() const { return data.Size(); }
 
-    constexpr const T& operator[](const Handle<T> pos) const { return data[pos.id]; }
-    constexpr T& operator[](const Handle<T> pos) { return data[pos.id]; }
+    constexpr void Clear() {
+        offset_handle.id += Size();
+        data.Clear();
+    }
+
+    [[nodiscard]] constexpr const T& operator[](const Handle handle) const { return data[HandleToIndex(handle)]; }
+    [[nodiscard]] constexpr T& operator[](const Handle handle) { return data[HandleToIndex(handle)]; }
+
+    [[nodiscard]] constexpr Handle First() const { return offset_handle; }
 
     [[nodiscard]] constexpr Iter begin() { return data.begin(); }
     [[nodiscard]] constexpr Iter end() { return data.end(); }
@@ -196,8 +203,15 @@ template <typename T> struct HandleList {
     [[nodiscard]] constexpr const T& Front() const { return data.front(); }
     [[nodiscard]] constexpr const T& Back() const { return data.back(); }
 
+    [[nodiscard]] constexpr u32 HandleToIndex(const H handle) const {
+        assert(ValidHandle(handle));
+        return handle.id - offset_handle.id;
+    }
+    [[nodiscard]] constexpr b8 ValidHandle(const H handle) const { return (handle.id - offset_handle.id) < Size(); }
+
 private:
     List<T> data;
+    Handle offset_handle { 0U };
 };
 template <typename K, typename V> class FlatMap {
     List<K> keys { };

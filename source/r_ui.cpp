@@ -243,7 +243,7 @@ void NodeRenderSystem::HoverClickEvents(const InputSystem& input_system) {
         hovered_tree.Propagate(hovered_node, Click);
     }
 
-    if (hovered.has_value() && !hovered.value().tree.get().ValidHandle(hovered.value().node_handle)) { hovered = std::nullopt; }
+    if (hovered.has_value() && !hovered.value().tree.get().node_styles.ValidHandle(hovered.value().node_handle)) { hovered = std::nullopt; }
     const HoveredType previous_hovered = hovered;
     hovered = GetHovered(*this, input_system.MousePosition());
 

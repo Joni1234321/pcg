@@ -124,19 +124,17 @@ struct NodeProperties {
     NodeReaction on_hover { };
     NodeReaction on_hover_out { };
 };
-class NodeTree {
+struct NodeTree {
+    template<class T> using HandleList = HandleList<T, Handle<Node>>;
     static constexpr u32 DEFAULT_COUNT = 64U;
-    List<NodeStyle> node_styles { DEFAULT_COUNT };
-    List<NodeProperties> node_properties { DEFAULT_COUNT };
+    HandleList<NodeStyle> node_styles { DEFAULT_COUNT };
+    HandleList<NodeProperties> node_properties { DEFAULT_COUNT };
     std::vector<std::unique_ptr<TTF_Text, DestroyText>> node_ttf_texts { };
-    List<Handle<Node>> parents { DEFAULT_COUNT };
-    List<List<Handle<Node>>> children { DEFAULT_COUNT };
+    HandleList<Handle<Node>> parents { DEFAULT_COUNT };
+    HandleList<List<Handle<Node>>> children { DEFAULT_COUNT };
 
-    Handle<Node> offset_handle { 0U };
     b8 display { true };
-
-public:
-    bool dirty { true };
+    b8 dirty { true };
     FrameElements frame_elements { };
 
     NodeTree() = default;
@@ -145,16 +143,16 @@ public:
     NodeTree(NodeTree&&) noexcept = default;
     NodeTree& operator=(NodeTree&&) noexcept = default;
 
-    [[nodiscard]] constexpr Handle<Node> Root() const { return offset_handle; }
-    [[nodiscard]] constexpr Handle<Node> Parent(const Handle<Node> node_handle) { return parents[HandleToIndex(node_handle)]; }
-    [[nodiscard]] constexpr const List<Handle<Node>>& Children(const Handle<Node> node_handle) const { return children[HandleToIndex(node_handle)]; }
-    [[nodiscard]] constexpr List<Handle<Node>>& Children(const Handle<Node> node_handle) { return children[HandleToIndex(node_handle)]; }
-    [[nodiscard]] constexpr const NodeStyle& GetStyle(const Handle<Node> node_handle) const { return node_styles[HandleToIndex(node_handle)]; }
-    [[nodiscard]] constexpr NodeStyle& GetStyle(const Handle<Node> node_handle) { return node_styles[HandleToIndex(node_handle)]; }
-    [[nodiscard]] constexpr const NodeProperties& GetProperties(const Handle<Node> node_handle) const { return node_properties[HandleToIndex(node_handle)]; }
-    [[nodiscard]] constexpr NodeProperties& GetProperties(const Handle<Node> node_handle) { return node_properties[HandleToIndex(node_handle)]; }
-    [[nodiscard]] constexpr const std::unique_ptr<TTF_Text, DestroyText>& GetTTFText(const Handle<Node> node_handle) const { return node_ttf_texts[HandleToIndex(node_handle)]; }
-    [[nodiscard]] constexpr std::unique_ptr<TTF_Text, DestroyText>& GetTTFText(const Handle<Node> node_handle) { return node_ttf_texts[HandleToIndex(node_handle)]; }
+    [[nodiscard]] constexpr Handle<Node> Root() const { return node_styles.First(); }
+    [[nodiscard]] constexpr Handle<Node> Parent(const Handle<Node> node_handle) { return parents[node_handle]; }
+    [[nodiscard]] constexpr const List<Handle<Node>>& Children(const Handle<Node> node_handle) const { return children[node_handle]; }
+    [[nodiscard]] constexpr List<Handle<Node>>& Children(const Handle<Node> node_handle) { return children[node_handle]; }
+    [[nodiscard]] constexpr const NodeStyle& GetStyle(const Handle<Node> node_handle) const { return node_styles[node_handle]; }
+    [[nodiscard]] constexpr NodeStyle& GetStyle(const Handle<Node> node_handle) { return node_styles[node_handle]; }
+    [[nodiscard]] constexpr const NodeProperties& GetProperties(const Handle<Node> node_handle) const { return node_properties[node_handle]; }
+    [[nodiscard]] constexpr NodeProperties& GetProperties(const Handle<Node> node_handle) { return node_properties[node_handle]; }
+    [[nodiscard]] constexpr const std::unique_ptr<TTF_Text, DestroyText>& GetTTFText(const Handle<Node> node_handle) const { return node_ttf_texts[node_styles.HandleToIndex(node_handle)]; }
+    [[nodiscard]] constexpr std::unique_ptr<TTF_Text, DestroyText>& GetTTFText(const Handle<Node> node_handle) { return node_ttf_texts[node_styles.HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr b8 Empty() const { return node_styles.Empty(); }
     [[nodiscard]] Handle<Node> AddRoot();
     [[nodiscard]] Handle<Node> AddRoot(NodeStyle&& root);
@@ -167,10 +165,6 @@ public:
     constexpr void SetDisplay(const b8 value) noexcept { display = value; }
 
     [[nodiscard]] constexpr b8 GetDisplay() const noexcept { return display; }
-    [[nodiscard]] constexpr b8 ValidHandle(const Handle<Node> node_handle) const { return (node_handle.id - offset_handle.id) < node_styles.Size(); }
-
-private:
-    [[nodiscard]] constexpr u32 HandleToIndex(Handle<Node> node_handle) const;
 };
 struct Layout {
     LayoutLength width;

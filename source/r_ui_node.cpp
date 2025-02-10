@@ -17,10 +17,6 @@ const Font& FontCollection::GetFont(const FontSizes size) {
 }
 
 // NodeTree
-constexpr u32 NodeTree::HandleToIndex(const Handle<Node> node_handle) const {
-    ASSERT_DBG(ValidHandle(node_handle), "Out of bounds, most likely destroyed");
-    return node_handle.id - offset_handle.id;
-}
 Handle<Node> NodeTree::AddRoot() {
     ASSERT_DBG(node_styles.Empty(), "Setting root non empty tree");
     node_styles.EmplaceBack();
@@ -33,14 +29,13 @@ Handle<Node> NodeTree::AddRoot() {
 }
 Handle<Node> NodeTree::AddRoot(NodeStyle&& root) {
     const Handle<Node> node_handle = AddRoot();
-    node_styles[HandleToIndex(node_handle)] = std::move(root);
+    node_styles[node_handle] = std::move(root);
     return node_handle;
 }
 Handle<Node> NodeTree::AddNode(const Handle<Node> parent_handle) {
     ASSERT_DBG(!node_styles.Empty(), "Adding node without root");
-    const Handle<Node> node_handle { offset_handle.id + node_styles.Size() };
+    const Handle<Node> node_handle = node_styles.EmplaceBack();
     ASSERT_DBG(node_handle.id != parent_handle.id, "Assigning node to itself recursion");
-    node_styles.EmplaceBack();
     parents.PushBack(parent_handle);
     children.EmplaceBack();
     node_properties.EmplaceBack();
@@ -51,12 +46,10 @@ Handle<Node> NodeTree::AddNode(const Handle<Node> parent_handle) {
 }
 Handle<Node> NodeTree::AddNode(NodeStyle&& node, const Handle<Node> parent_handle) {
     const Handle<Node> node_handle = AddNode(parent_handle);
-    node_styles[HandleToIndex(node_handle)] = std::move(node);
+    node_styles[node_handle] = std::move(node);
     return node_handle;
 }
 void NodeTree::Clear() {
-    offset_handle.id += node_styles.Size();
-
     node_styles.Clear();
     parents.Clear();
     children.Clear();
