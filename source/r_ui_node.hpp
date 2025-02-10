@@ -129,7 +129,7 @@ struct NodeTree {
     static constexpr u32 DEFAULT_COUNT = 64U;
     HandleList<NodeStyle> node_styles { DEFAULT_COUNT };
     HandleList<NodeProperties> node_properties { DEFAULT_COUNT };
-    std::vector<std::unique_ptr<TTF_Text, DestroyText>> node_ttf_texts { };
+    HandleList<std::unique_ptr<TTF_Text, DestroyText>> node_ttf_texts {  };
     HandleList<Handle<Node>> parents { DEFAULT_COUNT };
     HandleList<List<Handle<Node>>> children { DEFAULT_COUNT };
 
@@ -144,7 +144,6 @@ struct NodeTree {
     NodeTree& operator=(NodeTree&&) noexcept = default;
 
     [[nodiscard]] constexpr Handle<Node> Root() const { return node_styles.First(); }
-    [[nodiscard]] constexpr std::unique_ptr<TTF_Text, DestroyText>& GetTTFText(const Handle<Node> node_handle) { return node_ttf_texts[node_styles.HandleToIndex(node_handle)]; }
     [[nodiscard]] constexpr b8 Empty() const { return node_styles.Empty(); }
     [[nodiscard]] Handle<Node> AddRoot();
     [[nodiscard]] Handle<Node> AddRoot(NodeStyle&& root);

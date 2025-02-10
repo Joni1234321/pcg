@@ -39,7 +39,7 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
     for (const Handle<Node> node_handle : node_handles) {
         NodeStyle& node_style = tree.node_styles[node_handle];
         NodeProperties& node_properties = tree.node_properties[node_handle];
-        auto& ttf_text = tree.GetTTFText(node_handle);
+        auto& ttf_text = tree.node_ttf_texts[node_handle];
         if (node_properties.text.Empty()) {
             ttf_text.reset();
             continue;
@@ -67,7 +67,7 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
         if (node_style.width.constraint != LayoutLength::child_constraint && node_style.height.constraint != LayoutLength::child_constraint) { continue; }
 
         uint2 text_size { 0U, 0U };
-        if (!node_properties.text.Empty()) { (void)TTF_GetTextSize(tree.GetTTFText(node_handle).get(), reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
+        if (!node_properties.text.Empty()) { (void)TTF_GetTextSize(tree.node_ttf_texts[node_handle].get(), reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
         LayoutLength& major_layout = get_major_layout(node_style, node_style.direction);
         if (major_layout.constraint == LayoutLength::child_constraint) {
             const u32 children_major = get_major_pixels_taken_by_children(node_handle, node_style.direction);
@@ -211,7 +211,7 @@ const FrameElements& GetFrameElements(NodeRenderSystem& node_render_system, Node
                     RectangleElement rectangle { .color = node_style.background_color, .rect = node_style.OuterRect() };
                     tree.frame_elements.rectangles.PushBack(rectangle);
                 } else {
-                    TextElement text { .text = tree.GetTTFText(node_handle).get(), .position = float2 { static_cast<f32>(node_style.InnerBoxPosition().x), static_cast<f32>(node_style.InnerBoxPosition().y) } };
+                    TextElement text { .text = tree.node_ttf_texts[node_handle].get(), .position = float2 { static_cast<f32>(node_style.InnerBoxPosition().x), static_cast<f32>(node_style.InnerBoxPosition().y) } };
                     tree.frame_elements.texts.PushBack(text);
                 }
             }

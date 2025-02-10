@@ -85,10 +85,9 @@ template <typename T> struct List {
     using value_type = typename std::vector<T>::value_type;
 
     constexpr List() : data() { }
-    constexpr List(std::initializer_list<T> init_list) : data(init_list) { }
+    constexpr List(std::initializer_list<T> init_list) : data(std::move(init_list)) { }
     explicit constexpr List(u32 size) : data() { data.reserve(size); }
     explicit constexpr List(u32 size, const T& val) : data(size, val, std::allocator<T>()) { }
-    constexpr ~List() = default;
     template <class Iter> constexpr List(Iter first, Iter last) : data(first, last) { }
 
     // Generic collection converter  CREDIT goes the bot for this madness
@@ -163,10 +162,9 @@ template <typename T, typename H = Handle<T>> struct HandleList {
     using Handle = H;
 
     constexpr HandleList() : data() { }
-    constexpr HandleList(std::initializer_list<T> init_list) : data(init_list) { }
-    explicit constexpr HandleList(u32 size) : data() { data.Reserve(size); }
+    constexpr HandleList(std::initializer_list<T> init_list) : data(std::move(init_list)) { }
+    explicit constexpr HandleList(u32 size) : data(size) { }
     explicit constexpr HandleList(u32 size, const T& val) : data(size, val) { }
-    constexpr ~HandleList() = default;
 
     template <typename... Args> Handle [[nodiscard]] EmplaceBack(Args&&... args) {
         data.EmplaceBack(std::forward<Args>(args)...);
@@ -195,13 +193,13 @@ template <typename T, typename H = Handle<T>> struct HandleList {
 
     [[nodiscard]] constexpr Iter begin() { return data.begin(); }
     [[nodiscard]] constexpr Iter end() { return data.end(); }
-    [[nodiscard]] constexpr T& Front() { return data.front(); }
-    [[nodiscard]] constexpr T& Back() { return data.back(); }
+    [[nodiscard]] constexpr T& Front() { return data.Front(); }
+    [[nodiscard]] constexpr T& Back() { return data.Back(); }
 
     [[nodiscard]] constexpr CIter begin() const { return data.begin(); }
     [[nodiscard]] constexpr CIter end() const { return data.end(); }
-    [[nodiscard]] constexpr const T& Front() const { return data.front(); }
-    [[nodiscard]] constexpr const T& Back() const { return data.back(); }
+    [[nodiscard]] constexpr const T& Front() const { return data.Front(); }
+    [[nodiscard]] constexpr const T& Back() const { return data.Back(); }
 
     [[nodiscard]] constexpr u32 HandleToIndex(const H handle) const {
         assert(ValidHandle(handle));
