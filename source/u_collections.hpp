@@ -206,10 +206,10 @@ template <typename T, typename H = Handle<T>> struct HandleList {
         return handle.id - offset_handle.id;
     }
     [[nodiscard]] constexpr b8 ValidHandle(const H handle) const { return (handle.id - offset_handle.id) < Size(); }
+    Handle offset_handle { 0U };
 
 private:
     List<T> data;
-    Handle offset_handle { 0U };
 };
 template <typename K, typename V> class FlatMap {
     List<K> keys { };

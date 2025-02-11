@@ -25,12 +25,11 @@ struct GameData {
 };
 struct MainMenuFrame {
     Handle<NodeTree> tree_handle { NodeRenderSystem::node_trees.EmplaceBack() };
-    NodeTree& tree { NodeRenderSystem::node_trees[tree_handle]};
     explicit MainMenuFrame();
-    [[nodiscard]] constexpr NodeStyle& StartButton() { return tree.node_styles[start_button.GetHandle()]; }
-    constexpr void SetStartButtonText(String&& string) { tree.node_properties[start_button.GetHandle()].text = string; }
-    [[nodiscard]] constexpr NodeStyle& SettingsButton() { return tree.node_styles[settings_button.GetHandle()]; }
-    [[nodiscard]] constexpr NodeStyle& ExitButton() { return tree.node_styles[exit_button.GetHandle()]; }
+    [[nodiscard]] constexpr NodeStyle& StartButton() { return NodeRenderSystem::node_trees[tree_handle].node_styles[start_button.GetHandle()]; }
+    constexpr void SetStartButtonText(String&& string) { NodeRenderSystem::node_trees[tree_handle].node_properties[start_button.GetHandle()].text = string; }
+    [[nodiscard]] constexpr NodeStyle& SettingsButton() { return NodeRenderSystem::node_trees[tree_handle].node_styles[settings_button.GetHandle()]; }
+    [[nodiscard]] constexpr NodeStyle& ExitButton() { return NodeRenderSystem::node_trees[tree_handle].node_styles[exit_button.GetHandle()]; }
 
 private:
     HandleOptional<Node> start_button { };
@@ -39,14 +38,15 @@ private:
 };
 struct GameFrame {
     Handle<NodeTree> tree_handle { NodeRenderSystem::node_trees.EmplaceBack() };
-    NodeTree& tree { NodeRenderSystem::node_trees[tree_handle]};
     explicit GameFrame();
-    [[nodiscard]] constexpr NodeStyle& Frame() { return tree.node_styles[frame.GetHandle()]; }
-    [[nodiscard]] constexpr NodeStyle& GameArea() { return tree.node_styles[game_area.GetHandle()]; }
-    [[nodiscard]] constexpr NodeStyle& Box() { return tree.node_styles[box.GetHandle()]; }
-    [[nodiscard]] constexpr NodeStyle& ScoreBox() { return tree.node_styles[score_box.GetHandle()]; }
-    void SetTime(const u32 time_ms) { tree.node_properties[time_label.GetHandle()].text = std::format("Time {:02}:{:02}.{:02}", time_ms / (1000U * 60U), time_ms / 1000U % 60U, time_ms % 100U); }
-    void SetScore(const u32 score) { tree.node_properties[score_label.GetHandle()].text = std::format("Score {:4}", score); }
+    [[nodiscard]] constexpr NodeStyle& Frame() { return NodeRenderSystem::node_trees[tree_handle].node_styles[frame.GetHandle()]; }
+    [[nodiscard]] constexpr NodeStyle& GameArea() { return NodeRenderSystem::node_trees[tree_handle].node_styles[game_area.GetHandle()]; }
+    [[nodiscard]] constexpr NodeStyle& Box() { return NodeRenderSystem::node_trees[tree_handle].node_styles[box.GetHandle()]; }
+    [[nodiscard]] constexpr NodeStyle& ScoreBox() { return NodeRenderSystem::node_trees[tree_handle].node_styles[score_box.GetHandle()]; }
+    void SetTime(const u32 time_ms) {
+        NodeRenderSystem::node_trees[tree_handle].node_properties[time_label.GetHandle()].text = std::format("Time {:02}:{:02}.{:02}", time_ms / (1000U * 60U), time_ms / 1000U % 60U, time_ms % 100U);
+    }
+    void SetScore(const u32 score) { NodeRenderSystem::node_trees[tree_handle].node_properties[score_label.GetHandle()].text = std::format("Score {:4}", score); }
 
 private:
     HandleOptional<Node> time_label { };
@@ -58,7 +58,6 @@ private:
 };
 struct HighScoreFrame {
     Handle<NodeTree> tree_handle { NodeRenderSystem::node_trees.EmplaceBack() };
-    NodeTree& tree { NodeRenderSystem::node_trees[tree_handle]};
     HighScoreFrame() { }
     void SetHighScore(Multiset<HighScore> scores);
 };
@@ -98,15 +97,15 @@ private:
     Scene GameOverScene();
 };
 constexpr MainMenuFrame& ClickCoreFrames::MainMenuFrame() {
-    main_menu_frame.tree.MarkDirty();
+    NodeRenderSystem::node_trees[main_menu_frame.tree_handle].MarkDirty();
     return main_menu_frame;
 }
 constexpr GameFrame& ClickCoreFrames::GameFrame() {
-    game_frame.tree.MarkDirty();
+    NodeRenderSystem::node_trees[game_frame.tree_handle].MarkDirty();
     return game_frame;
 }
 constexpr HighScoreFrame& ClickCoreFrames::HighScoreFrame() {
-    high_score_frame.tree.MarkDirty();
+    NodeRenderSystem::node_trees[high_score_frame.tree_handle].MarkDirty();
     return high_score_frame;
 }
 void ClickCore::Tick() {
@@ -144,7 +143,7 @@ Scene ClickCore::MainMenuScene() {
     if (input_system.LeftMouseDown()) {
         MainMenuFrame& main_menu_frame = frames.MainMenuFrame();
         if (main_menu_frame.StartButton().IsInside(input_system.MousePosition())) {
-            main_menu_frame.tree.SetDisplay(false);
+            NodeRenderSystem::node_trees[main_menu_frame.tree_handle].SetDisplay(false);
             game = RoundData { .score = Score { 0U }, .start_time = TimeNow() };
             return Scene::game;
         }
@@ -163,12 +162,12 @@ Scene ClickCore::GameScene() {
 
         game_data.high_scores.emplace(game.score);
 
-        main_menu_frame.tree.SetDisplay(true);
+        NodeRenderSystem::node_trees[main_menu_frame.tree_handle].SetDisplay(true);
         main_menu_frame.SetStartButtonText("Play Again");
         game_frame.SetTime(0);
         game_frame.Box().background_color.a = 0U;
         high_score_frame.SetHighScore(game_data.high_scores);
-        high_score_frame.tree.SetDisplay(true);
+        NodeRenderSystem::node_trees[high_score_frame.tree_handle].SetDisplay(true);
         return Scene::game_over;
     }
     const u32 time_left_ms = duration_cast<Milliseconds>(game_time - elapsed).count();
@@ -198,41 +197,41 @@ Scene ClickCore::GameOverScene() {
         HighScoreFrame& high_score_frame = frames.HighScoreFrame();
         game_frame.Box().background_color = colors::ruby_red;
         game_frame.ScoreBox().background_color = colors::forest_green;
-        high_score_frame.tree.SetDisplay(false);
+        NodeRenderSystem::node_trees[high_score_frame.tree_handle].SetDisplay(false);
         return Scene::game;
     }
     return scene;
 }
 GameFrame::GameFrame() {
-    frame = B(tree, fill, { 0U, 0U }).Center().Direction(vertical).Padding2(uint2 { 0U, 30U }).Build();
-    B(tree, frame.GetHandle(), hug).Text("🎮 GAME TIME 🎮", FontSizes::h1).Padding2(uint2 { 20U, 10U }).Fill(colors::navy_blue).Center().Build();
-    score_box = B(tree, frame.GetHandle(), hug).Padding2(uint2 { 10U, 5U }).Fill(colors::forest_green).Direction(vertical).Center().Build();
-    time_label = B(tree, score_box.GetHandle(), hug).Text("Time: 00:00.00", FontSizes::h2).Padding(5U).Fill(colors::light_gray).Build();
-    score_label = B(tree, score_box.GetHandle(), hug).Text("Score: 0000", FontSizes::h2).Padding(5U).Fill(colors::gold).Build();
-    game_area = B(tree, frame.GetHandle(), fill).Padding2(uint2 { 300U, 100U }).Build();
+    frame = B(tree_handle, fill, { 0U, 0U }).Center().Direction(vertical).Padding2(uint2 { 0U, 30U }).Build();
+    B(tree_handle, frame.GetHandle(), hug).Text("🎮 GAME TIME 🎮", FontSizes::h1).Padding2(uint2 { 20U, 10U }).Fill(colors::navy_blue).Center().Build();
+    score_box = B(tree_handle, frame.GetHandle(), hug).Padding2(uint2 { 10U, 5U }).Fill(colors::forest_green).Direction(vertical).Center().Build();
+    time_label = B(tree_handle, score_box.GetHandle(), hug).Text("Time: 00:00.00", FontSizes::h2).Padding(5U).Fill(colors::light_gray).Build();
+    score_label = B(tree_handle, score_box.GetHandle(), hug).Text("Score: 0000", FontSizes::h2).Padding(5U).Fill(colors::gold).Build();
+    game_area = B(tree_handle, frame.GetHandle(), fill).Padding2(uint2 { 300U, 100U }).Build();
     constexpr u32 box_size = 100U;
-    box = B(tree, game_area.GetHandle(), uint2 { box_size, box_size }).Fill(colors::ruby_red).Padding(5U).Build();
+    box = B(tree_handle, game_area.GetHandle(), uint2 { box_size, box_size }).Fill(colors::ruby_red).Padding(5U).Build();
 }
 MainMenuFrame::MainMenuFrame() {
     const String title = "Hey Helene!";
-    const Handle<Node> frame = B(tree, fill, { 100U, 30U }).Direction(vertical).Build();
-    B(tree, frame, hug).Text(title, FontSizes::title).Fill(colors::light_sky_blue).Build();
-    const Handle<Node> root = B(tree, frame, hug).Padding2({ 20U, 5U }).Fill(colors::deep_purple).Center().Direction(vertical).Build();
-    start_button = B(tree, root, hug).Fill(colors::radiant_orange).Text(String { "Play" }, FontSizes::h1).Build();
-    settings_button = B(tree, root, hug).Fill(colors::cool_teal).Text(String { "Settings" }, FontSizes::h1).Build();
-    exit_button = B(tree, root, hug).Fill(colors::ruby_red).Text(String { "Exit" }, FontSizes::h1).Build();
+    const Handle<Node> frame = B(tree_handle, fill, { 100U, 30U }).Direction(vertical).Build();
+    B(tree_handle, frame, hug).Text(title, FontSizes::title).Fill(colors::light_sky_blue).Build();
+    const Handle<Node> root = B(tree_handle, frame, hug).Padding2({ 20U, 5U }).Fill(colors::deep_purple).Center().Direction(vertical).Build();
+    start_button = B(tree_handle, root, hug).Fill(colors::radiant_orange).Text(String { "Play" }, FontSizes::h1).Build();
+    settings_button = B(tree_handle, root, hug).Fill(colors::cool_teal).Text(String { "Settings" }, FontSizes::h1).Build();
+    exit_button = B(tree_handle, root, hug).Fill(colors::ruby_red).Text(String { "Exit" }, FontSizes::h1).Build();
 }
 void HighScoreFrame::SetHighScore(Multiset<HighScore> scores) {
-    tree.Clear();
-    Handle<Node> frame = B(tree, fill, uint2 { 0U, 0U }).Direction(vertical).Center().Build();
-    Handle<Node> root = B(tree, frame, hug).Direction(vertical).Center().Build();
-    Handle<Node> title = B(tree, root, hug).Text("High Scores", FontSizes::h1).Fill(colors::deep_purple).Build();
+    NodeRenderSystem::node_trees[tree_handle].Clear();
+    Handle<Node> frame = B(tree_handle, fill, uint2 { 0U, 0U }).Direction(vertical).Center().Build();
+    Handle<Node> root = B(tree_handle, frame, hug).Direction(vertical).Center().Build();
+    Handle<Node> title = B(tree_handle, root, hug).Text("High Scores", FontSizes::h1).Fill(colors::deep_purple).Build();
     bool alternate = false;
     for (const HighScore& high_score : scores | std::views::reverse) {
         const SDL_Color primary = alternate ? colors::deep_purple : colors::radiant_orange;
         const SDL_Color secondary = !alternate ? colors::deep_purple : colors::radiant_orange;
-        Handle<Node> row = B(tree, root, { 150U, hug }).Fill(primary).Center().Build();
-        B(tree, row, hug).Text(std::format("{:05}", high_score.score), FontSizes::h2).Fill(secondary).Build();
+        Handle<Node> row = B(tree_handle, root, { 150U, hug }).Fill(primary).Center().Build();
+        B(tree_handle, row, hug).Text(std::format("{:05}", high_score.score), FontSizes::h2).Fill(secondary).Build();
         alternate = !alternate;
     }
 }

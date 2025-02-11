@@ -15,10 +15,12 @@ HandleOptional<Node> HitNode(NodeTree& tree, uint2 screen_position) {
         node_handle = *node_iterator;
     }
 }
-HoveredType GetHovered(NodeRenderSystem& render_system, const uint2 mouse_position) {
-    for (NodeTree& tree : render_system.node_trees) {
+HoveredType GetHovered(const uint2 mouse_position) {
+    u32 i = 0;
+    for (NodeTree& tree : NodeRenderSystem::node_trees) {
         HandleOptional<Node> node_handle = HitNode(tree, mouse_position);
-        if (node_handle.IsValid()) { return std::optional { WeakNodeReference { .tree = tree, .node_handle = node_handle.GetHandle() } }; }
+        if (node_handle.IsValid()) { return std::optional { NodeReference { .tree_handle = Handle<NodeTree> { NodeRenderSystem::node_trees.offset_handle.id + i }, .node_handle = node_handle.GetHandle() } }; }
+        i++;
     }
     return std::nullopt;
 }
@@ -42,7 +44,7 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
     for (const Handle<Node> node_handle : node_handles) {
         NodeStyle& node_style = tree.node_styles[node_handle];
         NodeProperties& node_properties = tree.node_properties[node_handle];
-        auto& ttf_text = tree.node_ttf_texts[node_handle];
+        UniquePointer<TTF_Text, DestroyText>& ttf_text = tree.node_ttf_texts[node_handle];
         if (node_properties.text.Empty()) {
             ttf_text.Reset();
             continue;
@@ -125,8 +127,9 @@ void RecalculateTreeLayout(NodeRenderSystem& node_render_system, NodeTree& tree,
         const u32 node_major_size = get_major(node_style.InnerBoxSize(), node_style.direction);
         const u32 children_major_size = get_major_pixels_taken_by_children(node_handle, node_style.direction);
         if (node_style.gap_auto) {
-            if (children_major_size < node_major_size && tree.children[node_handle].Size() > 1) { node_style.resolved_gap = (node_major_size - children_major_size) / (tree.children[node_handle].Size() - 1U); }
-            else { node_style.resolved_gap = 0U; }
+            if (children_major_size < node_major_size && tree.children[node_handle].Size() > 1) { node_style.resolved_gap = (node_major_size - children_major_size) / (tree.children[node_handle].Size() - 1U); } else {
+                node_style.resolved_gap = 0U;
+            }
         }
         float2 factor;
         switch (node_style.alignment) {
@@ -223,45 +226,45 @@ const FrameElements& GetFrameElements(NodeRenderSystem& node_render_system, Node
     return tree.frame_elements;
 }
 
-void Hover(const NodeReference& node_reference) {
-    Logger().Log("Hover {}", node_reference.tree.node_properties[node_reference.node_handle].text);
-    NodeProperties& properties = node_reference.tree.node_properties[node_reference.node_handle];
+void Hover(const NodeReference node_reference) {
+    Logger().Log("Hover {}", NodeRenderSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle].text);
+    NodeProperties& properties = NodeRenderSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle];
     if (properties.on_hover) { properties.on_hover(node_reference); }
 }
-void HoverOut(const NodeReference& node_reference) {
-    Logger().Log("Hover Out {}", node_reference.tree.node_properties[node_reference.node_handle].text);
-    NodeProperties& properties = node_reference.tree.node_properties[node_reference.node_handle];
+void HoverOut(const NodeReference node_reference) {
+    Logger().Log("Hover Out {}", NodeRenderSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle].text);
+    NodeProperties& properties = NodeRenderSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle];
     if (properties.on_hover_out) { properties.on_hover_out(node_reference); }
 }
-void Click(const NodeReference& node_reference) {
-    Logger().Log("Clicked {}", node_reference.tree.node_properties[node_reference.node_handle].text);
-    NodeProperties& properties = node_reference.tree.node_properties[node_reference.node_handle];
+void Click(const NodeReference node_reference) {
+    Logger().Log("Clicked {}", NodeRenderSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle].text);
+    NodeProperties& properties = NodeRenderSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle];
     if (properties.on_click) { properties.on_click(node_reference); }
 }
-void NodeRenderSystem::HoverClickEvents(const InputSystem& input_system) {
-    if (input_system.LeftMouseDown() && hovered.has_value()) {
-        NodeTree& hovered_tree = hovered.value().tree;
-        const Handle<Node> hovered_node = hovered.value().node_handle;
-        hovered_tree.Propagate(hovered_node, Click);
+void Propagate(NodeReference node_reference, const NodeReaction& reaction) {
+    Handle<Node> root = NodeRenderSystem::node_trees[node_reference.tree_handle].Root();
+    while (true) {
+        std::invoke(reaction, node_reference);
+        if (node_reference.node_handle.id == root.id) { break; };
+        node_reference.node_handle = NodeRenderSystem::node_trees[node_reference.tree_handle].parents[node_reference.node_handle];
     }
+}
+void NodeRenderSystem::HoverClickEvents(const InputSystem& input_system) {
+    if (input_system.LeftMouseDown() && hovered.has_value()) { Propagate(hovered.value(), Click); }
 
-    if (hovered.has_value() && !hovered.value().tree.get().node_styles.ValidHandle(hovered.value().node_handle)) { hovered = std::nullopt; }
+    if (hovered.has_value() && !node_trees[hovered->tree_handle].node_styles.ValidHandle(hovered->node_handle)) { hovered = std::nullopt; }
     const HoveredType previous_hovered = hovered;
-    hovered = GetHovered(*this, input_system.MousePosition());
+    hovered = GetHovered(input_system.MousePosition());
 
-    if (hovered.has_value() && previous_hovered.has_value() && hovered == previous_hovered) { return; }
+    if (hovered.has_value() && previous_hovered.has_value() && hovered->tree_handle.id == previous_hovered->tree_handle.id && hovered->node_handle.id == previous_hovered->node_handle.id) { return; }
 
     if (previous_hovered.has_value()) {
-        NodeTree& hovered_tree = previous_hovered.value().tree;
-        const Handle<Node> hovered_node = previous_hovered.value().node_handle;
-        hovered_tree.Propagate(hovered_node, HoverOut);
-        hovered_tree.MarkDirty();
+        Propagate(previous_hovered.value(), HoverOut);
+        node_trees[previous_hovered->tree_handle].MarkDirty();
     }
     if (hovered.has_value()) {
-        NodeTree& hovered_tree = hovered.value().tree;
-        const Handle<Node> hovered_node = hovered.value().node_handle;
-        hovered_tree.Propagate(hovered_node, Hover);
-        hovered_tree.MarkDirty();
+        Propagate(hovered.value(), Hover);
+        node_trees[hovered->tree_handle].MarkDirty();
     }
 }
 void NodeRenderSystem::RenderTrees(SDL_Renderer* renderer) {

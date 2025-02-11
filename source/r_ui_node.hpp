@@ -1,8 +1,7 @@
 #pragma once
 
-#include <stacktrace>
-#include <algorithm>
 #include <functional>
+#include <r_engine.hpp>
 
 #include <SDL3/SDL_render.h>
 #include <SDL3_ttf/SDL_ttf.h>
@@ -25,7 +24,10 @@ struct DestroyText {
     }
 };
 using FontSize = u8;
-enum class FontSizes : FontSize { body = 16U, h1 = 34U, h2 = 30U, h3 = 24U, h4 = 20U, h5 = 18U, h6 = 16U, small = 14U, tiny = 12U, title = 52U, massive = 72U };
+enum class FontSizes : FontSize {
+    body    = 16U, h1 = 34U, h2 = 30U, h3 = 24U, h4 = 20U, h5 = 18U, h6 = 16U, small = 14U, tiny = 12U, title = 52U,
+    massive = 72U
+};
 class Font : LogLifetimeWithCount<Font> {
     UniquePointer<TTF_Font, CloseFont> font;
 
@@ -106,13 +108,8 @@ struct NodeStyle : LogDestroyWithCount<NodeStyle> {
     friend NodeTree;
 };
 struct NodeReference {
-    NodeTree& tree;
+    Handle<NodeTree> tree_handle;
     Handle<Node> node_handle;
-};
-struct WeakNodeReference {
-    std::reference_wrapper<NodeTree> tree;
-    Handle<Node> node_handle;
-    [[nodiscard]] b8 operator==(const WeakNodeReference other) const { return &tree.get() == &other.tree.get() && node_handle.id == other.node_handle.id; }
 };
 using NodeReaction = std::function<void(NodeReference)>;
 struct NodeProperties {
@@ -125,7 +122,7 @@ struct NodeProperties {
     NodeReaction on_hover_out { };
 };
 struct NodeTree {
-    template<class T> using HandleList = HandleList<T, Handle<Node>>;
+    template <class T> using HandleList = HandleList<T, Handle<Node>>;
     static constexpr u32 DEFAULT_COUNT = 64U;
     HandleList<NodeStyle> node_styles { DEFAULT_COUNT };
     HandleList<NodeProperties> node_properties { DEFAULT_COUNT };
@@ -151,7 +148,6 @@ struct NodeTree {
     [[nodiscard]] Handle<Node> AddNode(NodeStyle&& node, Handle<Node> parent_handle);
 
     void Clear();
-    void Propagate(Handle<Node> node_handle, const NodeReaction& reaction);
     constexpr void MarkDirty() noexcept { dirty = true; }
     constexpr void SetDisplay(const b8 value) noexcept { display = value; }
 
@@ -167,14 +163,34 @@ struct Layout {
     Layout(RelativeConstraint width_constraint, u32 height) : width { -1U, ToConstraint(width_constraint) }, height { height, LayoutLength::fixed } { }
     Layout(RelativeConstraint width_constraint, RelativeConstraint height_constraint) : width { -1U, ToConstraint(width_constraint) }, height { -1U, ToConstraint(height_constraint) } { }
 };
+using HoveredType = std::optional<NodeReference>;
+static const RelativePath font_path { "font.ttf" };
+static const RelativePath font_bold_path { "TitilliumWeb-SemiBold.ttf" };
+struct DestroyRenderTextEngine {
+    void operator()(TTF_TextEngine* engine) const {
+        Logger().Destroyed("TTF_TextEngine");
+        TTF_DestroyRendererTextEngine(engine);
+    }
+};
+
+struct NodeRenderSystem {
+    static HandleList<NodeTree> node_trees;
+    HoveredType hovered { };
+    FontCollection font { assets::Asset(font_path) };
+    FontCollection font_bold { assets::Asset(font_bold_path) };
+    UniquePointer<TTF_TextEngine, DestroyRenderTextEngine> text_engine { TTF_CreateRendererTextEngine(Window::renderer) };
+    ~NodeRenderSystem() { node_trees.Clear(); };
+    void HoverClickEvents(const InputSystem& input_system);
+    void RenderTrees(SDL_Renderer* renderer);
+};
 class NodeBuilder {
     NodeReference node_reference;
-    NodeStyle& style { node_reference.tree.node_styles[node_reference.node_handle] };
-    NodeProperties& properties { node_reference.tree.node_properties[node_reference.node_handle] };
+    NodeStyle& style { NodeRenderSystem::node_trees[node_reference.tree_handle].node_styles[node_reference.node_handle] };
+    NodeProperties& properties { NodeRenderSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle] };
 
 public:
-    NodeBuilder(NodeTree& node_tree, Layout new_layout, uint2 position);
-    NodeBuilder(NodeTree& node_tree, Handle<Node> parent_handle, Layout new_layout);
+    NodeBuilder(Handle<NodeTree> tree_handle, Layout new_layout, uint2 position);
+    NodeBuilder(Handle<NodeTree> tree_handle, Handle<Node> parent_handle, Layout new_layout);
     [[nodiscard]] NodeBuilder& Name(const String& name);
     [[nodiscard]] NodeBuilder& Fill(SDL_Color color);
     [[nodiscard]] NodeBuilder& Padding(u32 padding);
@@ -195,5 +211,4 @@ public:
 };
 using B = NodeBuilder;
 SDL_Color LightenColor(SDL_Color color, f32 factor);
-
 } // pce::ui

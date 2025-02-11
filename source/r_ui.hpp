@@ -11,44 +11,21 @@
 #include <SDL3_ttf/SDL_ttf.h>
 
 namespace pce::ui {
-using HoveredType = std::optional<WeakNodeReference>;
-static const RelativePath font_path { "font.ttf" };
-static const RelativePath font_bold_path { "TitilliumWeb-SemiBold.ttf" };
-struct DestroyRenderTextEngine {
-    void operator()(TTF_TextEngine* engine) const {
-        Logger().Destroyed("TTF_TextEngine");
-        TTF_DestroyRendererTextEngine(engine);
-    }
-};
-struct NodeRenderSystem {
-    static HandleList<NodeTree> node_trees;
-    HoveredType hovered { };
-    FontCollection font { assets::Asset(font_path) };
-    FontCollection font_bold { assets::Asset(font_bold_path) };
-    UniquePointer<TTF_TextEngine, DestroyRenderTextEngine> text_engine { TTF_CreateRendererTextEngine(Window::renderer) };
-    ~NodeRenderSystem() { node_trees.Clear(); };
-    void HoverClickEvents(const InputSystem& input_system);
-    void RenderTrees(SDL_Renderer* renderer);
-};
 inline HandleList<NodeTree> NodeRenderSystem::node_trees { 120U };
 class TickFrame {
     HandleOptional<Node> tick_handle { };
 
 public:
     Handle<NodeTree> tree_handle { NodeRenderSystem::node_trees.EmplaceBack() };
-    NodeTree& tree { NodeRenderSystem::node_trees[tree_handle]};
-    TickFrame() { tick_handle = B(tree, hug, { 10U, 0U }).Text("Tick", FontSizes::tiny).Fill(colors::radiant_orange).Build(); }
-    void SetInfo(u32 tick, u32 tps, u32 fps) { tree.node_properties[tick_handle.GetHandle()].text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, tps, fps); }
+    TickFrame() { tick_handle = B(tree_handle, hug, { 10U, 0U }).Text("Tick", FontSizes::tiny).Fill(colors::radiant_orange).Build(); }
+    void SetInfo(u32 tick, u32 tps, u32 fps) { NodeRenderSystem::node_trees[tree_handle].node_properties[tick_handle.GetHandle()].text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, tps, fps); }
 };
 struct InspectorFrame {
     Handle<NodeTree> tree_handle { NodeRenderSystem::node_trees.EmplaceBack() };
-    NodeTree& tree { NodeRenderSystem::node_trees[tree_handle]};
-    InspectorFrame() { };
-    void ShowElementStructure(const HoveredType& hovered);
+    void ShowElementStructure(HoveredType hovered);
 };
 struct TestFrame {
     Handle<NodeTree> tree_handle { NodeRenderSystem::node_trees.EmplaceBack() };
-    NodeTree& tree { NodeRenderSystem::node_trees[tree_handle]};
     TestFrame();
 };
 
@@ -58,10 +35,10 @@ struct DebugSystem {
 
     void operator()(const InputSystem& input_system, const TickSystem& tick_system, const NodeRenderSystem& node_render_system) {
         if (input_system.LeftMouseDown()) {
-            inspector_frame.tree.MarkDirty();
+            NodeRenderSystem::node_trees[inspector_frame.tree_handle].MarkDirty();
             inspector_frame.ShowElementStructure(node_render_system.hovered);
         }
-        tick_frame.tree.MarkDirty();
+        NodeRenderSystem::node_trees[tick_frame.tree_handle].MarkDirty();
         tick_frame.SetInfo(tick_system.tick.Value(), 1.0F / tick_system.tick_time, 1.0F / tick_system.delta_time);
     }
 };
@@ -110,9 +87,6 @@ struct ParticleSystem {
     [[nodiscard]] ParticleProtocol& GetParticleProtocol(const ParticleProtocolHandle protocol_handle) { return protocols[protocol_handle.id]; }
     [[nodiscard]] List<Particle>& GetParticles(const ParticleProtocolHandle protocol_handle) { return particles[protocol_handle.id]; }
     void NewParticle(ParticleProtocolHandle protocol_handle, Particle&& particle) { GetParticles(protocol_handle).PushBack(particle); }
-    void operator()() {
-        for (u32 i = 0; i < particles.Size(); i++) {
-        }
-    }
+    void operator()() { for (u32 i = 0; i < particles.Size(); i++) { } }
 };
 } // namespace pce::ui

@@ -5,6 +5,7 @@
 #include <string>
 #include <ranges>
 #include <array>
+#include <stacktrace>
 
 #include "u_collections.hpp"
 #include "u_types.hpp"

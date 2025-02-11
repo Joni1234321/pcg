@@ -4,6 +4,7 @@
 
 #include <ranges>
 #include <r_colors.hpp>
+#include <r_ui.hpp>
 #include <stack>
 
 namespace pce::ui {
@@ -57,19 +58,12 @@ void NodeTree::Clear() {
     node_properties.Clear();
     node_ttf_texts.Clear();
 }
-void NodeTree::Propagate(Handle<Node> node_handle, const NodeReaction& reaction) {
-    while (true) {
-        std::invoke(reaction, NodeReference { *this, node_handle });
-        if (node_handle.id == Root().id) { break; };
-        node_handle = parents[node_handle];
-    }
-}
-NodeBuilder::NodeBuilder(NodeTree &node_tree, const Layout new_layout, const uint2 position) : node_reference{ node_tree, node_tree.AddRoot() } {
+NodeBuilder::NodeBuilder(const Handle<NodeTree> tree_handle, const Layout new_layout, const uint2 position) : node_reference{ tree_handle, NodeRenderSystem::node_trees[tree_handle].AddRoot() } {
     style.position = position;
     style.width = new_layout.width;
     style.height = new_layout.height;
 }
-NodeBuilder::NodeBuilder(NodeTree &node_tree, const Handle<Node> parent_handle, const Layout new_layout) : node_reference{ node_tree, node_tree.AddNode(parent_handle) } {
+NodeBuilder::NodeBuilder(const Handle<NodeTree> tree_handle, const Handle<Node> parent_handle, const Layout new_layout) : node_reference{ tree_handle, NodeRenderSystem::node_trees[tree_handle].AddNode(parent_handle) } {
     style.width = new_layout.width;
     style.height = new_layout.height;
 }
@@ -142,7 +136,7 @@ SDL_Color LightenColor(const SDL_Color color, const f32 factor) {
     return SDL_Color { lerp(color.r, factor, 255), lerp(color.g, factor, 255), lerp(color.b, factor, 255), color.a };
 }
 Handle<Node> NodeBuilder::Build() const {
-    node_reference.tree.MarkDirty();
+    NodeRenderSystem::node_trees[node_reference.tree_handle].MarkDirty();
     return node_reference.node_handle;
 }
 }
