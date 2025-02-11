@@ -102,8 +102,12 @@ constexpr String UnitToString(const Unit unit) {
     }
     return "unknown unit";
 }
+struct NodeReferenceHandle {
+    Handle<NodeTree> tree_handle;
+    Handle<Node> node_handle;
+};
 template <class T> struct ValueUnit {
-    ValueUnit(NodeTree& tree, Handle<Node> parent_handle, const T& value, Unit unit, SDL_Color text_color, FontSizes font_sizes);
+    ValueUnit(NodeReferenceHandle parent_reference_handle, const T& value, Unit unit, SDL_Color text_color, FontSizes font_sizes);
     constexpr void SetValue(const T& value);
     constexpr void SetUnit(Unit unit);
 
@@ -114,17 +118,19 @@ private:
     HandleOptional<Node> unit_handle { };
 };
 struct BuildItem {
-    BuildItem(NodeTree& tree, const Handle<Node> parent_handle, const Building& building);
+    BuildItem(NodeReferenceHandle parent_reference_handle, const Building& building);
 
     [[nodiscard]] Handle<Node> RootHandle() const;
     [[nodiscard]] Handle<Node> CountHandle() const;
 
 private:
+    NodeTree& tree;
     HandleOptional<Node> build_item { };
     HandleOptional<Node> count_handle { };
 };
 struct GameFrame {
-    NodeTree& tree;
+    Handle<NodeTree> tree_handle { NodeRenderSystem::node_trees.EmplaceBack() };
+    NodeTree& tree { NodeRenderSystem::node_trees[tree_handle] };
     AnimationSystem& animation_system;
     GameFrame(AnimationSystem& animation_system);
     [[nodiscard]] constexpr b8 InsidePlanet(uint2 screen_position);
@@ -231,22 +237,23 @@ Scene CosmoClick::GameScene() {
     return Scene::game;
 }
 // ui
-template <class T> ValueUnit<T>::ValueUnit(NodeTree& tree, const Handle<Node> parent_handle, const T& value, const Unit unit, const SDL_Color text_color, const FontSizes font_sizes): tree { tree } {
-    node_handle = B(tree, parent_handle, hug).Alignment(top_right).Build();
+template <class T> ValueUnit<T>::ValueUnit(const NodeReferenceHandle parent_reference_handle, const T& value, const Unit unit, const SDL_Color text_color, const FontSizes font_sizes): tree {
+    NodeRenderSystem::node_trees[parent_reference_handle.tree_handle] } {
+    node_handle = B(tree, parent_reference_handle.node_handle, hug).Alignment(top_right).Build();
     value_handle = B(tree, node_handle.GetHandle(), hug).Text("", font_sizes).Fill(text_color).Build();
     unit_handle = B(tree, node_handle.GetHandle(), hug).Text(UnitToString(unit), static_cast<FontSizes>(static_cast<f32>(font_sizes) * 0.66F)).Fill(text_color).Build();
     SetValue(value);
 }
 template <class T> constexpr void ValueUnit<T>::SetValue(const T& value) { tree.node_properties[value_handle.GetHandle()].text = std::format("{}", value); }
 template <class T> constexpr void ValueUnit<T>::SetUnit(const Unit unit) { tree.node_properties[value_handle.GetHandle()].text = UnitToString(unit); }
-BuildItem::BuildItem(NodeTree& tree, const Handle<Node> parent_handle, const Building& building) {
-    build_item = B(tree, parent_handle, { fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build();
+BuildItem::BuildItem(NodeReferenceHandle parent_reference_handle, const Building& building) : tree { NodeRenderSystem::node_trees[parent_reference_handle.tree_handle] } {
+    build_item = B(tree, parent_reference_handle.node_handle, { fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build();
     const Handle<Node> upper = B(tree, build_item.GetHandle(), { fill, hug }).Center().GapAuto().Build();
     const Handle<Node> lower = B(tree, build_item.GetHandle(), { fill, hug }).Center().GapAuto().Build();
     count_handle = B(tree, upper, hug).Text("0000", FontSizes::title).Fill(colors::black).Build();
-    ValueUnit(tree, upper, building.cost, Unit::cosmos, colors::black, FontSizes::h1);
+    ValueUnit(NodeReferenceHandle { parent_reference_handle.tree_handle, upper }, building.cost, Unit::cosmos, colors::black, FontSizes::h1);
     B(tree, lower, hug).Text(building.name, FontSizes::title).Fill(colors::black).Build();
-    ValueUnit(tree, lower, building.income, Unit::cosmos_per_second, colors::black, FontSizes::h1);
+    ValueUnit(NodeReferenceHandle { parent_reference_handle.tree_handle, lower }, building.income, Unit::cosmos_per_second, colors::black, FontSizes::h1);
 }
 Handle<Node> BuildItem::RootHandle() const { return build_item.GetHandle(); }
 Handle<Node> BuildItem::CountHandle() const { return count_handle.GetHandle(); }
@@ -262,17 +269,17 @@ constexpr void GameFrame::UpdateBuildItemsCount(const List<Count>& building_coun
 }
 void GameFrame::RestartClickAnimation() const { animation_system.StartAnimation(click_animation_handle.GetHandle()); }
 constexpr b8 CosmoClick::IsRunning() const { return tick_system.running; }
-GameFrame::GameFrame(AnimationSystem& animation_system) : tree { NodeRenderSystem::node_trees.EmplaceBack() }, animation_system { animation_system } {
+GameFrame::GameFrame(AnimationSystem& animation_system) : animation_system { animation_system } {
     const Handle<Node> frame = B(tree, fill, uint2 { 0U, 0U }).Build();
     const Handle<Node> game = B(tree, frame, fill).Direction(vertical).Center().Build();
     const Handle<Node> title = B(tree, game, hug).Fill(colors::white).Text("Cosmo Click", FontSizes::title).Build();
-    money = std::make_unique<ValueUnit<Money>>(tree, game, Money { 0U }, Unit::cosmos, colors::white, FontSizes::h1);
-    income = std::make_unique<ValueUnit<Income>>(tree, game, Income { 0U }, Unit::cosmos_per_second, colors::white, FontSizes::h4);
+    money = std::make_unique<ValueUnit<Money>>(NodeReferenceHandle { tree_handle, game }, Money { 0U }, Unit::cosmos, colors::white, FontSizes::h1);
+    income = std::make_unique<ValueUnit<Income>>(NodeReferenceHandle { tree_handle, game }, Income { 0U }, Unit::cosmos_per_second, colors::white, FontSizes::h4);
     const Handle<Node> click = B(tree, game, fill).Padding2(uint2 { 0U, 100U }).Fill(colors::dark_grey).Alignment(top_center).Build();
     planet_handle = B(tree, click, Layout { uint2 { planet_size + planet_border_size, planet_size + planet_border_size } }).Padding(planet_border_size).Fill(colors::white).Build();
     const Handle<Node> planet_intra = B(tree, planet_handle.GetHandle(), fill).Fill(colors::dark_navy_blue).Build();
     const Handle<Node> build_menu = B(tree, frame, { 600U, hug }).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::faded_green).Build();
-    for (const Building& building : buildings) { shop.EmplaceBack(tree, build_menu, building); }
+    for (const Building& building : buildings) { shop.EmplaceBack(NodeReferenceHandle { tree_handle, build_menu }, building); }
 
     // animation
     constexpr u32 planet_padding_start = 10U;

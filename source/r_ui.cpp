@@ -238,7 +238,6 @@ void Click(const NodeReference& node_reference) {
     NodeProperties& properties = node_reference.tree.node_properties[node_reference.node_handle];
     if (properties.on_click) { properties.on_click(node_reference); }
 }
-List<NodeTree> NodeRenderSystem::node_trees { 120U };
 void NodeRenderSystem::HoverClickEvents(const InputSystem& input_system) {
     if (input_system.LeftMouseDown() && hovered.has_value()) {
         NodeTree& hovered_tree = hovered.value().tree;
