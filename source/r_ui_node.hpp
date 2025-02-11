@@ -49,6 +49,7 @@ class FontCollection {
 public:
     explicit FontCollection(const AbsolutePath& path) : font_path { path } { }
     [[nodiscard]] const Font& GetFont(FontSizes size);
+    void Clear() { fonts.Clear(); }
 };
 struct TextElement {
     TTF_Text* text;
@@ -166,23 +167,16 @@ struct Layout {
 using HoveredType = std::optional<NodeReference>;
 static const RelativePath font_path { "font.ttf" };
 static const RelativePath font_bold_path { "TitilliumWeb-SemiBold.ttf" };
-struct DestroyRenderTextEngine {
-    void operator()(TTF_TextEngine* engine) const {
-        Logger().Destroyed("TTF_TextEngine");
-        TTF_DestroyRendererTextEngine(engine);
-    }
-};
-
 struct NodeRenderSystem {
     static HandleList<NodeTree> node_trees;
+    static FontCollection font;
     HoveredType hovered { };
-    FontCollection font { assets::Asset(font_path) };
-    FontCollection font_bold { assets::Asset(font_bold_path) };
-    UniquePointer<TTF_TextEngine, DestroyRenderTextEngine> text_engine { TTF_CreateRendererTextEngine(Window::renderer) };
-    ~NodeRenderSystem() { node_trees.Clear(); };
+    ~NodeRenderSystem() { node_trees.Clear(); font.Clear(); };
     void HoverClickEvents(const InputSystem& input_system);
     void RenderTrees(SDL_Renderer* renderer);
 };
+inline HandleList<NodeTree> NodeRenderSystem::node_trees { 120U };
+inline FontCollection NodeRenderSystem::font { assets::Asset(font_path) };
 class NodeBuilder {
     NodeReference node_reference;
     NodeStyle& style { NodeRenderSystem::node_trees[node_reference.tree_handle].node_styles[node_reference.node_handle] };

@@ -11,7 +11,6 @@
 #include <SDL3_ttf/SDL_ttf.h>
 
 namespace pce::ui {
-inline HandleList<NodeTree> NodeRenderSystem::node_trees { 120U };
 class TickFrame {
     HandleOptional<Node> tick_handle { };
 

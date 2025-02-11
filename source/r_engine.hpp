@@ -27,6 +27,7 @@ using Tick = NamedType<u32, struct TickTag, Arithmetic>;
 struct Window {
     static SDL_Window* window;
     static SDL_Renderer* renderer;
+    static TTF_TextEngine* text_engine;
     static uint2 screen_size;
     static SDL_Color clear_color;
 
@@ -45,12 +46,13 @@ struct Window {
             SDL_Quit();
         }
         SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-
+        text_engine = TTF_CreateRendererTextEngine(renderer);
         screen_size = size;
     }
     ~Window() {
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
+        TTF_DestroyRendererTextEngine(text_engine);
         TTF_Quit();
         SDL_Quit();
     }
@@ -59,6 +61,7 @@ inline SDL_Window* Window::window;
 inline SDL_Renderer* Window::renderer;
 inline uint2 Window::screen_size;
 inline SDL_Color Window::clear_color;
+inline TTF_TextEngine* Window::text_engine;
 
 struct RenderSystem {
     void operator()() {

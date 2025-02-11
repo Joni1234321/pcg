@@ -4,8 +4,6 @@
 
 #include <ranges>
 #include <r_colors.hpp>
-#include <r_ui.hpp>
-#include <stack>
 
 namespace pce::ui {
 const Font& FontCollection::GetFont(const FontSizes size) {

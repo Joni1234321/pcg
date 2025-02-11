@@ -235,6 +235,11 @@ public:
         values.EmplaceBack(std::forward<Args>(args)...);
     };
 
+    constexpr void Clear() {
+        keys.Clear();
+        values.Clear();
+    }
+
     [[nodiscard]] constexpr b8 HasKey(const K& key) const { return std::ranges::find(keys, key) != keys.end(); }
     [[nodiscard]] constexpr V& operator[](const K& key) {
         const u32 pos = keys.IndexOf(key);
