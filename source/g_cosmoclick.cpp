@@ -159,11 +159,11 @@ void CosmoClick::Tick() {
     tick_system();
     input_system();
     node_system.HoverClickEvents();
-    if (InputSystem::input_table.keys[SDLK_ESCAPE]) { tick_system.running = false; }
+    if (InputSystem::input_table.keys[SDLK_ESCAPE]) { TickSystem::tick_table.running = false; }
 
     GameLoop();
 
-    debug_system(tick_system);
+    debug_system();
     animation_system();
     render_system();
     node_system.RenderTrees();
@@ -177,7 +177,7 @@ void CosmoClick::GameLoop() {
             break;
         case Scene::quit:
             Logger().Log("Quit requested");
-            tick_system.running = false;
+            TickSystem::tick_table.running = false;
             break;
     }
 }
@@ -246,7 +246,7 @@ constexpr void GameFrame::UpdateBuildItemsCount(const List<Count>& building_coun
     for (const auto [build_item, building_count] : std::views::zip(shop, building_counts)) { NodeSystem::node_trees[tree_handle].node_properties[build_item.CountHandle()].text = std::format("{:04}", building_count); }
 }
 void GameFrame::RestartClickAnimation() const { animation_system.StartAnimation(click_animation_handle.GetHandle()); }
-constexpr b8 CosmoClick::IsRunning() const { return tick_system.running; }
+constexpr b8 CosmoClick::IsRunning() const { return TickSystem::tick_table.running; }
 GameFrame::GameFrame(AnimationSystem& animation_system) : animation_system { animation_system } {
     const Handle<Node> frame = B(tree_handle, fill, uint2 { 0U, 0U }).Build();
     const Handle<Node> game = B(tree_handle, frame, fill).Direction(vertical).Center().Build();

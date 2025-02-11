@@ -32,13 +32,13 @@ struct DebugSystem {
     TickFrame tick_frame { };
     InspectorFrame inspector_frame { };
 
-    void operator()(const TickSystem& tick_system) {
+    void operator()() {
         if (InputSystem::input_table.left_mouse_down) {
             NodeSystem::node_trees[inspector_frame.tree_handle].MarkDirty();
             inspector_frame.ShowElementStructure(NodeSystem::hovered);
         }
         NodeSystem::node_trees[tick_frame.tree_handle].MarkDirty();
-        tick_frame.SetInfo(tick_system.tick.Value(), 1.0F / tick_system.tick_time, 1.0F / tick_system.delta_time);
+        tick_frame.SetInfo(TickSystem::tick_table.tick.Value(), 1.0F / TickSystem::tick_table.tick_time, 1.0F / TickSystem::tick_table.delta_time);
     }
 };
 inline f32 EasingSin(f32 t);

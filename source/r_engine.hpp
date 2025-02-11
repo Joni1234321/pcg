@@ -73,25 +73,14 @@ struct RenderSystem {
         (void)SDL_RenderPresent(Window::renderer);
     }
 };
-struct TickSystem {
-    b8 running { true };
+
+struct TickTable {
     Tick tick { 0U };
     std::chrono::time_point<std::chrono::high_resolution_clock> last_tick_start;
-    f32 tick_time { 1.0f };
-    f32 delta_time { 1.0f };
-
-    void operator()() {
-        using namespace std::chrono;
-        delta_time = duration<f32>(high_resolution_clock::now() - last_tick_start).count();
-        last_tick_start = high_resolution_clock::now();
-        tick += Tick { 1U };
-    }
-    void CaptureTime() {
-        using namespace std::chrono;
-        tick_time = duration<f32>(high_resolution_clock::now() - last_tick_start).count();
-    }
+    f32 tick_time;
+    f32 delta_time;
+    b8 running;
 };
-
 struct InputTable {
     UnorderedMap<SDL_Keycode, b8> keys { };
     b8 quit { false };
@@ -99,6 +88,25 @@ struct InputTable {
     b8 left_mouse_down { false };
     b8 left_mouse_up { false };
     uint2 mouse_position { };
+};
+struct TickSystem {
+    static TickTable tick_table;
+    TickSystem() {
+        tick_table.running = true;
+        tick_table.tick = Tick{ 0U };
+        tick_table.tick_time = 1.0F;
+        tick_table.delta_time = 1.0F;
+    }
+    void operator()() {
+        using namespace std::chrono;
+        tick_table.delta_time = duration<f32>(high_resolution_clock::now() - tick_table.last_tick_start).count();
+        tick_table.last_tick_start = high_resolution_clock::now();
+        tick_table.tick += Tick { 1U };
+    }
+    void CaptureTime() {
+        using namespace std::chrono;
+        tick_table.tick_time = duration<f32>(high_resolution_clock::now() - tick_table.last_tick_start).count();
+    }
 };
 struct InputSystem {
     static InputTable input_table;
@@ -128,4 +136,5 @@ struct InputSystem {
     }
 };
 inline InputTable InputSystem::input_table;
+inline TickTable TickSystem::tick_table;
 } // namespace pce
