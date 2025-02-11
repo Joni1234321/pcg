@@ -167,20 +167,21 @@ struct Layout {
 using HoveredType = std::optional<NodeReference>;
 static const RelativePath font_path { "font.ttf" };
 static const RelativePath font_bold_path { "TitilliumWeb-SemiBold.ttf" };
-struct NodeRenderSystem {
+struct NodeSystem {
     static HandleList<NodeTree> node_trees;
     static FontCollection font;
-    HoveredType hovered { };
-    ~NodeRenderSystem() { node_trees.Clear(); font.Clear(); };
-    void HoverClickEvents(const InputSystem& input_system);
-    void RenderTrees(SDL_Renderer* renderer);
+    static HoveredType hovered;
+    ~NodeSystem() { node_trees.Clear(); font.Clear(); hovered = { }; };
+    void HoverClickEvents();
+    void RenderTrees();
 };
-inline HandleList<NodeTree> NodeRenderSystem::node_trees { 120U };
-inline FontCollection NodeRenderSystem::font { assets::Asset(font_path) };
+inline HandleList<NodeTree> NodeSystem::node_trees { 120U };
+inline FontCollection NodeSystem::font { assets::Asset(font_path) };
+inline HoveredType NodeSystem::hovered { };
 class NodeBuilder {
     NodeReference node_reference;
-    NodeStyle& style { NodeRenderSystem::node_trees[node_reference.tree_handle].node_styles[node_reference.node_handle] };
-    NodeProperties& properties { NodeRenderSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle] };
+    NodeStyle& style { NodeSystem::node_trees[node_reference.tree_handle].node_styles[node_reference.node_handle] };
+    NodeProperties& properties { NodeSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle] };
 
 public:
     NodeBuilder(Handle<NodeTree> tree_handle, Layout new_layout, uint2 position);

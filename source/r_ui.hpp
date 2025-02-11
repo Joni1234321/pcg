@@ -15,16 +15,16 @@ class TickFrame {
     HandleOptional<Node> tick_handle { };
 
 public:
-    Handle<NodeTree> tree_handle { NodeRenderSystem::node_trees.EmplaceBack() };
+    Handle<NodeTree> tree_handle { NodeSystem::node_trees.EmplaceBack() };
     TickFrame() { tick_handle = B(tree_handle, hug, { 10U, 0U }).Text("Tick", FontSizes::tiny).Fill(colors::radiant_orange).Build(); }
-    void SetInfo(u32 tick, u32 tps, u32 fps) { NodeRenderSystem::node_trees[tree_handle].node_properties[tick_handle.GetHandle()].text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, tps, fps); }
+    void SetInfo(u32 tick, u32 tps, u32 fps) { NodeSystem::node_trees[tree_handle].node_properties[tick_handle.GetHandle()].text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, tps, fps); }
 };
 struct InspectorFrame {
-    Handle<NodeTree> tree_handle { NodeRenderSystem::node_trees.EmplaceBack() };
+    Handle<NodeTree> tree_handle { NodeSystem::node_trees.EmplaceBack() };
     void ShowElementStructure(HoveredType hovered);
 };
 struct TestFrame {
-    Handle<NodeTree> tree_handle { NodeRenderSystem::node_trees.EmplaceBack() };
+    Handle<NodeTree> tree_handle { NodeSystem::node_trees.EmplaceBack() };
     TestFrame();
 };
 
@@ -32,12 +32,12 @@ struct DebugSystem {
     TickFrame tick_frame { };
     InspectorFrame inspector_frame { };
 
-    void operator()(const InputSystem& input_system, const TickSystem& tick_system, const NodeRenderSystem& node_render_system) {
-        if (input_system.LeftMouseDown()) {
-            NodeRenderSystem::node_trees[inspector_frame.tree_handle].MarkDirty();
-            inspector_frame.ShowElementStructure(node_render_system.hovered);
+    void operator()(const TickSystem& tick_system) {
+        if (InputSystem::input_table.left_mouse_down) {
+            NodeSystem::node_trees[inspector_frame.tree_handle].MarkDirty();
+            inspector_frame.ShowElementStructure(NodeSystem::hovered);
         }
-        NodeRenderSystem::node_trees[tick_frame.tree_handle].MarkDirty();
+        NodeSystem::node_trees[tick_frame.tree_handle].MarkDirty();
         tick_frame.SetInfo(tick_system.tick.Value(), 1.0F / tick_system.tick_time, 1.0F / tick_system.delta_time);
     }
 };

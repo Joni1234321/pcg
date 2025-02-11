@@ -82,7 +82,7 @@ constexpr u16 BUILDING_TIME = 30U;
 constexpr f32 GROWTH_RATE_PER_MONTH = 0.0025F * PER_MONTH;
 
 
-void Game::PlayTick(pce::Tick tick, pce::ui::NodeRenderSystem& node_render_system, const b8 debug) {
+void Game::PlayTick(pce::Tick tick, pce::ui::NodeSystem& node_render_system, const b8 debug) {
     // Construction
     for (const Player player : player_archetype) { ProcessConstructionQueue(player); }
     for (const Planet planet : planet_archetype) { ProcessConstructionQueue(planet); }

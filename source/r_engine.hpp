@@ -92,26 +92,27 @@ struct TickSystem {
     }
 };
 
-class InputSystem {
+struct InputTable {
+    UnorderedMap<SDL_Keycode, b8> keys { };
     b8 quit { false };
     b8 left_mouse { false };
     b8 left_mouse_down { false };
     b8 left_mouse_up { false };
     uint2 mouse_position { };
-
-public:
-    UnorderedMap<SDL_Keycode, b8> keys { };
+};
+struct InputSystem {
+    static InputTable input_table;
     void operator()() {
-        for (b8& key : keys | std::ranges::views::values) { key = false; }
+        for (b8& key : input_table.keys | std::ranges::views::values) { key = false; }
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
                 case SDL_EVENT_QUIT: {
-                    quit = true;
+                    input_table.quit = true;
                     return;
                 }
                 case SDL_EVENT_KEY_DOWN:
-                    keys[event.key.key] = true;
+                    input_table.keys[event.key.key] = true;
                     break;
                 default:
                     break;
@@ -120,16 +121,11 @@ public:
 
         float2 mouse_position_f;
         const SDL_MouseButtonFlags state = SDL_GetMouseState(&mouse_position_f.x, &mouse_position_f.y);
-        mouse_position = uint2 { static_cast<u32>(mouse_position_f.x), static_cast<u32>(mouse_position_f.y) };
-        left_mouse_down = state && SDL_BUTTON_LMASK && !left_mouse;
-        left_mouse_up = left_mouse && !(state && SDL_BUTTON_LMASK);
-        left_mouse = state && SDL_BUTTON_LMASK;
+        input_table.mouse_position = uint2 { static_cast<u32>(mouse_position_f.x), static_cast<u32>(mouse_position_f.y) };
+        input_table.left_mouse_down = state && SDL_BUTTON_LMASK && !input_table.left_mouse;
+        input_table.left_mouse_up = input_table.left_mouse && !(state && SDL_BUTTON_LMASK);
+        input_table.left_mouse = state && SDL_BUTTON_LMASK;
     }
-
-    [[nodiscard]] constexpr uint2 MousePosition() const noexcept { return mouse_position; }
-    [[nodiscard]] constexpr b8 LeftMouseDown() const noexcept { return left_mouse_down; }
-    [[nodiscard]] constexpr b8 LeftMouseUp() const noexcept { return left_mouse_up; }
-    [[nodiscard]] constexpr b8 LeftMouse() const noexcept { return left_mouse; }
-    [[nodiscard]] constexpr b8 Quit() const noexcept { return quit; }
 };
-}
+inline InputTable InputSystem::input_table;
+} // namespace pce
