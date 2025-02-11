@@ -1,4 +1,7 @@
 #include "r_ui.hpp"
+
+#include <u_algorithm.hpp>
+
 #include "u_types.hpp"
 
 namespace pce::ui {
@@ -7,7 +10,7 @@ HandleOptional<Node> HitNode(NodeTree& tree, uint2 screen_position) {
     Handle<Node> node_handle = tree.Root();
     const auto is_inside_node = [screen_position, &tree] (const Handle<Node> child_handle) -> b8 { return tree.node_styles[child_handle].IsInside(screen_position); };
     while (true) {
-        auto node_iterator = std::ranges::find_if(tree.children[node_handle], is_inside_node, std::identity { });
+        const auto& node_iterator = std::ranges::find_if(tree.children[node_handle], is_inside_node, std::identity { });
         if (node_iterator == tree.children[node_handle].end()) { return HandleOptional<Node> { node_handle.id }; }
         node_handle = *node_iterator;
     }

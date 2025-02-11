@@ -44,4 +44,15 @@ template <typename Container, typename UnaryOperation> constexpr auto Select(con
     TransformLocal(container.begin(), container.end(), std::back_inserter(out), unary_operation);
     return out;
 }
+
+class _Find_Index_Of_fn {
+public:
+    template <std::ranges::input_range R, class T, class P> [[nodiscard]] constexpr std::optional<u32> operator()(R&& range, const T& value, P projection) const {
+        const auto& iterator = std::ranges::find(std::forward<R>(range), value, projection);
+        if (iterator == range.end()) { return std::nullopt; }
+        return static_cast<u32>(std::distance(range.begin(), iterator));
+    }
+};
+
+inline constexpr _Find_Index_Of_fn find_index_of;
 } // namespace pce

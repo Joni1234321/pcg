@@ -1,3 +1,5 @@
+#include <u_algorithm.hpp>
+
 #include "g_arcade.hpp"
 
 #include "r_engine.hpp"
@@ -112,15 +114,7 @@ private:
     HandleOptional<Node> unit_handle { };
 };
 struct BuildItem {
-    BuildItem(NodeTree& tree, const Handle<Node> parent_handle, const Building& building) {
-        build_item = B(tree, parent_handle, { fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build();
-        const Handle<Node> upper = B(tree, build_item.GetHandle(), { fill, hug }).Center().GapAuto().Build();
-        const Handle<Node> lower = B(tree, build_item.GetHandle(), { fill, hug }).Center().GapAuto().Build();
-        count_handle = B(tree, upper, hug).Text("0000", FontSizes::title).Fill(colors::black).Build();
-        ValueUnit(tree, upper, building.cost, Unit::cosmos, colors::black, FontSizes::h1);
-        B(tree, lower, hug).Text(building.name, FontSizes::title).Fill(colors::black).Build();
-        ValueUnit(tree, lower, building.income, Unit::cosmos_per_second, colors::black, FontSizes::h1);
-    }
+    BuildItem(NodeTree& tree, const Handle<Node> parent_handle, const Building& building);
 
     [[nodiscard]] Handle<Node> RootHandle() const;
     [[nodiscard]] Handle<Node> CountHandle() const;
@@ -176,9 +170,7 @@ private:
 
 constexpr u32 planet_size = 400U;
 constexpr u32 planet_border_size = 40U;
-CosmoClick::CosmoClick() {
-    Window::clear_color = colors::dark_grey;
-}
+CosmoClick::CosmoClick() { Window::clear_color = colors::dark_grey; }
 void CosmoClick::Tick() {
     tick_system();
     input_system();
@@ -198,11 +190,11 @@ void CosmoClick::GameLoop() {
     switch (scene) {
         case Scene::game:
             scene = GameScene();
-        break;
+            break;
         case Scene::quit:
             Logger().Log("Quit requested");
-        tick_system.running = false;
-        break;
+            tick_system.running = false;
+            break;
     }
 }
 Scene CosmoClick::GameScene() {
@@ -247,6 +239,15 @@ template <class T> ValueUnit<T>::ValueUnit(NodeTree& tree, const Handle<Node> pa
 }
 template <class T> constexpr void ValueUnit<T>::SetValue(const T& value) { tree.node_properties[value_handle.GetHandle()].text = std::format("{}", value); }
 template <class T> constexpr void ValueUnit<T>::SetUnit(const Unit unit) { tree.node_properties[value_handle.GetHandle()].text = UnitToString(unit); }
+BuildItem::BuildItem(NodeTree& tree, const Handle<Node> parent_handle, const Building& building) {
+    build_item = B(tree, parent_handle, { fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build();
+    const Handle<Node> upper = B(tree, build_item.GetHandle(), { fill, hug }).Center().GapAuto().Build();
+    const Handle<Node> lower = B(tree, build_item.GetHandle(), { fill, hug }).Center().GapAuto().Build();
+    count_handle = B(tree, upper, hug).Text("0000", FontSizes::title).Fill(colors::black).Build();
+    ValueUnit(tree, upper, building.cost, Unit::cosmos, colors::black, FontSizes::h1);
+    B(tree, lower, hug).Text(building.name, FontSizes::title).Fill(colors::black).Build();
+    ValueUnit(tree, lower, building.income, Unit::cosmos_per_second, colors::black, FontSizes::h1);
+}
 Handle<Node> BuildItem::RootHandle() const { return build_item.GetHandle(); }
 Handle<Node> BuildItem::CountHandle() const { return count_handle.GetHandle(); }
 constexpr b8 GameFrame::InsidePlanet(const uint2 screen_position) { return tree.node_styles[planet_handle.GetHandle()].IsInside(screen_position); }
@@ -254,13 +255,10 @@ constexpr Handle<Node> GameFrame::PlanetHandle() { return planet_handle.GetHandl
 constexpr ValueUnit<Money>& GameFrame::GetMoneyValueUnit() { return *money.get(); }
 constexpr ValueUnit<Income>& GameFrame::GetIncomeValueUnit() { return *income.get(); }
 constexpr std::optional<u32> GameFrame::GetBuildItemAtPosition(const uint2 screen_position) {
-    for (u32 i = 0U; i < shop.Size(); ++i) {
-        if (tree.node_styles[shop[i].RootHandle()].IsInside(screen_position)) { return i; }
-    }
-    return std::nullopt;
+    return find_index_of(shop, true, [this, screen_position] (const BuildItem& build_item) -> b8 { return tree.node_styles[build_item.RootHandle()].IsInside(screen_position); });
 }
 constexpr void GameFrame::UpdateBuildItemsCount(const List<Count>& building_counts) {
-    for (u32 i = 0U; i < building_counts.Size(); ++i) { tree.node_properties[shop[i].CountHandle()].text = std::format("{:04}", building_counts[i]); }
+    for (const auto [build_item, building_count] : std::views::zip(shop, building_counts)) { tree.node_properties[build_item.CountHandle()].text = std::format("{:04}", building_count); }
 }
 void GameFrame::RestartClickAnimation() const { animation_system.StartAnimation(click_animation_handle.GetHandle()); }
 constexpr b8 CosmoClick::IsRunning() const { return tick_system.running; }
