@@ -77,6 +77,7 @@ class ClickCore {
     PresentSystem present_system { };
     TickSystem tick_system { };
     InputSystem input_system { };
+    NodeInputSystem node_input_system{ };
     NodeSystem node_render_system { };
     DebugSystem debug_system { };
 
@@ -112,7 +113,7 @@ void ClickCore::Tick() {
     tick_system();
     input_system();
     debug_system();
-    node_render_system.HoverClickEvents();
+    node_input_system();
     if (InputSystem::input_table.keys[SDLK_ESCAPE]) { TickSystem::tick_table.running = false; }
 
     GameLoop();

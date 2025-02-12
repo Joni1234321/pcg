@@ -167,17 +167,20 @@ struct Layout {
 using HoveredType = std::optional<NodeReference>;
 static const RelativePath font_path { "font.ttf" };
 static const RelativePath font_bold_path { "TitilliumWeb-SemiBold.ttf" };
+struct NodeInputSystem {
+    static HoveredType hovered;
+    void operator()();
+    ~NodeInputSystem() { hovered = { }; }
+};
+inline HoveredType NodeInputSystem::hovered { };
 struct NodeSystem {
     static HandleList<NodeTree> node_trees;
     static FontCollection font;
-    static HoveredType hovered;
-    ~NodeSystem() { node_trees.Clear(); font.Clear(); hovered = { }; };
-    void HoverClickEvents();
+    ~NodeSystem() { node_trees.Clear(); font.Clear(); };
     void operator()();
 };
 inline HandleList<NodeTree> NodeSystem::node_trees { 120U };
 inline FontCollection NodeSystem::font { assets::Asset(font_path) };
-inline HoveredType NodeSystem::hovered { };
 class NodeBuilder {
     NodeReference node_reference;
     NodeStyle& style { NodeSystem::node_trees[node_reference.tree_handle].node_styles[node_reference.node_handle] };

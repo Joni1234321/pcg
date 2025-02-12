@@ -33,17 +33,6 @@ struct SystemTable {
     std::vector<u32> nano_seconds;
 };
 struct SystemStructure {
-    // std::vector<std::unique_ptr<void, void(*)(void*)>> systems;
-    // template <typename T> void Add() {
-    //     auto deleter = [] (void* ptr) -> void { delete static_cast<T*>(ptr); };
-    //     systems.emplace_back(new T { }, deleter);
-    // }
-
-    // std::vector<std::function<void()>> systems;
-    // template <typename T> void Add() {
-    //     systems.emplace_back(new T { });
-    // }
-
     static SystemTable system_table;
     template <typename T>
     void Add() {
@@ -53,7 +42,6 @@ struct SystemStructure {
         system_table.names.emplace_back(typeid(T).name());
         system_table.nano_seconds.emplace_back(1U);
     }
-
     void RunSystems() {
         using namespace std::chrono;
         for (const auto [i, system] : system_table.systems | std::views::enumerate) {
@@ -63,6 +51,7 @@ struct SystemStructure {
             system_table.nano_seconds[i] = static_cast<f32>(elapsed.count());
         }
     }
+    ~SystemStructure() { system_table = { }; }
 };
 inline SystemTable SystemStructure::system_table;
 struct Window {

@@ -248,10 +248,10 @@ void Propagate(NodeReference node_reference, const NodeReaction& reaction) {
         node_reference.node_handle = NodeSystem::node_trees[node_reference.tree_handle].parents[node_reference.node_handle];
     }
 }
-void NodeSystem::HoverClickEvents() {
+void NodeInputSystem::operator()() {
     if (InputSystem::input_table.left_mouse_down && hovered.has_value()) { Propagate(hovered.value(), Click); }
 
-    if (hovered.has_value() && !node_trees[hovered->tree_handle].node_styles.ValidHandle(hovered->node_handle)) { hovered = std::nullopt; }
+    if (hovered.has_value() && !NodeSystem::node_trees[hovered->tree_handle].node_styles.ValidHandle(hovered->node_handle)) { hovered = std::nullopt; }
     const HoveredType previous_hovered = hovered;
     hovered = GetHovered(InputSystem::input_table.mouse_position);
 
@@ -259,11 +259,11 @@ void NodeSystem::HoverClickEvents() {
 
     if (previous_hovered.has_value()) {
         Propagate(previous_hovered.value(), HoverOut);
-        node_trees[previous_hovered->tree_handle].MarkDirty();
+        NodeSystem::node_trees[previous_hovered->tree_handle].MarkDirty();
     }
     if (hovered.has_value()) {
         Propagate(hovered.value(), Hover);
-        node_trees[hovered->tree_handle].MarkDirty();
+        NodeSystem::node_trees[hovered->tree_handle].MarkDirty();
     }
 }
 void NodeSystem::operator()() {

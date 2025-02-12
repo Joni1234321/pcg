@@ -127,53 +127,55 @@ private:
     HandleOptional<Animation> click_animation_handle;
 };
 enum class Scene { game, quit };
-class CosmoClick {
-    SystemStructure system_structure { };
-    TickSystem tick_system { };
-    InputSystem input_system { };
-    NodeSystem node_system { };
-
+struct CosmoClickTable {
     GameFrame game_frame { };
-
     GameData game_data { .building_counts = List { buildings.Size(), Count { 0U } }, .start_time = TimeNow(), .seconds_since_start = 0U, .money = Money { 100U }, .income = Income { 0U } };
-
     Scene scene { Scene::game };
+};
+struct CosmoClickSystem {
+    static CosmoClickTable cosmo_click_table;
+    void operator()();
+private:
+    Scene GameScene();
+};
+inline CosmoClickTable CosmoClickSystem::cosmo_click_table;
+class CosmoClick {
+    SystemStructure systems { };
+    TickSystem tick_system { };
 
 public:
     CosmoClick();
     void Tick();
-    [[nodiscard]] constexpr b8 IsRunning() const;
 
-private:
-    void GameLoop();
-    Scene GameScene();
 };
 
 constexpr u32 planet_size = 400U;
 constexpr u32 planet_border_size = 40U;
 CosmoClick::CosmoClick() {
     Window::clear_color = colors::dark_grey;
-    system_structure.Add<DebugSystem>();
-    system_structure.Add<AnimationSystem>();
-    system_structure.Add<RenderSystem>();
-    system_structure.Add<NodeSystem>();
-    system_structure.Add<PresentSystem>();
+    systems.Add<DebugSystem>();
+
+    systems.Add<TickSystem>();
+    systems.Add<InputSystem>();
+    systems.Add<NodeInputSystem>();
+
+    // system_structure.Add<>();
+    systems.Add<CosmoClickSystem>();
+
+    systems.Add<AnimationSystem>();
+    systems.Add<RenderSystem>();
+    systems.Add<NodeSystem>();
+    systems.Add<PresentSystem>();
 }
 void CosmoClick::Tick() {
-    tick_system();
-    input_system();
-    node_system.HoverClickEvents();
     if (InputSystem::input_table.keys[SDLK_ESCAPE]) { TickSystem::tick_table.running = false; }
-
-    GameLoop();
-
-    system_structure.RunSystems();
+    systems.RunSystems();
     tick_system.CaptureTime();
 }
-void CosmoClick::GameLoop() {
-    switch (scene) {
+void CosmoClickSystem::operator()() {
+    switch (cosmo_click_table.scene) {
         case Scene::game:
-            scene = GameScene();
+            cosmo_click_table.scene = GameScene();
             break;
         case Scene::quit:
             Logger().Log("Quit requested");
@@ -181,7 +183,9 @@ void CosmoClick::GameLoop() {
             break;
     }
 }
-Scene CosmoClick::GameScene() {
+Scene CosmoClickSystem::GameScene() {
+    GameData& game_data = cosmo_click_table.game_data;
+    GameFrame& game_frame = cosmo_click_table.game_frame;
     const TimePoint update_time = TimeNow();
     const Duration time_since_start = update_time - game_data.start_time;
     const u32 seconds_since_start = std::chrono::duration_cast<Seconds>(time_since_start).count();
@@ -246,14 +250,13 @@ constexpr void GameFrame::UpdateBuildItemsCount(const List<Count>& building_coun
     for (const auto [build_item, building_count] : std::views::zip(shop, building_counts)) { NodeSystem::node_trees[tree_handle].node_properties[build_item.CountHandle()].text = std::format("{:04}", building_count); }
 }
 void GameFrame::RestartClickAnimation() const { AnimationSystem::StartAnimation(click_animation_handle.GetHandle()); }
-constexpr b8 CosmoClick::IsRunning() const { return TickSystem::tick_table.running; }
 GameFrame::GameFrame() {
     const Handle<Node> frame = B(tree_handle, fill, uint2 { 0U, 0U }).Build();
     const Handle<Node> game = B(tree_handle, frame, fill).Direction(vertical).Center().Build();
     const Handle<Node> title = B(tree_handle, game, hug).Fill(colors::white).Text("Cosmo Click", FontSizes::title).Build();
     money = std::make_unique<ValueUnit<Money>>(NodeReference { tree_handle, game }, Money { 0U }, Unit::cosmos, colors::white, FontSizes::h1);
     income = std::make_unique<ValueUnit<Income>>(NodeReference { tree_handle, game }, Income { 0U }, Unit::cosmos_per_second, colors::white, FontSizes::h4);
-    const Handle<Node> click = B(tree_handle, game, fill).Padding2(uint2 { 0U, 100U }).Fill(colors::dark_grey).Alignment(top_center).Build();
+    const Handle<Node> click = B(tree_handle, game, fill).Padding2(uint2 { 0U, 100U }).Alignment(top_center).Build();
     planet_handle = B(tree_handle, click, Layout { uint2 { planet_size + planet_border_size, planet_size + planet_border_size } }).Padding(planet_border_size).Fill(colors::white).Build();
     const Handle<Node> planet_intra = B(tree_handle, planet_handle.GetHandle(), fill).Fill(colors::dark_navy_blue).Build();
     const Handle<Node> build_menu = B(tree_handle, frame, { 600U, hug }).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::faded_green).Build();
@@ -276,5 +279,5 @@ GameFrame::GameFrame() {
 
 void pcg::arcade::RunCosmoClick() {
     cosmoclick::CosmoClick cosmo_click { };
-    while (cosmo_click.IsRunning()) { cosmo_click.Tick(); }
+    while (pce::TickSystem::tick_table.running) { cosmo_click.Tick(); }
 }
