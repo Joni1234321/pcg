@@ -7,17 +7,25 @@
 #include "u_collections.hpp"
 #include "u_types.hpp"
 
-#include <SDL3/SDL_render.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
 namespace pce::ui {
-class TickFrame {
-    HandleOptional<Node> tick_handle { };
-
-public:
+struct TickFrame {
     Handle<NodeTree> tree_handle { NodeSystem::node_trees.EmplaceBack() };
-    TickFrame() { tick_handle = B(tree_handle, hug, { 10U, 0U }).Text("Tick", FontSizes::tiny).Fill(colors::radiant_orange).Build(); }
-    void SetInfo(u32 tick, u32 tps, u32 fps) { NodeSystem::node_trees[tree_handle].node_properties[tick_handle.GetHandle()].text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, tps, fps); }
+    TickFrame() { SetInfo(0,0,0); }
+    void SetInfo(u32 tick, u32 tps, u32 fps) {
+        static u32 i = 0;
+        if (i++ % 100 != 0) { return; }
+        NodeSystem::node_trees[tree_handle].Clear();
+        Handle<Node> frame = B(tree_handle, hug, {10U, 0U}).Direction(vertical).Build();
+        Handle<Node> ticks = B(tree_handle, frame, hug).Text(std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, tps, fps), FontSizes::tiny).Fill(colors::radiant_orange).Build();
+        Handle<Node> systems = B(tree_handle, frame, hug).Direction(vertical).Gap(10).Build();
+        for (const auto [name, ns] : std::views::zip(SystemStructure::system_table.names, SystemStructure::system_table.nano_seconds)) {
+            constexpr f32 THOUSANDTH = 0.001F;
+            (void)B(tree_handle, systems, fill).Fill(colors::radiant_orange).Text(std::format("{:.3f}ms | {}", ns * THOUSANDTH * THOUSANDTH, name), FontSizes::tiny).Build();
+        }
+        NodeSystem::node_trees[tree_handle].MarkDirty();
+    }
 };
 struct InspectorFrame {
     Handle<NodeTree> tree_handle { NodeSystem::node_trees.EmplaceBack() };
@@ -55,14 +63,17 @@ struct Animation {
     u32 duration_ms;
     AnimationState state;
 };
-struct AnimationSystem {
+struct AnimationTable {
     static constexpr u32 DEFAULT_COUNT = 128U;
     HandleList<Animation> animations { DEFAULT_COUNT };
-
-    Handle<Animation> Register(const AnimationDesc& animation_desc);
-    void StartAnimation(Handle<Animation> animation_handle);
+};
+struct AnimationSystem {
+    static AnimationTable animation_table;
+    static Handle<Animation> Register(const AnimationDesc& animation_desc);
+    static void StartAnimation(Handle<Animation> animation_handle);
     void operator()();
 };
+inline AnimationTable AnimationSystem::animation_table;
 
 struct Particle {
     uint2 position;

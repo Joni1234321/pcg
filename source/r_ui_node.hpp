@@ -173,7 +173,7 @@ struct NodeSystem {
     static HoveredType hovered;
     ~NodeSystem() { node_trees.Clear(); font.Clear(); hovered = { }; };
     void HoverClickEvents();
-    void RenderTrees();
+    void operator()();
 };
 inline HandleList<NodeTree> NodeSystem::node_trees { 120U };
 inline FontCollection NodeSystem::font { assets::Asset(font_path) };

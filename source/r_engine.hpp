@@ -1,8 +1,10 @@
 #pragma once
 
 #include <filesystem>
+#include <functional>
 #include <ranges>
 #include <u_ecs.hpp>
+#include <u_logger.hpp>
 
 #include "u_collections.hpp"
 #include "u_types.hpp"
@@ -24,6 +26,45 @@ inline AbsolutePath Asset(const AssetPath& asset_path) {
 namespace pce {
 using Tick = NamedType<u32, struct TickTag, Arithmetic>;
 
+struct SystemTable {
+    std::vector<std::function<void()>> systems;
+    std::vector<std::unique_ptr<void, void(*)(void*)>> system_storage;
+    std::vector<String> names;
+    std::vector<u32> nano_seconds;
+};
+struct SystemStructure {
+    // std::vector<std::unique_ptr<void, void(*)(void*)>> systems;
+    // template <typename T> void Add() {
+    //     auto deleter = [] (void* ptr) -> void { delete static_cast<T*>(ptr); };
+    //     systems.emplace_back(new T { }, deleter);
+    // }
+
+    // std::vector<std::function<void()>> systems;
+    // template <typename T> void Add() {
+    //     systems.emplace_back(new T { });
+    // }
+
+    static SystemTable system_table;
+    template <typename T>
+    void Add() {
+        auto ptr = new T();  // Create system instance
+        system_table.system_storage.emplace_back(ptr, [](void* p) { delete static_cast<T*>(p); }); // Ensure destruction
+        system_table.systems.emplace_back([ptr]() { (*static_cast<T*>(ptr))(); });  // Store callable functor
+        system_table.names.emplace_back(typeid(T).name());
+        system_table.nano_seconds.emplace_back(1U);
+    }
+
+    void RunSystems() {
+        using namespace std::chrono;
+        for (const auto [i, system] : system_table.systems | std::views::enumerate) {
+            TimePoint start = TimeNow();
+            system();
+            Duration elapsed = TimeNow() - start;
+            system_table.nano_seconds[i] = static_cast<f32>(elapsed.count());
+        }
+    }
+};
+inline SystemTable SystemStructure::system_table;
 struct Window {
     static SDL_Window* window;
     static SDL_Renderer* renderer;
@@ -68,7 +109,9 @@ struct RenderSystem {
         (void)SDL_SetRenderDrawColor(Window::renderer, Window::clear_color.r, Window::clear_color.g, Window::clear_color.b, Window::clear_color.a);
         (void)SDL_RenderClear(Window::renderer);
     }
-    void Present() {
+};
+struct PresentSystem {
+    void operator()() {
         (void)SDL_GetWindowSize(Window::window, reinterpret_cast<i32*>(&Window::screen_size.x), reinterpret_cast<i32*>(&Window::screen_size.y));
         (void)SDL_RenderPresent(Window::renderer);
     }
@@ -93,7 +136,7 @@ struct TickSystem {
     static TickTable tick_table;
     TickSystem() {
         tick_table.running = true;
-        tick_table.tick = Tick{ 0U };
+        tick_table.tick = Tick { 0U };
         tick_table.tick_time = 1.0F;
         tick_table.delta_time = 1.0F;
     }

@@ -74,6 +74,7 @@ public:
 };
 class ClickCore {
     RenderSystem render_system { };
+    PresentSystem present_system { };
     TickSystem tick_system { };
     InputSystem input_system { };
     NodeSystem node_render_system { };
@@ -117,8 +118,8 @@ void ClickCore::Tick() {
     GameLoop();
 
     render_system();
-    node_render_system.RenderTrees();
-    render_system.Present();
+    node_render_system();
+    present_system();
     tick_system.CaptureTime();
 }
 void ClickCore::GameLoop() {

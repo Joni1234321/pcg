@@ -226,17 +226,17 @@ const FrameElements& GetFrameElements(NodeTree& tree) {
 }
 
 void Hover(const NodeReference node_reference) {
-    Logger().Log("Hover {}", NodeSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle].text);
+    // Logger().Log("Hover {}", NodeSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle].text);
     NodeProperties& properties = NodeSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle];
     if (properties.on_hover) { properties.on_hover(node_reference); }
 }
 void HoverOut(const NodeReference node_reference) {
-    Logger().Log("Hover Out {}", NodeSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle].text);
+    // Logger().Log("Hover Out {}", NodeSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle].text);
     NodeProperties& properties = NodeSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle];
     if (properties.on_hover_out) { properties.on_hover_out(node_reference); }
 }
 void Click(const NodeReference node_reference) {
-    Logger().Log("Clicked {}", NodeSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle].text);
+    // Logger().Log("Clicked {}", NodeSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle].text);
     NodeProperties& properties = NodeSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle];
     if (properties.on_click) { properties.on_click(node_reference); }
 }
@@ -266,7 +266,7 @@ void NodeSystem::HoverClickEvents() {
         node_trees[hovered->tree_handle].MarkDirty();
     }
 }
-void NodeSystem::RenderTrees() {
+void NodeSystem::operator()() {
     for (NodeTree& tree : node_trees | std::views::reverse | std::views::filter(&NodeTree::GetDisplay)) {
         const FrameElements& frame_elements = GetFrameElements(tree);
         for (const RectangleElement& element : frame_elements.rectangles) {
@@ -279,18 +279,18 @@ void NodeSystem::RenderTrees() {
 f32 EasingSin(const f32 t) { return math::Sin(t) * 0.5F + 0.5F; }
 f32 EasingCos(const f32 t) { return math::Cos(t) * 0.5F + 0.5F; }
 Handle<Animation> AnimationSystem::Register(const AnimationDesc& animation_desc) {
-    Logger().Log("Size of action {} and action {} size {}", sizeof(animation_desc), sizeof(animation_desc.action), animations.Size());
+    Logger().Log("Size of action {} and action {} size {}", sizeof(animation_desc), sizeof(animation_desc.action), animation_table.animations.Size());
     const Animation animation { .action = animation_desc.action, .offset_ms = static_cast<u32>(SDL_GetTicks()), .duration_ms = animation_desc.duration_ms, .state = animation_desc.state };
-    for (Handle<Animation> handle { 0U }; handle.id < animations.Size(); ++handle.id) {
-        if (animations[handle].state == AnimationState::recycle) {
-            animations[handle] = animation;
+    for (Handle<Animation> handle { 0U }; handle.id < animation_table.animations.Size(); ++handle.id) {
+        if (animation_table.animations[handle].state == AnimationState::recycle) {
+            animation_table.animations[handle] = animation;
             return handle;
         }
     }
-    return animations.PushBack(animation);
+    return animation_table.animations.PushBack(animation);
 }
 void AnimationSystem::StartAnimation(const Handle<Animation> animation_handle) {
-    Animation& animation = animations[animation_handle];
+    Animation& animation = animation_table.animations[animation_handle];
     animation.offset_ms = static_cast<u32>(SDL_GetTicks());
     switch (animation.state) {
         case AnimationState::run_once:
@@ -308,7 +308,7 @@ void AnimationSystem::StartAnimation(const Handle<Animation> animation_handle) {
 }
 void AnimationSystem::operator()() {
     const u32 current_ms = SDL_GetTicks();
-    for (Animation& animation : animations) {
+    for (Animation& animation : animation_table.animations) {
         f32 t = static_cast<f32>(current_ms - animation.offset_ms) / static_cast<f32>(animation.duration_ms);
         switch (animation.state) {
             case AnimationState::run_once:
