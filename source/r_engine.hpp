@@ -27,20 +27,20 @@ namespace pce {
 using Tick = NamedType<u32, struct TickTag, Arithmetic>;
 
 struct SystemTable {
-    std::vector<std::function<void()>> systems;
-    std::vector<std::unique_ptr<void, void(*)(void*)>> system_storage;
-    std::vector<String> names;
-    std::vector<u32> nano_seconds;
+    List<std::function<void()>> systems;
+    List<std::unique_ptr<void, void(*)(void*)>> system_storage;
+    List<String> names;
+    List<u32> nano_seconds;
 };
 struct SystemStructure {
     static SystemTable system_table;
     template <typename T>
     void Add() {
         auto ptr = new T();  // Create system instance
-        system_table.system_storage.emplace_back(ptr, [](void* p) { delete static_cast<T*>(p); }); // Ensure destruction
-        system_table.systems.emplace_back([ptr]() { (*static_cast<T*>(ptr))(); });  // Store callable functor
-        system_table.names.emplace_back(typeid(T).name());
-        system_table.nano_seconds.emplace_back(1U);
+        system_table.system_storage.EmplaceBack(ptr, [](void* p) { delete static_cast<T*>(p); }); // Ensure destruction
+        system_table.systems.EmplaceBack([ptr]() { (*static_cast<T*>(ptr))(); });  // Store callable functor
+        system_table.names.EmplaceBack(typeid(T).name());
+        system_table.nano_seconds.EmplaceBack(1U);
     }
     void RunSystems() {
         using namespace std::chrono;
