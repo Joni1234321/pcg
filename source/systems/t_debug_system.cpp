@@ -3,6 +3,7 @@
 #include <stack>
 
 #include "g_components.hpp"
+#include "engine/u_colors.hpp"
 #include "orchestra.hpp"
 
 #include "engine/u_types.hpp"

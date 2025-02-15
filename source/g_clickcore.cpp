@@ -1,12 +1,14 @@
 #include "g_arcade.hpp"
 
-#include "engine/r_engine.hpp"
+#include "engine/r_window.hpp"
 #include "systems/r_ui_node.hpp"
 #include "engine/u_collections.hpp"
+#include "engine/u_colors.hpp"
 #include "engine/u_util.hpp"
 #include "engine/u_types.hpp"
 
 #include "systems/orchestra.hpp"
+#include "systems/r_render.hpp"
 #include "systems/t_debug_system.hpp"
 #include "systems/t_tick_system.hpp"
 

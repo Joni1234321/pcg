@@ -1,14 +1,14 @@
 #pragma once
 
+#include <chrono>
 #include <format>
+#include <queue>
 #include <set>
 #include <span>
-#include <utility>
-#include <vector>
-#include <filesystem>
-#include <queue>
 #include <stack>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "u_types.hpp"
 #include "u_util.hpp"
@@ -30,9 +30,6 @@ using Nanoseconds = std::chrono::nanoseconds;
 [[nodiscard]] inline TimePoint TimeNow() noexcept { return std::chrono::high_resolution_clock::now(); };
 // template <typename T> [[nodiscard]] Duration DurationCast (Duration duration) { return std::chrono::duration_cast<T>(duration); }
 
-using AbsolutePath = std::filesystem::path;
-using RelativePath = std::filesystem::path;
-using AssetPath = std::filesystem::path;
 
 template <typename T, typename D> class UniquePointer {
     T* pointer;

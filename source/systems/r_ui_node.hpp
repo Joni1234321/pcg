@@ -8,7 +8,8 @@
 #include "../engine/u_collections.hpp"
 #include "../engine/u_logger.hpp"
 #include "../engine/u_types.hpp"
-#include "../engine/r_engine.hpp"
+
+#include "engine/u_assets.hpp"
 
 namespace pce::ui {
 struct CloseFont {
@@ -180,7 +181,7 @@ struct NodeRenderSystem {
     void operator()();
 };
 inline HandleList<NodeTree> NodeRenderSystem::node_trees { 120U };
-inline FontCollection NodeRenderSystem::font { assets::Asset(font_path) };
+inline FontCollection NodeRenderSystem::font { Asset(font_path) };
 class NodeBuilder {
     NodeReference node_reference;
     NodeStyle& style { NodeRenderSystem::node_trees[node_reference.tree_handle].node_styles[node_reference.node_handle] };

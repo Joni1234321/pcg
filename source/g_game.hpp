@@ -1,7 +1,6 @@
 #pragma once
 
 #include "g_components.hpp"
-#include "engine/r_engine.hpp"
 #include "engine/u_logger.hpp"
 #include "engine/u_types.hpp"
 #include "systems/r_ui_node.hpp"

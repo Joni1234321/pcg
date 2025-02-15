@@ -1,15 +1,9 @@
 #pragma once
 
 #include <chrono>
-#include <ranges>
 
 #include "engine/u_ecs.hpp"
 #include "engine/u_types.hpp"
-
-#include <SDL3/SDL_log.h>
-#include <SDL3/SDL_render.h>
-
-#include <SDL3_ttf/SDL_ttf.h>
 
 namespace pce {
 using Tick = NamedType<u32, struct TickTag, Arithmetic>;

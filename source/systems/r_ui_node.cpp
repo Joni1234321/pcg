@@ -5,6 +5,7 @@
 #include "orchestra.hpp"
 #include "t_tick_system.hpp"
 
+#include "engine/r_window.hpp"
 #include "engine/u_colors.hpp"
 #include "engine/u_types.hpp"
 

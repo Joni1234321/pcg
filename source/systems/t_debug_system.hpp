@@ -1,8 +1,6 @@
 #pragma once
 #include "r_ui_node.hpp"
 
-#include "engine/u_colors.hpp"
-
 namespace pce::ui {
 struct TickFrame {
     Handle<NodeTree> tree_handle { NodeRenderSystem::node_trees.EmplaceBack() };
