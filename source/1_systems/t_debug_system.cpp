@@ -2,11 +2,11 @@
 
 #include <stack>
 
-#include "g_components.hpp"
-#include "engine/u_colors.hpp"
+#include "../g_components.hpp"
+#include "0_engine/u_colors.hpp"
 #include "orchestra.hpp"
 
-#include "engine/u_types.hpp"
+#include "0_engine/u_types.hpp"
 
 namespace pce::ui {
 namespace colors = colors;

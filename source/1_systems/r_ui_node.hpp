@@ -5,11 +5,11 @@
 #include <SDL3/SDL_render.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-#include "../engine/u_collections.hpp"
-#include "../engine/u_logger.hpp"
-#include "../engine/u_types.hpp"
+#include "0_engine/u_collections.hpp"
+#include "0_engine/u_logger.hpp"
+#include "0_engine/u_types.hpp"
 
-#include "engine/u_assets.hpp"
+#include "0_engine/u_assets.hpp"
 
 namespace pce::ui {
 struct CloseFont {
@@ -73,7 +73,7 @@ struct LayoutLength {
     u32 resolved;
     Constraint constraint;
 };
-class NodeTree;
+struct NodeTree;
 class NodeBuilder;
 struct Node;
 struct NodeStyle : LogDestroyWithCount<NodeStyle> {

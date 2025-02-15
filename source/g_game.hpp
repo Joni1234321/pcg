@@ -1,9 +1,12 @@
 #pragma once
 
 #include "g_components.hpp"
-#include "engine/u_logger.hpp"
-#include "engine/u_types.hpp"
-#include "systems/r_ui_node.hpp"
+
+#include "0_engine/u_logger.hpp"
+#include "0_engine/u_types.hpp"
+
+#include "1_systems/r_ui_node.hpp"
+
 namespace pcg {
 struct NewGameSettings {
     u32 players;

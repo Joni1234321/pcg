@@ -1,18 +1,17 @@
-#include <engine/u_algorithm.hpp>
-
 #include "g_arcade.hpp"
 
-#include "engine/r_window.hpp"
-#include "systems/r_ui_node.hpp"
-#include "engine/u_collections.hpp"
-#include "engine/u_colors.hpp"
-#include "engine/u_types.hpp"
+#include "0_engine/r_window.hpp"
+#include "0_engine/u_algorithm.hpp"
+#include "0_engine/u_collections.hpp"
+#include "0_engine/u_colors.hpp"
+#include "0_engine/u_types.hpp"
 
-#include "systems/orchestra.hpp"
-#include "systems/r_render.hpp"
-#include "systems/t_debug_system.hpp"
-#include "systems/t_tick_system.hpp"
-#include "systems/u_animation_system.hpp"
+#include "1_systems/orchestra.hpp"
+#include "1_systems/r_render.hpp"
+#include "1_systems/r_ui_node.hpp"
+#include "1_systems/t_debug_system.hpp"
+#include "1_systems/t_tick_system.hpp"
+#include "1_systems/u_animation_system.hpp"
 
 namespace pcg::cosmoclick {
 using namespace pce;
