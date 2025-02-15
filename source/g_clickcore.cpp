@@ -88,7 +88,7 @@ class ClickCore {
     Scene scene { Scene::main_menu };
 
 public:
-    ClickCore() { Window::clear_color = colors::dark_slate; }
+    ClickCore() { Window::window_config.clear_color = colors::dark_slate; }
     void Tick();
 
 private:
@@ -114,7 +114,7 @@ void ClickCore::Tick() {
     input_system();
     debug_system();
     node_input_system();
-    if (InputSystem::input_table.keys[SDLK_ESCAPE]) { TickSystem::tick_table.running = false; }
+    if (InputSystem::input_table.keys_down[SDLK_ESCAPE]) { TickSystem::tick_table.running = false; }
 
     GameLoop();
 

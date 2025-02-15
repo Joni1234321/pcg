@@ -135,41 +135,40 @@ struct CosmoClickTable {
 struct CosmoClickSystem {
     static CosmoClickTable cosmo_click_table;
     void operator()();
+
 private:
     Scene GameScene();
 };
 inline CosmoClickTable CosmoClickSystem::cosmo_click_table;
 class CosmoClick {
-    SystemStructure systems { };
+    Orchestra orchestra { };
     TickSystem tick_system { };
 
 public:
     CosmoClick();
     void Tick();
-
 };
 
 constexpr u32 planet_size = 400U;
 constexpr u32 planet_border_size = 40U;
 CosmoClick::CosmoClick() {
-    Window::clear_color = colors::dark_grey;
-    systems.Add<DebugSystem>();
+    Window::window_config.clear_color = colors::dark_grey;
+    orchestra.Add<DebugSystem>();
 
-    systems.Add<TickSystem>();
-    systems.Add<InputSystem>();
-    systems.Add<NodeInputSystem>();
+    orchestra.Add<TickSystem>();
+    orchestra.Add<InputSystem>();
+    orchestra.Add<NodeInputSystem>();
 
-    // system_structure.Add<>();
-    systems.Add<CosmoClickSystem>();
+    orchestra.Add<CosmoClickSystem>();
 
-    systems.Add<AnimationSystem>();
-    systems.Add<RenderSystem>();
-    systems.Add<NodeSystem>();
-    systems.Add<PresentSystem>();
+    orchestra.Add<AnimationSystem>();
+    orchestra.Add<RenderSystem>();
+    orchestra.Add<NodeSystem>();
+    orchestra.Add<PresentSystem>();
 }
 void CosmoClick::Tick() {
-    if (InputSystem::input_table.keys[SDLK_ESCAPE]) { TickSystem::tick_table.running = false; }
-    systems.RunSystems();
+    if (InputSystem::input_table.keys_down[SDLK_ESCAPE]) { TickSystem::tick_table.running = false; }
+    orchestra.RunSystems();
     tick_system.CaptureTime();
 }
 void CosmoClickSystem::operator()() {
@@ -271,7 +270,8 @@ GameFrame::GameFrame() {
         },
         .duration_ms = 500U, .state = AnimationState::repeat };
     const AnimationDesc click_animation_desc {
-        .action = [this] (const f32 t) { NodeSystem::node_trees[tree_handle].node_styles[planet_handle.GetHandle()].background_color = LightenColor(colors::blue, t); }, .duration_ms = 300U, .state = AnimationState::keep_alive_stopped };
+        .action = [this] (const f32 t) { NodeSystem::node_trees[tree_handle].node_styles[planet_handle.GetHandle()].background_color = LightenColor(colors::blue, t); }, .duration_ms = 300U,
+        .state = AnimationState::keep_alive_stopped };
     planet_animation_handle = AnimationSystem::Register(planet_animation_desc);
     click_animation_handle = AnimationSystem::Register(click_animation_desc);
 }

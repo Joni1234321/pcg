@@ -26,44 +26,47 @@ inline AbsolutePath Asset(const AssetPath& asset_path) {
 namespace pce {
 using Tick = NamedType<u32, struct TickTag, Arithmetic>;
 
-struct SystemTable {
+struct OrchestraConfig {
     List<std::function<void()>> systems;
     List<std::unique_ptr<void, void(*)(void*)>> system_storage;
     List<String> names;
     List<u32> nano_seconds;
 };
-struct SystemStructure {
-    static SystemTable system_table;
+struct Orchestra {
+    static OrchestraConfig orchestra_table;
     template <typename T>
     void Add() {
         auto ptr = new T();  // Create system instance
-        system_table.system_storage.EmplaceBack(ptr, [](void* p) { delete static_cast<T*>(p); }); // Ensure destruction
-        system_table.systems.EmplaceBack([ptr]() { (*static_cast<T*>(ptr))(); });  // Store callable functor
-        system_table.names.EmplaceBack(typeid(T).name());
-        system_table.nano_seconds.EmplaceBack(1U);
+        orchestra_table.system_storage.EmplaceBack(ptr, [](void* p) { delete static_cast<T*>(p); }); // Ensure destruction
+        orchestra_table.systems.EmplaceBack([ptr]() { (*static_cast<T*>(ptr))(); });  // Store callable functor
+        orchestra_table.names.EmplaceBack(typeid(T).name());
+        orchestra_table.nano_seconds.EmplaceBack(1U);
     }
     void RunSystems() {
         using namespace std::chrono;
-        for (const auto [i, system] : system_table.systems | std::views::enumerate) {
+        for (const auto [i, system] : orchestra_table.systems | std::views::enumerate) {
             TimePoint start = TimeNow();
             system();
             Duration elapsed = TimeNow() - start;
-            system_table.nano_seconds[i] = static_cast<f32>(elapsed.count());
+            orchestra_table.nano_seconds[i] = static_cast<f32>(elapsed.count());
         }
     }
-    ~SystemStructure() { system_table = { }; }
+    ~Orchestra() { orchestra_table = { }; }
 };
-inline SystemTable SystemStructure::system_table;
+inline OrchestraConfig Orchestra::orchestra_table;
+struct WindowConfig {
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    TTF_TextEngine* text_engine;
+    uint2 screen_size;
+    SDL_Color clear_color;
+};
 struct Window {
-    static SDL_Window* window;
-    static SDL_Renderer* renderer;
-    static TTF_TextEngine* text_engine;
-    static uint2 screen_size;
-    static SDL_Color clear_color;
+    static WindowConfig window_config;
 
     explicit Window(const uint2 size) {
         constexpr u32 window_flags = SDL_WINDOW_RESIZABLE;
-        if (!SDL_CreateWindowAndRenderer("Video Game", static_cast<i32>(size.x), static_cast<i32>(size.y), window_flags, &window, &renderer)) {
+        if (!SDL_CreateWindowAndRenderer("Video Game", static_cast<i32>(size.x), static_cast<i32>(size.y), window_flags, &window_config.window, &window_config.renderer)) {
             SDL_Log("SDL_CreateWindowAndRenderer failed (%s)", SDL_GetError());
             SDL_Quit();
         }
@@ -75,34 +78,30 @@ struct Window {
             SDL_Log("SDL_ttf failed (%s)", SDL_GetError());
             SDL_Quit();
         }
-        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-        text_engine = TTF_CreateRendererTextEngine(renderer);
-        screen_size = size;
+        SDL_SetRenderDrawBlendMode(window_config.renderer, SDL_BLENDMODE_BLEND);
+        window_config.text_engine = TTF_CreateRendererTextEngine(window_config.renderer);
+        window_config.screen_size = size;
     }
     ~Window() {
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        TTF_DestroyRendererTextEngine(text_engine);
+        SDL_DestroyRenderer(window_config.renderer);
+        SDL_DestroyWindow(window_config.window);
+        TTF_DestroyRendererTextEngine(window_config.text_engine);
         TTF_Quit();
         SDL_Quit();
     }
 };
-inline SDL_Window* Window::window;
-inline SDL_Renderer* Window::renderer;
-inline uint2 Window::screen_size;
-inline SDL_Color Window::clear_color;
-inline TTF_TextEngine* Window::text_engine;
+inline WindowConfig Window::window_config;
 
 struct RenderSystem {
     void operator()() {
-        (void)SDL_SetRenderDrawColor(Window::renderer, Window::clear_color.r, Window::clear_color.g, Window::clear_color.b, Window::clear_color.a);
-        (void)SDL_RenderClear(Window::renderer);
+        (void)SDL_SetRenderDrawColor(Window::window_config.renderer, Window::window_config.clear_color.r, Window::window_config.clear_color.g, Window::window_config.clear_color.b, Window::window_config.clear_color.a);
+        (void)SDL_RenderClear(Window::window_config.renderer);
     }
 };
 struct PresentSystem {
     void operator()() {
-        (void)SDL_GetWindowSize(Window::window, reinterpret_cast<i32*>(&Window::screen_size.x), reinterpret_cast<i32*>(&Window::screen_size.y));
-        (void)SDL_RenderPresent(Window::renderer);
+        (void)SDL_GetWindowSize(Window::window_config.window, reinterpret_cast<i32*>(&Window::window_config.screen_size.x), reinterpret_cast<i32*>(&Window::window_config.screen_size.y));
+        (void)SDL_RenderPresent(Window::window_config.renderer);
     }
 };
 
@@ -115,6 +114,8 @@ struct TickTable {
 };
 struct InputTable {
     UnorderedMap<SDL_Keycode, b8> keys { };
+    UnorderedMap<SDL_Keycode, b8> keys_down { };
+    UnorderedMap<SDL_Keycode, b8> keys_up { };
     b8 quit { false };
     b8 left_mouse { false };
     b8 left_mouse_down { false };
@@ -143,7 +144,8 @@ struct TickSystem {
 struct InputSystem {
     static InputTable input_table;
     void operator()() {
-        for (b8& key : input_table.keys | std::ranges::views::values) { key = false; }
+        for (b8& key : input_table.keys_up | std::ranges::views::values) { key = false; }
+        for (b8& key : input_table.keys_down | std::ranges::views::values) { key = false; }
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
@@ -151,8 +153,13 @@ struct InputSystem {
                     input_table.quit = true;
                     return;
                 }
+                case SDL_EVENT_KEY_UP:
+                    input_table.keys[event.key.key] = false;
+                    input_table.keys_up[event.key.key] = true;
+                    break;
                 case SDL_EVENT_KEY_DOWN:
                     input_table.keys[event.key.key] = true;
+                    input_table.keys_down[event.key.key] = true;
                     break;
                 default:
                     break;

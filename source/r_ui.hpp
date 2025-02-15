@@ -20,7 +20,7 @@ struct TickFrame {
         Handle<Node> frame = B(tree_handle, hug, {10U, 0U}).Direction(vertical).Build();
         Handle<Node> ticks = B(tree_handle, frame, hug).Text(std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, tps, fps), FontSizes::tiny).Fill(colors::radiant_orange).Build();
         Handle<Node> systems = B(tree_handle, frame, hug).Direction(vertical).Gap(10).Build();
-        for (const auto [name, ns] : std::views::zip(SystemStructure::system_table.names, SystemStructure::system_table.nano_seconds)) {
+        for (const auto [name, ns] : std::views::zip(Orchestra::orchestra_table.names, Orchestra::orchestra_table.nano_seconds)) {
             constexpr f32 THOUSANDTH = 0.001F;
             (void)B(tree_handle, systems, fill).Fill(colors::radiant_orange).Text(std::format("{:.3f}ms | {}", ns * THOUSANDTH * THOUSANDTH, name), FontSizes::tiny).Build();
         }
@@ -41,10 +41,11 @@ struct DebugSystem {
     InspectorFrame inspector_frame { };
 
     void operator()() {
-        // if (InputSystem::input_table.left_mouse_down) {
-        //     NodeSystem::node_trees[inspector_frame.tree_handle].MarkDirty();
-        //     inspector_frame.ShowElementStructure(NodeSystem::hovered);
-        // }
+        if (InputSystem::input_table.left_mouse_down) {
+            NodeSystem::node_trees[inspector_frame.tree_handle].MarkDirty();
+            if (InputSystem::input_table.keys[SDLK_LALT]) { inspector_frame.ShowElementStructure(NodeInputSystem::hovered); }
+            else { NodeSystem::node_trees[inspector_frame.tree_handle].Clear(); }
+        }
         NodeSystem::node_trees[tick_frame.tree_handle].MarkDirty();
         tick_frame.SetInfo(TickSystem::tick_table.tick.Value(), 1.0F / TickSystem::tick_table.tick_time, 1.0F / TickSystem::tick_table.delta_time);
     }
