@@ -22,12 +22,12 @@ Handle<Node> CreateDebugNodeComponent(const u32 layer, const String& text, const
 void InspectorFrame::ShowElementStructure(const HoveredType hovered) {
     using NodeHandleLayer = std::tuple<Handle<Node>, u32>;
     if (!hovered.has_value() || hovered->tree_handle.id == tree_handle.id) { return; }
-    NodeSystem::node_trees[tree_handle].Clear();
+    NodeRenderSystem::node_trees[tree_handle].Clear();
     Stack<NodeHandleLayer> node_handles;
     node_handles.push(NodeHandleLayer { hovered->node_handle, 0U });
 
     const Handle<Node> frame = B(tree_handle, hug, { 10U, 30U }).Fill(colors::clear).Fill(colors::white).Direction(vertical).Build();
-    const NodeTree& hovered_tree = NodeSystem::node_trees[hovered->tree_handle];
+    const NodeTree& hovered_tree = NodeRenderSystem::node_trees[hovered->tree_handle];
     while (!node_handles.empty()) {
         const auto [node_handle, layer] = node_handles.top();
         node_handles.pop();

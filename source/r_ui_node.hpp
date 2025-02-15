@@ -173,18 +173,18 @@ struct NodeInputSystem {
     ~NodeInputSystem() { hovered = { }; }
 };
 inline HoveredType NodeInputSystem::hovered { };
-struct NodeSystem {
+struct NodeRenderSystem {
     static HandleList<NodeTree> node_trees;
     static FontCollection font;
-    ~NodeSystem() { node_trees.Clear(); font.Clear(); };
+    ~NodeRenderSystem() { node_trees.Clear(); font.Clear(); };
     void operator()();
 };
-inline HandleList<NodeTree> NodeSystem::node_trees { 120U };
-inline FontCollection NodeSystem::font { assets::Asset(font_path) };
+inline HandleList<NodeTree> NodeRenderSystem::node_trees { 120U };
+inline FontCollection NodeRenderSystem::font { assets::Asset(font_path) };
 class NodeBuilder {
     NodeReference node_reference;
-    NodeStyle& style { NodeSystem::node_trees[node_reference.tree_handle].node_styles[node_reference.node_handle] };
-    NodeProperties& properties { NodeSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle] };
+    NodeStyle& style { NodeRenderSystem::node_trees[node_reference.tree_handle].node_styles[node_reference.node_handle] };
+    NodeProperties& properties { NodeRenderSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle] };
 
 public:
     NodeBuilder(Handle<NodeTree> tree_handle, Layout new_layout, uint2 position);

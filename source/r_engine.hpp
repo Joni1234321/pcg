@@ -92,7 +92,7 @@ struct Window {
 };
 inline WindowConfig Window::window_config;
 
-struct RenderSystem {
+struct RenderClearSystem {
     void operator()() {
         (void)SDL_SetRenderDrawColor(Window::window_config.renderer, Window::window_config.clear_color.r, Window::window_config.clear_color.g, Window::window_config.clear_color.b, Window::window_config.clear_color.a);
         (void)SDL_RenderClear(Window::window_config.renderer);
