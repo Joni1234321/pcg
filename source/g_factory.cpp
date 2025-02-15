@@ -1,7 +1,7 @@
 #include <engine/r_engine.hpp>
 
 #include "g_components.hpp"
-#include "u_types.hpp"
+#include "engine/u_types.hpp"
 
 //TODO: PLYER  PLANET CONCEPT CONSTRAINTS
 namespace pcg {

@@ -4,7 +4,7 @@
 #include "engine/r_engine.hpp"
 #include "r_ui.hpp"
 #include "u_logger.hpp"
-#include "u_types.hpp"
+#include "engine/u_types.hpp"
 
 namespace pcg {
 struct NewGameSettings {

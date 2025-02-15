@@ -5,8 +5,8 @@
 #include "g_components.hpp"
 
 #include "u_logger.hpp"
-#include "u_types.hpp"
-#include "u_util.hpp"
+#include "engine/u_types.hpp"
+#include "engine/u_util.hpp"
 #include "u_table.hpp"
 
 namespace pcg {

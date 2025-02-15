@@ -6,7 +6,7 @@
 #include "r_ui.hpp"
 #include "r_ui_node.hpp"
 #include "u_collections.hpp"
-#include "u_types.hpp"
+#include "engine/u_types.hpp"
 
 namespace pcg::cosmoclick {
 using namespace pce;
