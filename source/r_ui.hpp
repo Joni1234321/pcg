@@ -12,10 +12,11 @@
 namespace pce::ui {
 struct TickFrame {
     Handle<NodeTree> tree_handle { NodeRenderSystem::node_trees.EmplaceBack() };
-    TickFrame() { SetInfo(0,0,0); }
-    void SetInfo(u32 tick, u32 tps, u32 fps) {
-        static u32 i = 0;
-        if (i++ % 100 != 0) { return; }
+    TickFrame() { DisplayInfo(); }
+    void DisplayInfo() {
+        u32 tick = TickSystem::tick_table.tick.Value();
+        u32 tps = 1.0F / TickSystem::tick_table.tick_time;
+        u32 fps = 1.0F / TickSystem::tick_table.delta_time;
         NodeRenderSystem::node_trees[tree_handle].Clear();
         Handle<Node> frame = B(tree_handle, hug, {10U, 0U}).Direction(vertical).Build();
         Handle<Node> ticks = B(tree_handle, frame, hug).Text(std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, tps, fps), FontSizes::tiny).Fill(colors::radiant_orange).Build();
@@ -47,7 +48,7 @@ struct DebugSystem {
             else { NodeRenderSystem::node_trees[inspector_frame.tree_handle].Clear(); }
         }
         NodeRenderSystem::node_trees[tick_frame.tree_handle].MarkDirty();
-        tick_frame.SetInfo(TickSystem::tick_table.tick.Value(), 1.0F / TickSystem::tick_table.tick_time, 1.0F / TickSystem::tick_table.delta_time);
+        if (TickSystem::tick_table.tick.Value() % 100 == 0) { tick_frame.DisplayInfo(); }
     }
 };
 inline f32 EasingSin(f32 t);
