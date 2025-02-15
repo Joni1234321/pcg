@@ -132,19 +132,19 @@ private:
     HandleOptional<Animation> click_animation_handle;
 };
 enum class Scene { game, quit };
-struct CosmoClickTable {
+struct CosmoClickConfig {
     GameFrame game_frame { };
     GameData game_data { .building_counts = List { buildings.Size(), Count { 0U } }, .start_time = TimeNow(), .seconds_since_start = 0U, .money = Money { 100U }, .income = Income { 0U } };
     Scene scene { Scene::game };
 };
 struct CosmoClickSystem {
-    static CosmoClickTable cosmo_click_table;
+    static CosmoClickConfig cosmo_click_config;
     void operator()();
 
 private:
     Scene GameScene();
 };
-inline CosmoClickTable CosmoClickSystem::cosmo_click_table;
+inline CosmoClickConfig CosmoClickSystem::cosmo_click_config;
 class CosmoClick {
     Orchestra orchestra { };
     TickSystem tick_system { };
@@ -172,23 +172,23 @@ CosmoClick::CosmoClick() {
     orchestra.Add<PresentSystem>();
 }
 void CosmoClick::Tick() {
-    if (InputSystem::input_table.keys_down[SDLK_ESCAPE]) { TickSystem::tick_table.running = false; }
+    if (InputSystem::input_config.keys_down[SDLK_ESCAPE]) { TickSystem::tick_config.running = false; }
     orchestra.RunSystems();
 }
 void CosmoClickSystem::operator()() {
-    switch (cosmo_click_table.scene) {
+    switch (cosmo_click_config.scene) {
         case Scene::game:
-            cosmo_click_table.scene = GameScene();
+            cosmo_click_config.scene = GameScene();
             break;
         case Scene::quit:
             Logger().Log("Quit requested");
-            TickSystem::tick_table.running = false;
+            TickSystem::tick_config.running = false;
             break;
     }
 }
 Scene CosmoClickSystem::GameScene() {
-    GameData& game_data = cosmo_click_table.game_data;
-    GameFrame& game_frame = cosmo_click_table.game_frame;
+    GameData& game_data = cosmo_click_config.game_data;
+    GameFrame& game_frame = cosmo_click_config.game_frame;
     const TimePoint update_time = TimeNow();
     const Duration time_since_start = update_time - game_data.start_time;
     const u32 seconds_since_start = std::chrono::duration_cast<Seconds>(time_since_start).count();
@@ -197,15 +197,15 @@ Scene CosmoClickSystem::GameScene() {
         game_data.money += Money { game_data.income.Value() * delta_seconds };
         game_data.seconds_since_start = seconds_since_start;
     }
-    if (InputSystem::input_table.left_mouse_down || InputSystem::input_table.left_mouse_up) {
-        if (game_frame.InsidePlanet(InputSystem::input_table.mouse_position)) {
+    if (InputSystem::input_config.left_mouse_down || InputSystem::input_config.left_mouse_up) {
+        if (game_frame.InsidePlanet(InputSystem::input_config.mouse_position)) {
             constexpr Money click_money = Money { 5U };
             game_data.money += click_money;
             game_frame.RestartClickAnimation();
         }
     }
-    if (InputSystem::input_table.left_mouse_down) {
-        const std::optional<u32> building_index = game_frame.GetBuildItemAtPosition(InputSystem::input_table.mouse_position);
+    if (InputSystem::input_config.left_mouse_down) {
+        const std::optional<u32> building_index = game_frame.GetBuildItemAtPosition(InputSystem::input_config.mouse_position);
         if (building_index.has_value()) {
             const Building& building = buildings[building_index.value()];
             if (game_data.money >= building.cost) {
@@ -283,5 +283,5 @@ GameFrame::GameFrame() {
 
 void pcg::arcade::RunCosmoClick() {
     cosmoclick::CosmoClick cosmo_click { };
-    while (pce::TickSystem::tick_table.running) { cosmo_click.Tick(); }
+    while (pce::TickSystem::tick_config.running) { cosmo_click.Tick(); }
 }

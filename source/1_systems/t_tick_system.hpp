@@ -8,25 +8,25 @@
 namespace pce {
 using Tick = NamedType<u32, struct TickTag, Arithmetic>;
 
-struct TickTable {
+struct TickConfig {
     Tick tick { 0U };
     std::chrono::time_point<std::chrono::high_resolution_clock> last_tick_start;
     f32 delta_time;
     b8 running;
 };
 struct TickSystem {
-    static TickTable tick_table;
+    static TickConfig tick_config;
     TickSystem() {
-        tick_table.running = true;
-        tick_table.tick = Tick { 0U };
-        tick_table.delta_time = 1.0F;
+        tick_config.running = true;
+        tick_config.tick = Tick { 0U };
+        tick_config.delta_time = 1.0F;
     }
     void operator()() {
         using namespace std::chrono;
-        tick_table.delta_time = duration<f32>(high_resolution_clock::now() - tick_table.last_tick_start).count();
-        tick_table.last_tick_start = high_resolution_clock::now();
-        tick_table.tick += Tick { 1U };
+        tick_config.delta_time = duration<f32>(high_resolution_clock::now() - tick_config.last_tick_start).count();
+        tick_config.last_tick_start = high_resolution_clock::now();
+        tick_config.tick += Tick { 1U };
     }
 };
-inline TickTable TickSystem::tick_table;
+inline TickConfig TickSystem::tick_config;
 } // namespace pce

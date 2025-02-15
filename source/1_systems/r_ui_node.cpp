@@ -383,11 +383,11 @@ void Propagate(NodeReference node_reference, const NodeReaction& reaction) {
     }
 }
 void NodeInputSystem::operator()() {
-    if (InputSystem::input_table.left_mouse_down && hovered.has_value()) { Propagate(hovered.value(), Click); }
+    if (InputSystem::input_config.left_mouse_down && hovered.has_value()) { Propagate(hovered.value(), Click); }
 
     if (hovered.has_value() && !NodeRenderSystem::node_trees[hovered->tree_handle].node_styles.ValidHandle(hovered->node_handle)) { hovered = std::nullopt; }
     const HoveredType previous_hovered = hovered;
-    hovered = GetHovered(InputSystem::input_table.mouse_position);
+    hovered = GetHovered(InputSystem::input_config.mouse_position);
 
     if (hovered.has_value() && previous_hovered.has_value() && hovered->tree_handle.id == previous_hovered->tree_handle.id && hovered->node_handle.id == previous_hovered->node_handle.id) { return; }
 

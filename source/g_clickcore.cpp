@@ -119,7 +119,7 @@ void ClickCore::Tick() {
     input_system();
     debug_system();
     node_input_system();
-    if (InputSystem::input_table.keys_down[SDLK_ESCAPE]) { TickSystem::tick_table.running = false; }
+    if (InputSystem::input_config.keys_down[SDLK_ESCAPE]) { TickSystem::tick_config.running = false; }
 
     GameLoop();
 
@@ -140,20 +140,20 @@ void ClickCore::GameLoop() {
             break;
         case Scene::quit:
             Logger().Log("Quit requested");
-            TickSystem::tick_table.running = false;
+            TickSystem::tick_config.running = false;
             break;
     }
 }
 Scene ClickCore::MainMenuScene() {
-    if (InputSystem::input_table.left_mouse_down) {
+    if (InputSystem::input_config.left_mouse_down) {
         MainMenuFrame& main_menu_frame = frames.MainMenuFrame();
-        if (main_menu_frame.StartButton().IsInside(InputSystem::input_table.mouse_position)) {
+        if (main_menu_frame.StartButton().IsInside(InputSystem::input_config.mouse_position)) {
             NodeRenderSystem::node_trees[main_menu_frame.tree_handle].SetDisplay(false);
             game = RoundData { .score = Score { 0U }, .start_time = TimeNow() };
             return Scene::game;
         }
-        if (main_menu_frame.SettingsButton().IsInside(InputSystem::input_table.mouse_position)) { return Scene::game_over; }
-        if (main_menu_frame.ExitButton().IsInside(InputSystem::input_table.mouse_position)) { return Scene::quit; }
+        if (main_menu_frame.SettingsButton().IsInside(InputSystem::input_config.mouse_position)) { return Scene::game_over; }
+        if (main_menu_frame.ExitButton().IsInside(InputSystem::input_config.mouse_position)) { return Scene::quit; }
     }
     return Scene::main_menu;
 }
@@ -179,8 +179,8 @@ Scene ClickCore::GameScene() {
     game_frame.SetScore(game.score.Value());
     game_frame.SetTime(time_left_ms);
 
-    if (InputSystem::input_table.left_mouse_down || InputSystem::input_table.left_mouse_up) {
-        if (game_frame.Box().IsInside(InputSystem::input_table.mouse_position)) {
+    if (InputSystem::input_config.left_mouse_down || InputSystem::input_config.left_mouse_up) {
+        if (game_frame.Box().IsInside(InputSystem::input_config.mouse_position)) {
             constexpr Score points = Score { 50U };
             game.score += points;
             const uint2 area = game_frame.GameArea().OuterBoxSize() - game_frame.Box().OuterBoxSize();
@@ -193,8 +193,8 @@ Scene ClickCore::GameScene() {
 Scene ClickCore::GameOverScene() {
     constexpr f32 slow_down = 1000.0F;
     GameFrame& game_frame = frames.GameFrame();
-    game_frame.Box().background_color = colors::AnimateDamp(static_cast<f32>(TickSystem::tick_table.tick.Value()) / slow_down);
-    game_frame.ScoreBox().background_color = colors::AnimateDamp(TickSystem::tick_table.tick.Value() * 1.2F / slow_down);
+    game_frame.Box().background_color = colors::AnimateDamp(static_cast<f32>(TickSystem::tick_config.tick.Value()) / slow_down);
+    game_frame.ScoreBox().background_color = colors::AnimateDamp(TickSystem::tick_config.tick.Value() * 1.2F / slow_down);
 
     const Scene scene = MainMenuScene();
     if (scene == Scene::main_menu) { return Scene::game_over; }
@@ -244,5 +244,5 @@ void HighScoreFrame::SetHighScore(Multiset<HighScore> scores) {
 
 void pcg::arcade::RunClickCore() {
     clickcore::ClickCore click_core { };
-    while (pce::TickSystem::tick_table.running) { click_core.Tick(); }
+    while (pce::TickSystem::tick_config.running) { click_core.Tick(); }
 }
