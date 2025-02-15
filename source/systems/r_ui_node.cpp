@@ -2,8 +2,11 @@
 
 #include <ranges>
 
-#include "../engine/u_colors.hpp"
-#include "../engine/u_types.hpp"
+#include "orchestra.hpp"
+#include "t_tick_system.hpp"
+
+#include "engine/u_colors.hpp"
+#include "engine/u_types.hpp"
 
 namespace pce::ui {
 const Font& FontCollection::GetFont(const FontSizes size) {

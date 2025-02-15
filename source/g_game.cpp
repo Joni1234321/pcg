@@ -6,7 +6,7 @@
 #include "engine/u_logger.hpp"
 #include "engine/u_types.hpp"
 #include "engine/u_util.hpp"
-#include "u_table.hpp"
+#include "engine/u_table.hpp"
 
 namespace pcg {
 using pce::Component;

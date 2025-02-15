@@ -7,7 +7,9 @@
 #include "engine/u_collections.hpp"
 #include "engine/u_types.hpp"
 
+#include "systems/orchestra.hpp"
 #include "systems/t_debug_system.hpp"
+#include "systems/t_tick_system.hpp"
 #include "systems/u_animation_system.hpp"
 
 namespace pcg::cosmoclick {
@@ -171,7 +173,6 @@ CosmoClick::CosmoClick() {
 void CosmoClick::Tick() {
     if (InputSystem::input_table.keys_down[SDLK_ESCAPE]) { TickSystem::tick_table.running = false; }
     orchestra.RunSystems();
-    tick_system.CaptureTime();
 }
 void CosmoClickSystem::operator()() {
     switch (cosmo_click_table.scene) {
