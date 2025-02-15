@@ -18,6 +18,7 @@ struct Data {
     using Database = UnorderedMap<Key, void*>;
     Database tables;
     static constexpr u32 DEFAULT_SIZE { 64U };
+
     template <typename T> [[nodiscard]] constexpr HandleList<T>& Get() {
         const Key key { typeid(T) };
         const Database::iterator table_iterator = tables.find(key);
@@ -30,6 +31,7 @@ struct Data {
         return *table;
     }
     template <typename T> [[nodiscard]] constexpr T& operator[](Handle<T> handle) { return Get<T>()[handle]; }
+    template <class T, typename... Args> constexpr Handle<T> Create(Args&&... args) { return Get<T>().EmplaceBack(std::forward<Args>(args)...); }
 };
 inline Data data { };
 struct Orchestra {

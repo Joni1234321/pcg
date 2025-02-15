@@ -3,16 +3,16 @@
 
 namespace pce::ui {
 struct TickFrame {
-    Handle<NodeTree> tree_handle { NodeRenderSystem::node_trees.EmplaceBack() };
+    Handle<NodeTree> tree_handle { data.Create<NodeTree>() };
     TickFrame() { DisplayInfo(); }
     void DisplayInfo() const;
 };
 struct InspectorFrame {
-    Handle<NodeTree> tree_handle { NodeRenderSystem::node_trees.EmplaceBack() };
-    void ShowElementStructure(HoveredType hovered);
+    Handle<NodeTree> tree_handle { data.Create<NodeTree>() };
+    void ShowElementStructure(HoveredType hovered) const;
 };
 struct TestFrame {
-    Handle<NodeTree> tree_handle { NodeRenderSystem::node_trees.EmplaceBack() };
+    Handle<NodeTree> tree_handle { data.Create<NodeTree>() };
     TestFrame();
 };
 struct DebugSystem {

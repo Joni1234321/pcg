@@ -100,7 +100,7 @@ template <typename T> struct List {
     constexpr const T& operator[](u32 pos) const { return data[pos]; }
     constexpr T& operator[](u32 pos) { return data[pos]; }
 
-    template <typename... Args> T& EmplaceBack(Args&&... args) { return data.emplace_back(std::forward<Args>(args)...); }
+    template <typename... Args> constexpr T& EmplaceBack(Args&&... args) { return data.emplace_back(std::forward<Args>(args)...); }
 
     [[nodiscard]] constexpr Iter begin() { return data.begin(); }
     [[nodiscard]] constexpr Iter end() { return data.end(); }
@@ -163,7 +163,7 @@ template <typename T, typename H = Handle<T>> struct HandleList {
     explicit constexpr HandleList(u32 size) : data(size) { }
     explicit constexpr HandleList(u32 size, const T& val) : data(size, val) { }
 
-    template <typename... Args> Handle [[nodiscard]] EmplaceBack(Args&&... args) {
+    template <typename... Args> [[nodiscard]] constexpr Handle EmplaceBack(Args&&... args) {
         data.EmplaceBack(std::forward<Args>(args)...);
         return Handle { offset_handle.id + data.Size() - 1U };
     }

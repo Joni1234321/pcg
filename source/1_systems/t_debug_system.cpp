@@ -23,7 +23,7 @@ void TickFrame::DisplayInfo() const {
     using namespace ui;
     u32 tick = TickSystem::tick_config.tick.Value();
     u32 fps = 1.0F / TickSystem::tick_config.delta_time;
-    NodeRenderSystem::node_trees[tree_handle].Clear();
+    data[tree_handle].Clear();
     Handle<Node> frame = B(tree_handle, hug, { 10U, 0U }).Direction(vertical).Build();
     Handle<Node> ticks = B(tree_handle, frame, hug).Text(std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, fps, fps), FontSizes::tiny).Fill(colors::radiant_orange).Build();
     Handle<Node> systems = B(tree_handle, frame, hug).Direction(vertical).Gap(10).Build();
@@ -31,17 +31,17 @@ void TickFrame::DisplayInfo() const {
         constexpr f32 THOUSANDTH = 0.001F;
         (void)B(tree_handle, systems, fill).Fill(colors::radiant_orange).Text(std::format("{:.3f}ms | {}", ns * THOUSANDTH * THOUSANDTH, name), FontSizes::tiny).Build();
     }
-    NodeRenderSystem::node_trees[tree_handle].MarkDirty();
+    data[tree_handle].MarkDirty();
 }
-void InspectorFrame::ShowElementStructure(const HoveredType hovered) {
+void InspectorFrame::ShowElementStructure(const HoveredType hovered) const {
     using NodeHandleLayer = std::tuple<Handle<Node>, u32>;
     if (!hovered.has_value() || hovered->tree_handle.id == tree_handle.id) { return; }
-    NodeRenderSystem::node_trees[tree_handle].Clear();
+    data[tree_handle].Clear();
     Stack<NodeHandleLayer> node_handles;
     node_handles.push(NodeHandleLayer { hovered->node_handle, 0U });
 
     const Handle<Node> frame = B(tree_handle, hug, { 10U, 30U }).Fill(colors::clear).Fill(colors::white).Direction(vertical).Build();
-    const NodeTree& hovered_tree = NodeRenderSystem::node_trees[hovered->tree_handle];
+    const NodeTree& hovered_tree = data[hovered->tree_handle];
     while (!node_handles.empty()) {
         const auto [node_handle, layer] = node_handles.top();
         node_handles.pop();
@@ -88,10 +88,10 @@ TestFrame::TestFrame() {
 void DebugSystem::operator()() {
     using namespace ui;
     if (InputSystem::input_config.left_mouse_down) {
-        NodeRenderSystem::node_trees[inspector_frame.tree_handle].MarkDirty();
-        if (InputSystem::input_config.keys[SDLK_LALT]) { inspector_frame.ShowElementStructure(NodeInputSystem::hovered); } else { NodeRenderSystem::node_trees[inspector_frame.tree_handle].Clear(); }
+        data[inspector_frame.tree_handle].MarkDirty();
+        if (InputSystem::input_config.keys[SDLK_LALT]) { inspector_frame.ShowElementStructure(NodeInputSystem::hovered); } else { data[inspector_frame.tree_handle].Clear(); }
     }
-    NodeRenderSystem::node_trees[tick_frame.tree_handle].MarkDirty();
+    data[tick_frame.tree_handle].MarkDirty();
     if (TickSystem::tick_config.tick.Value() % 100 == 0) { tick_frame.DisplayInfo(); }
 }
 }

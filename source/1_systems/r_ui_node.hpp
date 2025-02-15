@@ -5,30 +5,31 @@
 #include "0_engine/u_assets.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_types.hpp"
+
+#include "1_systems/orchestra.hpp"
 #include "1_systems/r_ui_node_data.hpp"
 
 namespace pce::ui {
 struct NodeInputSystem {
     static HoveredType hovered;
-    void operator()();
+    void operator()() const;
     ~NodeInputSystem() { hovered = { }; }
 };
 struct NodeRenderSystem {
-    static HandleList<NodeTree> node_trees;
     static FontCollection font;
-    ~NodeRenderSystem() { node_trees.Clear(); font.Clear(); };
+    NodeRenderSystem() {  }
+    ~NodeRenderSystem() { data.Get<NodeTree>().Clear(); };
     void operator()();
 };
 static const RelativePath font_path { "font.ttf" };
 static const RelativePath font_bold_path { "TitilliumWeb-SemiBold.ttf" };
 inline HoveredType NodeInputSystem::hovered { };
-inline HandleList<NodeTree> NodeRenderSystem::node_trees { 120U };
 inline FontCollection NodeRenderSystem::font { Asset(font_path) };
 
 class NodeBuilder {
     NodeReference node_reference;
-    NodeStyle& style { NodeRenderSystem::node_trees[node_reference.tree_handle].node_styles[node_reference.node_handle] };
-    NodeProperties& properties { NodeRenderSystem::node_trees[node_reference.tree_handle].node_properties[node_reference.node_handle] };
+    NodeStyle& style { data[node_reference.tree_handle].node_styles[node_reference.node_handle] };
+    NodeProperties& properties { data[node_reference.tree_handle].node_properties[node_reference.node_handle] };
 
 public:
     NodeBuilder(Handle<NodeTree> tree_handle, Layout new_layout, uint2 position);
