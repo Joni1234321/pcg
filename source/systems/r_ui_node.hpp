@@ -1,14 +1,14 @@
 #pragma once
 
 #include <functional>
-#include <engine/r_engine.hpp>
 
 #include <SDL3/SDL_render.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-#include "engine/u_collections.hpp"
-#include "engine/u_logger.hpp"
-#include "engine/u_types.hpp"
+#include "../engine/u_collections.hpp"
+#include "../engine/u_logger.hpp"
+#include "../engine/u_types.hpp"
+#include "../engine/r_engine.hpp"
 
 namespace pce::ui {
 struct CloseFont {

@@ -19,9 +19,8 @@ add_executable(${PROJECT_NAME}
                source/g_cosmoclick.cpp
                source/g_factory.cpp
                source/g_game.cpp
-               source/m_frame.cpp
-               source/r_ui.cpp
-               source/r_ui_node.cpp
+               source/systems/t_debug_system.cpp
+               source/systems/r_ui_node.cpp
                ${imgui_dir}/imgui.cpp
                ${imgui_dir}/imgui_demo.cpp
                ${imgui_dir}/imgui_draw.cpp

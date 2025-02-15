@@ -1,15 +1,12 @@
-#include "r_ui.hpp"
+#include "t_debug_system.hpp"
 
-#include <ranges>
 #include <stack>
 
-#include "g_components.hpp"
-#include "engine/u_types.hpp"
+#include "../g_components.hpp"
+#include "../engine/u_types.hpp"
 
 namespace pce::ui {
-namespace ui = ui;
 namespace colors = colors;
-
 Handle<Node> CreateDebugNodeComponent(const u32 layer, const String& text, const SDL_Color color, Handle<NodeTree> tree, const Handle<Node> frame) {
     constexpr u32 padding_offset = 10U;
     constexpr uint2 color_indicator_size { 10U, 20U };
@@ -70,6 +67,5 @@ TestFrame::TestFrame() {
         Handle<Node> box32 = B(tree_handle, box3, fill).Fill(colors::chocolate).Build();
         Handle<Node> box33 = B(tree_handle, box3, fill).Fill(colors::yellow).Build();
     }
-
 }
 }

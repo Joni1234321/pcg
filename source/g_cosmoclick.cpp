@@ -3,10 +3,12 @@
 #include "g_arcade.hpp"
 
 #include "engine/r_engine.hpp"
-#include "r_ui.hpp"
-#include "r_ui_node.hpp"
+#include "systems/r_ui_node.hpp"
 #include "engine/u_collections.hpp"
 #include "engine/u_types.hpp"
+
+#include "systems/t_debug_system.hpp"
+#include "systems/u_animation_system.hpp"
 
 namespace pcg::cosmoclick {
 using namespace pce;
