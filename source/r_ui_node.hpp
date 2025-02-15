@@ -6,8 +6,8 @@
 #include <SDL3/SDL_render.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-#include "u_collections.hpp"
-#include "u_logger.hpp"
+#include "engine/u_collections.hpp"
+#include "engine/u_logger.hpp"
 #include "engine/u_types.hpp"
 
 namespace pce::ui {

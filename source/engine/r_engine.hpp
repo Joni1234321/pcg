@@ -4,9 +4,9 @@
 #include <functional>
 #include <ranges>
 
-#include "../u_ecs.hpp"
-#include "../u_logger.hpp"
-#include "../u_collections.hpp"
+#include "u_ecs.hpp"
+#include "u_logger.hpp"
+#include "u_collections.hpp"
 #include "u_types.hpp"
 
 #include <SDL3/SDL_init.h>

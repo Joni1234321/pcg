@@ -4,7 +4,7 @@
 #pragma once
 
 #include "u_collections.hpp"
-#include "engine/u_types.hpp"
+#include "u_types.hpp"
 
 namespace pce {
 template <typename T, typename TagType, template<typename> class... InheritList> class NamedType : public InheritList<NamedType<T, TagType, InheritList...>>... {
@@ -72,6 +72,7 @@ template <typename T, typename Parameter> std::ostream& operator<<(std::ostream&
     object.print(os);
     return os;
 }
+
 } // namespace pcg
 
 #include "format"

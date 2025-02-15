@@ -1,11 +1,11 @@
-#include <u_algorithm.hpp>
+#include <engine/u_algorithm.hpp>
 
 #include "g_arcade.hpp"
 
 #include "engine/r_engine.hpp"
 #include "r_ui.hpp"
 #include "r_ui_node.hpp"
-#include "u_collections.hpp"
+#include "engine/u_collections.hpp"
 #include "engine/u_types.hpp"
 
 namespace pcg::cosmoclick {

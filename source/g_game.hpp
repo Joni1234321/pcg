@@ -3,7 +3,7 @@
 #include "g_components.hpp"
 #include "engine/r_engine.hpp"
 #include "r_ui.hpp"
-#include "u_logger.hpp"
+#include "engine/u_logger.hpp"
 #include "engine/u_types.hpp"
 
 namespace pcg {

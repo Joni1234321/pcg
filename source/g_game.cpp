@@ -1,10 +1,10 @@
 // ReSharper disable CppNonExplicitConvertingConstructor
 #include "g_game.hpp"
 #include "r_ui.hpp"
-#include "u_algorithm.hpp"
+#include "engine/u_algorithm.hpp"
 #include "g_components.hpp"
 
-#include "u_logger.hpp"
+#include "engine/u_logger.hpp"
 #include "engine/u_types.hpp"
 #include "engine/u_util.hpp"
 #include "u_table.hpp"

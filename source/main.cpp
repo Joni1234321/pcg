@@ -5,8 +5,8 @@
 #include "g_components.hpp"
 #include "g_game.hpp"
 #include "engine/r_engine.hpp"
-#include "u_collections.hpp"
-#include "u_logger.hpp"
+#include "engine/u_collections.hpp"
+#include "engine/u_logger.hpp"
 #include "engine/u_types.hpp"
 
 namespace pce {

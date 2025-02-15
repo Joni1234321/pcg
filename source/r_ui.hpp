@@ -1,10 +1,10 @@
 #pragma once
 
-#include <r_colors.hpp>
+#include <engine/u_colors.hpp>
 
 #include "engine/r_engine.hpp"
 #include "r_ui_node.hpp"
-#include "u_collections.hpp"
+#include "engine/u_collections.hpp"
 #include "engine/u_types.hpp"
 
 #include <SDL3_ttf/SDL_ttf.h>
