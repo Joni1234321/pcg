@@ -11,7 +11,6 @@ if (_SET_WARNINGS_ENABLED)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error -Wall -Wextra -Wpedantic -Werror")
 endif ()
 
-set(imgui_dir ${CMAKE_SOURCE_DIR}/lib/imgui)
 set(resources_dir ${CMAKE_SOURCE_DIR}/resources)
 add_executable(${PROJECT_NAME}
                source/main.cpp
@@ -19,15 +18,8 @@ add_executable(${PROJECT_NAME}
                source/g_cosmoclick.cpp
                source/g_factory.cpp
                source/g_game.cpp
-               source/systems/t_debug_system.cpp
-               source/systems/r_ui_node.cpp
-               ${imgui_dir}/imgui.cpp
-               ${imgui_dir}/imgui_demo.cpp
-               ${imgui_dir}/imgui_draw.cpp
-               ${imgui_dir}/imgui_tables.cpp
-               ${imgui_dir}/imgui_widgets.cpp
-               ${imgui_dir}/imgui_impl_sdl3.cpp
-               ${imgui_dir}/imgui_impl_sdlrenderer3.cpp
+               source/1_systems/t_debug_system.cpp
+               source/1_systems/r_ui_node.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
