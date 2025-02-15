@@ -4,6 +4,11 @@
 #include <complex>
 
 namespace pce::colors {
+inline SDL_Color LightenColor(const SDL_Color color, const f32 factor) {
+    auto lerp = [] (const u8 channel, const f32 factor, const u8 target) -> u8 { return static_cast<u8>(channel + (target - channel) * factor); };
+    return SDL_Color { lerp(color.r, factor, 255), lerp(color.g, factor, 255), lerp(color.b, factor, 255), color.a };
+}
+
 constexpr SDL_Color clear { 0, 0, 0, 0 };
 constexpr SDL_Color black { 0, 0, 0, 255U };
 constexpr SDL_Color white { 255U, 255U, 255U, 255U };

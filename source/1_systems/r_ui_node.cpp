@@ -133,10 +133,6 @@ NodeBuilder& NodeBuilder::Alignment(const ui::Alignment alignment) {
 NodeBuilder& NodeBuilder::Right() { return Alignment(right); }
 NodeBuilder& NodeBuilder::Center() { return Alignment(center); }
 NodeBuilder& NodeBuilder::Left() { return Alignment(left); }
-SDL_Color LightenColor(const SDL_Color color, const f32 factor) {
-    auto lerp = [] (const u8 channel, const f32 factor, const u8 target) -> u8 { return static_cast<u8>(channel + (target - channel) * factor); };
-    return SDL_Color { lerp(color.r, factor, 255), lerp(color.g, factor, 255), lerp(color.b, factor, 255), color.a };
-}
 Handle<Node> NodeBuilder::Build() const {
     NodeRenderSystem::node_trees[node_reference.tree_handle].MarkDirty();
     return node_reference.node_handle;
@@ -181,7 +177,7 @@ void RecalculateTreeLayout(NodeTree& tree) {
     for (const Handle<Node> node_handle : node_handles) {
         NodeStyle& node_style = tree.node_styles[node_handle];
         NodeProperties& node_properties = tree.node_properties[node_handle];
-        UniquePointer<TTF_Text, DestroyText>& ttf_text = tree.node_ttf_texts[node_handle];
+        UniquePointer<TTF_Text, NodeTree::DestroyText>& ttf_text = tree.node_ttf_texts[node_handle];
         if (node_properties.text.Empty()) {
             ttf_text.Reset();
             continue;

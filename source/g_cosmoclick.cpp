@@ -274,7 +274,7 @@ GameFrame::GameFrame() {
         },
         .duration_ms = 500U, .state = AnimationState::repeat };
     const AnimationDesc click_animation_desc {
-        .action = [this] (const f32 t) { NodeRenderSystem::node_trees[tree_handle].node_styles[planet_handle.GetHandle()].background_color = LightenColor(colors::blue, t); }, .duration_ms = 300U,
+        .action = [this] (const f32 t) { NodeRenderSystem::node_trees[tree_handle].node_styles[planet_handle.GetHandle()].background_color = colors::LightenColor(colors::blue, t); }, .duration_ms = 300U,
         .state = AnimationState::keep_alive_stopped };
     planet_animation_handle = AnimationSystem::Register(planet_animation_desc);
     click_animation_handle = AnimationSystem::Register(click_animation_desc);
