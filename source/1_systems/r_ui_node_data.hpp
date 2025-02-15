@@ -2,8 +2,6 @@
 
 #include <functional>
 
-#include <SDL3/SDL_render.h>
-
 #include <SDL3_ttf/SDL_ttf.h>
 
 #include "0_engine/u_assets.hpp"

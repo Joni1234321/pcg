@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <ranges>
+#include <typeindex>
 
 #include "0_engine/u_collections.hpp"
 
@@ -12,10 +13,29 @@ struct OrchestraConfig {
     List<String> names;
     List<u32> nano_seconds;
 };
+struct Data {
+    using Key = std::type_index;
+    using Database = UnorderedMap<Key, void*>;
+    Database tables;
+    static constexpr u32 DEFAULT_SIZE { 64U };
+    template <typename T> [[nodiscard]] constexpr HandleList<T>& Get() {
+        const Key key { typeid(T) };
+        const Database::iterator table_iterator = tables.find(key);
+        if (table_iterator == tables.end()) {
+            HandleList<T>* table = new HandleList<T> { DEFAULT_SIZE };
+            tables[key] = table;
+            return *table;
+        }
+        HandleList<T>* table = static_cast<HandleList<T>*>(table_iterator->second);
+        return *table;
+    }
+    template <typename T> [[nodiscard]] constexpr T& operator[](Handle<T> handle) { return Get<T>()[handle]; }
+};
+inline Data data { };
 struct Orchestra {
     static OrchestraConfig orchestra_config;
     template <typename T> void Add() {
-        auto ptr = new T();                                                                           // Create system instance
+        auto ptr = new T();                                                                            // Create system instance
         orchestra_config.system_storage.EmplaceBack(ptr, [] (void* p) { delete static_cast<T*>(p); }); // Ensure destruction
         orchestra_config.systems.EmplaceBack([ptr]() { (*static_cast<T*>(ptr))(); });                  // Store callable functor
         orchestra_config.names.EmplaceBack(typeid(T).name());
@@ -33,7 +53,6 @@ struct Orchestra {
     ~Orchestra() { orchestra_config = { }; }
 };
 inline OrchestraConfig Orchestra::orchestra_config;
-
 
 struct InputConfig {
     UnorderedMap<SDL_Keycode, b8> keys { };
@@ -59,12 +78,12 @@ struct InputSystem {
                 }
                 case SDL_EVENT_KEY_UP:
                     input_config.keys[event.key.key] = false;
-                input_config.keys_up[event.key.key] = true;
-                break;
+                    input_config.keys_up[event.key.key] = true;
+                    break;
                 case SDL_EVENT_KEY_DOWN:
                     input_config.keys[event.key.key] = true;
-                input_config.keys_down[event.key.key] = true;
-                break;
+                    input_config.keys_down[event.key.key] = true;
+                    break;
                 default:
                     break;
             }
