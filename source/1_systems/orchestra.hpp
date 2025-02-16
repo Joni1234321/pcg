@@ -4,6 +4,8 @@
 #include <ranges>
 #include <typeindex>
 
+#include <0_engine/u_logger.hpp>
+
 #include "0_engine/u_collections.hpp"
 
 namespace pce {
@@ -13,11 +15,13 @@ struct OrchestraConfig {
     List<String> names;
     List<u32> nano_seconds;
 };
+
+
 struct Wrapper {
     void* ptr;
-    template <class T> HandleList<T>& Get() { return *static_cast<HandleList<T>*>(ptr); }
+    template <class T> [[nodiscard]] constexpr HandleList<T>& Get() { return *static_cast<HandleList<T>*>(ptr); }
 };
-template <class T> Wrapper MakeWrapper() {
+template <class T> [[nodiscard]] constexpr Wrapper MakeWrapper() {
     constexpr u32 DEFAULT_SIZE = 128U;
     return Wrapper { .ptr = new HandleList<T> { DEFAULT_SIZE } };
 }
@@ -25,18 +29,63 @@ struct Data {
     using Key = std::type_index;
     using Database = UnorderedMap<Key, Wrapper>;
     Database tables;
-    static constexpr u32 DEFAULT_SIZE { 64U };
 
     template <typename T> [[nodiscard]] constexpr HandleList<T>& Get() {
         const Key key { typeid(T) };
-        const auto [table_iterator, _] = tables.try_emplace(key, MakeWrapper<T>());
-        Wrapper& table = table_iterator->second;
+        Wrapper& table = tables.try_emplace(key, MakeWrapper<T>()).first->second;
         return table.Get<T>();
     }
     template <typename T> [[nodiscard]] constexpr T& operator[](Handle<T> handle) { return Get<T>()[handle]; }
     template <class T, typename... Args> constexpr Handle<T> Create(Args&&... args) { return Get<T>().EmplaceBack(std::forward<Args>(args)...); }
 };
+
+inline u32 data_incrementer = 0U;
+template <class T> struct Getter {
+    static u32 index;
+};
+//template<class T> u32 Getter<T>::index = data_incrementer++;
+
+struct DataFast {
+    std::vector<Wrapper> tables;
+
+    template <typename T> [[nodiscard]] constexpr HandleList<T>& Get() {
+        u32 index = Getter<T>::index;
+        if (index == tables.size()) {
+            tables.push_back(MakeWrapper<T>());
+        }
+        const char* name = typeid(T).name();
+        Logger().Log("Index {} {}", name, index);
+        Wrapper& wrapper = tables[index];
+        HandleList<T>& handle_list = wrapper.Get<T>();
+        Logger().Log("Size {} [{},{}]", typeid(handle_list).name(), index, handle_list.Size());
+        return handle_list;
+    }
+
+    template <typename T> [[nodiscard]] constexpr T& operator[](Handle<T> handle) { 
+        HandleList<T>& t = Get<T>();
+        T & data = t[handle];
+        return data;
+    }
+    template <class T, typename... Args> constexpr Handle<T> Create(Args&&... args) { 
+        HandleList<T> &t = Get<T>();
+        Handle<T> handle = t.EmplaceBack(std::forward<Args>(args)...);
+        return handle;
+    }
+};
+
 inline Data data { };
+template <typename T> u32 Getter<T>::index = [] {
+    static bool initialized = false;
+    if (!initialized) {
+        index = data_incrementer++;
+        Logger().Log("Creating index {}", index);
+        initialized = true;
+        data.tables.push_back(MakeWrapper<T>());
+    }
+    return index;
+}();
+
+
 struct Orchestra {
     static OrchestraConfig orchestra_config;
     template <typename T> void Add() {
