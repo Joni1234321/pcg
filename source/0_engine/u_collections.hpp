@@ -198,11 +198,11 @@ template <typename T, typename H = Handle<T>> struct HandleList {
     [[nodiscard]] constexpr const T& Front() const { return data.Front(); }
     [[nodiscard]] constexpr const T& Back() const { return data.Back(); }
 
-    [[nodiscard]] constexpr u32 HandleToIndex(const H handle) const {
+    [[nodiscard]] constexpr u32 HandleToIndex(const Handle handle) const {
         assert(ValidHandle(handle));
         return handle.id - offset_handle.id;
     }
-    [[nodiscard]] constexpr b8 ValidHandle(const H handle) const { return (handle.id - offset_handle.id) < Size(); }
+    [[nodiscard]] constexpr b8 ValidHandle(const Handle handle) const { return (handle.id - offset_handle.id) < Size(); }
     Handle offset_handle { 0U };
 
 private:

@@ -13,22 +13,25 @@ struct OrchestraConfig {
     List<String> names;
     List<u32> nano_seconds;
 };
+struct Wrapper {
+    void* ptr;
+    template <class T> HandleList<T>& Get() { return *static_cast<HandleList<T>*>(ptr); }
+};
+template <class T> Wrapper MakeWrapper() {
+    constexpr u32 DEFAULT_SIZE = 128U;
+    return Wrapper { .ptr = new HandleList<T> { DEFAULT_SIZE } };
+}
 struct Data {
     using Key = std::type_index;
-    using Database = UnorderedMap<Key, void*>;
+    using Database = UnorderedMap<Key, Wrapper>;
     Database tables;
     static constexpr u32 DEFAULT_SIZE { 64U };
 
     template <typename T> [[nodiscard]] constexpr HandleList<T>& Get() {
         const Key key { typeid(T) };
-        const Database::iterator table_iterator = tables.find(key);
-        if (table_iterator == tables.end()) {
-            HandleList<T>* table = new HandleList<T> { DEFAULT_SIZE };
-            tables[key] = table;
-            return *table;
-        }
-        HandleList<T>* table = static_cast<HandleList<T>*>(table_iterator->second);
-        return *table;
+        const auto [table_iterator, _] = tables.try_emplace(key, MakeWrapper<T>());
+        Wrapper& table = table_iterator->second;
+        return table.Get<T>();
     }
     template <typename T> [[nodiscard]] constexpr T& operator[](Handle<T> handle) { return Get<T>()[handle]; }
     template <class T, typename... Args> constexpr Handle<T> Create(Args&&... args) { return Get<T>().EmplaceBack(std::forward<Args>(args)...); }
