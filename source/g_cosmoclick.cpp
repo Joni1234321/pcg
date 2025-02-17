@@ -112,7 +112,7 @@ private:
     HandleOptional<Node> build_item { };
     HandleOptional<Node> count_handle { };
 };
-struct GameFrame {
+struct GameFrame : LogLifetimeWithCount<GameFrame>{
     Handle<NodeTree> tree_handle { data.Create<NodeTree>() };
     GameFrame();
     [[nodiscard]] constexpr b8 InsidePlanet(uint2 screen_position) const;
@@ -138,14 +138,13 @@ struct CosmoClickConfig {
     Scene scene { Scene::game };
 };
 struct CosmoClickSystem {
-    static CosmoClickConfig cosmo_click_config;
+    CosmoClickConfig cosmo_click_config;
     void operator()();
 
 private:
     Scene GameScene();
 };
-inline CosmoClickConfig CosmoClickSystem::cosmo_click_config;
-class CosmoClick {
+class CosmoClick : LogLifetimeWithCount<CosmoClick> {
     Orchestra orchestra { };
     TickSystem tick_system { };
 

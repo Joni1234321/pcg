@@ -179,7 +179,7 @@ template <typename T, typename H = Handle<T>> struct HandleList {
     [[nodiscard]] constexpr u32 Size() const { return data.Size(); }
 
     constexpr void Clear() {
-        offset_handle.id += Size();
+        offset_handle = Handle { offset_handle.id + Size() };
         data.Clear();
     }
 
