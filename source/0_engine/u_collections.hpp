@@ -30,7 +30,6 @@ using Nanoseconds = std::chrono::nanoseconds;
 [[nodiscard]] inline TimePoint TimeNow() noexcept { return std::chrono::high_resolution_clock::now(); };
 // template <typename T> [[nodiscard]] Duration DurationCast (Duration duration) { return std::chrono::duration_cast<T>(duration); }
 
-
 template <typename T, typename D> class UniquePointer {
     T* pointer;
     [[msvc::no_unique_address]][[no_unique_address]] D destructor { }; // man i love msvc
@@ -43,7 +42,20 @@ public:
     [[nodiscard]] constexpr T *Get() const noexcept { return pointer; }
 
     constexpr explicit UniquePointer(T* pointer) noexcept : pointer { pointer } { }
-    constexpr explicit UniquePointer(UniquePointer&& other) noexcept : pointer { std::exchange(other.pointer, nullptr) } { }
+    UniquePointer(UniquePointer&& other) noexcept : pointer { std::exchange(other.pointer, nullptr) } { }
+    UniquePointer(const UniquePointer& other) : pointer(other.pointer), destructor(other.destructor) { }
+    UniquePointer& operator=(const UniquePointer& other) {
+        if (this == &other) { return *this; }
+        pointer = other.pointer;
+        destructor = other.destructor;
+        return *this;
+    }
+    UniquePointer& operator=(UniquePointer&& other) noexcept {
+        if (this == &other) { return *this; }
+        pointer = other.pointer;
+        destructor = std::move(other.destructor);
+        return *this;
+    }
     constexpr ~UniquePointer() noexcept { if (pointer != nullptr) { destructor(pointer); } }
 };
 struct String {
@@ -116,6 +128,7 @@ template <typename T> struct List {
     constexpr void PopBack() { data.pop_back(); }
     constexpr void Resize(const u32 size) { data.resize(size); }
     constexpr void Reserve(const u32 size) { data.reserve(size); }
+    constexpr void Erase(const u32 index) { data.erase(data.begin() + index); }
     // ReSharper disable once CppInconsistentNaming
     constexpr void push_back(const T& value) { data.push_back(value); }
     template <std::_Container_compatible_range<T> _Rng> constexpr void AppendRange(_Rng&& range) { data.append_range(range); }
@@ -222,6 +235,15 @@ public:
 
     constexpr FlatMap() = default;
     explicit constexpr FlatMap(const u32 initial_size) : keys(initial_size), values(initial_size) { }
+    constexpr void PushBack(const K& key, const V& value) {
+        keys.PushBack(key);
+        values.PushBack(value);
+    }
+    constexpr void Erase(const K& key) {
+        u32 index = keys.IndexOf(key);
+        keys.Erase(index);
+        values.Erase(index);
+    }
     constexpr void PushBack(const K& key, V&& value) {
         keys.PushBack(key);
         values.PushBack(value);

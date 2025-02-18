@@ -67,7 +67,7 @@ private:
     HandleOptional<Node> build_item { };
     HandleOptional<Node> count_handle { };
 };
-struct GameFrame : LogLifetimeWithCount<GameFrame>{
+struct GameFrame : LogLifetimeWithCount<GameFrame> {
     Handle<NodeTree> tree_handle { data.Create<NodeTree>() };
     GameFrame();
     [[nodiscard]] constexpr b8 InsidePlanet(uint2 screen_position) const;
@@ -107,11 +107,13 @@ public:
     CosmoClick();
     void Tick();
 };
-
+static const RelativePath font_path { "font.ttf" };
+static const RelativePath font_bold_path { "TitilliumWeb-SemiBold.ttf" };
 constexpr u32 planet_size = 400U;
 constexpr u32 planet_border_size = 40U;
 CosmoClick::CosmoClick() {
     Window::window_config.clear_color = colors::dark_grey;
+    singleton.Get<FontCollection>().SetFontFile(Asset(font_path));
     orchestra.Add<DebugSystem>();
 
     orchestra.Add<TickSystem>();

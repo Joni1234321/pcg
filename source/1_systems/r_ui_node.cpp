@@ -11,10 +11,13 @@
 
 namespace pce::ui {
 const Font& FontCollection::GetFont(const FontSizes size) {
-    if (!fonts.HasKey(size)) {
+    if (!fonts.HasKey(size) && font_path != "") {
         fonts.EmplaceBack(size, font_path, static_cast<FontSize>(size));
         b8 failed = fonts[size].FailedLoading();
-        if (failed) { SDL_Log("Font not loaded (%s)", SDL_GetError()); }
+        if (failed) {
+            SDL_Log("ERROR Failed Font not loaded (%s)", SDL_GetError());
+            fonts.Erase(size);
+        }
     }
     return fonts[size];
 }
@@ -183,7 +186,7 @@ void RecalculateTreeLayout(NodeTree& tree) {
             continue;
         }
 
-        const Font& font = NodeRenderSystem::font.GetFont(node_properties.font_size);
+        const Font& font = singleton.Get<FontCollection>().GetFont(node_properties.font_size);
         if (ttf_text.Get() == nullptr) { ttf_text.Reset(TTF_CreateText(Window::window_config.text_engine, font.ToSDL(), node_properties.text.CString(), node_properties.text.Size())); } else {
             TTF_SetTextString(ttf_text.Get(), node_properties.text.CString(), node_properties.text.Size());
             TTF_SetTextFont(ttf_text.Get(), font.ToSDL());

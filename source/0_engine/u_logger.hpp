@@ -142,6 +142,16 @@ template <typename T> struct LogLifetimeWithCount {
     LogLifetimeWithCount(const LogLifetimeWithCount&) noexcept { Logger().Copied("{} {}", typeid(T).name(), log_id); }
     LogLifetimeWithCount(LogLifetimeWithCount&& other) noexcept { Logger().Moved("{} {} -> {}", typeid(T).name(), other.log_id, log_id); }
     ~LogLifetimeWithCount() { Logger().Destroyed("{} {}", typeid(T).name(), log_id); }
+    LogLifetimeWithCount& operator=(const LogLifetimeWithCount& other) {
+        if (this == &other) return *this;
+        log_id = other.log_id;
+        return *this;
+    }
+    LogLifetimeWithCount& operator=(LogLifetimeWithCount&& other) noexcept {
+        if (this == &other) return *this;
+        log_id = other.log_id;
+        return *this;
+    }
     static u32 log_counter;
     u32 log_id { log_counter++ };
 };

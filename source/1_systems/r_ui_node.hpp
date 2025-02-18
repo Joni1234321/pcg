@@ -16,15 +16,13 @@ struct NodeInputSystem {
     ~NodeInputSystem() { hovered = { }; }
 };
 struct NodeRenderSystem {
-    static FontCollection font;
-    NodeRenderSystem() {  }
-    ~NodeRenderSystem() { data.Get<NodeTree>().Clear(); };
+    NodeRenderSystem() { }
+    ~NodeRenderSystem() {
+        data.Get<NodeTree>().Clear();
+    };
     void operator()();
 };
-static const RelativePath font_path { "font.ttf" };
-static const RelativePath font_bold_path { "TitilliumWeb-SemiBold.ttf" };
 inline HoveredType NodeInputSystem::hovered { };
-inline FontCollection NodeRenderSystem::font { Asset(font_path) };
 
 class NodeBuilder {
     NodeReference node_reference;

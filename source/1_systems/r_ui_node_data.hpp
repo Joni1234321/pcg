@@ -25,7 +25,7 @@ enum Alignment : u8 { top_left, top_center, top_right, left, center, right, bott
 class Font : LogLifetimeWithCount<Font> {
     struct CloseFont {
         void operator()(TTF_Font* font) const {
-            Logger().Destroyed("TTF_Font");
+            Logger().Destroyed("TTF_Font with size {}", TTF_GetFontSize(font));
             TTF_CloseFont(font);
         }
     };
@@ -33,21 +33,21 @@ class Font : LogLifetimeWithCount<Font> {
 
 public:
     Font(const AbsolutePath& path, const FontSize size) : font(TTF_OpenFont(path.string().c_str(), size)) { Logger().Created("Font {} {}", size, path.string()); }
-    Font(const Font&) = delete;
-    Font& operator=(const Font&) = delete;
-    Font(Font&&) noexcept = default;
-    Font& operator=(Font&&) noexcept = default;
 
     [[nodiscard]] b8 FailedLoading() const { return font.Get() == nullptr; }
     [[nodiscard]] constexpr TTF_Font *ToSDL() const { return font.Get(); }
     [[nodiscard]] FontSize GetSize() const { return TTF_GetFontSize(font.Get()); }
 };
 class FontCollection {
-    AbsolutePath font_path;
+    AbsolutePath font_path { };
     FlatMap<FontSizes, Font> fonts { 16U };
 
 public:
-    explicit FontCollection(const AbsolutePath& path) : font_path { path } { }
+    explicit FontCollection() { }
+    void SetFontFile(const AbsolutePath& path) {
+        font_path = path;
+        Clear();
+    }
     [[nodiscard]] const Font& GetFont(FontSizes size);
     void Clear() { fonts.Clear(); }
 };
@@ -75,7 +75,9 @@ struct LayoutLength {
 struct Layout {
     LayoutLength width;
     LayoutLength height;
-    [[nodiscard]] static constexpr LayoutLength::Constraint ToConstraint(const RelativeConstraint related_constraint) { return related_constraint == hug ? LayoutLength::child_constraint : LayoutLength::parent_constraint; }
+    [[nodiscard]] static constexpr LayoutLength::Constraint ToConstraint(const RelativeConstraint related_constraint) {
+        return related_constraint == hug ? LayoutLength::child_constraint : LayoutLength::parent_constraint;
+    }
     Layout(const uint2 size) : width { size.x, LayoutLength::fixed }, height { size.y, LayoutLength::fixed } { }
     Layout(const RelativeConstraint relative_constraint) : width { -1U, ToConstraint(relative_constraint) }, height { -1U, ToConstraint(relative_constraint) } { }
     Layout(const u32 width, const RelativeConstraint height_constraint) : width { width, LayoutLength::fixed }, height { -1U, ToConstraint(height_constraint) } { }
