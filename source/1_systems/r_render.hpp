@@ -6,15 +6,17 @@
 
 namespace pce {
 struct RenderClearSystem {
-    void operator()() {
-        (void)SDL_SetRenderDrawColor(Window::window_config.renderer, Window::window_config.clear_color.r, Window::window_config.clear_color.g, Window::window_config.clear_color.b, Window::window_config.clear_color.a);
-        (void)SDL_RenderClear(Window::window_config.renderer);
+    void operator()() const {
+        WindowState& window_state = singleton.Get<WindowState>();
+        (void)SDL_SetRenderDrawColor(window_state.renderer, window_state.clear_color.r, window_state.clear_color.g, window_state.clear_color.b, window_state.clear_color.a);
+        (void)SDL_RenderClear(window_state.renderer);
     }
 };
 struct PresentSystem {
-    void operator()() {
-        (void)SDL_GetWindowSize(Window::window_config.window, reinterpret_cast<i32*>(&Window::window_config.screen_size.x), reinterpret_cast<i32*>(&Window::window_config.screen_size.y));
-        (void)SDL_RenderPresent(Window::window_config.renderer);
+    void operator()() const {
+        WindowState& window_state = singleton.Get<WindowState>();
+        (void)SDL_GetWindowSize(window_state.window, reinterpret_cast<i32*>(&window_state.screen_size.x), reinterpret_cast<i32*>(&window_state.screen_size.y));
+        (void)SDL_RenderPresent(window_state.renderer);
     }
 };
 } // namespace pce

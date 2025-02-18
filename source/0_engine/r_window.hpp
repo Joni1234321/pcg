@@ -1,9 +1,10 @@
 #pragma once
 
-#include <functional>
-#include <ranges>
+#include "0_engine/g_globals.hpp"
+#include "0_engine/u_assets.hpp"
+#include "0_engine/u_types.hpp"
+#include "0_engine/u_fonts.hpp"
 
-#include "u_types.hpp"
 
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_log.h>
@@ -12,19 +13,20 @@
 
 namespace pce {
 
-struct WindowConfig {
+struct WindowState {
     SDL_Window* window;
     SDL_Renderer* renderer;
     TTF_TextEngine* text_engine;
     uint2 screen_size;
     SDL_Color clear_color;
 };
+static const RelativePath FONT_PATH { "font.ttf" };
+static const RelativePath FONT_BOLD_PATH { "TitilliumWeb-SemiBold.ttf" };
 struct Window {
-    static WindowConfig window_config;
-
     explicit Window(const uint2 size) {
         constexpr u32 window_flags = SDL_WINDOW_RESIZABLE;
-        if (!SDL_CreateWindowAndRenderer("Video Game", static_cast<i32>(size.x), static_cast<i32>(size.y), window_flags, &window_config.window, &window_config.renderer)) {
+        WindowState& window_state = singleton.Get<WindowState>();
+        if (!SDL_CreateWindowAndRenderer("Video Game", static_cast<i32>(size.x), static_cast<i32>(size.y), window_flags, &window_state.window, &window_state.renderer)) {
             SDL_Log("SDL_CreateWindowAndRenderer failed (%s)", SDL_GetError());
             SDL_Quit();
         }
@@ -36,17 +38,19 @@ struct Window {
             SDL_Log("SDL_ttf failed (%s)", SDL_GetError());
             SDL_Quit();
         }
-        SDL_SetRenderDrawBlendMode(window_config.renderer, SDL_BLENDMODE_BLEND);
-        window_config.text_engine = TTF_CreateRendererTextEngine(window_config.renderer);
-        window_config.screen_size = size;
+        SDL_SetRenderDrawBlendMode(window_state.renderer, SDL_BLENDMODE_BLEND);
+        window_state.text_engine = TTF_CreateRendererTextEngine(window_state.renderer);
+        window_state.screen_size = size;
+
+        singleton.Get<ui::FontCollection>().SetFontFile(Asset(FONT_PATH));
     }
     ~Window() {
-        SDL_DestroyRenderer(window_config.renderer);
-        SDL_DestroyWindow(window_config.window);
-        TTF_DestroyRendererTextEngine(window_config.text_engine);
+        singleton.Get<ui::FontCollection>().Clear();
+        SDL_DestroyRenderer(singleton.Get<WindowState>().renderer);
+        SDL_DestroyWindow(singleton.Get<WindowState>().window);
+        TTF_DestroyRendererTextEngine(singleton.Get<WindowState>().text_engine);
         TTF_Quit();
         SDL_Quit();
     }
 };
-inline WindowConfig Window::window_config;
 } // namespace pce

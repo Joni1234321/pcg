@@ -2,7 +2,8 @@
 
 #include <ranges>
 
-#include "orchestra.hpp"
+#include "i_input_system.hpp"
+#include "u_orchestra.hpp"
 #include "t_tick_system.hpp"
 
 #include "0_engine/r_window.hpp"
@@ -187,7 +188,7 @@ void RecalculateTreeLayout(NodeTree& tree) {
         }
 
         const Font& font = singleton.Get<FontCollection>().GetFont(node_properties.font_size);
-        if (ttf_text.Get() == nullptr) { ttf_text.Reset(TTF_CreateText(Window::window_config.text_engine, font.ToSDL(), node_properties.text.CString(), node_properties.text.Size())); } else {
+        if (ttf_text.Get() == nullptr) { ttf_text.Reset(TTF_CreateText(singleton.Get<WindowState>().text_engine, font.ToSDL(), node_properties.text.CString(), node_properties.text.Size())); } else {
             TTF_SetTextString(ttf_text.Get(), node_properties.text.CString(), node_properties.text.Size());
             TTF_SetTextFont(ttf_text.Get(), font.ToSDL());
         }
@@ -224,8 +225,8 @@ void RecalculateTreeLayout(NodeTree& tree) {
 
     // fill top down
     NodeStyle& root_node = tree.node_styles[tree.Root()];
-    if (root_node.width.constraint == LayoutLength::parent_constraint) { root_node.width.resolved = Window::window_config.screen_size.x - root_node.position.x; }
-    if (root_node.height.constraint == LayoutLength::parent_constraint) { root_node.height.resolved = Window::window_config.screen_size.y - root_node.position.y; }
+    if (root_node.width.constraint == LayoutLength::parent_constraint) { root_node.width.resolved = singleton.Get<WindowState>().screen_size.x - root_node.position.x; }
+    if (root_node.height.constraint == LayoutLength::parent_constraint) { root_node.height.resolved = singleton.Get<WindowState>().screen_size.y - root_node.position.y; }
     for (const Handle<Node> node_handle : node_handles) {
         const NodeStyle& node_style = tree.node_styles[node_handle];
 
@@ -409,8 +410,8 @@ void NodeRenderSystem::operator()() {
     for (NodeTree& tree : data.Get<NodeTree>() | std::views::reverse | std::views::filter(&NodeTree::GetDisplay)) {
         const FrameElements& frame_elements = GetFrameElements(tree);
         for (const RectangleElement& element : frame_elements.rectangles) {
-            (void)SDL_SetRenderDrawColor(Window::window_config.renderer, element.color.r, element.color.g, element.color.b, element.color.a);
-            (void)SDL_RenderFillRect(Window::window_config.renderer, &element.rect);
+            (void)SDL_SetRenderDrawColor(singleton.Get<WindowState>().renderer, element.color.r, element.color.g, element.color.b, element.color.a);
+            (void)SDL_RenderFillRect(singleton.Get<WindowState>().renderer, &element.rect);
         }
         for (const TextElement& text : frame_elements.texts) { (void)TTF_DrawRendererText(text.text, text.position.x, text.position.y); }
     }

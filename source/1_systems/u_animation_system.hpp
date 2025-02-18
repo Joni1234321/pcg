@@ -22,7 +22,7 @@ struct Animation {
 struct AnimationSystem {
     static Handle<Animation> Register(const AnimationDesc& animation_desc);
     static void StartAnimation(Handle<Animation> animation_handle);
-    void operator()();
+    void operator()() const;
 };
 struct Particle {
     uint2 position;
@@ -46,7 +46,7 @@ struct ParticleSystem {
     [[nodiscard]] ParticleProtocol& GetParticleProtocol(const ParticleProtocolHandle protocol_handle) { return protocols[protocol_handle.id]; }
     [[nodiscard]] List<Particle>& GetParticles(const ParticleProtocolHandle protocol_handle) { return particles[protocol_handle.id]; }
     void NewParticle(const ParticleProtocolHandle protocol_handle, Particle&& particle) { GetParticles(protocol_handle).PushBack(particle); }
-    void operator()() { for (u32 i = 0; i < particles.Size(); i++) { } }
+    void operator()() const { for (u32 i = 0; i < particles.Size(); i++) { } }
 };
 
 f32 EasingSin(const f32 t) { return math::Sin(t) * 0.5F + 0.5F; }
@@ -80,7 +80,7 @@ inline void AnimationSystem::StartAnimation(const Handle<Animation> animation_ha
             break;
     }
 }
-inline void AnimationSystem::operator()() {
+inline void AnimationSystem::operator()() const {
     const u32 current_ms = SDL_GetTicks();
     for (Animation& animation : data.Get<Animation>()) {
         f32 t = static_cast<f32>(current_ms - animation.offset_ms) / static_cast<f32>(animation.duration_ms);

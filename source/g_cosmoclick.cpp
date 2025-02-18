@@ -6,7 +6,8 @@
 #include "0_engine/u_colors.hpp"
 #include "0_engine/u_types.hpp"
 
-#include "1_systems/orchestra.hpp"
+#include "1_systems/i_input_system.hpp"
+#include "1_systems/u_orchestra.hpp"
 #include "1_systems/r_render.hpp"
 #include "1_systems/r_ui_node.hpp"
 #include "1_systems/t_debug_system.hpp"
@@ -107,13 +108,10 @@ public:
     CosmoClick();
     void Tick();
 };
-static const RelativePath font_path { "font.ttf" };
-static const RelativePath font_bold_path { "TitilliumWeb-SemiBold.ttf" };
 constexpr u32 planet_size = 400U;
 constexpr u32 planet_border_size = 40U;
 CosmoClick::CosmoClick() {
-    Window::window_config.clear_color = colors::dark_grey;
-    singleton.Get<FontCollection>().SetFontFile(Asset(font_path));
+    singleton.Get<WindowState>().clear_color = colors::dark_grey;
     orchestra.Add<DebugSystem>();
 
     orchestra.Add<TickSystem>();

@@ -5,10 +5,11 @@
 #include "0_engine/u_colors.hpp"
 #include "0_engine/u_types.hpp"
 #include "0_engine/u_util.hpp"
-#include "1_systems/r_ui_node.hpp"
 
-#include "1_systems/orchestra.hpp"
+#include "1_systems/i_input_system.hpp"
 #include "1_systems/r_render.hpp"
+#include "1_systems/r_ui_node.hpp"
+#include "1_systems/u_orchestra.hpp"
 #include "1_systems/t_debug_system.hpp"
 #include "1_systems/t_tick_system.hpp"
 
@@ -93,7 +94,7 @@ class ClickCore {
 public:
     b8 running = true;
 
-    ClickCore() { Window::window_config.clear_color = colors::dark_slate; }
+    ClickCore() { singleton.Get<WindowState>().clear_color = colors::dark_slate; }
     void Tick();
 
 private:
