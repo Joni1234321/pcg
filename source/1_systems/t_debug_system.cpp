@@ -29,7 +29,7 @@ void TickFrame::DisplayInfo() const {
     Handle<Node> frame = B(tree_handle, hug, { 10U, 0U }).Direction(vertical).Build();
     Handle<Node> ticks = B(tree_handle, frame, hug).Text(std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, fps, fps), FontSizes::tiny).Fill(colors::radiant_orange).Build();
     Handle<Node> systems = B(tree_handle, frame, hug).Direction(vertical).Gap(10).Build();
-    for (const auto [name, ns] : std::views::zip(Orchestra::orchestra_config.names, Orchestra::orchestra_config.nano_seconds)) {
+    for (const auto [name, ns] : std::views::zip(singleton.Get<OrchestraState>().names, singleton.Get<OrchestraState>().nano_seconds)) {
         constexpr f32 THOUSANDTH = 0.001F;
         (void)B(tree_handle, systems, fill).Fill(colors::radiant_orange).Text(std::format("{:.3f}ms | {}", ns * THOUSANDTH * THOUSANDTH, name), FontSizes::tiny).Build();
     }
