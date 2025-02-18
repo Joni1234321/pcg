@@ -388,6 +388,7 @@ void Propagate(NodeReference node_reference, const NodeReaction& reaction) {
     }
 }
 void NodeInputSystem::operator()() const {
+    HoveredType& hovered = singleton.Get<HoveredType>();
     HandleList<NodeTree>& trees = data.Get<NodeTree>();
     if (singleton.Get<InputState>().left_mouse_down && hovered.has_value()) { Propagate(hovered.value(), Click); }
 

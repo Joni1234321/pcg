@@ -196,8 +196,8 @@ Scene ClickCore::GameScene() {
 Scene ClickCore::GameOverScene() {
     constexpr f32 slow_down = 1000.0F;
     GameFrame& game_frame = frames.GameFrame();
-    // game_frame.Box().background_color = colors::AnimateDamp(static_cast<f32>(singleton.Get<TickState>().tick.Value()) / slow_down);
-    // game_frame.ScoreBox().background_color = colors::AnimateDamp(singleton.Get<TickState>().tick.Value() * 1.2F / slow_down);
+    game_frame.Box().background_color = colors::AnimateDamp(static_cast<f32>(singleton.Get<TickState>().tick.Value()) / slow_down);
+    game_frame.ScoreBox().background_color = colors::AnimateDamp(singleton.Get<TickState>().tick.Value() * 1.2F / slow_down);
 
     const Scene scene = MainMenuScene();
     if (scene == Scene::main_menu) { return Scene::game_over; }

@@ -11,9 +11,8 @@
 
 namespace pce::ui {
 struct NodeInputSystem {
-    static HoveredType hovered;
     void operator()() const;
-    ~NodeInputSystem() { hovered = { }; }
+    ~NodeInputSystem() { singleton.Get<HoveredType>() = { }; }
 };
 struct NodeRenderSystem {
     NodeRenderSystem() { }
@@ -22,7 +21,6 @@ struct NodeRenderSystem {
     };
     void operator()();
 };
-inline HoveredType NodeInputSystem::hovered { };
 
 class NodeBuilder {
     NodeReference node_reference;

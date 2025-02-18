@@ -92,7 +92,7 @@ void DebugSystem::operator()() const {
     InputState& input_state = singleton.Get<InputState>();
     if (input_state.left_mouse_down) {
         data[inspector_frame.tree_handle].MarkDirty();
-        if (input_state.keys[SDLK_LALT]) { inspector_frame.ShowElementStructure(NodeInputSystem::hovered); } else { data[inspector_frame.tree_handle].Clear(); }
+        if (input_state.keys[SDLK_LALT]) { inspector_frame.ShowElementStructure(singleton.Get<HoveredType>()); } else { data[inspector_frame.tree_handle].Clear(); }
     }
     data[tick_frame.tree_handle].MarkDirty();
     if (singleton.Get<TickState>().tick.Value() % 100 == 0) { tick_frame.DisplayInfo(); }

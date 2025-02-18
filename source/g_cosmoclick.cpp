@@ -102,7 +102,6 @@ private:
 };
 class CosmoClick : LogLifetimeWithCount<CosmoClick> {
     Orchestra orchestra { };
-    TickSystem tick_system { };
 
 public:
     CosmoClick();
