@@ -2,15 +2,15 @@
 
 #include <stack>
 
-#include "../g_components.hpp"
-#include "0_engine/u_colors.hpp"
+#include "g_components.hpp"
 #include "orchestra.hpp"
 
+#include "0_engine/u_colors.hpp"
 #include "0_engine/u_types.hpp"
 
 namespace pce::ui {
 namespace colors = colors;
-Handle<Node> CreateDebugNodeComponent(const u32 layer, const String& text, const SDL_Color color, Handle<NodeTree> tree, const Handle<Node> frame) {
+Handle<Node> CreateDebugNodeComponent(const u32 layer, const String& text, const SDL_Color color, const Handle<NodeTree> tree, const Handle<Node> frame) {
     constexpr u32 padding_offset = 10U;
     constexpr uint2 color_indicator_size { 10U, 20U };
     constexpr u32 gap_size { 2U };
@@ -21,8 +21,8 @@ Handle<Node> CreateDebugNodeComponent(const u32 layer, const String& text, const
 }
 void TickFrame::DisplayInfo() const {
     using namespace ui;
-    u32 tick = TickSystem::tick_config.tick.Value();
-    u32 fps = 1.0F / TickSystem::tick_config.delta_time;
+    u32 tick = singleton.Get<TickState>().tick.Value();
+    u32 fps = 1.0F / singleton.Get<TickState>().delta_time;
     data[tree_handle].Clear();
     Handle<Node> frame = B(tree_handle, hug, { 10U, 0U }).Direction(vertical).Build();
     Handle<Node> ticks = B(tree_handle, frame, hug).Text(std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, fps, fps), FontSizes::tiny).Fill(colors::radiant_orange).Build();
@@ -93,6 +93,6 @@ void DebugSystem::operator()() const {
         if (input_state.keys[SDLK_LALT]) { inspector_frame.ShowElementStructure(NodeInputSystem::hovered); } else { data[inspector_frame.tree_handle].Clear(); }
     }
     data[tick_frame.tree_handle].MarkDirty();
-    if (TickSystem::tick_config.tick.Value() % 100 == 0) { tick_frame.DisplayInfo(); }
+    if (singleton.Get<TickState>().tick.Value() % 100 == 0) { tick_frame.DisplayInfo(); }
 }
 }

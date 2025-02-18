@@ -126,7 +126,7 @@ CosmoClick::CosmoClick() {
     orchestra.Add<PresentSystem>();
 }
 void CosmoClick::Tick() {
-    if (singleton.Get<InputState>().keys_down[SDLK_ESCAPE]) { TickSystem::tick_config.running = false; }
+    if (singleton.Get<InputState>().keys_down[SDLK_ESCAPE]) { singleton.Get<TickState>().running = false; }
     orchestra.RunSystems();
 }
 void CosmoClickSystem::operator()() {
@@ -136,7 +136,7 @@ void CosmoClickSystem::operator()() {
             break;
         case Scene::quit:
             Logger().Log("Quit requested");
-            TickSystem::tick_config.running = false;
+            singleton.Get<TickState>().running = false;
             break;
     }
 }
@@ -237,5 +237,5 @@ GameFrame::GameFrame() {
 
 void pcg::arcade::RunCosmoClick() {
     cosmoclick::CosmoClick cosmo_click { };
-    while (pce::TickSystem::tick_config.running) { cosmo_click.Tick(); }
+    while (pce::singleton.Get<pce::TickState>().running) { cosmo_click.Tick(); }
 }

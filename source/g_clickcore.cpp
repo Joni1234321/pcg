@@ -91,6 +91,8 @@ class ClickCore {
     Scene scene { Scene::main_menu };
 
 public:
+    b8 running = true;
+
     ClickCore() { Window::window_config.clear_color = colors::dark_slate; }
     void Tick();
 
@@ -117,7 +119,7 @@ void ClickCore::Tick() {
     input_system();
     debug_system();
     node_input_system();
-    if (singleton.Get<InputState>().keys_down[SDLK_ESCAPE]) { TickSystem::tick_config.running = false; }
+    if (singleton.Get<InputState>().keys_down[SDLK_ESCAPE]) { running = false; }
 
     GameLoop();
 
@@ -138,7 +140,7 @@ void ClickCore::GameLoop() {
             break;
         case Scene::quit:
             Logger().Log("Quit requested");
-            TickSystem::tick_config.running = false;
+            running = false;
             break;
     }
 }
@@ -193,8 +195,8 @@ Scene ClickCore::GameScene() {
 Scene ClickCore::GameOverScene() {
     constexpr f32 slow_down = 1000.0F;
     GameFrame& game_frame = frames.GameFrame();
-    game_frame.Box().background_color = colors::AnimateDamp(static_cast<f32>(TickSystem::tick_config.tick.Value()) / slow_down);
-    game_frame.ScoreBox().background_color = colors::AnimateDamp(TickSystem::tick_config.tick.Value() * 1.2F / slow_down);
+    // game_frame.Box().background_color = colors::AnimateDamp(static_cast<f32>(singleton.Get<TickState>().tick.Value()) / slow_down);
+    // game_frame.ScoreBox().background_color = colors::AnimateDamp(singleton.Get<TickState>().tick.Value() * 1.2F / slow_down);
 
     const Scene scene = MainMenuScene();
     if (scene == Scene::main_menu) { return Scene::game_over; }
@@ -244,5 +246,5 @@ void HighScoreFrame::SetHighScore(Multiset<HighScore> scores) const {
 
 void pcg::arcade::RunClickCore() {
     clickcore::ClickCore click_core { };
-    while (pce::TickSystem::tick_config.running) { click_core.Tick(); }
+    while (click_core.running) { click_core.Tick(); }
 }

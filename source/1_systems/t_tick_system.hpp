@@ -4,29 +4,24 @@
 
 #include "0_engine/u_ecs.hpp"
 #include "0_engine/u_types.hpp"
+#include "1_systems/orchestra.hpp"
 
 namespace pce {
 using Tick = NamedType<u32, struct TickTag, Arithmetic>;
 
-struct TickConfig {
+struct TickState {
     Tick tick { 0U };
     std::chrono::time_point<std::chrono::high_resolution_clock> last_tick_start;
-    f32 delta_time;
-    b8 running;
+    f32 delta_time { 1.0F };
+    b8 running { true };
 };
 struct TickSystem {
-    static TickConfig tick_config;
-    TickSystem() {
-        tick_config.running = true;
-        tick_config.tick = Tick { 0U };
-        tick_config.delta_time = 1.0F;
-    }
-    void operator()() {
+    void operator()() const {
         using namespace std::chrono;
-        tick_config.delta_time = duration<f32>(high_resolution_clock::now() - tick_config.last_tick_start).count();
-        tick_config.last_tick_start = high_resolution_clock::now();
-        tick_config.tick += Tick { 1U };
+        TickState& tick_state = singleton.Get<TickState>();
+        tick_state.delta_time = duration<f32>(high_resolution_clock::now() - tick_state.last_tick_start).count();
+        tick_state.last_tick_start = high_resolution_clock::now();
+        tick_state.tick += Tick { 1U };
     }
 };
-inline TickConfig TickSystem::tick_config;
 } // namespace pce
