@@ -85,11 +85,12 @@ TestFrame::TestFrame() {
         Handle<Node> box33 = B(tree_handle, box3, fill).Fill(colors::yellow).Build();
     }
 }
-void DebugSystem::operator()() {
+void DebugSystem::operator()() const {
     using namespace ui;
-    if (InputSystem::input_config.left_mouse_down) {
+    InputState& input_state = singleton.Get<InputState>();
+    if (input_state.left_mouse_down) {
         data[inspector_frame.tree_handle].MarkDirty();
-        if (InputSystem::input_config.keys[SDLK_LALT]) { inspector_frame.ShowElementStructure(NodeInputSystem::hovered); } else { data[inspector_frame.tree_handle].Clear(); }
+        if (input_state.keys[SDLK_LALT]) { inspector_frame.ShowElementStructure(NodeInputSystem::hovered); } else { data[inspector_frame.tree_handle].Clear(); }
     }
     data[tick_frame.tree_handle].MarkDirty();
     if (TickSystem::tick_config.tick.Value() % 100 == 0) { tick_frame.DisplayInfo(); }

@@ -48,9 +48,15 @@ struct GlobalDataInstantNoReset {
     template <class T> [[nodiscard]] constexpr T& operator[](Handle<T> handle) { return Get<T>()[handle]; }
     template <class T, typename... Args> [[nodiscard]] constexpr Handle<T> Create(Args&&... args) { return Get<T>().EmplaceBack(std::forward<Args>(args)...); }
 };
+struct SingletonNaive {
+    template <class T> [[nodiscard]] static constexpr T& Get() {
+        static T instance;
+        return instance;
+    }
+};
 
 inline GlobalDataInstantNoReset data { };
-
+inline SingletonNaive singleton { };
 struct Orchestra {
     static OrchestraConfig orchestra_config;
     template <typename T> void Add() {
@@ -73,7 +79,7 @@ struct Orchestra {
 };
 inline OrchestraConfig Orchestra::orchestra_config;
 
-struct InputConfig {
+struct InputState {
     UnorderedMap<SDL_Keycode, b8> keys { };
     UnorderedMap<SDL_Keycode, b8> keys_down { };
     UnorderedMap<SDL_Keycode, b8> keys_up { };
@@ -84,24 +90,24 @@ struct InputConfig {
     uint2 mouse_position { };
 };
 struct InputSystem {
-    static InputConfig input_config;
-    void operator()() {
-        for (b8& key : input_config.keys_up | std::ranges::views::values) { key = false; }
-        for (b8& key : input_config.keys_down | std::ranges::views::values) { key = false; }
+    void operator()() const {
+        InputState& input_state = singleton.Get<InputState>();
+        for (b8& key : input_state.keys_up | std::ranges::views::values) { key = false; }
+        for (b8& key : input_state.keys_down | std::ranges::views::values) { key = false; }
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
                 case SDL_EVENT_QUIT: {
-                    input_config.quit = true;
+                    input_state.quit = true;
                     return;
                 }
                 case SDL_EVENT_KEY_UP:
-                    input_config.keys[event.key.key] = false;
-                    input_config.keys_up[event.key.key] = true;
+                    input_state.keys[event.key.key] = false;
+                    input_state.keys_up[event.key.key] = true;
                     break;
                 case SDL_EVENT_KEY_DOWN:
-                    input_config.keys[event.key.key] = true;
-                    input_config.keys_down[event.key.key] = true;
+                    input_state.keys[event.key.key] = true;
+                    input_state.keys_down[event.key.key] = true;
                     break;
                 default:
                     break;
@@ -110,11 +116,10 @@ struct InputSystem {
 
         float2 mouse_position_f;
         const SDL_MouseButtonFlags state = SDL_GetMouseState(&mouse_position_f.x, &mouse_position_f.y);
-        input_config.mouse_position = uint2 { static_cast<u32>(mouse_position_f.x), static_cast<u32>(mouse_position_f.y) };
-        input_config.left_mouse_down = state && SDL_BUTTON_LMASK && !input_config.left_mouse;
-        input_config.left_mouse_up = input_config.left_mouse && !(state && SDL_BUTTON_LMASK);
-        input_config.left_mouse = state && SDL_BUTTON_LMASK;
+        input_state.mouse_position = uint2 { static_cast<u32>(mouse_position_f.x), static_cast<u32>(mouse_position_f.y) };
+        input_state.left_mouse_down = state && SDL_BUTTON_LMASK && !input_state.left_mouse;
+        input_state.left_mouse_up = input_state.left_mouse && !(state && SDL_BUTTON_LMASK);
+        input_state.left_mouse = state && SDL_BUTTON_LMASK;
     }
 };
-inline InputConfig InputSystem::input_config;
-}
+} // namespace pce

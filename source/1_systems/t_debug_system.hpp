@@ -18,6 +18,6 @@ struct TestFrame {
 struct DebugSystem {
     TickFrame tick_frame { };
     InspectorFrame inspector_frame { };
-    void operator()();
+    void operator()() const;
 };
 } // namespace pce

@@ -385,11 +385,11 @@ void Propagate(NodeReference node_reference, const NodeReaction& reaction) {
 }
 void NodeInputSystem::operator()() const {
     HandleList<NodeTree>& trees = data.Get<NodeTree>();
-    if (InputSystem::input_config.left_mouse_down && hovered.has_value()) { Propagate(hovered.value(), Click); }
+    if (singleton.Get<InputState>().left_mouse_down && hovered.has_value()) { Propagate(hovered.value(), Click); }
 
     if (hovered.has_value() && !trees[hovered->tree_handle].node_styles.ValidHandle(hovered->node_handle)) { hovered = std::nullopt; }
     const HoveredType previous_hovered = hovered;
-    hovered = GetHovered(InputSystem::input_config.mouse_position);
+    hovered = GetHovered(singleton.Get<InputState>().mouse_position);
 
     if (hovered.has_value() && previous_hovered.has_value() && hovered->tree_handle.id == previous_hovered->tree_handle.id && hovered->node_handle.id == previous_hovered->node_handle.id) { return; }
 

@@ -17,51 +17,6 @@ namespace pcg::cosmoclick {
 using namespace pce;
 using namespace pce::ui;
 
-// struct EngineStructure {
-//     List<std::function<void()>> systems;
-//
-//     void RunSystems() {
-//         for (std::function<void()>& system : systems) {
-//             auto start = std::chrono::high_resolution_clock::now();
-//             system();  // Run the system
-//             auto end = std::chrono::high_resolution_clock::now();
-//             std::chrono::duration<double, std::milli> elapsed = end - start;
-//             Logger().Log("System took {}ms", elapsed.count());
-//         }
-//     }
-//     template<typename T> T& Get () { return systems | std::views::filter([](std::function<void()> f) {  return true; }); }
-// };
-//
-// struct InputDirectory {
-//     InputSystem input_system;
-//     void operator()() {
-//         input_system();
-//     }
-// };
-// struct UpdateDirectory {
-//     void operator()() {
-//         input_system();
-//     }
-// };
-// struct RenderDirectory {
-//     RenderSystem render_system;
-//     AnimationSystem animation_system;
-//     NodeRenderSystem node_render_system;
-//
-//     void operator()() {
-//         render_system();
-//         animation_system();
-//         node_render_system.RenderTrees(render_system.renderer);
-//     }
-// };
-// void CreateEngine () {
-//     EngineStructure engine;
-//
-//     engine.systems.PushBack(InputSystem {  });
-//     engine.systems.PushBack(RenderSystem { uint2(100, 100) });
-//
-// }
-
 using Count = NamedType<u32, struct CountTag, Arithmetic, FormatLongNumber>;
 using Money = NamedType<u32, struct MoneyTag, Arithmetic, FormatLongNumber>;
 using Income = NamedType<u32, struct IncomeTag, Arithmetic, FormatLongNumber>;
@@ -171,7 +126,7 @@ CosmoClick::CosmoClick() {
     orchestra.Add<PresentSystem>();
 }
 void CosmoClick::Tick() {
-    if (InputSystem::input_config.keys_down[SDLK_ESCAPE]) { TickSystem::tick_config.running = false; }
+    if (singleton.Get<InputState>().keys_down[SDLK_ESCAPE]) { TickSystem::tick_config.running = false; }
     orchestra.RunSystems();
 }
 void CosmoClickSystem::operator()() {
@@ -196,15 +151,15 @@ Scene CosmoClickSystem::GameScene() {
         game_data.money += Money { game_data.income.Value() * delta_seconds };
         game_data.seconds_since_start = seconds_since_start;
     }
-    if (InputSystem::input_config.left_mouse_down || InputSystem::input_config.left_mouse_up) {
-        if (game_frame.InsidePlanet(InputSystem::input_config.mouse_position)) {
+    if (singleton.Get<InputState>().left_mouse_down || singleton.Get<InputState>().left_mouse_up) {
+        if (game_frame.InsidePlanet(singleton.Get<InputState>().mouse_position)) {
             constexpr Money click_money = Money { 5U };
             game_data.money += click_money;
             game_frame.RestartClickAnimation();
         }
     }
-    if (InputSystem::input_config.left_mouse_down) {
-        const std::optional<u32> building_index = game_frame.GetBuildItemAtPosition(InputSystem::input_config.mouse_position);
+    if (singleton.Get<InputState>().left_mouse_down) {
+        const std::optional<u32> building_index = game_frame.GetBuildItemAtPosition(singleton.Get<InputState>().mouse_position);
         if (building_index.has_value()) {
             const Building& building = buildings[building_index.value()];
             if (game_data.money >= building.cost) {

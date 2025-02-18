@@ -117,7 +117,7 @@ void ClickCore::Tick() {
     input_system();
     debug_system();
     node_input_system();
-    if (InputSystem::input_config.keys_down[SDLK_ESCAPE]) { TickSystem::tick_config.running = false; }
+    if (singleton.Get<InputState>().keys_down[SDLK_ESCAPE]) { TickSystem::tick_config.running = false; }
 
     GameLoop();
 
@@ -143,15 +143,16 @@ void ClickCore::GameLoop() {
     }
 }
 Scene ClickCore::MainMenuScene() {
-    if (InputSystem::input_config.left_mouse_down) {
+    InputState& input_state = singleton.Get<InputState>();
+    if (input_state.left_mouse_down) {
         MainMenuFrame& main_menu_frame = frames.MainMenuFrame();
-        if (main_menu_frame.StartButton().IsInside(InputSystem::input_config.mouse_position)) {
+        if (main_menu_frame.StartButton().IsInside(input_state.mouse_position)) {
             data[main_menu_frame.tree_handle].SetDisplay(false);
             game = RoundData { .score = Score { 0U }, .start_time = TimeNow() };
             return Scene::game;
         }
-        if (main_menu_frame.SettingsButton().IsInside(InputSystem::input_config.mouse_position)) { return Scene::game_over; }
-        if (main_menu_frame.ExitButton().IsInside(InputSystem::input_config.mouse_position)) { return Scene::quit; }
+        if (main_menu_frame.SettingsButton().IsInside(input_state.mouse_position)) { return Scene::game_over; }
+        if (main_menu_frame.ExitButton().IsInside(input_state.mouse_position)) { return Scene::quit; }
     }
     return Scene::main_menu;
 }
@@ -177,8 +178,9 @@ Scene ClickCore::GameScene() {
     game_frame.SetScore(game.score.Value());
     game_frame.SetTime(time_left_ms);
 
-    if (InputSystem::input_config.left_mouse_down || InputSystem::input_config.left_mouse_up) {
-        if (game_frame.Box().IsInside(InputSystem::input_config.mouse_position)) {
+    const InputState& input_state = singleton.Get<InputState>();
+    if (input_state.left_mouse_down || input_state.left_mouse_up) {
+        if (game_frame.Box().IsInside(input_state.mouse_position)) {
             constexpr Score points = Score { 50U };
             game.score += points;
             const uint2 area = game_frame.GameArea().OuterBoxSize() - game_frame.Box().OuterBoxSize();
