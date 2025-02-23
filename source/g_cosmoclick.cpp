@@ -4,15 +4,16 @@
 #include "0_engine/u_algorithm.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
+#include "0_engine/u_texture.hpp"
 #include "0_engine/u_types.hpp"
 
 #include "1_systems/i_input_system.hpp"
-#include "1_systems/u_orchestra.hpp"
 #include "1_systems/r_render.hpp"
 #include "1_systems/r_ui_node.hpp"
 #include "1_systems/t_debug_system.hpp"
 #include "1_systems/t_tick_system.hpp"
 #include "1_systems/u_animation_system.hpp"
+#include "1_systems/u_orchestra.hpp"
 
 namespace pcg::cosmoclick {
 using namespace pce;
@@ -26,7 +27,7 @@ struct Building {
     Money cost;
     Income income;
 };
-struct GameData {
+struct GameState {
     List<Count> building_counts;
     TimePoint start_time;
     u32 seconds_since_start;
@@ -90,7 +91,7 @@ private:
 enum class Scene { game, quit };
 struct CosmoClickConfig {
     GameFrame game_frame { };
-    GameData game_data { .building_counts = List { buildings.Size(), Count { 0U } }, .start_time = TimeNow(), .seconds_since_start = 0U, .money = Money { 100U }, .income = Income { 0U } };
+    GameState game_data { .building_counts = List { buildings.Size(), Count { 0U } }, .start_time = TimeNow(), .seconds_since_start = 0U, .money = Money { 100U }, .income = Income { 0U } };
     Scene scene { Scene::game };
 };
 struct CosmoClickSystem {
@@ -100,8 +101,10 @@ struct CosmoClickSystem {
 private:
     Scene GameScene();
 };
+static const RelativePath PARROT_PATH {  };
 class CosmoClick : LogLifetimeWithCount<CosmoClick> {
     Orchestra orchestra { };
+    Texture texture { Asset(PARROT_PATH) };
 
 public:
     CosmoClick();
@@ -120,12 +123,12 @@ CosmoClick::CosmoClick() {
     orchestra.Add<CosmoClickSystem>();
 
     orchestra.Add<AnimationSystem>();
-    orchestra.Add<RenderClearSystem>();
     orchestra.Add<NodeRenderSystem>();
     orchestra.Add<PresentSystem>();
 }
 void CosmoClick::Tick() {
     if (singleton.Get<InputState>().keys_down[SDLK_ESCAPE]) { singleton.Get<TickState>().running = false; }
+    SDL_RenderTexture(singleton.Get<WindowState>().renderer, texture.ToSDL(), NULL, NULL);
     orchestra.RunSystems();
 }
 void CosmoClickSystem::operator()() {
@@ -140,7 +143,7 @@ void CosmoClickSystem::operator()() {
     }
 }
 Scene CosmoClickSystem::GameScene() {
-    GameData& game_data = cosmo_click_config.game_data;
+    GameState& game_data = cosmo_click_config.game_data;
     GameFrame& game_frame = cosmo_click_config.game_frame;
     const TimePoint update_time = TimeNow();
     const Duration time_since_start = update_time - game_data.start_time;

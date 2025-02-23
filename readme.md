@@ -23,3 +23,7 @@ install ninja-build
 install libfreetype6-dev
 ```
 
+# VCPKG ZLIP BROKEN
+`CMake Error at C:/Users/[user]/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/share/zlib/vcpkg-cmake-wrapper.cmake:5 (message):
+  Broken installation of vcpkg port zlib`
+Go to `view -> tool window -> vcpkg` (bottom) then i unisntalled ZLIB and it worked

@@ -77,7 +77,6 @@ public:
     [[nodiscard]] constexpr HighScoreFrame& HighScoreFrame();
 };
 class ClickCore {
-    RenderClearSystem render_system { };
     PresentSystem present_system { };
     TickSystem tick_system { };
     InputSystem input_system { };
@@ -124,7 +123,6 @@ void ClickCore::Tick() {
 
     GameLoop();
 
-    render_system();
     node_render_system();
     present_system();
 }

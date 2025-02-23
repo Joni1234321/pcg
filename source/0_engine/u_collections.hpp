@@ -40,6 +40,7 @@ public:
     }
     constexpr void Reset() noexcept { Reset(nullptr); }
     [[nodiscard]] constexpr T *Get() const noexcept { return pointer; }
+    constexpr T *operator->() const noexcept { return pointer; }
 
     constexpr explicit UniquePointer(T* pointer) noexcept : pointer { pointer } { }
     UniquePointer(UniquePointer&& other) noexcept : pointer { std::exchange(other.pointer, nullptr) } { }

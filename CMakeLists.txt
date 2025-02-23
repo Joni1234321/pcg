@@ -32,26 +32,35 @@ if (DOWNLOAD_DEPENDENCIES)
 	fetchcontent_declare(
 			SDL3
 			GIT_REPOSITORY "https://github.com/libsdl-org/SDL.git"
-			GIT_TAG "preview-3.1.6"
+			GIT_TAG "main"
 			EXCLUDE_FROM_ALL
 	)
+	fetchcontent_makeavailable(SDL3)
 	fetchcontent_declare(
 			SDL3_ttf
 			GIT_REPOSITORY "https://github.com/libsdl-org/SDL_ttf.git"
 			GIT_TAG "main"
 			EXCLUDE_FROM_ALL
 	)
-	fetchcontent_makeavailable(SDL3)
 	fetchcontent_makeavailable(SDL3_ttf)
+	fetchcontent_declare(
+			SDL3_image
+			GIT_REPOSITORY "https://github.com/libsdl-org/SDL_image.git"
+			GIT_TAG "main"
+			EXCLUDE_FROM_ALL
+	)
+	fetchcontent_makeavailable(SDL3_image)
 
 else ()
 	find_package(SDL3 CONFIG REQUIRED)
 	find_package(SDL3_ttf CONFIG REQUIRED)
+	find_package(SDL3_image CONFIG REQUIRED)
 endif ()
 
 target_link_libraries(${PROJECT_NAME}
                       PRIVATE SDL3::SDL3
                       PRIVATE SDL3_ttf::SDL3_ttf
+                      PRIVATE SDL3_image::SDL3_image
 )
 
 add_custom_command(
@@ -59,6 +68,7 @@ add_custom_command(
 		COMMAND "${CMAKE_COMMAND}" -E echo "Copying files..."
 		COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_FILE:SDL3::SDL3-shared> $<TARGET_FILE_DIR:${PROJECT_NAME}>
 		COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_FILE:SDL3_ttf::SDL3_ttf-shared> $<TARGET_FILE_DIR:${PROJECT_NAME}>
+		COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_FILE:SDL3_image::SDL3_image-shared> $<TARGET_FILE_DIR:${PROJECT_NAME}>
 		COMMAND "${CMAKE_COMMAND}" -E echo "Finished copying files"
 		VERBATIM
 )
