@@ -81,7 +81,7 @@ inline void AnimationSystem::StartAnimation(const Handle<Animation> animation_ha
     }
 }
 inline void AnimationSystem::operator()() const {
-    const u32 current_ms = SDL_GetTicks();
+    const u32 current_ms = static_cast<u32>(SDL_GetTicks());
     for (Animation& animation : data.Get<Animation>()) {
         f32 t = static_cast<f32>(current_ms - animation.offset_ms) / static_cast<f32>(animation.duration_ms);
         switch (animation.state) {

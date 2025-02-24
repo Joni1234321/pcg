@@ -38,13 +38,20 @@ struct GlobalDataInstantNoReset {
     template <class T> [[nodiscard]] constexpr T& operator[](Handle<T> handle) { return Get<T>()[handle]; }
     template <class T, typename... Args> [[nodiscard]] constexpr Handle<T> Create(Args&&... args) { return Get<T>().EmplaceBack(std::forward<Args>(args)...); }
 };
+template<DefaultConstructible T> struct SingletonNaive2Helper {
+    static T data;
+};
+template <DefaultConstructible T> T SingletonNaive2Helper<T>::data { };
+struct SingletonNaive2 {
+    template <DefaultConstructible T> [[nodiscard]] static constexpr T& Get() { return SingletonNaive2Helper<T>::data; }
+};
 struct SingletonNaive {
-    template <class T> [[nodiscard]] static constexpr T& Get() {
+    template <DefaultConstructible T> [[nodiscard]] static constexpr T& Get() {
         static T instance;
         return instance;
     }
 };
 
 inline GlobalDataInstantNoReset data { };
-inline SingletonNaive singleton { };
+inline SingletonNaive2 singleton { };
 } // namespace pce

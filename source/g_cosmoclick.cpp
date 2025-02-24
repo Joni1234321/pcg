@@ -23,20 +23,21 @@ using Count = NamedType<u32, struct CountTag, Arithmetic, FormatLongNumber>;
 using Money = NamedType<u32, struct MoneyTag, Arithmetic, FormatLongNumber>;
 using Income = NamedType<u32, struct IncomeTag, Arithmetic, FormatLongNumber>;
 struct Building {
+    //HandleOptional<Texture> texture;
     String name;
     Money cost;
     Income income;
 };
-struct GameState {
-    List<Count> building_counts;
-    TimePoint start_time;
-    u32 seconds_since_start;
-    Money money;
-    Income income;
+struct GameDefines {
+    List<Building> buildings;
 };
-List<Building> buildings = {
-    { "Mine", Money { 100U }, Income { 1U } }, { "Factory", Money { 500U }, Income { 10U } }, { "Spaceport", Money { 2000U }, Income { 60U } }, { "Off World Colony", Money { 10000U }, Income { 500U } } };
-
+struct GameState {
+    List<Count> building_counts { };
+    TimePoint start_time { };
+    u32 seconds_since_start { 0U };
+    Money money { 0U };
+    Income income { 0U };
+};
 enum class ValueUnitTextSize : u8 { small, normal, larger };
 enum class Unit : u8 { cosmos, cosmos_per_second };
 constexpr String UnitToString(const Unit unit) {
@@ -91,7 +92,6 @@ private:
 enum class Scene { game, quit };
 struct CosmoClickConfig {
     GameFrame game_frame { };
-    GameState game_data { .building_counts = List { buildings.Size(), Count { 0U } }, .start_time = TimeNow(), .seconds_since_start = 0U, .money = Money { 100U }, .income = Income { 0U } };
     Scene scene { Scene::game };
 };
 struct CosmoClickSystem {
@@ -101,7 +101,7 @@ struct CosmoClickSystem {
 private:
     Scene GameScene();
 };
-static const RelativePath PARROT_PATH {  };
+static const RelativePath PARROT_PATH { "mine-small.png" };
 class CosmoClick : LogLifetimeWithCount<CosmoClick> {
     Orchestra orchestra { };
     Texture texture { Asset(PARROT_PATH) };
@@ -114,6 +114,12 @@ constexpr u32 planet_size = 400U;
 constexpr u32 planet_border_size = 40U;
 CosmoClick::CosmoClick() {
     singleton.Get<WindowState>().clear_color = colors::dark_grey;
+
+    singleton.Get<GameDefines>().buildings = List<Building> {
+        { "Mine", Money { 100U }, Income { 1U } }, { "Factory", Money { 500U }, Income { 10U } }, { "Spaceport", Money { 2000U }, Income { 60U } }, { "Off World Colony", Money { 10000U }, Income { 500U } } };
+    singleton.Get<GameState>() = GameState {
+        .building_counts = List { singleton.Get<GameDefines>().buildings.Size(), Count { 0U } }, .start_time = TimeNow(), .seconds_since_start = 0U, .money = Money { 100U }, .income = Income { 0U } };
+
     orchestra.Add<DebugSystem>();
 
     orchestra.Add<TickSystem>();
@@ -143,11 +149,11 @@ void CosmoClickSystem::operator()() {
     }
 }
 Scene CosmoClickSystem::GameScene() {
-    GameState& game_data = cosmo_click_config.game_data;
+    GameState& game_data = singleton.Get<GameState>();
     GameFrame& game_frame = cosmo_click_config.game_frame;
     const TimePoint update_time = TimeNow();
     const Duration time_since_start = update_time - game_data.start_time;
-    const u32 seconds_since_start = std::chrono::duration_cast<Seconds>(time_since_start).count();
+    const u32 seconds_since_start = static_cast<u32>(std::chrono::duration_cast<Seconds>(time_since_start).count());
     const u32 delta_seconds = seconds_since_start - game_data.seconds_since_start;
     if (delta_seconds > 0U) {
         game_data.money += Money { game_data.income.Value() * delta_seconds };
@@ -163,7 +169,7 @@ Scene CosmoClickSystem::GameScene() {
     if (singleton.Get<InputState>().left_mouse_down) {
         const std::optional<u32> building_index = game_frame.GetBuildItemAtPosition(singleton.Get<InputState>().mouse_position);
         if (building_index.has_value()) {
-            const Building& building = buildings[building_index.value()];
+            const Building& building = singleton.Get<GameDefines>().buildings[building_index.value()];
             if (game_data.money >= building.cost) {
                 ++game_data.building_counts[building_index.value()];
                 game_data.money -= building.cost;
@@ -219,13 +225,13 @@ GameFrame::GameFrame() {
     planet_handle = B(tree_handle, click, Layout { uint2 { planet_size + planet_border_size, planet_size + planet_border_size } }).Padding(planet_border_size).Fill(colors::white).Build();
     const Handle<Node> planet_intra = B(tree_handle, planet_handle.GetHandle(), fill).Fill(colors::dark_navy_blue).Build();
     const Handle<Node> build_menu = B(tree_handle, frame, { 600U, hug }).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::faded_green).Build();
-    for (const Building& building : buildings) { shop.EmplaceBack(NodeReference { tree_handle, build_menu }, building); }
+    for (const Building& building : singleton.Get<GameDefines>().buildings) { shop.EmplaceBack(NodeReference { tree_handle, build_menu }, building); }
 
     // animation
     constexpr u32 planet_padding_start = 10U;
     const AnimationDesc planet_animation_desc {
         .action = [this] (const f32 t) {
-            const u32 padding_value = planet_padding_start + t * planet_border_size;
+            const u32 padding_value = planet_padding_start + static_cast<u32>(t * planet_border_size);
             data[tree_handle].node_styles[planet_handle.GetHandle()].padding = uint4 { padding_value, padding_value, padding_value, padding_value };
         },
         .duration_ms = 500U, .state = AnimationState::repeat };

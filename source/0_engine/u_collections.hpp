@@ -14,6 +14,9 @@
 #include "u_util.hpp"
 
 namespace pce {
+template <typename T>concept TriviallyConstructible = std::is_trivially_constructible_v<T>;
+template <typename T>concept DefaultConstructible = std::is_default_constructible_v<T>;
+
 template <typename T, u32 N> using Array = std::array<T, N>;
 template <typename T> using Span = std::span<T>;
 template <typename T> using Stack = std::stack<T>;
@@ -106,7 +109,7 @@ template <typename T> struct List {
     template <typename Container> explicit List(Container&& container) requires std::is_constructible_v<
         std::vector<T>, typename Container::iterator, typename Container::iterator> : data(std::make_move_iterator(container.begin()), std::make_move_iterator(container.end())) { }
 
-    [[nodiscard]] constexpr u32 Size() const { return data.size(); }
+    [[nodiscard]] constexpr u32 Size() const { return static_cast<u32>(data.size()); }
 
     operator Span<T>() { return Span<T>(*this); }
 

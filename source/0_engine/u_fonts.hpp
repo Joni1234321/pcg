@@ -26,7 +26,7 @@ public:
 
     [[nodiscard]] b8 FailedLoading() const { return font.Get() == nullptr; }
     [[nodiscard]] constexpr TTF_Font *ToSDL() const { return font.Get(); }
-    [[nodiscard]] FontSize GetSize() const { return TTF_GetFontSize(font.Get()); }
+    [[nodiscard]] FontSize GetSize() const { return static_cast<FontSize>(TTF_GetFontSize(font.Get())); }
 };
 class FontCollection {
     AbsolutePath font_path { };
