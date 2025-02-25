@@ -102,6 +102,7 @@ struct uint4 {
     // constexpr u32& operator[](u32 pos) { return *std::array { &x, &y, &z, &w }[pos]; }
 };
 
+constexpr u8 U8_MAX = UINT8_MAX;
 constexpr u32 U32_MAX = UINT32_MAX;
 
 template <class T, class U> concept Derived = std::is_base_of_v<U, T>;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <variant>
 
 #include <SDL3_ttf/SDL_ttf.h>
 
@@ -11,11 +12,11 @@
 #include "0_engine/u_types.hpp"
 
 namespace pce::ui {
+enum class ElementType : u8 { rectangle,  texture, text };
 enum class TextAlign { left, center, right };
 enum RelativeConstraint : u8 { hug, fill };
 enum FlexDirection : u8 { horizontal, vertical };
 enum Alignment : u8 { top_left, top_center, top_right, left, center, right, bottom_left, bottom_center, bottom_right };
-
 struct TextElement {
     TTF_Text* text;
     float2 position;
@@ -28,7 +29,13 @@ struct TextureElement {
     SDL_FRect rect;
     SDL_Texture* texture;
 };
+
+struct VariantIndex {
+    ElementType type;
+    u8 count;
+};
 struct FrameElements {
+    List<VariantIndex> items_in_a_row { };
     List<TextureElement> textures { };
     List<RectangleElement> rectangles { };
     List<TextElement> texts { };
