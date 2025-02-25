@@ -2,8 +2,8 @@
 
 #include <SDL3/SDL_render.h>
 
-#include "0_engine/u_assets.hpp"
 #include "0_engine/u_collections.hpp"
+#include "0_engine/u_texture.hpp"
 #include "0_engine/u_types.hpp"
 
 #include "1_systems/u_orchestra.hpp"
@@ -32,6 +32,7 @@ public:
     NodeBuilder(Handle<NodeTree> tree_handle, Handle<Node> parent_handle, Layout new_layout);
     [[nodiscard]] NodeBuilder& Name(const String& name);
     [[nodiscard]] NodeBuilder& Fill(SDL_Color color);
+    [[nodiscard]] NodeBuilder& Texture(Handle<Texture> texture_handle);
     [[nodiscard]] NodeBuilder& Padding(u32 padding);
     [[nodiscard]] NodeBuilder& Padding2(uint2 padding);
     [[nodiscard]] NodeBuilder& Padding4(uint4 padding);

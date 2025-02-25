@@ -72,3 +72,4 @@ add_custom_command(
 		COMMAND "${CMAKE_COMMAND}" -E echo "Finished copying files"
 		VERBATIM
 )
+file(COPY ${CMAKE_SOURCE_DIR}/Assets DESTINATION ${CMAKE_BINARY_DIR}/out/build)

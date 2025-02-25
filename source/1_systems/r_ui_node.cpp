@@ -81,6 +81,10 @@ NodeBuilder& NodeBuilder::Fill(const SDL_Color color) {
     style.background_color = color;
     return *this;
 }
+NodeBuilder& NodeBuilder::Texture(const Handle<pce::Texture> handle) {
+    style.texture = HandleOptional { handle };
+    return *this;
+}
 NodeBuilder& NodeBuilder::Padding(const u32 padding) {
     style.padding = uint4 { padding, padding, padding, padding };
     return *this;
@@ -339,6 +343,7 @@ const FrameElements& GetFrameElements(NodeTree& tree) {
         tree.dirty = false;
         RecalculateTreeLayout(tree);
         tree.frame_elements.rectangles.Clear();
+        tree.frame_elements.textures.Clear();
         tree.frame_elements.texts.Clear();
         if (!tree.Empty()) {
             Stack<Handle<Node>> nodes;
@@ -350,12 +355,18 @@ const FrameElements& GetFrameElements(NodeTree& tree) {
                 nodes.pop();
                 nodes.push_range(tree.children[node_handle]);
 
-                if (node_properties.text.Empty()) {
-                    RectangleElement rectangle { .color = node_style.background_color, .rect = node_style.OuterRect() };
-                    tree.frame_elements.rectangles.PushBack(rectangle);
-                } else {
+                if (!node_properties.text.Empty()) {
                     TextElement text { .text = tree.node_ttf_texts[node_handle].Get(), .position = float2 { static_cast<f32>(node_style.InnerBoxPosition().x), static_cast<f32>(node_style.InnerBoxPosition().y) } };
                     tree.frame_elements.texts.PushBack(text);
+                } else {
+                    if (node_style.texture.IsValid()) {
+                        TextureElement texture { .rect = node_style.OuterRect(), .texture = data[node_style.texture.GetHandle()].ToSDL() };
+                        tree.frame_elements.textures.PushBack(texture);
+                    }
+                    if (node_style.background_color.a != 0U) {
+                        RectangleElement rectangle { .color = node_style.background_color, .rect = node_style.OuterRect() };
+                        tree.frame_elements.rectangles.PushBack(rectangle);
+                    }
                 }
             }
         }
@@ -414,7 +425,8 @@ void NodeRenderSystem::operator()() {
             (void)SDL_SetRenderDrawColor(singleton.Get<WindowState>().renderer, element.color.r, element.color.g, element.color.b, element.color.a);
             (void)SDL_RenderFillRect(singleton.Get<WindowState>().renderer, &element.rect);
         }
+        for (const TextureElement& element : frame_elements.textures) { (void)SDL_RenderTexture(singleton.Get<WindowState>().renderer, element.texture, NULL, &element.rect); }
         for (const TextElement& text : frame_elements.texts) { (void)TTF_DrawRendererText(text.text, text.position.x, text.position.y); }
     }
 }
-}
+} // namespace pce::ui

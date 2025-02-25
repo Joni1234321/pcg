@@ -24,7 +24,12 @@ struct RectangleElement {
     SDL_Color color;
     SDL_FRect rect;
 };
+struct TextureElement {
+    SDL_FRect rect;
+    SDL_Texture* texture;
+};
 struct FrameElements {
+    List<TextureElement> textures { };
     List<RectangleElement> rectangles { };
     List<TextElement> texts { };
 };
@@ -61,7 +66,8 @@ using HoveredType = std::optional<NodeReference>;
 // Nodes
 struct NodeStyle : LogDestroyWithCount<NodeStyle> {
     SDL_FRect bounding_box { };
-    SDL_Color background_color { 0, 0, 0 };
+    SDL_Color background_color { 0, 0, 0, 0 };
+    HandleOptional<Texture> texture { };
 
     uint2 position { U32_MAX, U32_MAX };
     uint4 padding { 0U, 0U, 0U, 0U };

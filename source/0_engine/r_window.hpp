@@ -1,25 +1,16 @@
 #pragma once
 
-#include "0_engine/g_globals.hpp"
-#include "0_engine/u_assets.hpp"
-#include "0_engine/u_types.hpp"
-#include "0_engine/u_fonts.hpp"
-
-
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_log.h>
 
-#include <SDL3_ttf/SDL_ttf.h>
+#include "0_engine/g_globals.hpp"
+#include "0_engine/r_window_state.hpp"
+#include "0_engine/u_assets.hpp"
+#include "0_engine/u_fonts.hpp"
+#include "0_engine/u_texture.hpp"
+#include "0_engine/u_types.hpp"
 
 namespace pce {
-
-struct WindowState {
-    SDL_Window* window;
-    SDL_Renderer* renderer;
-    TTF_TextEngine* text_engine;
-    uint2 screen_size;
-    SDL_Color clear_color;
-};
 static const RelativePath FONT_PATH { "font.ttf" };
 static const RelativePath FONT_BOLD_PATH { "TitilliumWeb-SemiBold.ttf" };
 struct Window {
@@ -46,6 +37,7 @@ struct Window {
     }
     ~Window() {
         singleton.Get<ui::FontCollection>().Clear();
+        data.Get<Texture>().Clear();
         SDL_DestroyRenderer(singleton.Get<WindowState>().renderer);
         SDL_DestroyWindow(singleton.Get<WindowState>().window);
         TTF_DestroyRendererTextEngine(singleton.Get<WindowState>().text_engine);

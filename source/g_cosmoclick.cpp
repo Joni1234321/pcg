@@ -22,9 +22,14 @@ using namespace pce::ui;
 using Count = NamedType<u32, struct CountTag, Arithmetic, FormatLongNumber>;
 using Money = NamedType<u32, struct MoneyTag, Arithmetic, FormatLongNumber>;
 using Income = NamedType<u32, struct IncomeTag, Arithmetic, FormatLongNumber>;
+enum class ValueUnitTextSize : u8 { small, normal, larger };
+enum class Unit : u8 { cosmos, cosmos_per_second };
+enum class Scene { game, quit };
+constexpr u32 planet_size = 400U;
+constexpr u32 planet_border_size = 40U;
 struct Building {
-    //HandleOptional<Texture> texture;
     String name;
+    Handle<Texture> texture;
     Money cost;
     Income income;
 };
@@ -38,8 +43,6 @@ struct GameState {
     Money money { 0U };
     Income income { 0U };
 };
-enum class ValueUnitTextSize : u8 { small, normal, larger };
-enum class Unit : u8 { cosmos, cosmos_per_second };
 constexpr String UnitToString(const Unit unit) {
     switch (unit) {
         case Unit::cosmos:
@@ -89,7 +92,6 @@ private:
     HandleOptional<Animation> planet_animation_handle;
     HandleOptional<Animation> click_animation_handle;
 };
-enum class Scene { game, quit };
 struct CosmoClickConfig {
     GameFrame game_frame { };
     Scene scene { Scene::game };
@@ -101,22 +103,22 @@ struct CosmoClickSystem {
 private:
     Scene GameScene();
 };
-static const RelativePath PARROT_PATH { "mine-small.png" };
 class CosmoClick : LogLifetimeWithCount<CosmoClick> {
     Orchestra orchestra { };
-    Texture texture { Asset(PARROT_PATH) };
 
 public:
     CosmoClick();
     void Tick();
 };
-constexpr u32 planet_size = 400U;
-constexpr u32 planet_border_size = 40U;
 CosmoClick::CosmoClick() {
     singleton.Get<WindowState>().clear_color = colors::dark_grey;
 
     singleton.Get<GameDefines>().buildings = List<Building> {
-        { "Mine", Money { 100U }, Income { 1U } }, { "Factory", Money { 500U }, Income { 10U } }, { "Spaceport", Money { 2000U }, Income { 60U } }, { "Off World Colony", Money { 10000U }, Income { 500U } } };
+        { .name = "Mine", .texture = data.Create<Texture>(Asset("mine-small.png")), .cost = Money { 100U }, .income = Income { 1U } },
+        { .name = "Factory", .texture = data.Create<Texture>(Asset("factory-small.png")), .cost = Money { 500U }, .income = Income { 10U } },
+        { .name = "Spaceport", .texture = data.Create<Texture>(Asset("spaceport-small.png")), .cost = Money { 2000U }, .income = Income { 60U } },
+        { .name = "Off World Colony", .texture = data.Create<Texture>(Asset("off-world-colony-small.png")), .cost = Money { 10000U }, .income = Income { 500U } }
+    };
     singleton.Get<GameState>() = GameState {
         .building_counts = List { singleton.Get<GameDefines>().buildings.Size(), Count { 0U } }, .start_time = TimeNow(), .seconds_since_start = 0U, .money = Money { 100U }, .income = Income { 0U } };
 
@@ -134,7 +136,6 @@ CosmoClick::CosmoClick() {
 }
 void CosmoClick::Tick() {
     if (singleton.Get<InputState>().keys_down[SDLK_ESCAPE]) { singleton.Get<TickState>().running = false; }
-    SDL_RenderTexture(singleton.Get<WindowState>().renderer, texture.ToSDL(), NULL, NULL);
     orchestra.RunSystems();
 }
 void CosmoClickSystem::operator()() {
@@ -194,12 +195,12 @@ template <class T> ValueUnit<T>::ValueUnit(const NodeReference parent_reference_
 template <class T> constexpr void ValueUnit<T>::SetValue(const T& value) { data[tree_handle].node_properties[value_handle.GetHandle()].text = std::format("{}", value); }
 template <class T> constexpr void ValueUnit<T>::SetUnit(const Unit unit) const { data[tree_handle].node_properties[value_handle.GetHandle()].text = UnitToString(unit); }
 BuildItem::BuildItem(const NodeReference parent_reference_handle, const Building& building) : tree_handle { parent_reference_handle.tree_handle } {
-    build_item = B(tree_handle, parent_reference_handle.node_handle, { fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build();
+    build_item = B(tree_handle, parent_reference_handle.node_handle, { fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Texture(building.texture).Build();
     const Handle<Node> upper = B(tree_handle, build_item.GetHandle(), { fill, hug }).Center().GapAuto().Build();
     const Handle<Node> lower = B(tree_handle, build_item.GetHandle(), { fill, hug }).Center().GapAuto().Build();
     count_handle = B(tree_handle, upper, hug).Text("0000", FontSizes::title).Fill(colors::black).Build();
     ValueUnit(NodeReference { tree_handle, upper }, building.cost, Unit::cosmos, colors::black, FontSizes::h1);
-    B(tree_handle, lower, hug).Text(building.name, FontSizes::title).Fill(colors::black).Build();
+    (void)B(tree_handle, lower, hug).Text(building.name, FontSizes::title).Fill(colors::black).Build();
     ValueUnit(NodeReference { tree_handle, lower }, building.income, Unit::cosmos_per_second, colors::black, FontSizes::h1);
 }
 Handle<Node> BuildItem::RootHandle() const { return build_item.GetHandle(); }
@@ -236,7 +237,7 @@ GameFrame::GameFrame() {
         },
         .duration_ms = 500U, .state = AnimationState::repeat };
     const AnimationDesc click_animation_desc {
-        .action = [this] (const f32 t) { data[tree_handle].node_styles[planet_handle.GetHandle()].background_color = colors::LightenColor(colors::blue, t); }, .duration_ms = 300U,
+        .action = [this] (const f32 t) -> void { data[tree_handle].node_styles[planet_handle.GetHandle()].background_color = colors::LightenColor(colors::blue, t); }, .duration_ms = 300U,
         .state = AnimationState::keep_alive_stopped };
     planet_animation_handle = AnimationSystem::Register(planet_animation_desc);
     click_animation_handle = AnimationSystem::Register(click_animation_desc);

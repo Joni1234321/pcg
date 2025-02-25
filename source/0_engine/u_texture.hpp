@@ -1,16 +1,15 @@
 #pragma once
 
 #include "0_engine/g_globals.hpp"
-#include "0_engine/r_window.hpp"
+#include "0_engine/r_window_state.hpp"
 #include "0_engine/u_assets.hpp"
 #include "0_engine/u_logger.hpp"
-
 
 #include "SDL3_image/SDL_image.h"
 
 namespace pce {
 struct Texture : LogLifetimeWithCount<Texture> {
-    Texture (const AbsolutePath& path) : texture(IMG_LoadTexture(singleton.Get<WindowState>().renderer, path.string().c_str())) { Logger().Created("Texture {} {}", texture->w, texture->h); }
+    Texture(const AbsolutePath &path) : texture(IMG_LoadTexture(singleton.Get<WindowState>().renderer, path.string().c_str())) { Logger().Created("Texture {} {}", texture->w, texture->h); }
     [[nodiscard]] b8 FailedLoading() const { return texture.Get() == nullptr; }
     [[nodiscard]] constexpr SDL_Texture *ToSDL() const { return texture.Get(); }
 private:
