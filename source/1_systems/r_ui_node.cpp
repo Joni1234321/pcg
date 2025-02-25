@@ -365,14 +365,9 @@ const FrameElements& GetFrameElements(NodeTree& tree) {
 
                 const std::optional<ElementType> maybe_type = GetElementType(node_style, node_properties);
                 if (maybe_type.has_value()) {
-                    const ElementType type = maybe_type.value();
+                    const ElementType type { maybe_type.value() };
                     VariantIndex& last_variant = tree.frame_elements.items_in_a_row.Back();
-                    if (last_variant.type == type && last_variant.count < UINT8_MAX) {
-                        ++last_variant.count;
-                    }
-                    else {
-                        tree.frame_elements.items_in_a_row.PushBack(VariantIndex { .type = type, .count = 1U } );
-                    }
+                    if (last_variant.type == type && last_variant.count < UINT8_MAX) { ++last_variant.count; } else { tree.frame_elements.items_in_a_row.PushBack(VariantIndex { .type = type, .count = 1U }); }
                     switch (type) {
                         case ElementType::rectangle: {
                             RectangleElement rectangle { .color = node_style.background_color, .rect = node_style.OuterRect() };
@@ -385,30 +380,12 @@ const FrameElements& GetFrameElements(NodeTree& tree) {
                             break;
                         }
                         case ElementType::text: {
-                            TextElement text {
-                                .text = tree.node_ttf_texts[node_handle].Get(),
-                                .position = float2 { static_cast<f32>(node_style.InnerBoxPosition().x), static_cast<f32>(node_style.InnerBoxPosition().y) }
-                            };
+                            const float2 position { static_cast<f32>(node_style.InnerBoxPosition().x), static_cast<f32>(node_style.InnerBoxPosition().y) };
+                            TextElement text { .text = tree.node_ttf_texts[node_handle].Get(), .position = position };
                             tree.frame_elements.texts.PushBack(text);
                             break;
                         }
                     }
-
-                    // switch (type) {
-                    //     case ElementType::rectangle:
-                    //         RectangleElement rectangle { .color = node_style.background_color, .rect = node_style.OuterRect() };
-                    //         tree.frame_elements.rectangles.PushBack(rectangle);
-                    //         break;
-                    //     case ElementType::texture:
-                    //         TextureElement texture { .rect = node_style.OuterRect(), .texture = data[node_style.texture.GetHandle()].ToSDL() };
-                    //         tree.frame_elements.textures.PushBack(texture);
-                    //         break;
-                    //     case ElementType::text:
-                    //         TextElement text {
-                    //             .text = tree.node_ttf_texts[node_handle].Get(), .position = float2 { static_cast<f32>(node_style.InnerBoxPosition().x), static_cast<f32>(node_style.InnerBoxPosition().y) } };
-                    //         tree.frame_elements.texts.PushBack(text);
-                    //         break;
-                    // }
                 }
             }
         }
@@ -463,44 +440,34 @@ void NodeInputSystem::operator()() const {
 void NodeRenderSystem::operator()() {
     for (NodeTree& tree : data.Get<NodeTree>() | std::views::reverse | std::views::filter(&NodeTree::GetDisplay)) {
         const FrameElements& frame_elements = GetFrameElements(tree);
-        // todo remake with spans
-        u32 index_rectangle { 0U };
-        u32 index_texture { 0U };
-        u32 index_text { 0U };
-        for (u32 i = 0; i < frame_elements.items_in_a_row.Size(); ++i) {
-            const auto [type, count] = frame_elements.items_in_a_row[i];
-            if (count == 0U) { continue; }
+        std::span rectangles { frame_elements.rectangles };
+        std::span textures { frame_elements.textures };
+        std::span texts { frame_elements.texts };
+        for (const auto [type, count] : frame_elements.items_in_a_row) {
             switch (type) {
                 case ElementType::rectangle: {
-                    const u32 end_rectangle = index_rectangle + count;
-                    while (index_rectangle != end_rectangle) {
-                        const RectangleElement& element = frame_elements.rectangles[index_rectangle++];
+                    for (const RectangleElement& element : rectangles.first(count)) {
                         (void)SDL_SetRenderDrawColor(singleton.Get<WindowState>().renderer, element.color.r, element.color.g, element.color.b, element.color.a);
                         (void)SDL_RenderFillRect(singleton.Get<WindowState>().renderer, &element.rect);
                     }
+                    rectangles = rectangles.subspan(count);
                     break;
                 }
                 case ElementType::texture: {
-                    const u32 end_texture = index_texture + count;
-                    while (index_texture != end_texture) {
-                        const TextureElement& element = frame_elements.textures[index_texture++];
-                        (void)SDL_RenderTexture(singleton.Get<WindowState>().renderer, element.texture, NULL, &element.rect);
-                    }
+                    for (const TextureElement& element : textures.first(count)) { (void)SDL_RenderTexture(singleton.Get<WindowState>().renderer, element.texture, NULL, &element.rect); }
+                    textures = textures.subspan(count);
                     break;
                 }
                 case ElementType::text: {
-                    const u32 end_text = index_text + count;
-                    while (index_text != end_text) {
-                        const TextElement& text = frame_elements.texts[index_text++];
-                        (void)TTF_DrawRendererText(text.text, text.position.x, text.position.y);
-                    }
+                    for (const TextElement& text : texts.first(count)) { (void)TTF_DrawRendererText(text.text, text.position.x, text.position.y); }
+                    texts = texts.subspan(count);
                     break;
                 }
             }
         }
-        ASSERT_DBG(index_rectangle == frame_elements.rectangles.Size(), "Rectangle size mismatch");
-        ASSERT_DBG(index_texture == frame_elements.textures.Size(), "Textures size mismatch");
-        ASSERT_DBG(index_text == frame_elements.texts.Size(), "Texts size mismatch");
+        ASSERT_DBG(rectangles.empty(), "Textures size mismatch");
+        ASSERT_DBG(textures.empty(), "Textures size mismatch");
+        ASSERT_DBG(texts.empty(), "Texts size mismatch");
     }
 }
 } // namespace pce::ui

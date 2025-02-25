@@ -118,13 +118,17 @@ template <typename T> struct List {
 
     template <typename... Args> constexpr T& EmplaceBack(Args&&... args) { return data.emplace_back(std::forward<Args>(args)...); }
 
-    [[nodiscard]] constexpr Iter begin() { return data.begin(); }
-    [[nodiscard]] constexpr Iter end() { return data.end(); }
+    [[nodiscard]] constexpr Iter begin() noexcept{ return data.begin(); }
+    [[nodiscard]] constexpr Iter end() noexcept { return data.end(); }
+    [[nodiscard]] constexpr CIter begin() const noexcept { return data.begin(); }
+    [[nodiscard]] constexpr CIter end() const noexcept { return data.end(); }
+    [[nodiscard]] constexpr Iter Begin() noexcept { return data.begin(); }
+    [[nodiscard]] constexpr Iter End() noexcept { return data.end(); }
+    [[nodiscard]] constexpr CIter Begin() const noexcept { return data.begin(); }
+    [[nodiscard]] constexpr CIter End() const noexcept { return data.end(); }
+
     [[nodiscard]] constexpr T& Front() { return data.front(); }
     [[nodiscard]] constexpr T& Back() { return data.back(); }
-
-    [[nodiscard]] constexpr CIter begin() const { return data.begin(); }
-    [[nodiscard]] constexpr CIter end() const { return data.end(); }
     [[nodiscard]] constexpr const T& Front() const { return data.front(); }
     [[nodiscard]] constexpr const T& Back() const { return data.back(); }
 
