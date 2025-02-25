@@ -18,6 +18,9 @@ using namespace pce;
 using namespace ui;
 
 using Score = NamedType<u32, struct ScoreTag, Arithmetic, FormatLongNumber>;
+
+enum class Scene { game, main_menu, game_over, quit };
+
 struct HighScore {
     Score score;
     std::strong_ordering operator<=>(const HighScore& other) const noexcept { return score.Value() <=> other.score.Value(); }
@@ -31,7 +34,7 @@ struct GameData {
 };
 struct MainMenuFrame {
     Handle<NodeTree> tree_handle { data.Create<NodeTree>() };
-    explicit MainMenuFrame();
+    MainMenuFrame();
     [[nodiscard]] constexpr NodeStyle& StartButton() const { return data[tree_handle].node_styles[start_button.GetHandle()]; }
     constexpr void SetStartButtonText(String&& string) const { data[tree_handle].node_properties[start_button.GetHandle()].text = string; }
     [[nodiscard]] constexpr NodeStyle& SettingsButton() const { return data[tree_handle].node_styles[settings_button.GetHandle()]; }
@@ -44,7 +47,7 @@ private:
 };
 struct GameFrame {
     Handle<NodeTree> tree_handle { data.Create<NodeTree>() };
-    explicit GameFrame();
+    GameFrame();
     [[nodiscard]] constexpr NodeStyle& Frame() const { return data[tree_handle].node_styles[frame.GetHandle()]; }
     [[nodiscard]] constexpr NodeStyle& GameArea() const { return data[tree_handle].node_styles[game_area.GetHandle()]; }
     [[nodiscard]] constexpr NodeStyle& Box() const { return data[tree_handle].node_styles[box.GetHandle()]; }
@@ -65,7 +68,6 @@ struct HighScoreFrame {
     HighScoreFrame() { }
     void SetHighScore(Multiset<HighScore> scores) const;
 };
-enum class Scene { game, main_menu, game_over, quit };
 class ClickCoreFrames {
     MainMenuFrame main_menu_frame { };
     GameFrame game_frame { };
@@ -210,13 +212,13 @@ Scene ClickCore::GameOverScene() {
 }
 GameFrame::GameFrame() {
     frame = B(tree_handle, fill, { 0U, 0U }).Center().Direction(vertical).Padding2(uint2 { 0U, 30U }).Build();
-    B(tree_handle, frame.GetHandle(), hug).Text("🎮 GAME TIME 🎮", FontSizes::h1).Padding2(uint2 { 20U, 10U }).Fill(colors::navy_blue).Center().Build();
+    (void)B(tree_handle, frame.GetHandle(), hug).Text("🎮 GAME TIME 🎮", FontSizes::h1).Padding2(uint2 { 20U, 10U }).Fill(colors::navy_blue).Center().Build();
     score_box = B(tree_handle, frame.GetHandle(), hug).Padding2(uint2 { 10U, 5U }).Fill(colors::forest_green).Direction(vertical).Center().Build();
     time_label = B(tree_handle, score_box.GetHandle(), hug).Text("Time: 00:00.00", FontSizes::h2).Padding(5U).Fill(colors::light_gray).Build();
     score_label = B(tree_handle, score_box.GetHandle(), hug).Text("Score: 0000", FontSizes::h2).Padding(5U).Fill(colors::gold).Build();
     game_area = B(tree_handle, frame.GetHandle(), fill).Padding2(uint2 { 300U, 100U }).Build();
     constexpr u32 box_size = 100U;
-    box = B(tree_handle, game_area.GetHandle(), uint2 { box_size, box_size }).Fill(colors::ruby_red).Padding(5U).Build();
+    box = B(tree_handle, game_area.GetHandle(), uint2 { box_size, box_size }).Fill(colors::ruby_red).Texture(data.Create<Texture>(Asset("parrot.jpg"))).Padding(5U).Build();
 }
 MainMenuFrame::MainMenuFrame() {
     const String title = "Hey Helene!";

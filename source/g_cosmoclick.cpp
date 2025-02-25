@@ -112,7 +112,6 @@ public:
 };
 CosmoClick::CosmoClick() {
     singleton.Get<WindowState>().clear_color = colors::dark_grey;
-
     singleton.Get<GameDefines>().buildings = List<Building> {
         { .name = "Mine", .texture = data.Create<Texture>(Asset("mine-small.png")), .cost = Money { 100U }, .income = Income { 1U } },
         { .name = "Factory", .texture = data.Create<Texture>(Asset("factory-small.png")), .cost = Money { 500U }, .income = Income { 10U } },
