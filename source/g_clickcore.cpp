@@ -211,7 +211,7 @@ Scene ClickCore::GameOverScene() {
     return scene;
 }
 GameFrame::GameFrame() {
-    frame = B(tree_handle, fill, { 0U, 0U }).Center().Direction(vertical).Padding2(uint2 { 0U, 30U }).Build();
+    frame = B(tree_handle, fill, { 0U, 0U }).Center().Direction(vertical).Texture(data.Create<Texture>(Asset("rainforest.jpg"))).Padding2(uint2 { 0U, 30U }).Build();
     (void)B(tree_handle, frame.GetHandle(), hug).Text("🎮 GAME TIME 🎮", FontSizes::h1).Padding2(uint2 { 20U, 10U }).Fill(colors::navy_blue).Center().Build();
     score_box = B(tree_handle, frame.GetHandle(), hug).Padding2(uint2 { 10U, 5U }).Fill(colors::forest_green).Direction(vertical).Center().Build();
     time_label = B(tree_handle, score_box.GetHandle(), hug).Text("Time: 00:00.00", FontSizes::h2).Padding(5U).Fill(colors::light_gray).Build();
