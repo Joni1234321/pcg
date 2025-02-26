@@ -35,10 +35,10 @@ struct GameData {
 struct MainMenuFrame {
     Handle<NodeTree> tree_handle { data.Create<NodeTree>() };
     MainMenuFrame();
-    [[nodiscard]] constexpr NodeStyle& StartButton() const { return data[tree_handle].node_styles[start_button.GetHandle()]; }
+    [[nodiscard]] constexpr NodeStyle& StartButton() const { return data[tree_handle].styles[start_button.GetHandle()]; }
     constexpr void SetStartButtonText(String&& string) const { data[tree_handle].node_properties[start_button.GetHandle()].text = string; }
-    [[nodiscard]] constexpr NodeStyle& SettingsButton() const { return data[tree_handle].node_styles[settings_button.GetHandle()]; }
-    [[nodiscard]] constexpr NodeStyle& ExitButton() const { return data[tree_handle].node_styles[exit_button.GetHandle()]; }
+    [[nodiscard]] constexpr NodeStyle& SettingsButton() const { return data[tree_handle].styles[settings_button.GetHandle()]; }
+    [[nodiscard]] constexpr NodeStyle& ExitButton() const { return data[tree_handle].styles[exit_button.GetHandle()]; }
 
 private:
     HandleOptional<Node> start_button { };
@@ -48,10 +48,10 @@ private:
 struct GameFrame {
     Handle<NodeTree> tree_handle { data.Create<NodeTree>() };
     GameFrame();
-    [[nodiscard]] constexpr NodeStyle& Frame() const { return data[tree_handle].node_styles[frame.GetHandle()]; }
-    [[nodiscard]] constexpr NodeStyle& GameArea() const { return data[tree_handle].node_styles[game_area.GetHandle()]; }
-    [[nodiscard]] constexpr NodeStyle& Box() const { return data[tree_handle].node_styles[box.GetHandle()]; }
-    [[nodiscard]] constexpr NodeStyle& ScoreBox() const { return data[tree_handle].node_styles[score_box.GetHandle()]; }
+    [[nodiscard]] constexpr NodeStyle& Frame() const { return data[tree_handle].styles[frame.GetHandle()]; }
+    [[nodiscard]] constexpr NodeStyle& GameArea() const { return data[tree_handle].styles[game_area.GetHandle()]; }
+    [[nodiscard]] constexpr NodeStyle& Box() const { return data[tree_handle].styles[box.GetHandle()]; }
+    [[nodiscard]] constexpr NodeStyle& ScoreBox() const { return data[tree_handle].styles[score_box.GetHandle()]; }
     void SetTime(const u32 time_ms) const { data[tree_handle].node_properties[time_label.GetHandle()].text = std::format("Time {:02}:{:02}.{:02}", time_ms / (1000U * 60U), time_ms / 1000U % 60U, time_ms % 100U); }
     void SetScore(const u32 score) const { data[tree_handle].node_properties[score_label.GetHandle()].text = std::format("Score {:4}", score); }
 

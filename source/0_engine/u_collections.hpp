@@ -118,7 +118,7 @@ template <typename T> struct List {
 
     template <typename... Args> constexpr T& EmplaceBack(Args&&... args) { return data.emplace_back(std::forward<Args>(args)...); }
 
-    [[nodiscard]] constexpr Iter begin() noexcept{ return data.begin(); }
+    [[nodiscard]] constexpr Iter begin() noexcept { return data.begin(); }
     [[nodiscard]] constexpr Iter end() noexcept { return data.end(); }
     [[nodiscard]] constexpr CIter begin() const noexcept { return data.begin(); }
     [[nodiscard]] constexpr CIter end() const noexcept { return data.end(); }
@@ -136,7 +136,11 @@ template <typename T> struct List {
     constexpr void PopBack() { data.pop_back(); }
     constexpr void Resize(const u32 size) { data.resize(size); }
     constexpr void Reserve(const u32 size) { data.reserve(size); }
-    constexpr void Erase(const u32 index) { data.erase(data.begin() + index); }
+    constexpr void EraseAt(const u32 index) { data.erase(data.begin() + index); }
+    constexpr void Erase(const T& value) {
+        // Iter it = std::ranges::find(data, value);
+        // if (it != data.end()) { data.erase(it); }
+    }
     // ReSharper disable once CppInconsistentNaming
     constexpr void push_back(const T& value) { data.push_back(value); }
     template <std::_Container_compatible_range<T> _Rng> constexpr void AppendRange(_Rng&& range) { data.append_range(range); }
@@ -249,8 +253,8 @@ public:
     }
     constexpr void Erase(const K& key) {
         u32 index = keys.IndexOf(key);
-        keys.Erase(index);
-        values.Erase(index);
+        keys.EraseAt(index);
+        values.EraseAt(index);
     }
     constexpr void PushBack(const K& key, V&& value) {
         keys.PushBack(key);
@@ -303,4 +307,6 @@ struct Parent : List<Entity> {
     Parent(Parent&&) = delete;
     Parent& operator=(Parent&&) = delete;
 };
+
+struct Pool { };
 } // namespace pce

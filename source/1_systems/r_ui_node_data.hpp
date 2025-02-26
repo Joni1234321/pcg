@@ -5,7 +5,6 @@
 
 #include <SDL3_ttf/SDL_ttf.h>
 
-#include "0_engine/u_assets.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_fonts.hpp"
 #include "0_engine/u_logger.hpp"
@@ -64,8 +63,8 @@ struct Layout {
 struct Node;
 struct NodeTree;
 struct NodeReference {
-    Handle<NodeTree> tree_handle;
-    Handle<Node> node_handle;
+    Handle<NodeTree> tree;
+    Handle<Node> node;
 };
 using NodeReaction = std::function<void(NodeReference)>;
 using HoveredType = std::optional<NodeReference>;
@@ -120,7 +119,7 @@ struct NodeTree {
     };
     template <class T> using HandleList = HandleList<T, Handle<Node>>;
     static constexpr u32 DEFAULT_COUNT = 64U;
-    HandleList<NodeStyle> node_styles { DEFAULT_COUNT };
+    HandleList<NodeStyle> styles { DEFAULT_COUNT };
     HandleList<NodeProperties> node_properties { DEFAULT_COUNT };
     HandleList<UniquePointer<TTF_Text, DestroyText>> node_ttf_texts { DEFAULT_COUNT };
     HandleList<Handle<Node>> parents { DEFAULT_COUNT };
@@ -136,12 +135,14 @@ struct NodeTree {
     NodeTree(NodeTree&&) noexcept = default;
     NodeTree& operator=(NodeTree&&) noexcept = default;
 
-    [[nodiscard]] constexpr Handle<Node> Root() const { return node_styles.First(); }
-    [[nodiscard]] constexpr b8 Empty() const { return node_styles.Empty(); }
+    [[nodiscard]] constexpr Handle<Node> Root() const { return styles.First(); }
+    [[nodiscard]] constexpr b8 Empty() const { return styles.Empty(); }
     [[nodiscard]] Handle<Node> AddRoot();
     [[nodiscard]] Handle<Node> AddRoot(NodeStyle&& root);
-    [[nodiscard]] Handle<Node> AddNode(Handle<Node> parent_handle);
-    [[nodiscard]] Handle<Node> AddNode(NodeStyle&& node, Handle<Node> parent_handle);
+    [[nodiscard]] Handle<Node> AddNode(Handle<Node> parent);
+    [[nodiscard]] Handle<Node> AddNode(NodeStyle&& style, Handle<Node> parent);
+    void DetachNode(Handle<Node> node);
+    void AttachNode(Handle<Node> node, Handle<Node> parent);
 
     void Clear();
     constexpr void MarkDirty() noexcept { dirty = true; }

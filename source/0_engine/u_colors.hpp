@@ -1,7 +1,9 @@
 #pragma once
 
-#include "u_types.hpp"
 #include <complex>
+#include <SDL3/SDL.h>
+
+#include "0_engine/u_types.hpp"
 
 namespace pce::colors {
 inline SDL_Color LightenColor(const SDL_Color color, const f32 factor) {

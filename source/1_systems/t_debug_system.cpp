@@ -21,34 +21,36 @@ Handle<Node> CreateDebugNodeComponent(const u32 layer, const String& text, const
     B(tree, component_handle, color_indicator_size).Fill(color).Build();
     return component_handle;
 }
+TickFrame::TickFrame() {
+    Handle<Node> frame = B(tree_handle, hug, { 10U, 0U }).Direction(vertical).Build();
+    ticks = B(tree_handle, frame, hug).Text("", FontSizes::tiny).Fill(colors::radiant_orange).Build();
+    systems = B(tree_handle, frame, hug).Direction(vertical).Gap(10).Build();
+}
 void TickFrame::DisplayInfo() const {
     using namespace ui;
     u32 tick = singleton.Get<TickState>().tick.Value();
     u32 fps = 1.0F / singleton.Get<TickState>().delta_time;
-    data[tree_handle].Clear();
-    Handle<Node> frame = B(tree_handle, hug, { 10U, 0U }).Direction(vertical).Build();
-    Handle<Node> ticks = B(tree_handle, frame, hug).Text(std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, fps, fps), FontSizes::tiny).Fill(colors::radiant_orange).Build();
-    Handle<Node> systems = B(tree_handle, frame, hug).Direction(vertical).Gap(10).Build();
+    data[tree_handle].node_properties[ticks.GetHandle()].text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, fps, fps);    data[tree_handle].node_properties[ticks.GetHandle()].text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, fps, fps);
     for (const auto [name, ns] : std::views::zip(singleton.Get<OrchestraState>().names, singleton.Get<OrchestraState>().nano_seconds)) {
         constexpr f32 THOUSANDTH = 0.001F;
-        (void)B(tree_handle, systems, fill).Fill(colors::radiant_orange).Text(std::format("{:.3f}ms | {}", ns * THOUSANDTH * THOUSANDTH, name), FontSizes::tiny).Build();
+        (void)B(tree_handle, systems.GetHandle(), fill).Fill(colors::radiant_orange).Text(std::format("{:.3f}ms | {}", ns * THOUSANDTH * THOUSANDTH, name), FontSizes::tiny).Build();
     }
     data[tree_handle].MarkDirty();
 }
 void InspectorFrame::ShowElementStructure(const HoveredType hovered) const {
     using NodeHandleLayer = std::tuple<Handle<Node>, u32>;
-    if (!hovered.has_value() || hovered->tree_handle.id == tree_handle.id) { return; }
+    if (!hovered.has_value() || hovered->tree.id == tree_handle.id) { return; }
     data[tree_handle].Clear();
     Stack<NodeHandleLayer> node_handles;
-    node_handles.push(NodeHandleLayer { hovered->node_handle, 0U });
+    node_handles.push(NodeHandleLayer { hovered->node, 0U });
 
     const Handle<Node> frame = B(tree_handle, hug, { 10U, 30U }).Fill(colors::clear).Fill(colors::white).Direction(vertical).Build();
-    const NodeTree& hovered_tree = data[hovered->tree_handle];
+    const NodeTree& hovered_tree = data[hovered->tree];
     while (!node_handles.empty()) {
         const auto [node_handle, layer] = node_handles.top();
         node_handles.pop();
         for (const Handle child_handle : hovered_tree.children[node_handle]) { node_handles.push(NodeHandleLayer { child_handle, layer + 1 }); }
-        const NodeStyle& node = hovered_tree.node_styles[node_handle];
+        const NodeStyle& node = hovered_tree.styles[node_handle];
         const NodeProperties& node_properties = hovered_tree.node_properties[node_handle];
         CreateDebugNodeComponent(layer, node_properties.text.Empty() ? "node" : std::format("text [{}, {}]", node.position.x, node.position.y), node.background_color, tree_handle, frame);
     }

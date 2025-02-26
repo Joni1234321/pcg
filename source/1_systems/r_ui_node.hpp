@@ -24,12 +24,12 @@ struct NodeRenderSystem {
 
 class NodeBuilder {
     NodeReference node_reference;
-    NodeStyle& style { data[node_reference.tree_handle].node_styles[node_reference.node_handle] };
-    NodeProperties& properties { data[node_reference.tree_handle].node_properties[node_reference.node_handle] };
+    NodeStyle& style { data[node_reference.tree].styles[node_reference.node] };
+    NodeProperties& properties { data[node_reference.tree].node_properties[node_reference.node] };
 
 public:
-    NodeBuilder(Handle<NodeTree> tree_handle, Layout new_layout, uint2 position);
-    NodeBuilder(Handle<NodeTree> tree_handle, Handle<Node> parent_handle, Layout new_layout);
+    NodeBuilder(Handle<NodeTree> tree, Layout new_layout, uint2 position);
+    NodeBuilder(Handle<NodeTree> tree, Handle<Node> parent, Layout new_layout);
     [[nodiscard]] NodeBuilder& Name(const String& name);
     [[nodiscard]] NodeBuilder& Fill(SDL_Color color);
     [[nodiscard]] NodeBuilder& Texture(Handle<Texture> texture_handle);

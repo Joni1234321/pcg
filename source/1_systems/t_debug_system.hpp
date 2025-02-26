@@ -4,8 +4,13 @@
 namespace pce::ui {
 struct TickFrame {
     Handle<NodeTree> tree_handle { data.Create<NodeTree>() };
-    TickFrame() { DisplayInfo(); }
+    TickFrame();
     void DisplayInfo() const;
+
+private:
+    HandleOptional<Node> ticks { };
+    HandleOptional<Node> systems { };
+    NodePool systems_pool { };
 };
 struct InspectorFrame {
     Handle<NodeTree> tree_handle { data.Create<NodeTree>() };
