@@ -12,42 +12,18 @@
 
 namespace pce::ui {
 namespace colors = colors;
-TickFrame::TickFrame() {
-    Handle<Node> frame = B(tree, hug, { 10U, 0U }).Direction(vertical).Build();
-    ticks = B(tree, frame, hug).Text("", FontSizes::tiny).Fill(colors::radiant_orange).Build();
-    systems = B(tree, frame, hug).Direction(vertical).Gap(10).Build();
-
-    system_nodes.SetPrefab(B(tree, systems.GetHandle(), fill).Fill(colors::radiant_orange).FontSize(FontSizes::tiny).Build());
+TickComponent::TickComponent(const NodeReference parent) : root { .tree = parent.tree, .node = B(parent.tree, parent.node, fill).Fill(colors::radiant_orange).FontSize(FontSizes::tiny).Build() } { }
+void TickComponent::SetProperty(const Property& property) const {
+    static constexpr f32 THOUSANDTH = 0.001F;
+    const auto& [name, ns] = property;
+    data[root.tree].node_properties[root.node].text = std::format("{:.3f}ms | {}", ns * THOUSANDTH * THOUSANDTH, name);
 }
-void TickFrame::DisplayInfo() {
-    using namespace ui;
-    u32 tick = singleton.Get<TickState>().tick.Value();
-    u32 fps = static_cast<u32>(1.0F / singleton.Get<TickState>().delta_time);
-    data[tree].node_properties[ticks.GetHandle()].text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, fps, fps);
-    data[tree].node_properties[ticks.GetHandle()].text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, fps, fps);
-
-    constexpr f32 THOUSANDTH = 0.001F;
-    auto values = std::views::zip(singleton.Get<OrchestraState>().names, singleton.Get<OrchestraState>().nano_seconds);
-    auto pred = [] (const Handle<NodeTree> tree, const Handle<Node> node, const std::tuple<String&, u32&>& tuple) {
-        const auto& [name, ns] = tuple;
-        data[tree].node_properties[node].text = std::format("{:.3f}ms | {}", ns * THOUSANDTH * THOUSANDTH, name);
-    };
-    system_nodes.Set(values, pred);
-
-    data[tree].MarkDirty();
-}
-
 static constexpr u32 GAP_SIZE { 2U };
 static constexpr uint2 COLOR_INDICATOR_SIZE { 10U, 20U };
-TickComponent::TickComponent(NodeReference parent) { }
-void TickComponent::SetProperty(const Property property) const {
-    static constexpr f32 THOUSANDTH = 0.001F;
-    data[root.tree].node_properties[root.node].text = std::format("{:.3f}ms | {}", property.ns * THOUSANDTH * THOUSANDTH, property.name);
-}
 DebugNodeComponent::DebugNodeComponent(const NodeReference parent): root { parent.tree, B(parent.tree, parent.node, hug).Fill(colors::forest_green).Gap(GAP_SIZE).Build() },
                                                                     text { B(root.tree, root.node, hug).FontSize(FontSizes::body).Fill(colors::black).Build() },
                                                                     color_indicator { B(root.tree, root.node, COLOR_INDICATOR_SIZE).Build() } { }
-void DebugNodeComponent::SetProperty(const Property property) const {
+void DebugNodeComponent::SetProperty(const Property& property) const {
     constexpr u32 padding_offset = 10U;
     const NodeStyle& style = data[property.hovered.tree].styles[property.hovered.node];
     const NodeProperties& properties = data[property.hovered.tree].node_properties[property.hovered.node];
@@ -56,6 +32,20 @@ void DebugNodeComponent::SetProperty(const Property property) const {
     data[root.tree].styles[root.node].padding.x = padding_offset * property.layer;
     data[root.tree].node_properties[text].text = std::format("{} [{}, {}]", type, style.position.x, style.position.y);
     data[root.tree].styles[color_indicator].background_color = style.background_color;
+}
+TickFrame::TickFrame() {
+    Handle<Node> frame = B(tree, hug, { 10U, 0U }).Direction(vertical).Build();
+    ticks = B(tree, frame, hug).Text("", FontSizes::tiny).Fill(colors::radiant_orange).Build();
+    systems = B(tree, frame, hug).Direction(vertical).Gap(10).Build();
+    system_nodes.parent.node = systems.GetHandle();
+}
+void TickFrame::DisplayInfo() {
+    u32 tick = singleton.Get<TickState>().tick.Value();
+    u32 fps = static_cast<u32>(1.0F / singleton.Get<TickState>().delta_time);
+    data[tree].MarkDirty();
+    data[tree].node_properties[ticks.GetHandle()].text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, fps, fps);
+
+    system_nodes.Set(std::views::zip(singleton.Get<OrchestraState>().names, singleton.Get<OrchestraState>().nano_seconds));
 }
 InspectorFrame::InspectorFrame() {
     const Handle<Node> frame = B(tree, hug, { 10U, 30U }).Fill(colors::clear).Fill(colors::white).Direction(vertical).Build();
@@ -67,15 +57,13 @@ void InspectorFrame::ShowElementStructure(const HoveredType hovered) {
     for (u32 i = 0U; i < properties.Size(); ++i) {
         const auto [hovered, layer] = properties.Back();
         for (const Handle child : data[hovered.tree].children[hovered.node]) {
-            const DebugNodeComponent::Property child_property { .hovered = { .tree = hovered.tree, .node = child}, .layer = layer + 1U };
+            const DebugNodeComponent::Property child_property { .hovered = { .tree = hovered.tree, .node = child }, .layer = layer + 1U };
             properties.EmplaceBack(child_property);
         }
     }
     debug_nodes.Set(properties);
 }
-void InspectorFrame::Hide() {
-    debug_nodes.SetSize(0U);
-}
+void InspectorFrame::Hide() { debug_nodes.SetSize(0U); }
 TestFrame::TestFrame() {
     Handle<Node> frame = B(tree, hug, { 100U, 400U }).Gap(20U).Fill(colors::clear).Build(); {
         Handle<Node> root = B(tree, frame, uint2 { 100U, 100U }).Padding2({ 5U, 5U }).Fill(colors::forest_green).Build();
@@ -115,11 +103,7 @@ void DebugSystem::operator()() {
     InputState& input_state = singleton.Get<InputState>();
     if (input_state.left_mouse_down) {
         data[inspector_frame.tree].MarkDirty();
-        if (input_state.keys[SDLK_LALT]) {
-            inspector_frame.ShowElementStructure(singleton.Get<HoveredType>());
-        } else {
-            inspector_frame.Hide();
-        }
+        if (input_state.keys[SDLK_LALT]) { inspector_frame.ShowElementStructure(singleton.Get<HoveredType>()); } else { inspector_frame.Hide(); }
     }
     data[tick_frame.tree].MarkDirty();
     if (singleton.Get<TickState>().tick.Value() % 100 == 0) { tick_frame.DisplayInfo(); }

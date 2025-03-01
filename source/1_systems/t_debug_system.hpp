@@ -3,16 +3,10 @@
 
 namespace pce::ui {
 struct TickComponent {
-    struct Property {
-        String name;
-        u32 ns;
-    };
+    using Property = std::tuple<String&, u32>;
     NodeReference root;
     explicit TickComponent(NodeReference parent);
-    void SetProperty(Property property) const;
-
-private:
-
+    void SetProperty(const Property& property) const;
 };
 static_assert(NodeComponent<TickComponent>);
 
@@ -23,7 +17,7 @@ struct DebugNodeComponent {
     };
     NodeReference root;
     explicit DebugNodeComponent(NodeReference parent);
-    void SetProperty(Property property) const;
+    void SetProperty(const Property& property) const;
 
 private:
     Handle<Node> text;
@@ -39,7 +33,7 @@ struct TickFrame {
 private:
     HandleOptional<Node> ticks { };
     HandleOptional<Node> systems { };
-    NodePool system_nodes { tree };
+    NodeComponentPool<TickComponent> system_nodes { .parent = NodeReference { .tree = tree, .node = Handle<Node> { 0U } } };
 };
 
 struct InspectorFrame {
