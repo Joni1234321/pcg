@@ -138,9 +138,7 @@ struct NodeTree {
     [[nodiscard]] constexpr Handle<Node> Root() const { return styles.First(); }
     [[nodiscard]] constexpr b8 Empty() const { return styles.Empty(); }
     [[nodiscard]] Handle<Node> AddRoot();
-    [[nodiscard]] Handle<Node> AddRoot(NodeStyle&& root);
     [[nodiscard]] Handle<Node> AddNode(Handle<Node> parent);
-    [[nodiscard]] Handle<Node> AddNode(NodeStyle&& style, Handle<Node> parent);
     [[nodiscard]] Handle<Node> CloneNode(Handle<Node> clone);
     void DetachNode(Handle<Node> node);
     void AttachNode(Handle<Node> node, Handle<Node> parent);
@@ -177,6 +175,13 @@ template <class T> concept NodeComponent = requires (T a, typename T::Property p
 {
     typename T::Property; { a.SetProperty(prop) } -> std::same_as<void>; { a.root } -> std::same_as<NodeReference&>;
 } && std::constructible_from<T, NodeReference> && !std::default_initializable<T>;
+
+template <NodeComponent Component> Component SingleComponent(const NodeReference parent, const typename Component::Property& property) {
+    Component component(parent);
+    component.SetProperty(property);
+    return component;
+}
+
 template <NodeComponent Component> struct NodeComponentPool {
     NodeReference parent;
     List<Component> nodes { };

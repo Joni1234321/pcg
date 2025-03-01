@@ -134,17 +134,19 @@ template <typename T> struct List {
     [[nodiscard]] constexpr const T& Front() const { return data.front(); }
     [[nodiscard]] constexpr const T& Back() const { return data.back(); }
 
+    [[nodiscard]] constexpr b8 Empty() const { return data.empty(); }
+    [[nodiscard]] constexpr b8 Contains(const T& value) const noexcept { return std::ranges::find(data, value, std::identity { }) != end(); }
+
     constexpr void Clear() { data.clear(); }
     constexpr void PopBack() { data.pop_back(); }
     constexpr void Resize(const u32 size) { data.resize(size); }
     constexpr void Reserve(const u32 size) { data.reserve(size); }
     constexpr void EraseAt(const u32 index) { data.erase(data.begin() + index); }
-    constexpr u32 EraseValue (const T& value) { return std::erase(data, value); }
-    // ReSharper disable once CppInconsistentNaming
-    constexpr void push_back(const T& value) { data.push_back(value); }
+    constexpr u32 EraseValue (const T& value) { return static_cast<u32>(std::erase(data, value)); }
+
     template <std::_Container_compatible_range<T> _Rng> constexpr void AppendRange(_Rng&& range) { data.append_range(range); }
 
-    [[nodiscard]] constexpr b8 Empty() const { return data.empty(); }
+    constexpr void push_back(const T& value) { data.push_back(value); }
     constexpr void PushBack(const T& t) { data.push_back(t); }
     constexpr void PushBack(T&& t) { data.push_back(std::move(t)); }
 
@@ -153,17 +155,17 @@ template <typename T> struct List {
         data.pop_back();
     }
 
-    u32 IndexOf(const T& t) const {
+    [[nodiscard]] u32 IndexOf(const T& t) const noexcept {
         u32 pos = 0;
-        for (; pos < Size(); ++pos) { if (t == data[pos]) { break; }; }
+        for (; pos < Size(); ++pos) { if (t == data[pos]) { break; } }
         return pos;
     }
 
-    [[nodiscard]] List<T> Limit(const u32 limit) const {
-        if (Empty()) { return List<T>(); }
+    [[nodiscard]] List Limit(const u32 limit) const {
+        if (Empty()) { return List(); }
         auto first = begin();
         auto last = begin() + math::Min(limit, Size());
-        return List<T>(first, last);
+        return List(first, last);
     }
 
     template <typename To> [[nodiscard]] constexpr List<To> StaticCast() const {

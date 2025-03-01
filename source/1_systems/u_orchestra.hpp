@@ -29,7 +29,7 @@ struct Orchestra {
             TimePoint start = TimeNow();
             system();
             Duration elapsed = TimeNow() - start;
-            orchestra_state.nano_seconds[i] = static_cast<u32>(elapsed.count());
+            orchestra_state.nano_seconds[i] = static_cast<u32>(elapsed.count()); // NOLINT(clang-analyzer-core.UndefinedBehavior)
         }
     }
     ~Orchestra() { singleton.Get<OrchestraState>() = { }; }

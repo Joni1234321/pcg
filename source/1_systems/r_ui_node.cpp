@@ -25,7 +25,7 @@ const Font& FontCollection::GetFont(const FontSizes size) {
 
 // NodeTree
 Handle<Node> NodeTree::AddRoot() {
-    ASSERT_DBG(styles.Empty(), "Setting root non empty tree");
+    STL_ASSERT(styles.Empty(), "Setting root non empty tree");
     (void)styles.EmplaceBack();
     (void)parents.EmplaceBack(Root());
     (void)children.EmplaceBack();
@@ -34,37 +34,26 @@ Handle<Node> NodeTree::AddRoot() {
 
     return Root();
 }
-Handle<Node> NodeTree::AddRoot(NodeStyle&& root) {
-    const Handle<Node> node = AddRoot();
-    styles[node] = std::move(root);
-    return node;
-}
 Handle<Node> NodeTree::AddNode(const Handle<Node> parent) {
-    ASSERT_DBG(!styles.Empty(), "Adding node without root");
+    STL_ASSERT(!styles.Empty(), "Adding node before root");
     const Handle<Node> node = styles.EmplaceBack();
+    STL_ASSERT(node.id != parent.id, "Assigning node to itself. Recursion!");
+
     (void)parents.PushBack(parent);
     (void)children.EmplaceBack();
     (void)node_properties.EmplaceBack();
     (void)node_ttf_texts.EmplaceBack(nullptr);
-
-    ASSERT_DBG(node.id != parent.id, "Assigning node to itself recursion");
-
-    children[parent].PushBack(node);
+    (void)children[parent].EmplaceBack(node);
     return node;
 }
-Handle<Node> NodeTree::AddNode(NodeStyle&& style, const Handle<Node> parent) {
-    const Handle<Node> node = AddNode(parent);
-    styles[node] = std::move(style);
-    return node;
-}
-Handle<Node> NodeTree::CloneNode(Handle<Node> clone) {
+Handle<Node> NodeTree::CloneNode(const Handle<Node> clone) {
     const Handle<Node> node = AddNode(parents[clone]);
     styles[node] = styles[clone];
     node_properties[node] = node_properties[clone];
     return node;
 }
 void NodeTree::DetachNode(const Handle<Node> node) {
-    assert(node.id != Root().id);
+    STL_ASSERT(node.id != Root().id, "trying to detach root");
     const Handle parent = parents[node];
     children[parent].EraseValue(node);
 }
