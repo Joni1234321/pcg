@@ -3,6 +3,23 @@
 #include <cstdint>
 #include <type_traits>
 
+#if defined(_DEBUG) || defined(NDEBUG)
+#define DEBUG
+#endif // DEBUG
+#if defined(_M_IX86) || defined(_M_X64)
+#define SIMD_OPTIMIZE
+#endif // SIMD_OPTIMIZE
+#if defined(_WIN64) || defined(__x86_64__) || defined(__aarch64__)
+#define WIN64
+#endif // WIN64
+
+#define STL_VERIFY(cond, mesg) _STL_VERIFY(cond, mesg)
+#ifdef DEBUG
+#define STL_ASSERT(cond, mesg) STL_VERIFY(cond, mesg)
+#else // DEBUG
+#define STL_ASSERT(cond, mesg) _Analysis_assume_(cond)
+#endif // !DEBUG
+
 using i8 = int8_t;
 using u8 = uint8_t;
 using i16 = int16_t;
@@ -128,7 +145,7 @@ protected:
 
 template<class T> struct Handle {
     u32 id;
-    explicit constexpr Handle(const u32 value) noexcept : id(value) { }
+    b8 operator==(const Handle&) const = default;
 };
 
 template<class T> struct HandleOptional {

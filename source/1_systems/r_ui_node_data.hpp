@@ -11,7 +11,7 @@
 #include "0_engine/u_types.hpp"
 
 namespace pce::ui {
-enum class ElementType : u8 { rectangle,  texture, text };
+enum class ElementType : u8 { rectangle, texture, text };
 enum class TextAlign { left, center, right };
 enum RelativeConstraint : u8 { hug, fill };
 enum FlexDirection : u8 { horizontal, vertical };
@@ -141,6 +141,7 @@ struct NodeTree {
     [[nodiscard]] Handle<Node> AddRoot(NodeStyle&& root);
     [[nodiscard]] Handle<Node> AddNode(Handle<Node> parent);
     [[nodiscard]] Handle<Node> AddNode(NodeStyle&& style, Handle<Node> parent);
+    [[nodiscard]] Handle<Node> CloneNode(Handle<Node> clone);
     void DetachNode(Handle<Node> node);
     void AttachNode(Handle<Node> node, Handle<Node> parent);
 
@@ -149,5 +150,32 @@ struct NodeTree {
     constexpr void SetDisplay(const b8 value) noexcept { display = value; }
 
     [[nodiscard]] constexpr b8 GetDisplay() const noexcept { return display; }
+};
+struct NodePool {
+    Handle<NodeTree> tree;
+    HandleOptional<Node> prefab { };
+    List<Handle<Node>> nodes { };
+    u32 size { 0U };
+    void SetPrefab(Handle<Node> node) {
+        prefab = node;
+        Sync(0);
+    }
+    void Sync(const u32 new_size) noexcept {
+        if (size == new_size) { return; }
+        STL_ASSERT(prefab.IsValid(), "Prefab not set");
+        NodeTree& node_tree = data[tree];
+        for (; size < new_size; ++size) { if (nodes.Size() > size) { node_tree.AttachNode(nodes[size - 1U], node_tree.parents[prefab.GetHandle()]); } else { nodes.EmplaceBack(node_tree.CloneNode(prefab.GetHandle())); } }
+        for (; size > new_size; --size) { node_tree.DetachNode(nodes[size - 1U]); }
+
+    }
+    template <std::ranges::input_range RangeType, class Modify> void Set(RangeType&& range, Modify modify) {
+        auto size = std::ranges::size(range);
+        Sync(size);
+        for (const auto& [item, node] : std::views::zip(range, nodes)) {
+            NodeTree& t = data[tree];
+            modify(tree, node, item);
+        }
+
+    }
 };
 } // namespace pce::ui

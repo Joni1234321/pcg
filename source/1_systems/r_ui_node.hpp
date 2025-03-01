@@ -43,6 +43,7 @@ public:
     [[nodiscard]] NodeBuilder& Text(String&& string);
     [[nodiscard]] NodeBuilder& Text(const String& string, FontSizes font_size);
     [[nodiscard]] NodeBuilder& Text(String&& string, FontSizes font_size);
+    [[nodiscard]] NodeBuilder& FontSize(FontSizes font_size);
     [[nodiscard]] NodeBuilder& Alignment(Alignment alignment);
     [[nodiscard]] NodeBuilder& Right();
     [[nodiscard]] NodeBuilder& Center();

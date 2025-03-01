@@ -93,9 +93,10 @@ private:
 };
 
 template <typename T> struct List {
-    using Iter = typename std::vector<T>::iterator;
-    using CIter = typename std::vector<T>::const_iterator;
+    using iterator = typename std::vector<T>::iterator;
+    using const_iterator = typename std::vector<T>::const_iterator;
     using value_type = typename std::vector<T>::value_type;
+    using size_type = u32;
 
     constexpr List() : data() { }
     constexpr List(std::initializer_list<T> init_list) : data(std::move(init_list)) { }
@@ -109,7 +110,8 @@ template <typename T> struct List {
     template <typename Container> explicit List(Container&& container) requires std::is_constructible_v<
         std::vector<T>, typename Container::iterator, typename Container::iterator> : data(std::make_move_iterator(container.begin()), std::make_move_iterator(container.end())) { }
 
-    [[nodiscard]] constexpr u32 Size() const { return static_cast<u32>(data.size()); }
+    [[nodiscard]] constexpr u32 size() const noexcept { return static_cast<u32>(data.size()); }
+    [[nodiscard]] constexpr u32 Size() const noexcept { return static_cast<u32>(data.size()); }
 
     operator Span<T>() { return Span<T>(*this); }
 
@@ -118,14 +120,14 @@ template <typename T> struct List {
 
     template <typename... Args> constexpr T& EmplaceBack(Args&&... args) { return data.emplace_back(std::forward<Args>(args)...); }
 
-    [[nodiscard]] constexpr Iter begin() noexcept { return data.begin(); }
-    [[nodiscard]] constexpr Iter end() noexcept { return data.end(); }
-    [[nodiscard]] constexpr CIter begin() const noexcept { return data.begin(); }
-    [[nodiscard]] constexpr CIter end() const noexcept { return data.end(); }
-    [[nodiscard]] constexpr Iter Begin() noexcept { return data.begin(); }
-    [[nodiscard]] constexpr Iter End() noexcept { return data.end(); }
-    [[nodiscard]] constexpr CIter Begin() const noexcept { return data.begin(); }
-    [[nodiscard]] constexpr CIter End() const noexcept { return data.end(); }
+    [[nodiscard]] constexpr iterator begin() noexcept { return data.begin(); }
+    [[nodiscard]] constexpr iterator end() noexcept { return data.end(); }
+    [[nodiscard]] constexpr const_iterator begin() const noexcept { return data.begin(); }
+    [[nodiscard]] constexpr const_iterator end() const noexcept { return data.end(); }
+    [[nodiscard]] constexpr iterator Begin() noexcept { return data.begin(); }
+    [[nodiscard]] constexpr iterator End() noexcept { return data.end(); }
+    [[nodiscard]] constexpr const_iterator Begin() const noexcept { return data.begin(); }
+    [[nodiscard]] constexpr const_iterator End() const noexcept { return data.end(); }
 
     [[nodiscard]] constexpr T& Front() { return data.front(); }
     [[nodiscard]] constexpr T& Back() { return data.back(); }
@@ -137,10 +139,7 @@ template <typename T> struct List {
     constexpr void Resize(const u32 size) { data.resize(size); }
     constexpr void Reserve(const u32 size) { data.reserve(size); }
     constexpr void EraseAt(const u32 index) { data.erase(data.begin() + index); }
-    constexpr void Erase(const T& value) {
-        // Iter it = std::ranges::find(data, value);
-        // if (it != data.end()) { data.erase(it); }
-    }
+    constexpr u32 EraseValue (const T& value) { return std::erase(data, value); }
     // ReSharper disable once CppInconsistentNaming
     constexpr void push_back(const T& value) { data.push_back(value); }
     template <std::_Container_compatible_range<T> _Rng> constexpr void AppendRange(_Rng&& range) { data.append_range(range); }
@@ -179,8 +178,8 @@ protected:
 };
 
 template <typename T, typename H = Handle<T>> struct HandleList {
-    using Iter = typename List<T>::Iter;
-    using CIter = typename List<T>::CIter;
+    using iterator = typename List<T>::iterator;
+    using const_iterator = typename List<T>::const_iterator;
     using Handle = H;
 
     constexpr HandleList() : data() { }
@@ -213,13 +212,13 @@ template <typename T, typename H = Handle<T>> struct HandleList {
 
     [[nodiscard]] constexpr Handle First() const { return offset_handle; }
 
-    [[nodiscard]] constexpr Iter begin() { return data.begin(); }
-    [[nodiscard]] constexpr Iter end() { return data.end(); }
+    [[nodiscard]] constexpr iterator begin() { return data.begin(); }
+    [[nodiscard]] constexpr iterator end() { return data.end(); }
     [[nodiscard]] constexpr T& Front() { return data.Front(); }
     [[nodiscard]] constexpr T& Back() { return data.Back(); }
 
-    [[nodiscard]] constexpr CIter begin() const { return data.begin(); }
-    [[nodiscard]] constexpr CIter end() const { return data.end(); }
+    [[nodiscard]] constexpr const_iterator begin() const { return data.begin(); }
+    [[nodiscard]] constexpr const_iterator end() const { return data.end(); }
     [[nodiscard]] constexpr const T& Front() const { return data.Front(); }
     [[nodiscard]] constexpr const T& Back() const { return data.Back(); }
 

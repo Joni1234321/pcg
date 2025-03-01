@@ -3,26 +3,26 @@
 
 namespace pce::ui {
 struct TickFrame {
-    Handle<NodeTree> tree_handle { data.Create<NodeTree>() };
+    Handle<NodeTree> tree { data.Create<NodeTree>() };
     TickFrame();
-    void DisplayInfo() const;
+    void DisplayInfo();
 
 private:
     HandleOptional<Node> ticks { };
     HandleOptional<Node> systems { };
-    NodePool systems_pool { };
+    NodePool systems_pool { tree };
 };
 struct InspectorFrame {
-    Handle<NodeTree> tree_handle { data.Create<NodeTree>() };
+    Handle<NodeTree> tree { data.Create<NodeTree>() };
     void ShowElementStructure(HoveredType hovered) const;
 };
 struct TestFrame {
-    Handle<NodeTree> tree_handle { data.Create<NodeTree>() };
+    Handle<NodeTree> tree { data.Create<NodeTree>() };
     TestFrame();
 };
 struct DebugSystem {
     TickFrame tick_frame { };
     InspectorFrame inspector_frame { };
-    void operator()() const;
+    void operator()();
 };
 } // namespace pce

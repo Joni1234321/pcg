@@ -57,11 +57,23 @@ Handle<Node> NodeTree::AddNode(NodeStyle&& style, const Handle<Node> parent) {
     styles[node] = std::move(style);
     return node;
 }
-void NodeTree::DetachNode(Handle<Node> node) {
+Handle<Node> NodeTree::CloneNode(Handle<Node> clone) {
+    const Handle<Node> node = AddNode(parents[clone]);
+    styles[node] = styles[clone];
+    node_properties[node] = node_properties[clone];
+    return node;
+}
+void NodeTree::DetachNode(const Handle<Node> node) {
     assert(node.id != Root().id);
     const Handle parent = parents[node];
-    children[parent].Erase(node);
+    children[parent].EraseValue(node);
 }
+void NodeTree::AttachNode(const Handle<Node> node, const Handle<Node> parent) {
+    assert(node.id != Root().id);
+    children[parent].PushBack(node);
+    parents[node] = parent;
+}
+
 void NodeTree::Clear() {
     styles.Clear();
     parents.Clear();
@@ -136,6 +148,10 @@ NodeBuilder& NodeBuilder::Text(const String& string, const FontSizes font_size) 
 NodeBuilder& NodeBuilder::Text(String&& string, const FontSizes font_size) {
     if (style.background_color.a == 0U) { style.background_color = DEFAULT_TEXT_COLOR; }
     properties.text = string;
+    properties.font_size = font_size;
+    return *this;
+}
+NodeBuilder& NodeBuilder::FontSize(FontSizes font_size) {
     properties.font_size = font_size;
     return *this;
 }
