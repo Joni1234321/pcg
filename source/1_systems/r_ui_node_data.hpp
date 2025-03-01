@@ -158,24 +158,43 @@ struct NodePool {
     u32 size { 0U };
     void SetPrefab(Handle<Node> node) {
         prefab = node;
-        Sync(0);
+        data[tree].DetachNode(node);
+        SetSize(0U);
     }
-    void Sync(const u32 new_size) noexcept {
+    void SetSize(const u32 new_size) noexcept {
         if (size == new_size) { return; }
         STL_ASSERT(prefab.IsValid(), "Prefab not set");
         NodeTree& node_tree = data[tree];
         for (; size < new_size; ++size) { if (nodes.Size() > size) { node_tree.AttachNode(nodes[size - 1U], node_tree.parents[prefab.GetHandle()]); } else { nodes.EmplaceBack(node_tree.CloneNode(prefab.GetHandle())); } }
         for (; size > new_size; --size) { node_tree.DetachNode(nodes[size - 1U]); }
-
     }
     template <std::ranges::input_range RangeType, class Modify> void Set(RangeType&& range, Modify modify) {
-        auto size = std::ranges::size(range);
-        Sync(size);
-        for (const auto& [item, node] : std::views::zip(range, nodes)) {
-            NodeTree& t = data[tree];
-            modify(tree, node, item);
+        SetSize(std::ranges::size(range));
+        for (const auto& [item, node] : std::views::zip(range, nodes)) { modify(tree, node, item); }
+    }
+};
+template <class T> concept NodeComponent = requires (T a, typename T::Property prop)
+{
+    typename T::Property; { a.SetProperty(prop) } -> std::same_as<void>; { a.root } -> std::same_as<NodeReference&>;
+} && std::constructible_from<T, NodeReference> && !std::default_initializable<T>;
+template <NodeComponent Component> struct NodeComponentPool {
+    NodeReference parent;
+    List<Component> nodes { };
+    u32 size { 0U };
+    void SetSize(const u32 new_size) noexcept {
+        if (size == new_size) { return; }
+        NodeTree& tree = data[parent.tree];
+        for (; size < new_size; ++size) {
+            if (nodes.Size() > size) { tree.AttachNode(nodes[size].root.node, parent.node); } else {
+                Component c { parent };
+                nodes.EmplaceBack(c);
+            }
         }
-
+        for (; size > new_size; --size) { tree.DetachNode(nodes[size - 1U].root.node); }
+    }
+    template <std::ranges::input_range RangeType> void Set(RangeType&& properties) {
+        SetSize(std::ranges::size(properties));
+        for (const auto& [node, property] : std::views::zip(nodes, properties)) { node.SetProperty(property); }
     }
 };
 } // namespace pce::ui

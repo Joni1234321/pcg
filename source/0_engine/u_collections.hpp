@@ -223,7 +223,7 @@ template <typename T, typename H = Handle<T>> struct HandleList {
     [[nodiscard]] constexpr const T& Back() const { return data.Back(); }
 
     [[nodiscard]] constexpr u32 HandleToIndex(const Handle handle) const {
-        assert(ValidHandle(handle));
+        STL_ASSERT(ValidHandle(handle), "handle invalidated");
         return handle.id - offset_handle.id;
     }
     [[nodiscard]] constexpr b8 ValidHandle(const Handle handle) const { return (handle.id - offset_handle.id) < Size(); }
