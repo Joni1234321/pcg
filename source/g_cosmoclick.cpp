@@ -69,16 +69,20 @@ private:
 };
 static_assert(NodeComponent<ValueUnit<u32>>);
 
-struct BuildItem {
-    BuildItem(NodeReference parent_reference_handle, const Building& building);
-    [[nodiscard]] Handle<Node> RootHandle() const;
-    [[nodiscard]] Handle<Node> CountHandle() const;
+struct BuildingNodeComponent {
+    NodeReference root;
+    using Property = std::tuple<const Building&, const Count>;
+    explicit BuildingNodeComponent(NodeReference parent);
+    void SetProperty(const Property& property) const;
 
 private:
-    Handle<NodeTree> tree;
-    HandleOptional<Node> build_item { };
-    HandleOptional<Node> count_handle { };
+    Handle<Node> upper;
+    Handle<Node> lower;
+    Handle<Node> count;
+    ValueUnit<Money> money;
+    ValueUnit<Income> income;
 };
+static_assert(NodeComponent<BuildingNodeComponent>);
 struct GameFrame : LogLifetimeWithCount<GameFrame> {
     Handle<NodeTree> tree { data.Create<NodeTree>() };
     GameFrame();
@@ -97,7 +101,7 @@ private:
         data[tree].styles[planet].padding = uint4 { padding_value, padding_value, padding_value, padding_value };
     }
     void ClickAnimation(const f32 t) const { data[tree].styles[planet].background_color = colors::LightenColor(colors::blue, t); }
-    List<BuildItem> shop;
+    List<BuildingNodeComponent> shop;
     Handle<Node> frame { B(tree, fill, uint2 { 0U, 0U }).Build() };
     Handle<Node> game { B(tree, frame, fill).Direction(vertical).Center().Build() };
     Handle<Node> title { B(tree, game, hug).Fill(colors::white).Text("Cosmo Click", FontSizes::title).Build() };
@@ -109,11 +113,11 @@ private:
     ValueUnit<Money> money = SingleComponent<ValueUnit<Money>>(NodeReference { tree, game }, ValueUnit<Money>::Property { Money { 0U }, Unit::cosmos, FontSizes::h1 });
     ValueUnit<Income> income = SingleComponent<ValueUnit<Income>>(NodeReference { tree, game }, ValueUnit<Income>::Property { Income { 0U }, Unit::cosmos_per_second, FontSizes::h4 });
 
-    AnimationDesc planet_animation_desc { .action = [this] (f32 t) -> void { this->PlanetAnimation(t); }, .duration_ms = 500U, .state = AnimationState::repeat };
+    AnimationDesc planet_animation_desc { .action = [this] (const f32 t) -> void { this->PlanetAnimation(t); }, .duration_ms = 500U, .state = AnimationState::repeat };
     AnimationDesc click_animation_desc { .action = [this] (const f32 t) -> void { this->ClickAnimation(t); }, .duration_ms = 300U, .state = AnimationState::keep_alive_stopped };
 
     Handle<Animation> planet_animation_handle = AnimationSystem::Register(planet_animation_desc);
-    Handle<Animation> click_animation_handle = AnimationSystem::Register(click_animation_desc);
+    Handle<Animation> click_animation = AnimationSystem::Register(click_animation_desc);
 };
 struct CosmoClickConfig {
     GameFrame game_frame { };
@@ -220,28 +224,35 @@ template <class T> void ValueUnit<T>::SetProperty(const Property& property) cons
     data[root.tree].node_properties[unit].text = UnitToString(property.unit);
 }
 template <class T> void ValueUnit<T>::SetValue(const T& new_value) const { data[root.tree].node_properties[value].text = std::format("{}", new_value); }
-BuildItem::BuildItem(const NodeReference parent_reference_handle, const Building& building) : tree { parent_reference_handle.tree } {
-    build_item = B(tree, parent_reference_handle.node, { fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Texture(building.texture).Build();
-    const Handle<Node> upper = B(tree, build_item.GetHandle(), { fill, hug }).Center().GapAuto().Build();
-    const Handle<Node> lower = B(tree, build_item.GetHandle(), { fill, hug }).Center().GapAuto().Build();
-    count_handle = B(tree, upper, hug).Text("0000", FontSizes::title).Fill(colors::black).Build();
-    SingleComponent<ValueUnit<Money>>(NodeReference { tree, upper }, ValueUnit<Money>::Property { .value = building.cost, .unit = Unit::cosmos, .font_size = FontSizes::h1 });
-    SingleComponent<ValueUnit<Income>>(NodeReference { tree, upper }, ValueUnit<Income>::Property { .value = building.income, .unit = Unit::cosmos, .font_size = FontSizes::h1 });
+BuildingNodeComponent::BuildingNodeComponent(const NodeReference parent) : root { .tree = parent.tree, .node = B(parent.tree, parent.node, { fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build() },
+                                                   upper { B(root.tree, root.node, { fill, hug }).Center().GapAuto().Build() },
+                                                   lower { B(root.tree, root.node, { fill, hug }).Center().GapAuto().Build() },
+                                                   count { B(root.tree, upper, hug).FontSize(FontSizes::title).Fill(colors::black).Build() },
+                                                   money { NodeReference { root.tree, upper } },
+                                                   income { NodeReference { root.tree, upper } } { }
+void BuildingNodeComponent::SetProperty(const Property& property) const {
+    const auto& [building, building_count] = property;
+    data[root.tree].styles[root.node].texture = building.texture;
+    money.SetProperty({ .value = building.cost, .unit = Unit::cosmos, .font_size = FontSizes::h1});
+    income.SetProperty({ .value = building.income, .unit = Unit::cosmos_per_second, .font_size = FontSizes::h1});
+    data[root.tree].node_properties[count].text = std::format("{:04}", building_count);
 }
-Handle<Node> BuildItem::RootHandle() const { return build_item.GetHandle(); }
-Handle<Node> BuildItem::CountHandle() const { return count_handle.GetHandle(); }
 constexpr b8 GameFrame::InsidePlanet(const uint2 screen_position) const { return data[tree].styles[planet].IsInside(screen_position); }
 constexpr Handle<Node> GameFrame::PlanetHandle() const { return planet; }
 constexpr ValueUnit<Money>& GameFrame::GetMoneyValueUnit() { return money; }
 constexpr ValueUnit<Income>& GameFrame::GetIncomeValueUnit() { return income; }
 constexpr std::optional<u32> GameFrame::GetBuildItemAtPosition(const uint2 screen_position) {
-    return find_index_of(shop, true, [this, screen_position] (const BuildItem& build_item) -> b8 { return data[tree].styles[build_item.RootHandle()].IsInside(screen_position); });
+    return find_index_of(shop, true, [this, screen_position] (const BuildingNodeComponent& build_item) -> b8 { return data[build_item.root.tree].styles[build_item.root.node].IsInside(screen_position); });
 }
 constexpr void GameFrame::UpdateBuildItemsCount(const List<Count>& building_counts) {
-    for (const auto [build_item, building_count] : std::views::zip(shop, building_counts)) { data[tree].node_properties[build_item.CountHandle()].text = std::format("{:04}", building_count); }
+    for (const auto& [build_item, property] : std::views::zip(shop, std::views::zip(singleton.Get<GameDefines>().buildings, building_counts))) { build_item.SetProperty(property); }
 }
-void GameFrame::RestartClickAnimation() const { AnimationSystem::StartAnimation(click_animation_handle); }
-GameFrame::GameFrame() { for (const Building& building : singleton.Get<GameDefines>().buildings) { shop.EmplaceBack(NodeReference { tree, build_menu }, building); } }
+void GameFrame::RestartClickAnimation() const { AnimationSystem::StartAnimation(click_animation); }
+GameFrame::GameFrame() {
+    for (const Building& building : singleton.Get<GameDefines>().buildings) {
+        shop.EmplaceBack(NodeReference { tree, build_menu });
+    }
+}
 } // namespace pcg::cosmoclick
 
 void pcg::arcade::RunCosmoClick() {
