@@ -16,9 +16,7 @@ struct NodeInputSystem {
 };
 struct NodeRenderSystem {
     NodeRenderSystem() { }
-    ~NodeRenderSystem() {
-        data.Get<NodeTree>().Clear();
-    };
+    ~NodeRenderSystem() { data.Get<NodeTree>().Clear(); };
     void operator()();
 };
 
@@ -52,4 +50,18 @@ public:
     Handle<Node> Build() const;
 };
 using B = NodeBuilder;
+
+struct NodeComponentBase {
+    NodeReference root;
+    explicit NodeComponentBase(const Handle<NodeTree> tree, const Handle<Node> root) : root({ tree, root }) { }
+};
+struct Frame {
+    Handle<NodeTree> tree { data.Create<NodeTree>() };
+
+protected:
+    NodeBuilder B(const Layout new_layout, const uint2 position) const { return NodeBuilder(tree, new_layout, position); }
+    NodeBuilder B(const Handle<Node> parent, const Layout new_layout) const { return NodeBuilder(tree, parent, new_layout); }
+    template <NodeComponent C> C Component(const Handle<Node> parent) { return C (NodeReference { tree, parent }); }
+    template <NodeComponent C> C Component(const Handle<Node> parent, const typename C::Property& property) { return SingleComponent<C>(NodeReference { tree, parent }, property); }
+};
 } // pce::ui

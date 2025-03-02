@@ -25,8 +25,6 @@ using Income = NamedType<u32, struct IncomeTag, Arithmetic, FormatLongNumber>;
 enum class ValueUnitTextSize : u8 { small, normal, larger };
 enum class Unit : u8 { cosmos, cosmos_per_second };
 enum class Scene { game, quit };
-constexpr u32 planet_size = 400U;
-constexpr u32 planet_border_size = 40U;
 struct Building {
     String name;
     Handle<Texture> texture;
@@ -43,83 +41,62 @@ struct GameState {
     Money money { 0U };
     Income income { 0U };
 };
-constexpr String UnitToString(const Unit unit) {
-    switch (unit) {
-        case Unit::cosmos:
-            return "¤";
-        case Unit::cosmos_per_second:
-            return "¤-s";
-    }
-    return "unknown unit";
-}
-
-struct NodeBase {
-    NodeReference root;
-    explicit NodeBase(const Handle<NodeTree> tree, const Handle<Node> root) : root({ tree, root }) { }
-};
-template <class T> struct ValueUnit : NodeBase {
+template <class T> struct ValueUnit : NodeComponentBase {
     struct Property {
         const T& value;
         Unit unit;
         FontSizes font_size;
     };
-    explicit ValueUnit(NodeReference parent) : NodeBase { parent.tree, B(parent.tree, parent.node, hug).Alignment(top_right).Build() } { }
+    explicit ValueUnit(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent, hug).Alignment(top_right).Build() } { }
     void SetProperty(const Property& property) const;
     void SetValue(const T& new_value) const { data[root.tree].node_properties[value].text = std::format("{}", new_value); };
 
 private:
-    Handle<Node> value { B(root.tree, root.node, hug).Fill(colors::white).Build() };
-    Handle<Node> unit { B(root.tree, root.node, hug).Fill(colors::white).Build() };
+    Handle<Node> value { B(root, hug).Fill(colors::white).Build() };
+    Handle<Node> unit { B(root, hug).Fill(colors::white).Build() };
 };
 static_assert(NodeComponent<ValueUnit<u32>>);
-
-struct BuildingComponent : NodeBase {
+struct BuildingComponent : NodeComponentBase {
     using Property = std::tuple<const Building&, const Count>;
-    explicit BuildingComponent(const NodeReference parent) : NodeBase { parent.tree, B(parent.tree, parent.node, { fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build() } { }
+    explicit BuildingComponent(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent, { fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build() } { }
     void SetProperty(const Property& property) const;
 
 private:
-    Handle<Node> upper { B(root.tree, root.node, { fill, hug }).Center().GapAuto().Build() };
-    Handle<Node> lower { B(root.tree, root.node, { fill, hug }).Center().GapAuto().Build() };
+    Handle<Node> upper { B(root, { fill, hug }).Center().GapAuto().Build() };
+    Handle<Node> lower { B(root, { fill, hug }).Center().GapAuto().Build() };
     Handle<Node> count { B(root.tree, upper, hug).FontSize(FontSizes::title).Fill(colors::black).Build() };
     ValueUnit<Money> money { NodeReference { root.tree, upper } };
     ValueUnit<Income> income { NodeReference { root.tree, upper } };
 };
 static_assert(NodeComponent<BuildingComponent>);
-struct GameFrame : LogLifetimeWithCount<GameFrame> {
-    Handle<NodeTree> tree { data.Create<NodeTree>() };
-    [[nodiscard]] constexpr b8 InsidePlanet(uint2 screen_position) const;
-    [[nodiscard]] constexpr Handle<Node> PlanetHandle() const;
-    [[nodiscard]] constexpr ValueUnit<Money>& GetMoneyValueUnit();
-    [[nodiscard]] constexpr ValueUnit<Income>& GetIncomeValueUnit();
-    [[nodiscard]] std::optional<u32> GetBuildItemAtPosition(uint2 screen_position) const;
-    void UpdateBuildItemsCount(const List<Count>& building_counts);
-    void RestartClickAnimation() const;
 
-private:
-    void PlanetAnimation(const f32 t) const noexcept {
-        static constexpr u32 PLANET_PADDING_START = 10U;
-        const u32 padding_value = PLANET_PADDING_START + static_cast<u32>(t * planet_border_size);
-        data[tree].styles[planet].padding = uint4 { padding_value, padding_value, padding_value, padding_value };
-    }
-    void ClickAnimation(const f32 t) const noexcept { data[tree].styles[planet].background_color = colors::LightenColor(colors::blue, t); }
-    Handle<Node> frame { B(tree, fill, uint2 { 0U, 0U }).Build() };
-    Handle<Node> game { B(tree, frame, fill).Direction(vertical).Center().Build() };
+struct GameFrame : Frame, LogLifetimeWithCount<GameFrame> {
+    static constexpr u32 PLANET_SIZE = 400U;
+    static constexpr u32 PLANET_BORDER_SIZE = 40U;
 
-    Handle<Node> title { B(tree, game, hug).Fill(colors::white).Text("Cosmo Click", FontSizes::title).Build() };
-    ValueUnit<Money> money = SingleComponent<ValueUnit<Money>>(NodeReference { tree, game }, ValueUnit<Money>::Property { Money { 0U }, Unit::cosmos, FontSizes::h1 });
-    ValueUnit<Income> income = SingleComponent<ValueUnit<Income>>(NodeReference { tree, game }, ValueUnit<Income>::Property { Income { 0U }, Unit::cosmos_per_second, FontSizes::h4 });
-    Handle<Node> click { B(tree, game, fill).Padding2(uint2 { 0U, 100U }).Alignment(top_center).Build() };
-    Handle<Node> planet { B(tree, click, Layout { uint2 { planet_size + planet_border_size, planet_size + planet_border_size } }).Padding(planet_border_size).Fill(colors::white).Build() };
-    Handle<Node> planet_intra { B(tree, planet, fill).Fill(colors::dark_navy_blue).Build() };
-
-    Handle<Node> build_menu { B(tree, frame, { 600U, hug }).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::faded_green).Build() };
+    Handle<Node> frame { B(fill, uint2 { 0U, 0U }).Build() };
+    Handle<Node> game { B(frame, fill).Direction(vertical).Center().Build() };
+    Handle<Node> title { B(game, hug).Fill(colors::white).Text("Cosmo Click", FontSizes::title).Build() };
+    ValueUnit<Money> money = Component<ValueUnit<Money>>(game, { Money { 0U }, Unit::cosmos, FontSizes::h1 });
+    ValueUnit<Income> income = Component<ValueUnit<Income>>(game, { Income { 0U }, Unit::cosmos_per_second, FontSizes::h4 });
+    Handle<Node> click { B(game, fill).Padding2(uint2 { 0U, 100U }).Alignment(top_center).Build() };
+    Handle<Node> planet { B(click, Layout { uint2 { PLANET_SIZE + PLANET_BORDER_SIZE, PLANET_SIZE + PLANET_BORDER_SIZE } }).Padding(PLANET_BORDER_SIZE).Fill(colors::white).Build() };
+    Handle<Node> planet_intra { B(planet, fill).Fill(colors::dark_navy_blue).Build() };
+    Handle<Node> build_menu { B(frame, { 600U, hug }).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::faded_green).Build() };
     NodeComponentPool<BuildingComponent> shop { NodeReference { .tree = tree, .node = build_menu } };
 
-    AnimationDesc planet_animation_desc { .action = [this] (const f32 t) -> void { this->PlanetAnimation(t); }, .duration_ms = 500U, .state = AnimationState::repeat };
-    AnimationDesc click_animation_desc { .action = [this] (const f32 t) -> void { this->ClickAnimation(t); }, .duration_ms = 300U, .state = AnimationState::keep_alive_stopped };
-    Handle<Animation> planet_animation_handle = AnimationSystem::Register(planet_animation_desc);
-    Handle<Animation> click_animation = AnimationSystem::Register(click_animation_desc);
+    Handle<Animation> planet_animation_handle = AnimationSystem::Register(AnimationDesc {
+                                                                              .action = [this] (const f32 t) -> void {
+                                                                                  static constexpr u32 PLANET_PADDING_START = 10U;
+                                                                                  const u32 padding_value = PLANET_PADDING_START + static_cast<u32>(t * PLANET_BORDER_SIZE);
+                                                                                  data[tree].styles[planet].padding = uint4 { padding_value, padding_value, padding_value, padding_value };
+                                                                              },
+                                                                              .duration_ms = 500U,
+                                                                              .state = AnimationState::repeat });
+    Handle<Animation> click_animation = AnimationSystem::Register(AnimationDesc {
+                                                                      .action = [this] (const f32 t) -> void { data[tree].styles[planet].background_color = colors::LightenColor(colors::blue, t); },
+                                                                      .duration_ms = 300U,
+                                                                      .state = AnimationState::keep_alive_stopped });
 };
 struct CosmoClickConfig {
     GameFrame game_frame { };
@@ -192,15 +169,14 @@ Scene CosmoClickSystem::GameScene() {
         game_data.seconds_since_start = seconds_since_start;
     }
     if (singleton.Get<InputState>().left_mouse_down || singleton.Get<InputState>().left_mouse_up) {
-        if (game_frame.InsidePlanet(singleton.Get<InputState>().mouse_position)) {
+        if (data[game_frame.tree].styles[game_frame.planet].IsInside(singleton.Get<InputState>().mouse_position)) {
             constexpr Money click_money = Money { 5U };
             game_data.money += click_money;
-            game_frame.RestartClickAnimation();
+            AnimationSystem::StartAnimation(game_frame.click_animation);
         }
     }
     if (singleton.Get<InputState>().left_mouse_down) {
-        const std::optional<u32> building_index = game_frame.GetBuildItemAtPosition(singleton.Get<InputState>().mouse_position);
-        Logger().Log("Position {} | {}", singleton.Get<InputState>().mouse_position.x, singleton.Get<InputState>().mouse_position.y);
+        const std::optional<u32> building_index = game_frame.shop.GetComponentAtPosition(singleton.Get<InputState>().mouse_position);
         if (building_index.has_value()) {
             const Building& building = singleton.Get<GameDefines>().buildings[building_index.value()];
             if (game_data.money >= building.cost) {
@@ -210,14 +186,22 @@ Scene CosmoClickSystem::GameScene() {
             }
         }
     }
-    game_frame.UpdateBuildItemsCount(game_data.building_counts);
-
+    game_frame.shop.Set(std::views::zip(singleton.Get<GameDefines>().buildings, game_data.building_counts));
+    game_frame.money.SetValue(game_data.money);
+    game_frame.income.SetValue(game_data.income);
     data[game_frame.tree].MarkDirty();
-    game_frame.GetMoneyValueUnit().SetValue(game_data.money);
-    game_frame.GetIncomeValueUnit().SetValue(game_data.income);
     return Scene::game;
 }
 // ui
+constexpr String UnitToString(const Unit unit) {
+    switch (unit) {
+        case Unit::cosmos:
+            return "¤";
+        case Unit::cosmos_per_second:
+            return "¤-s";
+    }
+    return "unknown unit";
+}
 template <class T> void ValueUnit<T>::SetProperty(const Property& property) const {
     data[root.tree].node_properties[value].font_size = property.font_size;
     data[root.tree].node_properties[value].text = std::format("{}", property.value);
@@ -231,13 +215,6 @@ void BuildingComponent::SetProperty(const Property& property) const {
     income.SetProperty({ .value = building.income, .unit = Unit::cosmos_per_second, .font_size = FontSizes::h1 });
     data[root.tree].node_properties[count].text = std::format("{:04}", building_count);
 }
-constexpr b8 GameFrame::InsidePlanet(const uint2 screen_position) const { return data[tree].styles[planet].IsInside(screen_position); }
-constexpr Handle<Node> GameFrame::PlanetHandle() const { return planet; }
-constexpr ValueUnit<Money>& GameFrame::GetMoneyValueUnit() { return money; }
-constexpr ValueUnit<Income>& GameFrame::GetIncomeValueUnit() { return income; }
-std::optional<u32> GameFrame::GetBuildItemAtPosition(const uint2 screen_position) const { return shop.GetComponentAtPosition(screen_position); }
-void GameFrame::UpdateBuildItemsCount(const List<Count>& building_counts) { shop.Set(std::views::zip(singleton.Get<GameDefines>().buildings, building_counts)); }
-void GameFrame::RestartClickAnimation() const { AnimationSystem::StartAnimation(click_animation); }
 } // namespace pcg::cosmoclick
 
 void pcg::arcade::RunCosmoClick() {

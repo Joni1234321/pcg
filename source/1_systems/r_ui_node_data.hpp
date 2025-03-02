@@ -149,28 +149,6 @@ struct NodeTree {
 
     [[nodiscard]] constexpr b8 GetDisplay() const noexcept { return display; }
 };
-struct NodePool {
-    Handle<NodeTree> tree;
-    HandleOptional<Node> prefab { };
-    List<Handle<Node>> nodes { };
-    u32 size { 0U };
-    void SetPrefab(Handle<Node> node) {
-        prefab = node;
-        data[tree].DetachNode(node);
-        SetSize(0U);
-    }
-    void SetSize(const u32 new_size) noexcept {
-        if (size == new_size) { return; }
-        STL_ASSERT(prefab.IsValid(), "Prefab not set");
-        NodeTree& node_tree = data[tree];
-        for (; size < new_size; ++size) { if (nodes.Size() > size) { node_tree.AttachNode(nodes[size - 1U], node_tree.parents[prefab.GetHandle()]); } else { nodes.EmplaceBack(node_tree.CloneNode(prefab.GetHandle())); } }
-        for (; size > new_size; --size) { node_tree.DetachNode(nodes[size - 1U]); }
-    }
-    template <std::ranges::input_range RangeType, class Modify> void Set(RangeType&& range, Modify modify) {
-        SetSize(std::ranges::size(range));
-        for (const auto& [item, node] : std::views::zip(range, nodes)) { modify(tree, node, item); }
-    }
-};
 template <class T> concept NodeComponent = requires (T a, typename T::Property prop)
 {
     typename T::Property; { a.SetProperty(prop) } -> std::same_as<void>; { a.root } -> std::same_as<NodeReference&>;
