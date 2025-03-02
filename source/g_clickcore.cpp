@@ -156,10 +156,10 @@ Scene ClickCore::MainMenuScene() {
     return Scene::main_menu;
 }
 Scene ClickCore::GameScene() {
-    constexpr Seconds game_time = 2s;
+    static constexpr Seconds GAME_TIME = 20s;
     const Nanoseconds elapsed = TimeNow() - game.start_time;
     const GameFrame& game_frame = frames.GameFrame();
-    if (elapsed > game_time) {
+    if (elapsed > GAME_TIME) {
         game_data.high_scores.emplace(game.score);
 
         const MainMenuFrame& main_menu_frame = frames.MainMenuFrame();
@@ -173,7 +173,7 @@ Scene ClickCore::GameScene() {
         high_score_frame.highscores.Set(std::views::enumerate(game_data.high_scores | std::views::reverse));
         return Scene::game_over;
     }
-    const u32 time_left_ms = static_cast<u32>(duration_cast<Milliseconds>(game_time - elapsed).count());
+    const u32 time_left_ms = static_cast<u32>(duration_cast<Milliseconds>(GAME_TIME - elapsed).count());
     data[game_frame.tree].node_properties[game_frame.score_label].text = std::format("Score {:4}", game.score);
     game_frame.SetTime(time_left_ms);
 

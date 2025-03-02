@@ -121,7 +121,13 @@ CosmoClick::CosmoClick() {
         { .name = "Mine", .texture = data.Create<Texture>(Asset("mine-small.png")), .cost = Money { 100U }, .income = Income { 1U } },
         { .name = "Factory", .texture = data.Create<Texture>(Asset("factory-small.png")), .cost = Money { 500U }, .income = Income { 10U } },
         { .name = "Spaceport", .texture = data.Create<Texture>(Asset("spaceport-small.png")), .cost = Money { 2000U }, .income = Income { 60U } },
-        { .name = "Off World Colony", .texture = data.Create<Texture>(Asset("off-world-colony-small.png")), .cost = Money { 10000U }, .income = Income { 500U } } };
+        { .name = "Off World Colony", .texture = data.Create<Texture>(Asset("off-world-colony-small.png")), .cost = Money { 10000U }, .income = Income { 500U } },
+        { .name = "Asteroid Mining Station", .texture = data.Create<Texture>(Asset("asteroid-mine.jpg")), .cost = Money { 25000U }, .income = Income { 1500U } },
+        { .name = "Lunar Research Base", .texture = data.Create<Texture>(Asset("lunar-base.png")), .cost = Money { 75000U }, .income = Income { 5000U } },
+        { .name = "Orbital Shipyard", .texture = data.Create<Texture>(Asset("orbital-shipyard.png")), .cost = Money { 200000U }, .income = Income { 15000U } },
+        { .name = "Mars Colony", .texture = data.Create<Texture>(Asset("mars-colony.png")), .cost = Money { 500000U }, .income = Income { 40000U } },
+        { .name = "Dyson Sphere Segment", .texture = data.Create<Texture>(Asset("dyson-sphere.png")), .cost = Money { 2000000U }, .income = Income { 250000U } },
+    };
     singleton.Get<GameState>() = GameState {
         .building_counts = List { singleton.Get<GameDefines>().buildings.Size(), Count { 0U } },
         .start_time = TimeNow(),
