@@ -95,9 +95,7 @@ void DebugSystem::operator()() {
         auto it = std::ranges::find_if(rng, [&] (const u32 i) { return input_state.keys_down[SDLK_0 + i]; });
         if (it != std::end(rng)) {
             const Handle<NodeTree> tree { *it };
-            const NodeTree& t = data[tree];
-            inspector_frame.ShowElementStructure(NodeReference { .tree = tree, .node = t.Root() });
-            Logger().Log("Tree: {}", tree.id);
+            inspector_frame.ShowElementStructure(NodeReference { .tree = tree, .node = data[tree].Root() });
         }
     }
     data[tick_frame.tree].MarkDirty();

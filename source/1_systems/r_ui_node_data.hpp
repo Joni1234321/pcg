@@ -167,7 +167,7 @@ template <NodeComponent Component> struct NodeComponentPool {
     explicit NodeComponentPool(const NodeReference parent) noexcept : parent(parent) { }
     void Hide() { SetSize(0U); }
     template <std::ranges::input_range RangeType> void Set(RangeType&& properties) {
-        SetSize(std::ranges::size(properties));
+        SetSize(static_cast<u32>(std::ranges::size(properties)));
         for (const auto& [node, property] : std::views::zip(nodes, properties)) { node.SetProperty(property); }
     }
     [[nodiscard]] constexpr auto VisibleNodes() const noexcept { return std::span(nodes).first(size); }
