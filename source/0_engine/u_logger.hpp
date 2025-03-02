@@ -155,7 +155,7 @@ template <typename T> struct LogLifetimeWithCount {
     static u32 log_counter;
     u32 log_id { log_counter++ };
 };
-template<typename T> u32 LogLifetimeWithCount<T>::log_counter = 0U;
+template <typename T> u32 LogLifetimeWithCount<T>::log_counter = 0U;
 
 template <typename T> struct LogLifetimeWithStack {
     LogLifetimeWithStack() { Logger().Created("{} {}\n", typeid(T).name(), std::stacktrace::current()); }
@@ -180,26 +180,27 @@ template <typename T> struct LogDestroyWithCount {
         Logger().Destroyed("{} {}", typeid(T).name(), ++count);
     }
 };
-template <typename T> String FormatValue(const T value) { return std::format("{} ", value); }
 
-template <typename T>concept NamedTypeArithmetic = requires (T value)
+template <typename T>concept LongNumberFormattable = requires (T value)
 {
-    { static_cast<f32>(value) }; // Checks if T can be cast to f32
-} && (HasASkill<T, FormatLongNumber>);
+    { static_cast<f32>(value.Value()) }; // Checks if T can be cast to f32
+} && HasASkill<T, FormatLongNumber>;
 
-template <NamedTypeArithmetic T> String FormatValue(const T value) {
-    const f32 number = static_cast<f32>(value);
+template <LongNumberFormattable T> String FormatValue(const T value) {
+    const f32 number { static_cast<f32>(value.Value()) };
+    const char prefix { number < 0.0F ? '-' : ' ' };
     f32 abs_number = math::Abs(number);
+    if (abs_number < 1000.0F) { return std::format("{}{}", prefix, number); }
     static constexpr std::array LONG_NUMBER_SUFFIX = { 'K', 'M', 'B', 'T', 'Q', 'P', 'S' };
-    char suffix { ' ' };
+    char suffix = ' ';
     for (const char current_suffix : LONG_NUMBER_SUFFIX) {
         constexpr f32 one_thousand = 1'000.0F;
         if (abs_number < one_thousand) { break; }
         abs_number /= one_thousand;
         suffix = current_suffix;
     }
-    const char prefix { number < 0.0F ? '-' : ' ' };
     return std::format("{}{:.2f}{}", prefix, abs_number, suffix);
 }
+template <typename T> String FormatValue(const T value) { return std::format("{} ", value); }
 template < > inline String FormatValue<Entity>(const Entity value) { return value == Entity::NONE ? String { "NONE" } : std::format("{} ", value); }
 } // namespace pce

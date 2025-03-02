@@ -53,6 +53,7 @@ constexpr SDL_Color violet { 238U, 130U, 238U, 255U };
 constexpr SDL_Color lavender { 230U, 230U, 250U, 255U };
 constexpr SDL_Color beige { 245U, 245U, 220U, 255U };
 constexpr SDL_Color ivory { 255U, 255U, 240U, 255U };
+constexpr SDL_Color neon_blue{ 0U, 128U, 255U, 255U }; 
 
 constexpr SDL_Color chocolate { 210U, 105U, 30U, 255U };
 constexpr SDL_Color coral { 255U, 127U, 80U, 255U };
@@ -74,8 +75,12 @@ constexpr SDL_Color dark_slate { 47, 79, 79, 255U };     // Cool, dark, and slig
 // CosmoClicker
 constexpr SDL_Color faded_green { 204U, 238U, 204U, 255U }; // #CEC // close to tea green
 constexpr SDL_Color gray_tint { 218U, 218U, 218U, 255U };   // #DA
+constexpr SDL_Color dark_blue { 0, 0, 139, 255 };
 constexpr SDL_Color dark_navy_blue { 0U, 0U, 107U, 255U };
 constexpr SDL_Color dark_grey { 15U, 15U, 15U, 255U };
+constexpr SDL_Color jet{ 60, 55, 68, 255U };
+constexpr SDL_Color cerulean{ 0, 112, 144, 255U };
+
 
 inline SDL_Color AnimateFast(const f32 t) {
     const u8 red = static_cast<u8>((std::sin(t * 0.5F + 0.0F) * 0.5F + 0.5F) * 255U);
