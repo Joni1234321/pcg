@@ -79,7 +79,7 @@ NodeBuilder::NodeBuilder(const Handle<NodeTree> tree, const Handle<Node> parent,
     style.width = new_layout.width;
     style.height = new_layout.height;
 }
-NodeBuilder::NodeBuilder(NodeReference parent, Layout new_layout) : node_reference { parent.tree, data[parent.tree].AddNode(parent.node) } {
+NodeBuilder::NodeBuilder(const NodeReference parent, const Layout new_layout) : node_reference { parent.tree, data[parent.tree].AddNode(parent.node) } {
     style.width = new_layout.width;
     style.height = new_layout.height;
 }
@@ -144,7 +144,7 @@ NodeBuilder& NodeBuilder::Text(String&& string, const FontSizes font_size) {
     properties.font_size = font_size;
     return *this;
 }
-NodeBuilder& NodeBuilder::FontSize(FontSizes font_size) {
+NodeBuilder& NodeBuilder::FontSize(const FontSizes font_size) {
     properties.font_size = font_size;
     return *this;
 }

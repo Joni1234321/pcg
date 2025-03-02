@@ -64,7 +64,7 @@ struct BuildingComponent : NodeComponentBase {
 private:
     Handle<Node> upper { B(root).Node({ fill, hug }).Center().GapAuto().Build() };
     Handle<Node> lower { B(root).Node({ fill, hug }).Center().GapAuto().Build() };
-    Handle<Node> count { B(root).Node(hug).FontSize(FontSizes::title).Fill(colors::black).Build() };
+    Handle<Node> count { B(upper).Node(hug).FontSize(FontSizes::title).Fill(colors::black).Build() };
     ValueUnit<Money> money { B(upper).Component<ValueUnit<Money>>() };
     ValueUnit<Income> income { B(upper).Component<ValueUnit<Income>>() };
 };
@@ -74,16 +74,16 @@ struct GameFrame : Frame, LogLifetimeWithCount<GameFrame> {
     static constexpr u32 PLANET_SIZE = 400U;
     static constexpr u32 PLANET_BORDER_SIZE = 40U;
 
-    Handle<Node> frame { B(fill, uint2 { 0U, 0U }).Build() };
-    Handle<Node> game { B(frame, fill).Direction(vertical).Center().Build() };
-    Handle<Node> title { B(game, hug).Fill(colors::white).Text("Cosmo Click", FontSizes::title).Build() };
-    ValueUnit<Money> money = Component<ValueUnit<Money>>(game, { Money { 0U }, Unit::cosmos, FontSizes::h1 });
-    ValueUnit<Income> income = Component<ValueUnit<Income>>(game, { Income { 0U }, Unit::cosmos_per_second, FontSizes::h4 });
-    Handle<Node> click { B(game, fill).Padding2(uint2 { 0U, 100U }).Alignment(top_center).Build() };
-    Handle<Node> planet { B(click, Layout { uint2 { PLANET_SIZE + PLANET_BORDER_SIZE, PLANET_SIZE + PLANET_BORDER_SIZE } }).Padding(PLANET_BORDER_SIZE).Fill(colors::white).Build() };
-    Handle<Node> planet_intra { B(planet, fill).Fill(colors::dark_navy_blue).Build() };
-    Handle<Node> build_menu { B(frame, { 600U, hug }).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::faded_green).Build() };
-    NodeComponentPool<BuildingComponent> shop { Pool<BuildingComponent>(build_menu) };
+    Handle<Node> frame { NodeBuilder(tree, fill, uint2 { 0U, 0U }).Build() };
+    Handle<Node> game { B(frame).Node(fill).Direction(vertical).Center().Build() };
+    Handle<Node> title { B(game).Node(hug).Fill(colors::white).Text("Cosmo Click", FontSizes::title).Build() };
+    ValueUnit<Money> money { B(game).Component<ValueUnit<Money>>({ Money { 0U }, Unit::cosmos, FontSizes::h1 }) };
+    ValueUnit<Income> income { B(game).Component<ValueUnit<Income>>({ Income { 0U }, Unit::cosmos_per_second, FontSizes::h4 }) };
+    Handle<Node> click { B(game).Node(fill).Padding2(uint2 { 0U, 100U }).Alignment(top_center).Build() };
+    Handle<Node> planet { B(click).Node(Layout { uint2 { PLANET_SIZE + PLANET_BORDER_SIZE, PLANET_SIZE + PLANET_BORDER_SIZE } }).Padding(PLANET_BORDER_SIZE).Fill(colors::white).Build() };
+    Handle<Node> planet_intra { B(planet).Node(fill).Fill(colors::dark_navy_blue).Build() };
+    Handle<Node> build_menu { B(frame).Node({ 600U, hug }).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::faded_green).Build() };
+    NodeComponentPool<BuildingComponent> shop { B(build_menu).Pool<BuildingComponent>() };
 
     Handle<Animation> planet_animation_handle = AnimationSystem::Register(AnimationDesc {
                                                                               .action = [this] (const f32 t) -> void {

@@ -73,13 +73,7 @@ struct Frame {
     Handle<NodeTree> tree { data.Create<NodeTree>() };
 
 protected:
-    // [[nodiscard]] NodeBuilderHelper B(const Handle<Node> parent) const { return NodeBuilderHelper(NodeReference(root.tree, parent)); }
-    // [[nodiscard]] NodeBuilderHelper B(const NodeReference parent) const { return NodeBuilderHelper(parent); }
-
-    NodeBuilder B(const Layout new_layout, const uint2 position) const { return NodeBuilder(tree, new_layout, position); }
-    NodeBuilder B(const Handle<Node> parent, const Layout new_layout) const { return NodeBuilder(tree, parent, new_layout); }
-    template <NodeComponent C> C Component(const Handle<Node> parent) { return C(NodeReference { tree, parent }); }
-    template <NodeComponent C> C Component(const Handle<Node> parent, const typename C::Property& property) { return SingleComponent<C>(NodeReference { tree, parent }, property); }
-    template <NodeComponent C> NodeComponentPool<C> Pool(const Handle<Node> parent) { return NodeComponentPool<C>(NodeReference { .tree = tree, .node = parent }); }
+    [[nodiscard]] NodeBuilderHelper B(const Handle<Node> parent) const { return NodeBuilderHelper(NodeReference(tree, parent)); }
+    [[nodiscard]] NodeBuilderHelper B(const NodeReference parent) const { return NodeBuilderHelper(parent); }
 };
 } // pce::ui
