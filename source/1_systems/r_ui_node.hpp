@@ -30,6 +30,7 @@ class NodeBuilder {
 public:
     NodeBuilder(Handle<NodeTree> tree, Layout new_layout, uint2 position);
     NodeBuilder(Handle<NodeTree> tree, Handle<Node> parent, Layout new_layout);
+    NodeBuilder(NodeReference parent, Layout new_layout);
     [[nodiscard]] NodeBuilder& Name(const String& name);
     [[nodiscard]] NodeBuilder& Fill(SDL_Color color);
     [[nodiscard]] NodeBuilder& Texture(Handle<Texture> texture_handle);

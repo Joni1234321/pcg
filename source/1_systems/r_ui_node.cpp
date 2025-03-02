@@ -79,6 +79,10 @@ NodeBuilder::NodeBuilder(const Handle<NodeTree> tree, const Handle<Node> parent,
     style.width = new_layout.width;
     style.height = new_layout.height;
 }
+NodeBuilder::NodeBuilder(NodeReference parent, Layout new_layout) : node_reference { parent.tree, data[parent.tree].AddRoot() } {
+    style.width = new_layout.width;
+    style.height = new_layout.height;
+}
 NodeBuilder& NodeBuilder::Name(const String& name) {
     properties.name = name;
     return *this;

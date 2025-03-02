@@ -52,39 +52,38 @@ constexpr String UnitToString(const Unit unit) {
     }
     return "unknown unit";
 }
+
 struct NodeBase {
     NodeReference root;
-    explicit NodeBase(NodeReference root) : root(root) {}
+    explicit NodeBase(const Handle<NodeTree> tree, const Handle<Node> root) : root({ tree, root }) { }
 };
-template <class T> struct ValueUnit {
-    NodeReference root;
+template <class T> struct ValueUnit : NodeBase {
     struct Property {
         const T& value;
         Unit unit;
         FontSizes font_size;
     };
-    explicit ValueUnit(NodeReference parent);
+    explicit ValueUnit(NodeReference parent) : NodeBase { parent.tree, B(parent.tree, parent.node, hug).Alignment(top_right).Build() } { }
     void SetProperty(const Property& property) const;
-    void SetValue(const T& new_value) const;
+    void SetValue(const T& new_value) const { data[root.tree].node_properties[value].text = std::format("{}", new_value); };
 
 private:
-    Handle<Node> value;
-    Handle<Node> unit;
+    Handle<Node> value { B(root.tree, root.node, hug).Fill(colors::white).Build() };
+    Handle<Node> unit { B(root.tree, root.node, hug).Fill(colors::white).Build() };
 };
 static_assert(NodeComponent<ValueUnit<u32>>);
 
-struct BuildingComponent {
-    NodeReference root;
+struct BuildingComponent : NodeBase {
     using Property = std::tuple<const Building&, const Count>;
-    explicit BuildingComponent(NodeReference parent);
+    explicit BuildingComponent(const NodeReference parent) : NodeBase { parent.tree, B(parent.tree, parent.node, { fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build() } { }
     void SetProperty(const Property& property) const;
 
 private:
-    Handle<Node> upper;
-    Handle<Node> lower;
-    Handle<Node> count;
-    ValueUnit<Money> money;
-    ValueUnit<Income> income;
+    Handle<Node> upper { B(root.tree, root.node, { fill, hug }).Center().GapAuto().Build() };
+    Handle<Node> lower { B(root.tree, root.node, { fill, hug }).Center().GapAuto().Build() };
+    Handle<Node> count { B(root.tree, upper, hug).FontSize(FontSizes::title).Fill(colors::black).Build() };
+    ValueUnit<Money> money { NodeReference { root.tree, upper } };
+    ValueUnit<Income> income { NodeReference { root.tree, upper } };
 };
 static_assert(NodeComponent<BuildingComponent>);
 struct GameFrame : LogLifetimeWithCount<GameFrame> {
@@ -219,24 +218,12 @@ Scene CosmoClickSystem::GameScene() {
     return Scene::game;
 }
 // ui
-template <class T> ValueUnit<T>::ValueUnit(const NodeReference parent) : root { .tree = parent.tree, .node = B(parent.tree, parent.node, hug).Alignment(top_right).Build() },
-                                                                         value { B(root.tree, root.node, hug).Fill(colors::white).Build() },
-                                                                         unit { B(root.tree, root.node, hug).Fill(colors::white).Build() } { }
 template <class T> void ValueUnit<T>::SetProperty(const Property& property) const {
     data[root.tree].node_properties[value].font_size = property.font_size;
     data[root.tree].node_properties[value].text = std::format("{}", property.value);
     data[root.tree].node_properties[unit].font_size = static_cast<FontSizes>(static_cast<f32>(property.font_size) * 0.66F);
     data[root.tree].node_properties[unit].text = UnitToString(property.unit);
 }
-template <class T> void ValueUnit<T>::SetValue(const T& new_value) const { data[root.tree].node_properties[value].text = std::format("{}", new_value); }
-BuildingComponent::BuildingComponent(const NodeReference parent) : root {
-                                                                       .tree = parent.tree,
-                                                                       .node = B(parent.tree, parent.node, { fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build() },
-                                                                   upper { B(root.tree, root.node, { fill, hug }).Center().GapAuto().Build() },
-                                                                   lower { B(root.tree, root.node, { fill, hug }).Center().GapAuto().Build() },
-                                                                   count { B(root.tree, upper, hug).FontSize(FontSizes::title).Fill(colors::black).Build() },
-                                                                   money { NodeReference { root.tree, upper } },
-                                                                   income { NodeReference { root.tree, upper } } { }
 void BuildingComponent::SetProperty(const Property& property) const {
     const auto& [building, building_count] = property;
     data[root.tree].styles[root.node].texture = building.texture;
@@ -248,7 +235,7 @@ constexpr b8 GameFrame::InsidePlanet(const uint2 screen_position) const { return
 constexpr Handle<Node> GameFrame::PlanetHandle() const { return planet; }
 constexpr ValueUnit<Money>& GameFrame::GetMoneyValueUnit() { return money; }
 constexpr ValueUnit<Income>& GameFrame::GetIncomeValueUnit() { return income; }
-std::optional<u32> GameFrame::GetBuildItemAtPosition(const uint2 screen_position) const { return shop.GetComponentAtPosition(screen_position);}
+std::optional<u32> GameFrame::GetBuildItemAtPosition(const uint2 screen_position) const { return shop.GetComponentAtPosition(screen_position); }
 void GameFrame::UpdateBuildItemsCount(const List<Count>& building_counts) { shop.Set(std::views::zip(singleton.Get<GameDefines>().buildings, building_counts)); }
 void GameFrame::RestartClickAnimation() const { AnimationSystem::StartAnimation(click_animation); }
 } // namespace pcg::cosmoclick
