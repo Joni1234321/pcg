@@ -122,30 +122,35 @@ NodeBuilder& NodeBuilder::Direction(const FlexDirection direction) {
     return *this;
 }
 constexpr SDL_Color DEFAULT_TEXT_COLOR = colors::black;
-NodeBuilder& NodeBuilder::Text(const String& string) {
+NodeBuilder& NodeBuilder::Text(const String& string, const SDL_Color color) {
     if (style.background_color.a == 0U) { style.background_color = DEFAULT_TEXT_COLOR; }
     properties.text = string;
+    style.background_color = color;
     return *this;
 }
-NodeBuilder& NodeBuilder::Text(String&& string) {
+NodeBuilder& NodeBuilder::Text(String&& string, const SDL_Color color) {
     if (style.background_color.a == 0U) { style.background_color = DEFAULT_TEXT_COLOR; }
     properties.text = string;
+    style.background_color = color;
     return *this;
 }
-NodeBuilder& NodeBuilder::Text(const String& string, const FontSizes font_size) {
-    if (style.background_color.a == 0U) { style.background_color = DEFAULT_TEXT_COLOR; }
-    properties.text = string;
-    properties.font_size = font_size;
-    return *this;
-}
-NodeBuilder& NodeBuilder::Text(String&& string, const FontSizes font_size) {
+NodeBuilder& NodeBuilder::Text(const String& string, const FontSizes font_size, const SDL_Color color) {
     if (style.background_color.a == 0U) { style.background_color = DEFAULT_TEXT_COLOR; }
     properties.text = string;
     properties.font_size = font_size;
+    style.background_color = color;
     return *this;
 }
-NodeBuilder& NodeBuilder::FontSize(const FontSizes font_size) {
+NodeBuilder& NodeBuilder::Text(String&& string, const FontSizes font_size, const SDL_Color color) {
+    if (style.background_color.a == 0U) { style.background_color = DEFAULT_TEXT_COLOR; }
+    properties.text = string;
     properties.font_size = font_size;
+    style.background_color = color;
+    return *this;
+}
+NodeBuilder& NodeBuilder::Text(const FontSizes font_size, const SDL_Color color) {
+    properties.font_size = font_size;
+    style.background_color = color;
     return *this;
 }
 NodeBuilder& NodeBuilder::Alignment(const ui::Alignment alignment) {

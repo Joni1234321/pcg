@@ -64,18 +64,18 @@ struct BuildingComponent : NodeComponentBase {
 private:
     Handle<Node> upper { B(root).Node(fill, hug).Center().GapAuto().Build() };
     Handle<Node> lower { B(root).Node(fill, hug).Center().GapAuto().Build() };
-    Handle<Node> count { B(upper).Node(hug).FontSize(FontSizes::title).Fill(colors::black).Build() };
+    Handle<Node> count { B(upper).Node(hug).Text(FontSizes::title, colors::black).Build() };
     ValueUnit<Money> money { B(upper).Component<ValueUnit<Money>>() };
     ValueUnit<Income> income { B(upper).Component<ValueUnit<Income>>() };
 };
 static_assert(NodeComponent<BuildingComponent>);
 
-struct GameFrame : Frame, LogLifetimeWithCount<GameFrame> {
+struct GameFrame : Frame {
     static constexpr u32 PLANET_SIZE = 400U;
     static constexpr u32 PLANET_BORDER_SIZE = 40U;
 
     Handle<Node> game { B(frame).Node(fill).Direction(vertical).Center().Build() };
-    Handle<Node> title { B(game).Node(hug).Fill(colors::white).Text("Cosmo Click", FontSizes::title).Build() };
+    Handle<Node> title { B(game).Node(hug).Text("Cosmo Click", FontSizes::title, colors::white).Build() };
     ValueUnit<Money> money { B(game).Component<ValueUnit<Money>>({ Money { 0U }, Unit::cosmos, FontSizes::h1, colors::white }) };
     ValueUnit<Income> income { B(game).Component<ValueUnit<Income>>({ Income { 0U }, Unit::cosmos_per_second, FontSizes::h4, colors::white }) };
     Handle<Node> click { B(game).Node(fill).Padding2(uint2 { 0U, 100U }).Alignment(top_center).Build() };

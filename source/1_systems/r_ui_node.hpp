@@ -40,11 +40,11 @@ public:
     [[nodiscard]] NodeBuilder& Gap(u32 gap);
     [[nodiscard]] NodeBuilder& GapAuto();
     [[nodiscard]] NodeBuilder& Direction(FlexDirection direction);
-    [[nodiscard]] NodeBuilder& Text(const String& string);
-    [[nodiscard]] NodeBuilder& Text(String&& string);
-    [[nodiscard]] NodeBuilder& Text(const String& string, FontSizes font_size);
-    [[nodiscard]] NodeBuilder& Text(String&& string, FontSizes font_size);
-    [[nodiscard]] NodeBuilder& FontSize(FontSizes font_size);
+    [[nodiscard]] NodeBuilder& Text(const String& string, SDL_Color color);
+    [[nodiscard]] NodeBuilder& Text(String&& string, SDL_Color color);
+    [[nodiscard]] NodeBuilder& Text(const String& string, FontSizes font_size, SDL_Color color);
+    [[nodiscard]] NodeBuilder& Text(String&& string, FontSizes font_size, SDL_Color color);
+    [[nodiscard]] NodeBuilder& Text(FontSizes font_size, SDL_Color color);
     [[nodiscard]] NodeBuilder& Alignment(Alignment alignment);
     [[nodiscard]] NodeBuilder& Right();
     [[nodiscard]] NodeBuilder& Center();
@@ -58,6 +58,7 @@ struct NodeBuilderHelper {
     explicit NodeBuilderHelper(const NodeReference parent) : parent { parent } { }
     [[nodiscard]] NodeBuilder Node(const RelativeConstraint constraint) const { return NodeBuilder(parent, Layout { constraint }); }
     [[nodiscard]] NodeBuilder Node(const u32 size) const { return NodeBuilder(parent, Layout { uint2 { size, size } }); }
+    [[nodiscard]] NodeBuilder Node(const u32 width, const u32 height) const { return NodeBuilder(parent, Layout { uint2 { width, height } }); }
     [[nodiscard]] NodeBuilder Node(const RelativeConstraint width, const RelativeConstraint height) const { return NodeBuilder(parent, Layout { width, height }); }
     [[nodiscard]] NodeBuilder Node(const u32 width, const RelativeConstraint height) const { return NodeBuilder(parent, Layout { width, height }); }
     [[nodiscard]] NodeBuilder Node(const RelativeConstraint width, const u32 height) const { return NodeBuilder(parent, Layout { width, height }); }

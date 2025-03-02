@@ -31,13 +31,14 @@ struct TickFrame : Frame {
     void DisplayInfo();
 
     Handle<Node> root { B(frame).Node(hug).Padding2({ 10U, 0U }).Direction(vertical).Gap(10U).Build() };
-    Handle<Node> ticks { B(root).Node(hug).Text("", FontSizes::tiny).Fill(colors::radiant_orange).Build() };
+    Handle<Node> ticks { B(root).Node(hug).Text(FontSizes::tiny, colors::radiant_orange).Build() };
     NodeComponentPool<TickComponent> systems { B(root).Pool<TickComponent>() };
 };
 struct InspectorFrame : Frame {
     void ShowElementStructure(HoveredType hovered);
 
-    Handle<Node> root { B(frame).Node(hug).Padding2({ 10U, 30U }).Fill(colors::clear).Direction(vertical).Build() };
+    Handle<Node> root { B(frame).Node(hug).Padding2({ 10U, 30U }).Direction(vertical).Build() };
+    Handle<Node> hovered_label { B(root).Node(hug).Text(FontSizes::h1, colors::black).Build() };
     NodeComponentPool<DebugNodeComponent> nodes { B(root).Pool<DebugNodeComponent>() };
 };
 struct TestFrame : Frame {
