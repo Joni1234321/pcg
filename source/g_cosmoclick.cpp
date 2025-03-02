@@ -47,26 +47,26 @@ template <class T> struct ValueUnit : NodeComponentBase {
         Unit unit;
         FontSizes font_size;
     };
-    explicit ValueUnit(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent, hug).Alignment(top_right).Build() } { }
+    explicit ValueUnit(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(hug).Alignment(top_right).Build() } { }
     void SetProperty(const Property& property) const;
-    void SetValue(const T& new_value) const { data[root.tree].node_properties[value].text = std::format("{}", new_value); };
+    void SetValue(const T& new_value) const { data[root.tree].node_properties[value].text = std::format("{}", new_value); }
 
 private:
-    Handle<Node> value { B(root, hug).Fill(colors::white).Build() };
-    Handle<Node> unit { B(root, hug).Fill(colors::white).Build() };
+    Handle<Node> value { B(root).Node(hug).Fill(colors::white).Build() };
+    Handle<Node> unit { B(root).Node(hug).Fill(colors::white).Build() };
 };
 static_assert(NodeComponent<ValueUnit<u32>>);
 struct BuildingComponent : NodeComponentBase {
     using Property = std::tuple<const Building&, const Count>;
-    explicit BuildingComponent(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent, { fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build() } { }
+    explicit BuildingComponent(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node({ fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build() } { }
     void SetProperty(const Property& property) const;
 
 private:
-    Handle<Node> upper { B(root, { fill, hug }).Center().GapAuto().Build() };
-    Handle<Node> lower { B(root, { fill, hug }).Center().GapAuto().Build() };
-    Handle<Node> count { B(root.tree, upper, hug).FontSize(FontSizes::title).Fill(colors::black).Build() };
-    ValueUnit<Money> money { NodeReference { root.tree, upper } };
-    ValueUnit<Income> income { NodeReference { root.tree, upper } };
+    Handle<Node> upper { B(root).Node({ fill, hug }).Center().GapAuto().Build() };
+    Handle<Node> lower { B(root).Node({ fill, hug }).Center().GapAuto().Build() };
+    Handle<Node> count { B(root).Node(hug).FontSize(FontSizes::title).Fill(colors::black).Build() };
+    ValueUnit<Money> money { B(upper).Component<ValueUnit<Money>>() };
+    ValueUnit<Income> income { B(upper).Component<ValueUnit<Income>>() };
 };
 static_assert(NodeComponent<BuildingComponent>);
 
@@ -83,7 +83,7 @@ struct GameFrame : Frame, LogLifetimeWithCount<GameFrame> {
     Handle<Node> planet { B(click, Layout { uint2 { PLANET_SIZE + PLANET_BORDER_SIZE, PLANET_SIZE + PLANET_BORDER_SIZE } }).Padding(PLANET_BORDER_SIZE).Fill(colors::white).Build() };
     Handle<Node> planet_intra { B(planet, fill).Fill(colors::dark_navy_blue).Build() };
     Handle<Node> build_menu { B(frame, { 600U, hug }).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::faded_green).Build() };
-    NodeComponentPool<BuildingComponent> shop { NodeReference { .tree = tree, .node = build_menu } };
+    NodeComponentPool<BuildingComponent> shop { Pool<BuildingComponent>(build_menu) };
 
     Handle<Animation> planet_animation_handle = AnimationSystem::Register(AnimationDesc {
                                                                               .action = [this] (const f32 t) -> void {

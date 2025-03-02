@@ -37,13 +37,12 @@ Handle<Node> NodeTree::AddRoot() {
 Handle<Node> NodeTree::AddNode(const Handle<Node> parent) {
     STL_ASSERT(!styles.Empty(), "Adding node before root");
     const Handle<Node> node = styles.EmplaceBack();
-    STL_ASSERT(node.id != parent.id, "Assigning node to itself. Recursion!");
-
     (void)parents.PushBack(parent);
     (void)children.EmplaceBack();
     (void)node_properties.EmplaceBack();
     (void)node_ttf_texts.EmplaceBack(nullptr);
     (void)children[parent].EmplaceBack(node);
+    STL_ASSERT(node.id != parent.id, "Assigning node to itself. Recursion!");
     return node;
 }
 Handle<Node> NodeTree::CloneNode(const Handle<Node> clone) {
@@ -76,6 +75,7 @@ NodeBuilder::NodeBuilder(const Handle<NodeTree> tree, const Layout new_layout, c
     style.height = new_layout.height;
 }
 NodeBuilder::NodeBuilder(const Handle<NodeTree> tree, const Handle<Node> parent, const Layout new_layout) : node_reference { tree, data[tree].AddNode(parent) } {
+    auto& t = data[tree];
     style.width = new_layout.width;
     style.height = new_layout.height;
 }
