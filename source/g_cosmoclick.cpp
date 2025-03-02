@@ -58,15 +58,16 @@ template <class T> struct ValueUnit : NodeComponentBase {
 static_assert(NodeComponent<ValueUnit<u32>>);
 struct BuildingComponent : NodeComponentBase {
     using Property = std::tuple<const Building&, const Count>;
-    explicit BuildingComponent(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(fill, hug).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build() } { }
+    explicit BuildingComponent(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(fill, 100U).Direction(vertical).Build() } { }
     void SetProperty(const Property& property) const;
 
 private:
-    Handle<Node> upper { B(root).Node(fill, hug).Center().GapAuto().Build() };
-    Handle<Node> lower { B(root).Node(fill, hug).Center().GapAuto().Build() };
-    Handle<Node> count { B(upper).Node(hug).Text(FontSizes::title, colors::black).Build() };
-    ValueUnit<Money> money { B(upper).Component<ValueUnit<Money>>() };
-    ValueUnit<Income> income { B(upper).Component<ValueUnit<Income>>() };
+    Handle<Node> info { B(root).Node(fill, hug).GapAuto().Build() };
+    Handle<Node> name { B(info).Node(hug).Text(FontSizes::body, colors::black).Build() };
+    Handle<Node> purchasing_info { B(info).Node(hug).Gap(10U).Build() };
+    ValueUnit<Money> money { B(purchasing_info).Component<ValueUnit<Money>>() };
+    ValueUnit<Income> income { B(purchasing_info).Component<ValueUnit<Income>>() };
+    Handle<Node> item { B(root).Node(fill).Build() };
 };
 static_assert(NodeComponent<BuildingComponent>);
 
@@ -81,7 +82,7 @@ struct GameFrame : Frame {
     Handle<Node> click { B(game).Node(fill).Padding2(uint2 { 0U, 100U }).Alignment(top_center).Build() };
     Handle<Node> planet { B(click).Node(PLANET_SIZE + PLANET_BORDER_SIZE).Padding(PLANET_BORDER_SIZE).Fill(colors::white).Build() };
     Handle<Node> planet_intra { B(planet).Node(fill).Fill(colors::dark_navy_blue).Build() };
-    Handle<Node> build_menu { B(frame).Node(600U, hug).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::faded_green).Build() };
+    Handle<Node> build_menu { B(frame).Node(400U, hug).Direction(vertical).Padding(10U).Gap(2U).Fill(colors::faded_green).Build() };
     NodeComponentPool<BuildingComponent> shop { B(build_menu).Pool<BuildingComponent>() };
 
     Handle<Animation> planet_animation_handle = AnimationSystem::Register(AnimationDesc {
@@ -217,10 +218,10 @@ template <class T> void ValueUnit<T>::SetProperty(const Property& property) cons
 }
 void BuildingComponent::SetProperty(const Property& property) const {
     const auto& [building, building_count] = property;
-    data[root.tree].styles[root.node].texture = building.texture;
-    money.SetProperty({ .value = building.cost, .unit = Unit::cosmos, .font_size = FontSizes::h1, .color = colors::black });
-    income.SetProperty({ .value = building.income, .unit = Unit::cosmos_per_second, .font_size = FontSizes::h1, .color = colors::black });
-    data[root.tree].node_properties[count].text = std::format("{:04}", building_count);
+    data[root.tree].node_properties[name].text = std::format("[{:04}] {:20}", building_count, building.name);
+    data[root.tree].styles[item].texture = building.texture;
+    money.SetProperty({ .value = building.cost, .unit = Unit::cosmos, .font_size = FontSizes::body, .color = colors::black });
+    income.SetProperty({ .value = building.income, .unit = Unit::cosmos_per_second, .font_size = FontSizes::body, .color = colors::black });
 }
 } // namespace pcg::cosmoclick
 
