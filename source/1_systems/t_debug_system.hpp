@@ -1,6 +1,8 @@
 #pragma once
 #include "r_ui_node.hpp"
 
+#include "0_engine/u_colors.hpp"
+
 namespace pce::ui {
 struct TickComponent {
     using Property = std::tuple<String&, u32>;
@@ -25,28 +27,20 @@ private:
 };
 static_assert(NodeComponent<DebugNodeComponent>);
 
-struct TickFrame {
-    Handle<NodeTree> tree { data.Create<NodeTree>() };
-    TickFrame();
+struct TickFrame : Frame {
     void DisplayInfo();
 
-private:
-    HandleOptional<Node> ticks { };
-    HandleOptional<Node> systems { };
-    NodeComponentPool<TickComponent> system_nodes { NodeReference { .tree = tree, .node = Handle<Node> { 0U } } };
+    Handle<Node> root { B(frame).Node(hug).Padding2({ 10U, 0U }).Direction(vertical).Gap(10U).Build() };
+    Handle<Node> ticks { B(root).Node(hug).Text("", FontSizes::tiny).Fill(colors::radiant_orange).Build() };
+    NodeComponentPool<TickComponent> systems { B(root).Pool<TickComponent>() };
 };
-
-struct InspectorFrame {
-    Handle<NodeTree> tree { data.Create<NodeTree>() };
-    InspectorFrame();
+struct InspectorFrame : Frame {
     void ShowElementStructure(HoveredType hovered);
-    void Hide();
 
-private:
-    NodeComponentPool<DebugNodeComponent> debug_nodes { NodeReference { .tree = tree, .node = Handle<Node> { 0U } } };
+    Handle<Node> root { B(frame).Node(hug).Padding2({ 10U, 30U }).Fill(colors::clear).Direction(vertical).Build() };
+    NodeComponentPool<DebugNodeComponent> nodes { B(root).Pool<DebugNodeComponent>() };
 };
-struct TestFrame {
-    Handle<NodeTree> tree { data.Create<NodeTree>() };
+struct TestFrame : Frame {
     TestFrame();
 };
 struct DebugSystem {
