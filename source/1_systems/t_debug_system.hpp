@@ -33,7 +33,7 @@ struct TickFrame {
 private:
     HandleOptional<Node> ticks { };
     HandleOptional<Node> systems { };
-    NodeComponentPool<TickComponent> system_nodes { .parent = NodeReference { .tree = tree, .node = Handle<Node> { 0U } } };
+    NodeComponentPool<TickComponent> system_nodes { NodeReference { .tree = tree, .node = Handle<Node> { 0U } } };
 };
 
 struct InspectorFrame {
@@ -43,7 +43,7 @@ struct InspectorFrame {
     void Hide();
 
 private:
-    NodeComponentPool<DebugNodeComponent> debug_nodes { .parent = NodeReference { .tree = tree, .node = Handle<Node> { 0U } } };
+    NodeComponentPool<DebugNodeComponent> debug_nodes { NodeReference { .tree = tree, .node = Handle<Node> { 0U } } };
 };
 struct TestFrame {
     Handle<NodeTree> tree { data.Create<NodeTree>() };

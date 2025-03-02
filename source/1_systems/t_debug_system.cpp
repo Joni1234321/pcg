@@ -63,7 +63,7 @@ void InspectorFrame::ShowElementStructure(const HoveredType hovered) {
     }
     debug_nodes.Set(properties);
 }
-void InspectorFrame::Hide() { debug_nodes.SetSize(0U); }
+void InspectorFrame::Hide() { debug_nodes.Hide(); }
 TestFrame::TestFrame() {
     Handle<Node> frame = B(tree, hug, { 100U, 400U }).Gap(20U).Fill(colors::clear).Build(); {
         Handle<Node> root = B(tree, frame, uint2 { 100U, 100U }).Padding2({ 5U, 5U }).Fill(colors::forest_green).Build();

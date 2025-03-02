@@ -186,6 +186,18 @@ template <NodeComponent Component> struct NodeComponentPool {
     NodeReference parent;
     List<Component> nodes { };
     u32 size { 0U };
+    explicit NodeComponentPool(const NodeReference parent) noexcept : parent(parent) { }
+    void Hide() { SetSize(0U); }
+    template <std::ranges::input_range RangeType> void Set(RangeType&& properties) {
+        SetSize(std::ranges::size(properties));
+        for (const auto& [node, property] : std::views::zip(nodes, properties)) { node.SetProperty(property); }
+    }
+    [[nodiscard]] constexpr auto VisibleNodes() const noexcept { return std::span(nodes).first(size); }
+    std::optional<u32> GetComponentAtPosition(const uint2 screen_position) const {
+        return find_index_of(VisibleNodes(), true, [this, screen_position] (const Component& c) -> b8 { return data[c.root.tree].styles[c.root.node].IsInside(screen_position); });
+    }
+
+private:
     void SetSize(const u32 new_size) noexcept {
         if (size == new_size) { return; }
         NodeTree& tree = data[parent.tree];
@@ -196,10 +208,6 @@ template <NodeComponent Component> struct NodeComponentPool {
             }
         }
         for (; size > new_size; --size) { tree.DetachNode(nodes[size - 1U].root.node); }
-    }
-    template <std::ranges::input_range RangeType> void Set(RangeType&& properties) {
-        SetSize(std::ranges::size(properties));
-        for (const auto& [node, property] : std::views::zip(nodes, properties)) { node.SetProperty(property); }
     }
 };
 } // namespace pce::ui

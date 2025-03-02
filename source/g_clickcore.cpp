@@ -177,7 +177,7 @@ Scene ClickCore::GameScene() {
         data[high_score_frame.tree_handle].SetDisplay(true);
         return Scene::game_over;
     }
-    const u32 time_left_ms = duration_cast<Milliseconds>(game_time - elapsed).count();
+    const u32 time_left_ms = static_cast<u32>(duration_cast<Milliseconds>(game_time - elapsed).count());
     game_frame.SetScore(game.score.Value());
     game_frame.SetTime(time_left_ms);
 
