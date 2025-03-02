@@ -56,10 +56,14 @@ using B = NodeBuilder;
 struct NodeBuilderHelper {
     NodeReference parent;
     explicit NodeBuilderHelper(const NodeReference parent) : parent { parent } { }
-    NodeBuilder Node(const Layout new_layout) const { return NodeBuilder(parent, new_layout); }
-    template <NodeComponent C> C Component() { return C(parent); }
-    template <NodeComponent C> C Component(const typename C::Property& property) { return SingleComponent<C>(parent, property); }
-    template <NodeComponent C> NodeComponentPool<C> Pool() { return NodeComponentPool<C>(parent); }
+    [[nodiscard]] NodeBuilder Node(const RelativeConstraint constraint) const { return NodeBuilder(parent, Layout { constraint }); }
+    [[nodiscard]] NodeBuilder Node(const u32 size) const { return NodeBuilder(parent, Layout { uint2 { size, size } }); }
+    [[nodiscard]] NodeBuilder Node(const RelativeConstraint width, const RelativeConstraint height) const { return NodeBuilder(parent, Layout { width, height }); }
+    [[nodiscard]] NodeBuilder Node(const u32 width, const RelativeConstraint height) const { return NodeBuilder(parent, Layout { width, height }); }
+    [[nodiscard]] NodeBuilder Node(const RelativeConstraint width, const u32 height) const { return NodeBuilder(parent, Layout { width, height }); }
+    template <NodeComponent C> [[nodiscard]] C Component() { return C(parent); }
+    template <NodeComponent C> [[nodiscard]] C Component(const typename C::Property& property) { return SingleComponent<C>(parent, property); }
+    template <NodeComponent C> [[nodiscard]] NodeComponentPool<C> Pool() { return NodeComponentPool<C>(parent); }
 };
 struct NodeComponentBase {
     NodeReference root;
@@ -71,6 +75,7 @@ protected:
 };
 struct Frame {
     Handle<NodeTree> tree { data.Create<NodeTree>() };
+    Handle<Node> frame { NodeBuilder(tree, fill, uint2 { 0U, 0U }).Build() };
 
 protected:
     [[nodiscard]] NodeBuilderHelper B(const Handle<Node> parent) const { return NodeBuilderHelper(NodeReference(tree, parent)); }

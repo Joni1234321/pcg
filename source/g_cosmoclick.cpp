@@ -46,24 +46,24 @@ template <class T> struct ValueUnit : NodeComponentBase {
         const T& value;
         Unit unit;
         FontSizes font_size;
+        SDL_Color color;
     };
     explicit ValueUnit(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(hug).Alignment(top_right).Build() } { }
     void SetProperty(const Property& property) const;
     void SetValue(const T& new_value) const { data[root.tree].node_properties[value].text = std::format("{}", new_value); }
 
-private:
     Handle<Node> value { B(root).Node(hug).Fill(colors::white).Build() };
     Handle<Node> unit { B(root).Node(hug).Fill(colors::white).Build() };
 };
 static_assert(NodeComponent<ValueUnit<u32>>);
 struct BuildingComponent : NodeComponentBase {
     using Property = std::tuple<const Building&, const Count>;
-    explicit BuildingComponent(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node({ fill, hug }).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build() } { }
+    explicit BuildingComponent(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(fill, hug).Padding(10U).Direction(vertical).Center().Fill(colors::gray_tint).Build() } { }
     void SetProperty(const Property& property) const;
 
 private:
-    Handle<Node> upper { B(root).Node({ fill, hug }).Center().GapAuto().Build() };
-    Handle<Node> lower { B(root).Node({ fill, hug }).Center().GapAuto().Build() };
+    Handle<Node> upper { B(root).Node(fill, hug).Center().GapAuto().Build() };
+    Handle<Node> lower { B(root).Node(fill, hug).Center().GapAuto().Build() };
     Handle<Node> count { B(upper).Node(hug).FontSize(FontSizes::title).Fill(colors::black).Build() };
     ValueUnit<Money> money { B(upper).Component<ValueUnit<Money>>() };
     ValueUnit<Income> income { B(upper).Component<ValueUnit<Income>>() };
@@ -74,15 +74,14 @@ struct GameFrame : Frame, LogLifetimeWithCount<GameFrame> {
     static constexpr u32 PLANET_SIZE = 400U;
     static constexpr u32 PLANET_BORDER_SIZE = 40U;
 
-    Handle<Node> frame { NodeBuilder(tree, fill, uint2 { 0U, 0U }).Build() };
     Handle<Node> game { B(frame).Node(fill).Direction(vertical).Center().Build() };
     Handle<Node> title { B(game).Node(hug).Fill(colors::white).Text("Cosmo Click", FontSizes::title).Build() };
-    ValueUnit<Money> money { B(game).Component<ValueUnit<Money>>({ Money { 0U }, Unit::cosmos, FontSizes::h1 }) };
-    ValueUnit<Income> income { B(game).Component<ValueUnit<Income>>({ Income { 0U }, Unit::cosmos_per_second, FontSizes::h4 }) };
+    ValueUnit<Money> money { B(game).Component<ValueUnit<Money>>({ Money { 0U }, Unit::cosmos, FontSizes::h1, colors::white }) };
+    ValueUnit<Income> income { B(game).Component<ValueUnit<Income>>({ Income { 0U }, Unit::cosmos_per_second, FontSizes::h4, colors::white }) };
     Handle<Node> click { B(game).Node(fill).Padding2(uint2 { 0U, 100U }).Alignment(top_center).Build() };
-    Handle<Node> planet { B(click).Node(Layout { uint2 { PLANET_SIZE + PLANET_BORDER_SIZE, PLANET_SIZE + PLANET_BORDER_SIZE } }).Padding(PLANET_BORDER_SIZE).Fill(colors::white).Build() };
+    Handle<Node> planet { B(click).Node(PLANET_SIZE + PLANET_BORDER_SIZE).Padding(PLANET_BORDER_SIZE).Fill(colors::white).Build() };
     Handle<Node> planet_intra { B(planet).Node(fill).Fill(colors::dark_navy_blue).Build() };
-    Handle<Node> build_menu { B(frame).Node({ 600U, hug }).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::faded_green).Build() };
+    Handle<Node> build_menu { B(frame).Node(600U, hug).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::faded_green).Build() };
     NodeComponentPool<BuildingComponent> shop { B(build_menu).Pool<BuildingComponent>() };
 
     Handle<Animation> planet_animation_handle = AnimationSystem::Register(AnimationDesc {
@@ -205,14 +204,16 @@ constexpr String UnitToString(const Unit unit) {
 template <class T> void ValueUnit<T>::SetProperty(const Property& property) const {
     data[root.tree].node_properties[value].font_size = property.font_size;
     data[root.tree].node_properties[value].text = std::format("{}", property.value);
+    data[root.tree].styles[value].background_color = property.color;
     data[root.tree].node_properties[unit].font_size = static_cast<FontSizes>(static_cast<f32>(property.font_size) * 0.66F);
     data[root.tree].node_properties[unit].text = UnitToString(property.unit);
+    data[root.tree].styles[unit].background_color = property.color;
 }
 void BuildingComponent::SetProperty(const Property& property) const {
     const auto& [building, building_count] = property;
     data[root.tree].styles[root.node].texture = building.texture;
-    money.SetProperty({ .value = building.cost, .unit = Unit::cosmos, .font_size = FontSizes::h1 });
-    income.SetProperty({ .value = building.income, .unit = Unit::cosmos_per_second, .font_size = FontSizes::h1 });
+    money.SetProperty({ .value = building.cost, .unit = Unit::cosmos, .font_size = FontSizes::h1, .color = colors::black });
+    income.SetProperty({ .value = building.income, .unit = Unit::cosmos_per_second, .font_size = FontSizes::h1, .color = colors::black });
     data[root.tree].node_properties[count].text = std::format("{:04}", building_count);
 }
 } // namespace pcg::cosmoclick
