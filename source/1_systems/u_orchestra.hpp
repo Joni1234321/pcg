@@ -18,7 +18,7 @@ struct Orchestra {
         auto ptr = new T();                                                                                                                                            // Create system instance
         OrchestraState& orchestra_state = singleton.Get<OrchestraState>();
         orchestra_state.system_storage.EmplaceBack(ptr, [] (void* p) { delete static_cast<T*>(p); }); // Ensure destruction
-        orchestra_state.systems.EmplaceBack([ptr]() { (*static_cast<T*>(ptr))(); });                                                                                   // Store callable functor
+        orchestra_state.systems.EmplaceBack([ptr] ()-> void { (*static_cast<T*>(ptr))(); });                     // Store callable functor
         orchestra_state.names.EmplaceBack(typeid(T).name());
         orchestra_state.nano_seconds.EmplaceBack(1U);
     }

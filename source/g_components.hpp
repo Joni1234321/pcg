@@ -43,11 +43,11 @@ struct Finance {
     Money last_result;
     Population employees;
 
-    [[nodiscard]] Money NetIncome(const Stats stats, const u32 cost_of_good) const { return Income(stats, cost_of_good) - Expenses(stats); }                                                      // resultat
-    [[nodiscard]] Percentage ReturnOnAssets(const Stats stats, const u32 cost_of_good) const { return Percentage { NetIncome(stats, cost_of_good).Value() / static_cast<f32>(assets.Total()) }; } // afkastningsgrad
+    [[nodiscard]] Money NetIncome(const Stats& stats, const u32 cost_of_good) const { return Income(stats, cost_of_good) - Expenses(stats); }                                                      // resultat
+    [[nodiscard]] Percentage ReturnOnAssets(const Stats& stats, const u32 cost_of_good) const { return Percentage { NetIncome(stats, cost_of_good).Value() / static_cast<f32>(assets.Total()) }; } // afkastningsgrad
 private:
-    [[nodiscard]] Money Expenses(const Stats stats) const { return Money { 0.0F }; }
-    [[nodiscard]] Money Income(const Stats stats, const u32 cost_of_good) const { return Money { static_cast<f32>(stats.output_goods * cost_of_good) }; }
+    [[nodiscard]] static Money Expenses(const Stats& stats) { return Money { 0.0F }; }
+    [[nodiscard]] static Money Income(const Stats& stats, const u32 cost_of_good) { return Money { static_cast<f32>(stats.output_goods * cost_of_good) }; }
 };
 enum class FarmType : u8 { Wine, Wheat, Fish, Cows };
 enum class ResourceBuildings : u8 { Wood, Fe, Ag, Au };

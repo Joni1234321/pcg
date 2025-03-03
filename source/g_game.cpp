@@ -1,12 +1,13 @@
 // ReSharper disable CppNonExplicitConvertingConstructor
 #include "g_game.hpp"
-#include "0_engine/u_algorithm.hpp"
+
 #include "g_components.hpp"
 
+#include "0_engine/u_algorithm.hpp"
 #include "0_engine/u_logger.hpp"
+#include "0_engine/u_table.hpp"
 #include "0_engine/u_types.hpp"
 #include "0_engine/u_util.hpp"
-#include "0_engine/u_table.hpp"
 
 namespace pcg {
 using pce::Component;

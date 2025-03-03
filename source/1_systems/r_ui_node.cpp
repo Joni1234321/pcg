@@ -2,20 +2,18 @@
 
 #include <ranges>
 
-#include "i_input_system.hpp"
-#include "u_orchestra.hpp"
-#include "t_tick_system.hpp"
-
 #include "0_engine/r_window.hpp"
 #include "0_engine/u_colors.hpp"
 #include "0_engine/u_types.hpp"
+
+#include "1_systems/i_input_system.hpp"
+#include "1_systems/t_tick_system.hpp"
 
 namespace pce::ui {
 const Font& FontCollection::GetFont(const FontSizes size) {
     if (!fonts.HasKey(size) && font_path != "") {
         fonts.EmplaceBack(size, font_path, static_cast<FontSize>(size));
-        b8 failed = fonts[size].FailedLoading();
-        if (failed) {
+        if (fonts[size].FailedLoading()) {
             SDL_Log("ERROR Failed Font not loaded (%s)", SDL_GetError());
             fonts.Erase(size);
         }
@@ -75,7 +73,6 @@ NodeBuilder::NodeBuilder(const Handle<NodeTree> tree, const Layout new_layout, c
     style.height = new_layout.height;
 }
 NodeBuilder::NodeBuilder(const Handle<NodeTree> tree, const Handle<Node> parent, const Layout new_layout) : node_reference { tree, data[tree].AddNode(parent) } {
-    auto& t = data[tree];
     style.width = new_layout.width;
     style.height = new_layout.height;
 }
@@ -91,8 +88,8 @@ NodeBuilder& NodeBuilder::Fill(const SDL_Color color) {
     style.background_color = color;
     return *this;
 }
-NodeBuilder& NodeBuilder::Texture(const Handle<pce::Texture> handle) {
-    style.texture = HandleOptional { handle };
+NodeBuilder& NodeBuilder::Texture(const Handle<pce::Texture> texture) {
+    style.texture = HandleOptional { texture };
     return *this;
 }
 NodeBuilder& NodeBuilder::Padding(const u32 padding) {
@@ -483,7 +480,7 @@ void NodeRenderSystem::operator()() {
                     break;
                 }
                 case ElementType::texture: {
-                    for (const TextureElement& element : textures.first(count)) { (void)SDL_RenderTexture(singleton.Get<WindowState>().renderer, element.texture, NULL, &element.rect); }
+                    for (const TextureElement& element : textures.first(count)) { (void)SDL_RenderTexture(singleton.Get<WindowState>().renderer, element.texture, nullptr, &element.rect); }
                     textures = textures.subspan(count);
                     break;
                 }

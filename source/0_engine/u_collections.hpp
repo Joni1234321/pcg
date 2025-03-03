@@ -233,7 +233,7 @@ template <typename T, typename H = Handle<T>> struct HandleList {
         STL_ASSERT(iterator > end(), "iterator out of range");
         return H { offset_handle.id + static_cast<u32>(std::distance(begin(), iterator)) };
     }
-    [[nodiscard]] constexpr b8 ValidHandle(const Handle handle) const { return (handle.id - offset_handle.id) < Size(); }
+    [[nodiscard]] constexpr b8 ValidHandle(const Handle handle) const { return handle.id - offset_handle.id < Size(); }
     Handle offset_handle { 0U };
 
 private:

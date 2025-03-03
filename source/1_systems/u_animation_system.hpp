@@ -1,14 +1,10 @@
 #pragma once
 #include <functional>
 
-#include <numbers>
-
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_types.hpp"
 
 namespace pce {
-inline f32 EaseInSine(f32 t);
-inline f32 EasingCos(f32 t);
 enum class AnimationState : u8 { run_once, recycle, repeat, keep_alive, keep_alive_stopped };
 struct AnimationDesc {
     std::function<void(f32)> action;
@@ -84,7 +80,7 @@ inline void AnimationSystem::StartAnimation(const Handle<Animation> animation_ha
             break;
     }
 }
-inline b8 AnimationSystem::IsRunning(Handle<Animation> animation_handle) {
+inline b8 AnimationSystem::IsRunning(const Handle<Animation> animation_handle) {
     switch (data[animation_handle].state) {
         case AnimationState::run_once:
         case AnimationState::repeat:

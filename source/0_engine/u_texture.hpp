@@ -9,7 +9,7 @@
 
 namespace pce {
 struct Texture : LogLifetimeWithCount<Texture> {
-    Texture(const AbsolutePath &path) : texture(IMG_LoadTexture(singleton.Get<WindowState>().renderer, path.string().c_str())) { Logger().Created("Texture {} {}", texture->w, texture->h); }
+    explicit Texture(const AbsolutePath &path) : texture(IMG_LoadTexture(singleton.Get<WindowState>().renderer, path.string().c_str())) { Logger().Created("Texture {} {}", texture->w, texture->h); }
     [[nodiscard]] b8 FailedLoading() const { return texture.Get() == nullptr; }
     [[nodiscard]] constexpr SDL_Texture *ToSDL() const { return texture.Get(); }
 private:

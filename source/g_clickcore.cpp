@@ -9,9 +9,9 @@
 #include "1_systems/i_input_system.hpp"
 #include "1_systems/r_render.hpp"
 #include "1_systems/r_ui_node.hpp"
-#include "1_systems/u_orchestra.hpp"
 #include "1_systems/t_debug_system.hpp"
 #include "1_systems/t_tick_system.hpp"
+#include "1_systems/u_orchestra.hpp"
 
 namespace pcg::clickcore {
 using namespace pce;

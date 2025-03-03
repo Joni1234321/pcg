@@ -87,5 +87,5 @@ template < > struct std::formatter<pce::String> : std::formatter<const char*> {
     auto format(const pce::String& data, std::format_context& ctx) const { return formatter<const char*>::format(data.CString(), ctx); }
 };
 template < > struct std::formatter<Entity> : std::formatter<u32> {
-    auto format(const Entity& data, std::format_context& ctx) const { return formatter<u32>::format(static_cast<const u32>(data), ctx); }
+    auto format(const Entity& data, std::format_context& ctx) const { return formatter<u32>::format(data, ctx); }
 };

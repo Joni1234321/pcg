@@ -143,7 +143,7 @@ protected:
     u32 index;
 };
 
-template<class T> struct Handle {
+template<class> struct Handle {
     u32 id;
     explicit constexpr Handle(const u32 id) : id(id) { }
     b8 operator==(const Handle&) const = default;

@@ -34,9 +34,9 @@ template <typename Collection> const typename Collection::value_type& RandomValu
 
 namespace pce::math {
 static constexpr f32 PI = std::numbers::pi_v<f32>;
-inline f32 Sin (f32 t) { return std::sinf(t); }
-inline f32 Cos (f32 t) { return std::cosf(t); }
-constexpr std::pair<u32, u32> Div(u32 value, u32 divisor) { return { value / divisor, value % divisor }; }
+inline f32 Sin (const f32 t) { return std::sinf(t); }
+inline f32 Cos (const f32 t) { return std::cosf(t); }
+constexpr std::pair<u32, u32> Div(const u32 value, const u32 divisor) { return { value / divisor, value % divisor }; }
 template <typename T = void> T Sub(const T& left, const T& right) { return left - right; }
 template <typename T = void> struct Minus {
     T operator()(const T& left, const T& right) const { return left - right; } // NOLINT(*-overloaded-operator)
@@ -52,5 +52,5 @@ template <typename T> constexpr T Min(T left, T right) { return left < right ? l
 template <typename T> constexpr u32 FloorToU32(const T value) { return static_cast<u32>(value); }
 inline f32 Ceil(const f32 value) { return std::ceil(value); }
 template <typename T> constexpr T Abs(const T value) { return value < 0 ? -value : value; }
-template <typename T> constexpr T Lerp(const T min, const T max, const f32 value) { return (value * (max - min)) + min; }
+template <typename T> constexpr T Lerp(const T min, const T max, const f32 value) { return value * (max - min) + min; }
 } // namespace pce::math

@@ -96,7 +96,7 @@ struct Logger {
     constexpr void LogComplexLine() { string.Add(LOG_LINE_STRING); }
 
     void SetColor(u8 color) { string.Add(std::format("\033[38;5;{}m", color)); }
-    void RotateColor(const u32 index) { SetColor(static_cast<u8>(START_COLOR + (index * 3U))); }
+    void RotateColor(const u32 index) { SetColor(static_cast<u8>(START_COLOR + index * 3U)); }
     constexpr void ClearColor() { string.Add(LOGGER_COLOR_CLEAR); }
 
     template <typename T> constexpr void LogList(const String& label, const String& value_label, const Span<T> span) {
@@ -143,12 +143,12 @@ template <typename T> struct LogLifetimeWithCount {
     LogLifetimeWithCount(LogLifetimeWithCount&& other) noexcept { Logger().Moved("{} {} -> {}", typeid(T).name(), other.log_id, log_id); }
     ~LogLifetimeWithCount() { Logger().Destroyed("{} {}", typeid(T).name(), log_id); }
     LogLifetimeWithCount& operator=(const LogLifetimeWithCount& other) {
-        if (this == &other) return *this;
+        if (this == &other) { return *this; }
         log_id = other.log_id;
         return *this;
     }
     LogLifetimeWithCount& operator=(LogLifetimeWithCount&& other) noexcept {
-        if (this == &other) return *this;
+        if (this == &other) { return *this; }
         log_id = other.log_id;
         return *this;
     }

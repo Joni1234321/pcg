@@ -79,7 +79,7 @@ public:
         ASSERT_DBG_RETURN(values.Size() < rows.Size(), "Received more values than rows in table", );
         rows[0U] += std::format("{:>{}} |", title, width);
         for (u32 i = 0U; i < values.Size(); i++) { rows[i + 1U] += std::format("{:>{}} |", FormatValue(values[i]), width); }
-        for (u32 i = static_cast<u32>(values.Size()) + 1U; i < rows.Size(); i++) { rows[i] += std::format("{:>{}} |", "XXXX", width); }
+        for (u32 i = static_cast<u32>(values.Size()) + 1U; i < rows.Size(); ++i) { rows[i] += std::format("{:>{}} |", "XXXX", width); }
     }
     template <typename T> void AddColumn(const String& title, const List<T>& values) { AddColumnFixed(title, values, title.size() + 1U); }
     String& WriteToLogger (Logger& logger, const LOGGER_COLOR coloring) const {

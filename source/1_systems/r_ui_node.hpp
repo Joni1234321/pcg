@@ -33,7 +33,7 @@ public:
     NodeBuilder(NodeReference parent, Layout new_layout);
     [[nodiscard]] NodeBuilder& Name(const String& name);
     [[nodiscard]] NodeBuilder& Fill(SDL_Color color);
-    [[nodiscard]] NodeBuilder& Texture(Handle<Texture> texture_handle);
+    [[nodiscard]] NodeBuilder& Texture(Handle<Texture> texture);
     [[nodiscard]] NodeBuilder& Padding(u32 padding);
     [[nodiscard]] NodeBuilder& Padding2(uint2 padding);
     [[nodiscard]] NodeBuilder& Padding4(uint4 padding);
@@ -73,7 +73,7 @@ struct NodeComponentBase {
 
 protected:
     [[nodiscard]] NodeBuilderHelper B(const Handle<Node> parent) const { return NodeBuilderHelper(NodeReference(root.tree, parent)); }
-    [[nodiscard]] NodeBuilderHelper B(const NodeReference parent) const { return NodeBuilderHelper(parent); }
+    [[nodiscard]] static NodeBuilderHelper B(const NodeReference parent) { return NodeBuilderHelper(parent); }
 };
 struct Frame {
     Handle<NodeTree> tree { data.Create<NodeTree>() };
@@ -81,6 +81,6 @@ struct Frame {
 
 protected:
     [[nodiscard]] NodeBuilderHelper B(const Handle<Node> parent) const { return NodeBuilderHelper(NodeReference(tree, parent)); }
-    [[nodiscard]] NodeBuilderHelper B(const NodeReference parent) const { return NodeBuilderHelper(parent); }
+    [[nodiscard]] static NodeBuilderHelper B(const NodeReference parent) { return NodeBuilderHelper(parent); }
 };
 } // pce::ui
