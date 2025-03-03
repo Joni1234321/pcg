@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <bitset>
 #include <format>
 #include <queue>
 #include <set>
@@ -64,9 +65,9 @@ public:
 };
 struct String {
     constexpr String() = default;
-    constexpr String(const char character, const u32 count) : data(count, character, std::allocator<char>()) { }
-    constexpr String(std::string&& text) : data(std::move(text)) { }            // NOLINT(*-explicit-constructor, *-explicit-conversions)
-    constexpr String(const char* text) : data(text, std::allocator<char>()) { } // NOLINT(*-explicit-constructor, *-explicit-conversions)
+    constexpr String(const char character, const u32 count) : data(count, character, std::allocator<char>()) { } // ReSharper disable once CppNonExplicitConvertingConstructor
+    constexpr String(std::string&& text) : data(std::move(text)) { } // ReSharper disable once CppNonExplicitConvertingConstructor
+    constexpr String(const char* text) : data(text, std::allocator<char>()) { }     // ReSharper disable once CppNonExplicitConvertingConstructor
     template <typename... Args> constexpr String(const char* text, Args... args) : data(std::vformat(text, std::make_format_args(args...))) { }
 
     operator const char*() const { return data.c_str(); }

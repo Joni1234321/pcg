@@ -9,6 +9,7 @@
 #include "0_engine/u_fonts.hpp"
 #include "0_engine/u_logger.hpp"
 #include "0_engine/u_types.hpp"
+#include "0_engine/u_algorithm.hpp"
 
 namespace pce::ui {
 enum class ElementType : u8 { rectangle, texture, text };
@@ -118,7 +119,7 @@ struct NodeTree {
         }
     };
     template <class T> using HandleList = HandleList<T, Handle<Node>>;
-    static constexpr u32 DEFAULT_COUNT = 64U;
+    static constexpr u32 DEFAULT_COUNT = 128U;
     HandleList<NodeStyle> styles { DEFAULT_COUNT };
     HandleList<NodeProperties> node_properties { DEFAULT_COUNT };
     HandleList<UniquePointer<TTF_Text, DestroyText>> node_ttf_texts { DEFAULT_COUNT };

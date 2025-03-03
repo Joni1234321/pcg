@@ -1,7 +1,5 @@
 #include "g_arcade.hpp"
 
-#include "0_engine/r_window.hpp"
-#include "0_engine/u_algorithm.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
 #include "0_engine/u_texture.hpp"
@@ -41,6 +39,20 @@ struct GameState {
     Money money { 0U };
     Income income { 0U };
 };
+// ui
+struct UIFlags {
+    enum Flag : u32 { shop, money, planet, count };
+    [[nodiscard]] constexpr b8 Any() const noexcept { return flags.any(); }
+    constexpr void Set() noexcept { flags.set(); }
+    constexpr void Reset() noexcept { flags.reset(); }
+    std::bitset<static_cast<size_t>(count)> flags;
+};
+constexpr UIFlags& operator&(UIFlags& flags, const UIFlags::Flag flag) {
+    flags.flags.set(flag);
+    return flags;
+}
+constexpr b8 operator|(const UIFlags& flags, const UIFlags::Flag flag) noexcept { return flags.flags.test(flag); }
+
 template <class T> struct ValueUnit : NodeComponentBase {
     struct Property {
         const T& value;
@@ -73,7 +85,7 @@ static_assert(NodeComponent<BuildingComponent>);
 
 struct GameFrame : Frame {
     static constexpr u32 PLANET_SIZE = 400U;
-    static constexpr u32 PLANET_BORDER_SIZE = 40U;
+    static constexpr u32 PLANET_BORDER_SIZE = 10U;
 
     Handle<Node> game { B(frame).Node(fill).Direction(vertical).Center().Padding2({ 0U, 40U }).Build() };
     Handle<Node> info { B(game).Node(500U, hug).Direction(vertical).Center().Fill(colors::clear).Padding2({ 50U, 4U }).Build() };
@@ -85,29 +97,34 @@ struct GameFrame : Frame {
     Handle<Node> build_menu { B(frame).Node(700U, hug).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::cerulean).Build() };
     NodeComponentPool<BuildingComponent> shop { B(build_menu).Pool<BuildingComponent>() };
 
-    Handle<Animation> planet_animation_handle = AnimationSystem::Register(AnimationDesc {
-                                                                              .action = [this] (const f32 t) -> void {
-                                                                                  static constexpr u32 PLANET_PADDING_START = 10U;
-                                                                                  const u32 padding_value = PLANET_PADDING_START + static_cast<u32>(t * PLANET_BORDER_SIZE);
-                                                                                  data[tree].styles[planet].padding = uint4 { padding_value, padding_value, padding_value, padding_value };
-                                                                              },
-                                                                              .duration_ms = 500U,
-                                                                              .state = AnimationState::repeat });
+    Handle<Animation> planet_animation = AnimationSystem::Register(AnimationDesc {
+                                                                       .action = [this] (const f32 t) -> void {
+                                                                           static constexpr u32 PLANET_PADDING_START = 10U;
+                                                                           const u32 padding_value = PLANET_PADDING_START + static_cast<u32>(t * PLANET_BORDER_SIZE);
+                                                                           data[tree].styles[planet].padding = uint4 { padding_value, padding_value, padding_value, padding_value };
+                                                                           singleton.Get<UIFlags>() & UIFlags::planet;
+                                                                       },
+                                                                       .duration_ms = 500U,
+                                                                       .state = AnimationState::repeat });
     Handle<Animation> click_animation = AnimationSystem::Register(AnimationDesc {
-                                                                      .action = [this] (const f32 t) -> void { data[tree].styles[planet].background_color = colors::LightenColor(colors::blue, t); },
-                                                                      .duration_ms = 300U,
+                                                                      .action = [this] (const f32 t) -> void {
+                                                                          data[tree].styles[planet].background_color = colors::LightenColor(colors::cyan, t);
+                                                                          singleton.Get<UIFlags>() & UIFlags::planet;
+                                                                      },
+                                                                      .duration_ms = 400U,
                                                                       .state = AnimationState::keep_alive_stopped });
 };
-struct CosmoClickConfig {
-    GameFrame game_frame { };
-    Scene scene { Scene::game };
-};
 struct CosmoClickSystem {
-    CosmoClickConfig cosmo_click_config;
+    Scene scene { Scene::game };
     void operator()();
 
 private:
     Scene GameScene();
+};
+struct CosmoClickUISystem {
+    GameFrame game_frame { };
+    CosmoClickUISystem();
+    void operator()();
 };
 class CosmoClick : LogLifetimeWithCount<CosmoClick> {
     Orchestra orchestra { };
@@ -142,6 +159,7 @@ CosmoClick::CosmoClick() {
     orchestra.Add<NodeInputSystem>();
 
     orchestra.Add<CosmoClickSystem>();
+    orchestra.Add<CosmoClickUISystem>();
 
     orchestra.Add<AnimationSystem>();
     orchestra.Add<NodeRenderSystem>();
@@ -152,9 +170,9 @@ void CosmoClick::Tick() {
     orchestra.RunSystems();
 }
 void CosmoClickSystem::operator()() {
-    switch (cosmo_click_config.scene) {
+    switch (scene) {
         case Scene::game:
-            cosmo_click_config.scene = GameScene();
+            scene = GameScene();
             break;
         case Scene::quit:
             Logger().Log("Quit requested");
@@ -162,9 +180,10 @@ void CosmoClickSystem::operator()() {
             break;
     }
 }
+
 Scene CosmoClickSystem::GameScene() {
+    UIFlags& ui_flags = singleton.Get<UIFlags>();
     GameState& game_data = singleton.Get<GameState>();
-    GameFrame& game_frame = cosmo_click_config.game_frame;
     const TimePoint update_time = TimeNow();
     const Duration time_since_start = update_time - game_data.start_time;
     const u32 seconds_since_start = static_cast<u32>(std::chrono::duration_cast<Seconds>(time_since_start).count());
@@ -172,30 +191,44 @@ Scene CosmoClickSystem::GameScene() {
     if (delta_seconds > 0U) {
         game_data.money += Money { game_data.income.Value() * delta_seconds };
         game_data.seconds_since_start = seconds_since_start;
+        ui_flags & UIFlags::money;
     }
+    return Scene::game;
+}
+CosmoClickUISystem::CosmoClickUISystem() { singleton.Get<UIFlags>().Set(); }
+void CosmoClickUISystem::operator()() {
+    UIFlags& ui_flags = singleton.Get<UIFlags>();
+    GameState& game_state = singleton.Get<GameState>();
     if (singleton.Get<InputState>().left_mouse_down || singleton.Get<InputState>().left_mouse_up) {
         if (data[game_frame.tree].styles[game_frame.planet].IsInside(singleton.Get<InputState>().mouse_position)) {
             constexpr Money click_money = Money { 5U };
-            game_data.money += click_money;
+            game_state.money += click_money;
             AnimationSystem::StartAnimation(game_frame.click_animation);
+            ui_flags & UIFlags::money;
         }
     }
     if (singleton.Get<InputState>().left_mouse_down) {
         const std::optional<u32> building_index = game_frame.shop.GetComponentAtPosition(singleton.Get<InputState>().mouse_position);
         if (building_index.has_value()) {
             const Building& building = singleton.Get<GameDefines>().buildings[building_index.value()];
-            if (game_data.money >= building.cost) {
-                ++game_data.building_counts[building_index.value()];
-                game_data.money -= building.cost;
-                game_data.income += building.income;
+            if (game_state.money >= building.cost) {
+                ++game_state.building_counts[building_index.value()];
+                game_state.money -= building.cost;
+                game_state.income += building.income;
+                ui_flags & UIFlags::shop & UIFlags::money;
             }
         }
     }
-    game_frame.shop.Set(std::views::zip(singleton.Get<GameDefines>().buildings, game_data.building_counts));
-    game_frame.money.SetValue(game_data.money);
-    game_frame.income.SetValue(game_data.income);
-    data[game_frame.tree].MarkDirty();
-    return Scene::game;
+    if (ui_flags | UIFlags::planet) {  }
+    if (ui_flags | UIFlags::shop) { game_frame.shop.Set(std::views::zip(singleton.Get<GameDefines>().buildings, game_state.building_counts)); }
+    if (ui_flags | UIFlags::money) {
+        game_frame.money.SetValue(game_state.money);
+        game_frame.income.SetValue(game_state.income);
+    }
+    if (ui_flags.Any()) {
+        data[game_frame.tree].MarkDirty();
+        ui_flags.Reset();
+    }
 }
 // ui
 constexpr String UnitToString(const Unit unit) {

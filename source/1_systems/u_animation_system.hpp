@@ -1,11 +1,13 @@
 #pragma once
 #include <functional>
 
+#include <numbers>
+
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_types.hpp"
 
 namespace pce {
-inline f32 EasingSin(f32 t);
+inline f32 EaseInSine(f32 t);
 inline f32 EasingCos(f32 t);
 enum class AnimationState : u8 { run_once, recycle, repeat, keep_alive, keep_alive_stopped };
 struct AnimationDesc {
@@ -22,6 +24,7 @@ struct Animation {
 struct AnimationSystem {
     static Handle<Animation> Register(const AnimationDesc& animation_desc);
     static void StartAnimation(Handle<Animation> animation_handle);
+    static b8 IsRunning(Handle<Animation> animation_handle);
     void operator()() const;
 };
 struct Particle {
@@ -49,8 +52,9 @@ struct ParticleSystem {
     void operator()() const { for (u32 i = 0; i < particles.Size(); i++) { } }
 };
 
-f32 EasingSin(const f32 t) { return math::Sin(t) * 0.5F + 0.5F; }
-f32 EasingCos(const f32 t) { return math::Cos(t) * 0.5F + 0.5F; }
+inline f32 EaseInSine(const f32 t) { return 1 - math::Cos(t * math::PI * 0.5F); }
+inline f32 EaseOutSine(const f32 t) { return 1 - math::Sin(t * math::PI * 0.5F); }
+inline f32 EaseInOutSine(const f32 t) { return -(math::Cos(math::PI * t) - 1) * 0.5F; }
 inline Handle<Animation> AnimationSystem::Register(const AnimationDesc& animation_desc) {
     Logger().Log("Size of action {} and action {} size {}", sizeof(animation_desc), sizeof(animation_desc.action), data.Get<Animation>().Size());
     HandleList<Animation>& animations = data.Get<Animation>();
@@ -80,6 +84,19 @@ inline void AnimationSystem::StartAnimation(const Handle<Animation> animation_ha
             break;
     }
 }
+inline b8 AnimationSystem::IsRunning(Handle<Animation> animation_handle) {
+    switch (data[animation_handle].state) {
+        case AnimationState::run_once:
+        case AnimationState::repeat:
+        case AnimationState::keep_alive:
+            return true;
+        case AnimationState::recycle:
+        case AnimationState::keep_alive_stopped:
+            return false;
+        default: STL_ASSERT(false, "Unknown animation state {}", data[animation_handle].state);
+            return false;
+    }
+}
 inline void AnimationSystem::operator()() const {
     const u32 current_ms = static_cast<u32>(SDL_GetTicks());
     for (Animation& animation : data.Get<Animation>()) {
@@ -104,7 +121,7 @@ inline void AnimationSystem::operator()() const {
             case AnimationState::keep_alive_stopped:
                 continue;
         }
-        const f32 value = EasingSin(t);
+        const f32 value = EaseInOutSine(t);
         animation.action(value);
     }
 }
