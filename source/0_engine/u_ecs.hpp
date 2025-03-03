@@ -14,12 +14,12 @@ public:
     constexpr explicit NamedType(const T& value) : value(value) { }
     T& Value() { return value; }
     const T& Value() const { return value; }
-    explicit operator T() const { return Value(); };
+    explicit operator T() const { return Value(); }
 
 private:
     T value;
 };
-template <typename DerivedType, template<typename> class Recurring> struct RecurringDerived {
+template <typename DerivedType, template<typename> class> struct RecurringDerived {
     DerivedType& Derived() { return static_cast<DerivedType&>(*this); }
     const DerivedType& Derived() const { return static_cast<const DerivedType&>(*this); }
 };

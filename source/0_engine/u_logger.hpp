@@ -7,9 +7,9 @@
 #include <array>
 #include <stacktrace>
 
-#include "u_collections.hpp"
-#include "u_types.hpp"
-#include "u_ecs.hpp"
+#include "0_engine/u_collections.hpp"
+#include "0_engine/u_types.hpp"
+#include "0_engine/u_ecs.hpp"
 
 namespace pce {
 #define DISABLE_PREFIX 1 // NOLINT(*-macro-usage)

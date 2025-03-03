@@ -1,7 +1,7 @@
 #pragma once
 
-#include <chrono>
 #include <bitset>
+#include <chrono>
 #include <format>
 #include <queue>
 #include <set>
@@ -11,8 +11,8 @@
 #include <utility>
 #include <vector>
 
-#include "u_types.hpp"
-#include "u_util.hpp"
+#include "0_engine/u_types.hpp"
+#include "0_engine/u_util.hpp"
 
 namespace pce {
 template <typename T>concept TriviallyConstructible = std::is_trivially_constructible_v<T>;
@@ -31,7 +31,7 @@ using Duration = std::chrono::duration;
 using Seconds = std::chrono::seconds;
 using Milliseconds = std::chrono::milliseconds;
 using Nanoseconds = std::chrono::nanoseconds;
-[[nodiscard]] inline TimePoint TimeNow() noexcept { return std::chrono::high_resolution_clock::now(); };
+[[nodiscard]] inline TimePoint TimeNow() noexcept { return std::chrono::high_resolution_clock::now(); }
 // template <typename T> [[nodiscard]] Duration DurationCast (Duration duration) { return std::chrono::duration_cast<T>(duration); }
 
 template <typename T, typename D> class UniquePointer {
@@ -265,12 +265,12 @@ public:
     constexpr void PushBack(const K& key, V&& value) {
         keys.PushBack(key);
         values.PushBack(value);
-    };
+    }
 
     template <class... Args> constexpr void EmplaceBack(const K& key, Args&&... args) {
         keys.EmplaceBack(key);
         values.EmplaceBack(std::forward<Args>(args)...);
-    };
+    }
 
     constexpr void Clear() {
         keys.Clear();

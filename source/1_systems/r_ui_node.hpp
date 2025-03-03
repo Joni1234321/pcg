@@ -8,8 +8,8 @@
 #include "0_engine/u_texture.hpp"
 #include "0_engine/u_types.hpp"
 
-#include "1_systems/u_orchestra.hpp"
 #include "1_systems/r_ui_node_data.hpp"
+#include "1_systems/u_orchestra.hpp"
 
 namespace pce::ui {
 struct NodeInputSystem {

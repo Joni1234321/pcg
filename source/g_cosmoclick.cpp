@@ -22,7 +22,7 @@ using Money = NamedType<u32, struct MoneyTag, Arithmetic, FormatLongNumber>;
 using Income = NamedType<u32, struct IncomeTag, Arithmetic, FormatLongNumber>;
 enum class ValueUnitTextSize : u8 { small, normal, larger };
 enum class Unit : u8 { cosmos, cosmos_per_second };
-enum class Scene { start, game, quit };
+enum class Scene : u8 { start, game, quit };
 struct Building {
     String name;
     Handle<Texture> texture;
@@ -94,7 +94,7 @@ struct GameFrame : Frame {
     Handle<Node> click { B(game).Node(fill).Padding2(uint2 { 0U, 100U }).Alignment(top_center).Build() };
     Handle<Node> planet {
         B(click).Node(PLANET_SIZE + PLANET_BORDER_SIZE).Padding(PLANET_BORDER_SIZE).Fill(colors::white).OnClick([this] (const NodeReference) -> void {
-            AnimationSystem::StartAnimation(this->click_animation);
+            AnimationSystem::StartAnimation(this->planet_animation);
             singleton.Get<GameState>().money += Money { 5U };
             singleton.Get<UIFlags>() & UIFlags::money;
         }).Build() };
@@ -105,19 +105,13 @@ struct GameFrame : Frame {
     Handle<Animation> planet_animation = AnimationSystem::Register(AnimationDesc {
                                                                        .action = [this] (const f32 t) -> void {
                                                                            static constexpr u32 PLANET_PADDING_START = 10U;
-                                                                           const u32 padding_value = PLANET_PADDING_START + static_cast<u32>(t * PLANET_BORDER_SIZE);
+                                                                           const u32 padding_value = PLANET_PADDING_START + static_cast<u32>((1-t) * PLANET_BORDER_SIZE);
                                                                            data[tree].styles[planet].padding = uint4 { padding_value, padding_value, padding_value, padding_value };
+                                                                           data[tree].styles[planet].background_color = colors::LightenColor(colors::cyan, t);
                                                                            singleton.Get<UIFlags>() & UIFlags::planet;
                                                                        },
-                                                                       .duration_ms = 500U,
-                                                                       .state = AnimationState::repeat });
-    Handle<Animation> click_animation = AnimationSystem::Register(AnimationDesc {
-                                                                      .action = [this] (const f32 t) -> void {
-                                                                          data[tree].styles[planet].background_color = colors::LightenColor(colors::cyan, t);
-                                                                          singleton.Get<UIFlags>() & UIFlags::planet;
-                                                                      },
-                                                                      .duration_ms = 400U,
-                                                                      .state = AnimationState::keep_alive_stopped });
+                                                                       .duration_ms = 400U,
+                                                                       .state = AnimationState::keep_alive_stopped });
 };
 struct CosmoClickSystem {
     Scene scene { Scene::start };

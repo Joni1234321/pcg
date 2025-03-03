@@ -3,4 +3,4 @@
 namespace pcg::arcade {
 void RunClickCore();
 void RunCosmoClick();
-} // namespace pcg::clickcore
+} // namespace pcg::arcade

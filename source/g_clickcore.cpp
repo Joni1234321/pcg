@@ -1,6 +1,5 @@
 #include "g_arcade.hpp"
 
-#include "0_engine/r_window.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
 #include "0_engine/u_types.hpp"
@@ -19,7 +18,7 @@ using namespace ui;
 
 using Score = NamedType<u32, struct ScoreTag, Arithmetic, FormatLongNumber>;
 
-enum class Scene { game, main_menu, game_over, quit };
+enum class Scene : u8 { game, main_menu, game_over, quit };
 
 struct HighScore {
     Score score;
@@ -33,7 +32,7 @@ struct GameData {
     Multiset<HighScore> high_scores { };
 };
 struct HighScoreComponent : NodeComponentBase {
-    using Property = std::tuple<long long, HighScore>;
+    using Property = std::tuple<i64, HighScore>;
     explicit HighScoreComponent(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(200U, hug).Center().Build() } { }
     void SetProperty(const Property& property) const;
 

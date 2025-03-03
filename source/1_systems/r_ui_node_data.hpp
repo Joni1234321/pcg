@@ -5,11 +5,11 @@
 
 #include <SDL3_ttf/SDL_ttf.h>
 
+#include "0_engine/u_algorithm.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_fonts.hpp"
 #include "0_engine/u_logger.hpp"
 #include "0_engine/u_types.hpp"
-#include "0_engine/u_algorithm.hpp"
 
 namespace pce::ui {
 enum class ElementType : u8 { rectangle, texture, text };
