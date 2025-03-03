@@ -145,6 +145,7 @@ protected:
 
 template<class T> struct Handle {
     u32 id;
+    explicit constexpr Handle(const u32 id) : id(id) { }
     b8 operator==(const Handle&) const = default;
 };
 

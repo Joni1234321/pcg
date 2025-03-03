@@ -49,6 +49,7 @@ public:
     [[nodiscard]] NodeBuilder& Right();
     [[nodiscard]] NodeBuilder& Center();
     [[nodiscard]] NodeBuilder& Left();
+    [[nodiscard]] NodeBuilder& OnClick(NodeReaction&& reaction);
     Handle<Node> Build() const;
 };
 using B = NodeBuilder;

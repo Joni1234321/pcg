@@ -66,8 +66,8 @@ public:
 struct String {
     constexpr String() = default;
     constexpr String(const char character, const u32 count) : data(count, character, std::allocator<char>()) { } // ReSharper disable once CppNonExplicitConvertingConstructor
-    constexpr String(std::string&& text) : data(std::move(text)) { } // ReSharper disable once CppNonExplicitConvertingConstructor
-    constexpr String(const char* text) : data(text, std::allocator<char>()) { }     // ReSharper disable once CppNonExplicitConvertingConstructor
+    constexpr String(std::string&& text) : data(std::move(text)) { }                                             // ReSharper disable once CppNonExplicitConvertingConstructor
+    constexpr String(const char* text) : data(text, std::allocator<char>()) { }                                  // ReSharper disable once CppNonExplicitConvertingConstructor
     template <typename... Args> constexpr String(const char* text, Args... args) : data(std::vformat(text, std::make_format_args(args...))) { }
 
     operator const char*() const { return data.c_str(); }
@@ -125,17 +125,13 @@ template <typename T> struct List {
     [[nodiscard]] constexpr iterator end() noexcept { return data.end(); }
     [[nodiscard]] constexpr const_iterator begin() const noexcept { return data.begin(); }
     [[nodiscard]] constexpr const_iterator end() const noexcept { return data.end(); }
-    [[nodiscard]] constexpr iterator Begin() noexcept { return data.begin(); }
-    [[nodiscard]] constexpr iterator End() noexcept { return data.end(); }
-    [[nodiscard]] constexpr const_iterator Begin() const noexcept { return data.begin(); }
-    [[nodiscard]] constexpr const_iterator End() const noexcept { return data.end(); }
 
-    [[nodiscard]] constexpr T& Front() { return data.front(); }
-    [[nodiscard]] constexpr T& Back() { return data.back(); }
-    [[nodiscard]] constexpr const T& Front() const { return data.front(); }
-    [[nodiscard]] constexpr const T& Back() const { return data.back(); }
+    [[nodiscard]] constexpr T& Front() noexcept { return data.front(); }
+    [[nodiscard]] constexpr T& Back() noexcept { return data.back(); }
+    [[nodiscard]] constexpr const T& Front() const noexcept { return data.front(); }
+    [[nodiscard]] constexpr const T& Back() const noexcept { return data.back(); }
 
-    [[nodiscard]] constexpr b8 Empty() const { return data.empty(); }
+    [[nodiscard]] constexpr b8 Empty() const noexcept { return data.empty(); }
     [[nodiscard]] constexpr b8 Contains(const T& value) const noexcept { return std::ranges::find(data, value, std::identity { }) != end(); }
 
     constexpr void Clear() { data.clear(); }
@@ -143,7 +139,7 @@ template <typename T> struct List {
     constexpr void Resize(const u32 size) { data.resize(size); }
     constexpr void Reserve(const u32 size) { data.reserve(size); }
     constexpr void EraseAt(const u32 index) { data.erase(data.begin() + index); }
-    constexpr u32 EraseValue (const T& value) { return static_cast<u32>(std::erase(data, value)); }
+    constexpr u32 EraseValue(const T& value) { return static_cast<u32>(std::erase(data, value)); }
 
     template <std::_Container_compatible_range<T> _Rng> constexpr void AppendRange(_Rng&& range) { data.append_range(range); }
 
@@ -220,14 +216,22 @@ template <typename T, typename H = Handle<T>> struct HandleList {
     [[nodiscard]] constexpr T& Front() { return data.Front(); }
     [[nodiscard]] constexpr T& Back() { return data.Back(); }
 
-    [[nodiscard]] constexpr const_iterator begin() const { return data.begin(); }
-    [[nodiscard]] constexpr const_iterator end() const { return data.end(); }
-    [[nodiscard]] constexpr const T& Front() const { return data.Front(); }
-    [[nodiscard]] constexpr const T& Back() const { return data.Back(); }
+    [[nodiscard]] constexpr const_iterator begin() const noexcept { return data.begin(); }
+    [[nodiscard]] constexpr const_iterator end() const noexcept { return data.end(); }
+    [[nodiscard]] constexpr const T& Front() const noexcept { return data.Front(); }
+    [[nodiscard]] constexpr const T& Back() const noexcept { return data.Back(); }
 
-    [[nodiscard]] constexpr u32 HandleToIndex(const Handle handle) const {
+    [[nodiscard]] constexpr u32 HandleToIndex(const Handle handle) const noexcept {
         STL_ASSERT(ValidHandle(handle), "handle invalidated");
         return handle.id - offset_handle.id;
+    }
+    [[nodiscard]] constexpr H IndexToHandle(const u32 index) const noexcept {
+        STL_ASSERT(index < Size(), "index bigger than size");
+        return H { offset_handle.id + index };
+    }
+    [[nodiscard]] constexpr H IteratorToHandle(const_iterator iterator) const noexcept {
+        STL_ASSERT(iterator > end(), "iterator out of range");
+        return H { offset_handle.id + static_cast<u32>(std::distance(begin(), iterator)) };
     }
     [[nodiscard]] constexpr b8 ValidHandle(const Handle handle) const { return (handle.id - offset_handle.id) < Size(); }
     Handle offset_handle { 0U };
