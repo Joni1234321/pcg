@@ -17,9 +17,8 @@ struct NodeInputSystem {
     ~NodeInputSystem() { singleton.Get<HoveredType>() = { }; }
 };
 struct NodeRenderSystem {
-    NodeRenderSystem() { }
+    void operator()() const;
     ~NodeRenderSystem() { data.Get<NodeTree>().Clear(); };
-    void operator()();
 };
 
 class NodeBuilder {

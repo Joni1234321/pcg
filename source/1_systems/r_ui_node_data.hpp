@@ -167,6 +167,7 @@ template <NodeComponent Component> struct NodeComponentPool {
     List<Component> nodes { };
     u32 size { 0U };
     explicit NodeComponentPool(const NodeReference parent) noexcept : parent(parent) { }
+    [[nodiscard]] constexpr u32 Empty() const noexcept { return size == 0U; }
     void Hide() { SetSize(0U); }
     template <std::ranges::input_range RangeType> void Set(RangeType&& properties) {
         SetSize(static_cast<u32>(std::ranges::size(properties)));

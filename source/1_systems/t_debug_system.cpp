@@ -47,7 +47,17 @@ void TickFrame::Update() {
 
 void DebugFrame::SetInspector(const HoveredType hovered) {
     if (!hovered.has_value() || hovered->tree == tree) { return; }
-    data[tree].node_properties[hovered_label].text = std::format("[{} | {}]", hovered->tree.id, hovered->node.id);
+    data[tree].MarkDirty();
+    data[tree].node_properties[hovered_label].text = std::format("[{} | {}]", hovered->tree.id, hovered->node.id); {
+        const NodeStyle& style = data[hovered->tree].styles[hovered->node];
+        const NodeProperties& properties = data[hovered->tree].node_properties[hovered->node];
+        data[tree].node_properties[size].text = std::format("{} x {}", style.width.resolved, style.height.resolved);
+        data[tree].node_properties[padding_top].text = std::to_string(style.padding.x);
+        data[tree].node_properties[padding_right].text = std::to_string(style.padding.y);
+        data[tree].node_properties[padding_bottom].text = std::to_string(style.padding.z);
+        data[tree].node_properties[padding_left].text = std::to_string(style.padding.w);
+    }
+
     std::stack<DebugNodeComponent::Property> stack;
     stack.push(DebugNodeComponent::Property { .hovered = hovered.value(), .layer = 0U });
     List<DebugNodeComponent::Property> nodes { data[hovered->tree].children.Size() };
@@ -62,13 +72,20 @@ void DebugFrame::SetInspector(const HoveredType hovered) {
 }
 void DebugSystem::operator()() {
     InputState& input_state = singleton.Get<InputState>();
-    b8 update_debug_frame = false;
-    if (input_state.left_mouse_down) {
-        update_debug_frame = true;
-        if (input_state.keys[SDLK_LALT]) { debug_frame.SetInspector(singleton.Get<HoveredType>()); } else { debug_frame.debug_nodes.Hide(); }
+    const b8 debug_mode = input_state.keys[SDLK_LALT];
+    const b8 detailed_mode = input_state.keys[SDLK_LCTRL];
+
+    if (singleton.Get<TickState>().tick.Value() % 500U == 0U) {
+        data[tick_frame.tree].MarkDirty();
+        tick_frame.Update();
     }
-    if (input_state.keys[SDLK_LALT]) {
-        update_debug_frame = true;
+    data[debug_frame.tree].SetDisplay(debug_mode);
+    if (debug_mode) {
+        if (!detailed_mode && !tick_frame.systems.Empty()) {
+            data[tick_frame.tree].MarkDirty();
+            tick_frame.systems.Hide();
+        }
+        if (input_state.left_mouse_down) { debug_frame.SetInspector(singleton.Get<HoveredType>()); }
         u32 key_count = std::min(data.Get<NodeTree>().Size(), 10U);
         auto rng = std::views::iota(0U, key_count);
         const auto it = std::ranges::find_if(rng, [&] (const u32 i) { return input_state.keys_down[SDLK_0 + i]; });
@@ -76,11 +93,6 @@ void DebugSystem::operator()() {
             const Handle<NodeTree> tree { *it };
             debug_frame.SetInspector(NodeReference { .tree = tree, .node = data[tree].Root() });
         }
-    }
-    if (update_debug_frame) { data[debug_frame.tree].MarkDirty(); }
-    if (singleton.Get<TickState>().tick.Value() % 500U == 0U) {
-        data[tick_frame.tree].MarkDirty();
-        tick_frame.Update();
     }
 }
 TestFrame::TestFrame() {

@@ -164,7 +164,6 @@ Handle<Node> NodeBuilder::Build() const {
     return node_reference.node;
 }
 
-
 HandleOptional<Node> NodeAt(const NodeTree& tree, const uint2 screen_position) {
     const auto position_inside_node = [screen_position, &tree] (const Handle<Node> child) -> b8 { return tree.styles[child].IsInside(screen_position); };
     if (tree.Empty() || !tree.display || !tree.styles[tree.Root()].IsInside(screen_position)) { return HandleOptional<Node> { }; }
@@ -199,6 +198,14 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<Node> root) {
         return std::ranges::fold_left_first(tree.children[node] | std::views::transform(get_major_outer_box_size), std::plus { }).value_or(0U);
     };
 
+    // root
+    if (root == tree.Root()) {
+        NodeStyle& root_style = tree.styles[root];
+        if (root_style.width.constraint == LayoutLength::parent_constraint) { root_style.width.resolved = singleton.Get<WindowState>().screen_size.x - root_style.position.x; }
+        if (root_style.height.constraint == LayoutLength::parent_constraint) { root_style.height.resolved = singleton.Get<WindowState>().screen_size.y - root_style.position.y; }
+    }
+
+    // nodes ordered
     List nodes { root };
     for (u32 i = 0U; i < nodes.Size(); ++i) { nodes.AppendRange(tree.children[nodes[i]]); }
 
@@ -249,11 +256,6 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<Node> root) {
     }
 
     // fill top down
-    if (root == tree.Root()) {
-        NodeStyle& root_style = tree.styles[root];
-        if (root_style.width.constraint == LayoutLength::parent_constraint) { root_style.width.resolved = singleton.Get<WindowState>().screen_size.x - root_style.position.x; }
-        if (root_style.height.constraint == LayoutLength::parent_constraint) { root_style.height.resolved = singleton.Get<WindowState>().screen_size.y - root_style.position.y; }
-    }
     List<Handle<Node>> parent_constrained { };
     for (const Handle node : nodes) {
         parent_constrained.Clear();
@@ -362,33 +364,23 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<Node> root) {
         style.bounding_box = { .x = static_cast<f32>(start_position.x), .y = static_cast<f32>(start_position.y), .w = static_cast<f32>(size.x), .h = static_cast<f32>(size.y) };
     }
 }
-std::optional<ElementType> GetElementType(const NodeStyle& node_style, const NodeProperties& node_properties) {
-    if (!node_properties.text.Empty()) { return ElementType::text; }
-    if (node_style.texture.IsValid()) { return ElementType::texture; }
-    if (node_style.background_color.a != 0U) { return ElementType::rectangle; }
-    return std::nullopt;
-}
-void AddElement(NodeTree& tree, const Handle<Node> node) {
+void AddNodeToFrameElement(NodeTree& tree, const Handle<Node> node) {
+    const auto add_type = [&tree] (const ElementType new_type) -> void {
+        auto& [element_type, count] = tree.frame_elements.items_in_a_row.Back();
+        if (element_type == new_type && count < UINT8_MAX) { ++count; } else { tree.frame_elements.items_in_a_row.PushBack({ .type = new_type, .count = 1U }); }
+    };
+
     const NodeStyle& style = tree.styles[node];
     const NodeProperties& properties = tree.node_properties[node];
-    const std::optional<ElementType> element_type = GetElementType(style, properties);
-    if (!element_type.has_value()) { return; }
-
-    const ElementType type { element_type.value() };
-    List<VariantIndex>& items = tree.frame_elements.items_in_a_row;
-    VariantIndex& last_variant = items.Back();
-    if (last_variant.type == type && last_variant.count < UINT8_MAX) { ++last_variant.count; } else { items.PushBack({ .type = type, .count = 1U }); }
-
-    switch (type) {
-        case ElementType::rectangle:
-            tree.frame_elements.rectangles.PushBack(RectangleElement { .color = style.background_color, .rect = style.OuterRect() });
-            break;
-        case ElementType::texture:
-            tree.frame_elements.textures.PushBack(TextureElement { .rect = style.OuterRect(), .texture = data[style.texture.GetHandle()].ToSDL() });
-            break;
-        case ElementType::text:
-            tree.frame_elements.texts.PushBack(TextElement { .text = tree.node_ttf_texts[node].Get(), .position = { static_cast<f32>(style.InnerBoxPosition().x), static_cast<f32>(style.InnerBoxPosition().y) } });
-            break;
+    if (!properties.text.Empty()) {
+        add_type(ElementType::text);
+        tree.frame_elements.texts.PushBack(TextElement { .text = tree.node_ttf_texts[node].Get(), .position = { static_cast<f32>(style.InnerBoxPosition().x), static_cast<f32>(style.InnerBoxPosition().y) } });
+    } else if (style.texture.IsValid()) {
+        add_type(ElementType::texture);
+        tree.frame_elements.textures.PushBack(TextureElement { .rect = style.OuterRect(), .texture = data[style.texture.GetHandle()].ToSDL() });
+    } else if (style.background_color.a != 0U) {
+        add_type(ElementType::rectangle);
+        tree.frame_elements.rectangles.PushBack(RectangleElement { .color = style.background_color, .rect = style.OuterRect() });
     }
 }
 const FrameElements& GetFrameElements(NodeTree& tree) {
@@ -407,9 +399,9 @@ const FrameElements& GetFrameElements(NodeTree& tree) {
     tree.frame_elements.items_in_a_row.PushBack(VariantIndex { .type = ElementType::rectangle, .count = 0U });
     while (!nodes.empty()) {
         const Handle<Node> node = nodes.top();
-        nodes.push_range(tree.children[node]);
-        AddElement(tree, node);
         nodes.pop();
+        nodes.push_range(tree.children[node]);
+        AddNodeToFrameElement(tree, node);
     }
     return tree.frame_elements;
 }
@@ -458,7 +450,7 @@ void NodeInputSystem::operator()() const {
         trees[hovered->tree].MarkDirty();
     }
 }
-void NodeRenderSystem::operator()() {
+void NodeRenderSystem::operator()() const {
     for (NodeTree& tree : data.Get<NodeTree>() | std::views::reverse | std::views::filter(&NodeTree::GetDisplay)) {
         const FrameElements& frame_elements = GetFrameElements(tree);
         std::span rectangles { frame_elements.rectangles };
@@ -486,9 +478,9 @@ void NodeRenderSystem::operator()() {
                 }
             }
         }
-        ASSERT_DBG(rectangles.empty(), "Textures size mismatch");
-        ASSERT_DBG(textures.empty(), "Textures size mismatch");
-        ASSERT_DBG(texts.empty(), "Texts size mismatch");
+        STL_ASSERT(rectangles.empty(), "Textures size mismatch");
+        STL_ASSERT(textures.empty(), "Textures size mismatch");
+        STL_ASSERT(texts.empty(), "Texts size mismatch");
     }
 }
 } // namespace pce::ui
