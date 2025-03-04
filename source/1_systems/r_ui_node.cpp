@@ -25,21 +25,22 @@ const Font& FontCollection::GetFont(const FontSizes size) {
 Handle<Node> NodeTree::AddRoot() {
     STL_ASSERT(styles.Empty(), "Setting root non empty tree");
     (void)styles.EmplaceBack();
-    (void)parents.EmplaceBack(Root());
-    (void)children.EmplaceBack();
     (void)node_properties.EmplaceBack();
     (void)node_ttf_texts.EmplaceBack(nullptr);
-
+    (void)parents.EmplaceBack(Root());
+    (void)children.EmplaceBack();
+    (void)subtree_root.EmplaceBack(Root());
     return Root();
 }
 Handle<Node> NodeTree::AddNode(const Handle<Node> parent) {
     STL_ASSERT(!styles.Empty(), "Adding node before root");
     const Handle<Node> node = styles.EmplaceBack();
-    (void)parents.PushBack(parent);
-    (void)children.EmplaceBack();
     (void)node_properties.EmplaceBack();
     (void)node_ttf_texts.EmplaceBack(nullptr);
     (void)children[parent].EmplaceBack(node);
+    (void)parents.PushBack(parent);
+    (void)children.EmplaceBack();
+    (void)subtree_root.EmplaceBack(Root());
     STL_ASSERT(node.id != parent.id, "Assigning node to itself. Recursion!");
     return node;
 }
@@ -62,10 +63,11 @@ void NodeTree::AttachNode(const Handle<Node> node, const Handle<Node> parent) {
 
 void NodeTree::Clear() {
     styles.Clear();
-    parents.Clear();
-    children.Clear();
     node_properties.Clear();
     node_ttf_texts.Clear();
+    parents.Clear();
+    children.Clear();
+    subtree_root.Clear();
 }
 NodeBuilder::NodeBuilder(const Handle<NodeTree> tree, const Layout new_layout, const uint2 position) : node_reference { tree, data[tree].AddRoot() } {
     style.position = position;
@@ -120,26 +122,22 @@ NodeBuilder& NodeBuilder::Direction(const FlexDirection direction) {
 }
 constexpr SDL_Color DEFAULT_TEXT_COLOR = colors::black;
 NodeBuilder& NodeBuilder::Text(const String& string, const SDL_Color color) {
-    if (style.background_color.a == 0U) { style.background_color = DEFAULT_TEXT_COLOR; }
     properties.text = string;
     style.background_color = color;
     return *this;
 }
 NodeBuilder& NodeBuilder::Text(String&& string, const SDL_Color color) {
-    if (style.background_color.a == 0U) { style.background_color = DEFAULT_TEXT_COLOR; }
     properties.text = string;
     style.background_color = color;
     return *this;
 }
 NodeBuilder& NodeBuilder::Text(const String& string, const FontSizes font_size, const SDL_Color color) {
-    if (style.background_color.a == 0U) { style.background_color = DEFAULT_TEXT_COLOR; }
     properties.text = string;
     properties.font_size = font_size;
     style.background_color = color;
     return *this;
 }
 NodeBuilder& NodeBuilder::Text(String&& string, const FontSizes font_size, const SDL_Color color) {
-    if (style.background_color.a == 0U) { style.background_color = DEFAULT_TEXT_COLOR; }
     properties.text = string;
     properties.font_size = font_size;
     style.background_color = color;
@@ -190,9 +188,7 @@ HoveredType NodeAt(const uint2 mouse_position) {
     }
     return std::nullopt;
 }
-void RecalculateTreeLayout(NodeTree& tree) {
-    if (tree.Empty()) { return; }
-
+void RecalculateTreeLayout(NodeTree& tree, Handle<Node> root) {
     auto pixels_gap = [&tree] (const Handle<Node> node, const u32 gap) -> u32 { return tree.children[node].Empty() ? 0U : gap * (tree.children[node].Size() - 1U); };
     auto get_major = [] (const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.x : point.y; };
     auto get_minor = [] (const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.y : point.x; };
@@ -203,7 +199,7 @@ void RecalculateTreeLayout(NodeTree& tree) {
         return std::ranges::fold_left_first(tree.children[node] | std::views::transform(get_major_outer_box_size), std::plus { }).value_or(0U);
     };
 
-    List nodes { tree.Root() };
+    List nodes { root };
     for (u32 i = 0U; i < nodes.Size(); ++i) { nodes.AppendRange(tree.children[nodes[i]]); }
 
     // text
@@ -253,9 +249,11 @@ void RecalculateTreeLayout(NodeTree& tree) {
     }
 
     // fill top down
-    NodeStyle& root = tree.styles[tree.Root()];
-    if (root.width.constraint == LayoutLength::parent_constraint) { root.width.resolved = singleton.Get<WindowState>().screen_size.x - root.position.x; }
-    if (root.height.constraint == LayoutLength::parent_constraint) { root.height.resolved = singleton.Get<WindowState>().screen_size.y - root.position.y; }
+    if (root == tree.Root()) {
+        NodeStyle& root_style = tree.styles[root];
+        if (root_style.width.constraint == LayoutLength::parent_constraint) { root_style.width.resolved = singleton.Get<WindowState>().screen_size.x - root_style.position.x; }
+        if (root_style.height.constraint == LayoutLength::parent_constraint) { root_style.height.resolved = singleton.Get<WindowState>().screen_size.y - root_style.position.y; }
+    }
     List<Handle<Node>> parent_constrained { };
     for (const Handle node : nodes) {
         parent_constrained.Clear();
@@ -370,51 +368,48 @@ std::optional<ElementType> GetElementType(const NodeStyle& node_style, const Nod
     if (node_style.background_color.a != 0U) { return ElementType::rectangle; }
     return std::nullopt;
 }
-const FrameElements& GetFrameElements(NodeTree& tree) {
-    if (tree.dirty) {
-        tree.dirty = false;
-        RecalculateTreeLayout(tree);
-        tree.frame_elements.items_in_a_row.Clear();
-        tree.frame_elements.rectangles.Clear();
-        tree.frame_elements.textures.Clear();
-        tree.frame_elements.texts.Clear();
-        if (!tree.Empty()) {
-            Stack<Handle<Node>> nodes;
-            nodes.push(tree.Root());
-            tree.frame_elements.items_in_a_row.PushBack(VariantIndex { .type = ElementType::rectangle, .count = 0U });
-            while (!nodes.empty()) {
-                const Handle<Node> node = nodes.top();
-                const NodeStyle& style = tree.styles[node];
-                const NodeProperties& properties = tree.node_properties[node];
-                nodes.pop();
-                nodes.push_range(tree.children[node]);
+void AddElement(NodeTree& tree, const Handle<Node> node) {
+    const NodeStyle& style = tree.styles[node];
+    const NodeProperties& properties = tree.node_properties[node];
+    const std::optional<ElementType> element_type = GetElementType(style, properties);
+    if (!element_type.has_value()) { return; }
 
-                const std::optional<ElementType> maybe_type = GetElementType(style, properties);
-                if (maybe_type.has_value()) {
-                    const ElementType type { maybe_type.value() };
-                    VariantIndex& last_variant = tree.frame_elements.items_in_a_row.Back();
-                    if (last_variant.type == type && last_variant.count < UINT8_MAX) { ++last_variant.count; } else { tree.frame_elements.items_in_a_row.PushBack(VariantIndex { .type = type, .count = 1U }); }
-                    switch (type) {
-                        case ElementType::rectangle: {
-                            RectangleElement rectangle { .color = style.background_color, .rect = style.OuterRect() };
-                            tree.frame_elements.rectangles.PushBack(rectangle);
-                            break;
-                        }
-                        case ElementType::texture: {
-                            TextureElement texture { .rect = style.OuterRect(), .texture = data[style.texture.GetHandle()].ToSDL() };
-                            tree.frame_elements.textures.PushBack(texture);
-                            break;
-                        }
-                        case ElementType::text: {
-                            const float2 position { static_cast<f32>(style.InnerBoxPosition().x), static_cast<f32>(style.InnerBoxPosition().y) };
-                            TextElement text { .text = tree.node_ttf_texts[node].Get(), .position = position };
-                            tree.frame_elements.texts.PushBack(text);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
+    const ElementType type { element_type.value() };
+    List<VariantIndex>& items = tree.frame_elements.items_in_a_row;
+    VariantIndex& last_variant = items.Back();
+    if (last_variant.type == type && last_variant.count < UINT8_MAX) { ++last_variant.count; } else { items.PushBack({ .type = type, .count = 1U }); }
+
+    switch (type) {
+        case ElementType::rectangle:
+            tree.frame_elements.rectangles.PushBack(RectangleElement { .color = style.background_color, .rect = style.OuterRect() });
+            break;
+        case ElementType::texture:
+            tree.frame_elements.textures.PushBack(TextureElement { .rect = style.OuterRect(), .texture = data[style.texture.GetHandle()].ToSDL() });
+            break;
+        case ElementType::text:
+            tree.frame_elements.texts.PushBack(TextElement { .text = tree.node_ttf_texts[node].Get(), .position = { static_cast<f32>(style.InnerBoxPosition().x), static_cast<f32>(style.InnerBoxPosition().y) } });
+            break;
+    }
+}
+const FrameElements& GetFrameElements(NodeTree& tree) {
+    if (!tree.dirty) { return tree.frame_elements; }
+
+    tree.dirty = false;
+    tree.frame_elements.items_in_a_row.Clear();
+    tree.frame_elements.rectangles.Clear();
+    tree.frame_elements.textures.Clear();
+    tree.frame_elements.texts.Clear();
+    if (tree.Empty()) { return tree.frame_elements; }
+
+    RecalculateTreeLayout(tree, tree.Root());
+    std::stack<Handle<Node>> nodes;
+    nodes.push(tree.Root());
+    tree.frame_elements.items_in_a_row.PushBack(VariantIndex { .type = ElementType::rectangle, .count = 0U });
+    while (!nodes.empty()) {
+        const Handle<Node> node = nodes.top();
+        nodes.push_range(tree.children[node]);
+        AddElement(tree, node);
+        nodes.pop();
     }
     return tree.frame_elements;
 }

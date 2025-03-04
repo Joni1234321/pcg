@@ -125,6 +125,7 @@ struct NodeTree {
     HandleList<UniquePointer<TTF_Text, DestroyText>> node_ttf_texts { DEFAULT_COUNT };
     HandleList<Handle<Node>> parents { DEFAULT_COUNT };
     HandleList<List<Handle<Node>>> children { DEFAULT_COUNT };
+    HandleList<Handle<Node>> subtree_root { DEFAULT_COUNT };
 
     b8 display { true };
     b8 dirty { true };

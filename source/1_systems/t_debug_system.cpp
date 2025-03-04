@@ -10,44 +10,78 @@
 
 namespace pce::ui {
 namespace colors = colors;
-TickComponent::TickComponent(const NodeReference parent) : root { .tree = parent.tree, .node = B(parent.tree, parent.node, fill).Text(FontSizes::tiny, colors::radiant_orange).Build() } { }
 void TickComponent::SetProperty(const Property& property) const {
     static constexpr f32 THOUSANDTH = 0.001F;
     const auto& [name, ns] = property;
     data[root.tree].node_properties[root.node].text = std::format("{:.3f}ms | {}", ns * THOUSANDTH * THOUSANDTH, name);
 }
-static constexpr u32 GAP_SIZE { 2U };
-static constexpr uint2 COLOR_INDICATOR_SIZE { 10U, 20U };
-DebugNodeComponent::DebugNodeComponent(const NodeReference parent): root { parent.tree, B(parent.tree, parent.node, hug).Fill(colors::forest_green).Gap(GAP_SIZE).Build() },
-                                                                    text { B(root.tree, root.node, hug).Text(FontSizes::body, colors::black).Build() },
-                                                                    color_indicator { B(root.tree, root.node, COLOR_INDICATOR_SIZE).Build() } { }
 void DebugNodeComponent::SetProperty(const Property& property) const {
     constexpr u32 padding_offset = 10U;
     const NodeStyle& style = data[property.hovered.tree].styles[property.hovered.node];
     const NodeProperties& properties = data[property.hovered.tree].node_properties[property.hovered.node];
-    const String type = !properties.text.Empty() ? "text" : style.texture.IsValid() ? "image" : "node";
-
+    const String type = !properties.text.Empty() ? properties.text.CString() : style.texture.IsValid() ? "image" : "node";
+    const auto to_string = [] (LayoutLength c) -> String {
+        switch (c.constraint) {
+            case LayoutLength::Constraint::child_constraint:
+                return "hug";
+            case LayoutLength::Constraint::parent_constraint:
+                return "fill";
+            case LayoutLength::Constraint::fixed:
+                return std::format("{} px", c.resolved);
+            default:
+                return "unknown";
+        }
+    };
     data[root.tree].styles[root.node].padding.x = padding_offset * property.layer;
-    data[root.tree].node_properties[text].text = std::format("{} [{}, {}]", type, style.position.x, style.position.y);
+    data[root.tree].node_properties[text].text = std::format("{} [{}, {}]", type, to_string(style.width), to_string(style.height));
     data[root.tree].styles[color_indicator].background_color = style.background_color;
 }
-void TickFrame::DisplayInfo() {
+void TickFrame::Update() {
     u32 tick = singleton.Get<TickState>().tick.Value();
     u32 fps = static_cast<u32>(1.0F / singleton.Get<TickState>().delta_time);
     data[tree].MarkDirty();
-    data[tree].node_properties[ticks].text = std::format("Tick: {:>8}   |   TPS: {:>4}   |   FPS: {:>4}", tick, fps, fps);
-
+    static constexpr f32 THOUSAND = 1'000.0F;
+    data[tree].node_properties[ticks].text = std::format("{:.3f}ms | Tick: {:>8} | TPS: {:>4} | FPS: {:>4} |", singleton.Get<TickState>().delta_time * THOUSAND, tick, fps, fps);
     systems.Set(std::views::zip(singleton.Get<OrchestraState>().names, singleton.Get<OrchestraState>().nano_seconds));
 }
-void InspectorFrame::ShowElementStructure(const HoveredType hovered) {
-    if (!hovered.has_value() || hovered->tree.id == tree.id) { return; }
+
+void DebugFrame::SetInspector(const HoveredType hovered) {
+    if (!hovered.has_value() || hovered->tree == tree) { return; }
     data[tree].node_properties[hovered_label].text = std::format("[{} | {}]", hovered->tree.id, hovered->node.id);
-    List properties { DebugNodeComponent::Property { .hovered = hovered.value(), .layer = 0U } };
-    for (u32 i = 0U; i < properties.Size(); ++i) {
-        const auto [hovered, layer] = properties.Back();
-        for (const Handle child : data[hovered.tree].children[hovered.node]) { properties.EmplaceBack(DebugNodeComponent::Property { .hovered = { .tree = hovered.tree, .node = child }, .layer = layer + 1U }); }
+    std::stack<DebugNodeComponent::Property> stack;
+    stack.push(DebugNodeComponent::Property { .hovered = hovered.value(), .layer = 0U });
+    List<DebugNodeComponent::Property> nodes { data[hovered->tree].children.Size() };
+
+    while (!stack.empty()) {
+        nodes.PushBack(stack.top());
+        const auto [hovered, layer] = stack.top();
+        stack.pop();
+        for (const Handle child : data[hovered.tree].children[hovered.node] | std::views::reverse) { stack.push(DebugNodeComponent::Property { .hovered = { .tree = hovered.tree, .node = child }, .layer = layer + 1U }); }
     }
-    nodes.Set(properties);
+    debug_nodes.Set(nodes);
+}
+void DebugSystem::operator()() {
+    InputState& input_state = singleton.Get<InputState>();
+    b8 update_debug_frame = false;
+    if (input_state.left_mouse_down) {
+        update_debug_frame = true;
+        if (input_state.keys[SDLK_LALT]) { debug_frame.SetInspector(singleton.Get<HoveredType>()); } else { debug_frame.debug_nodes.Hide(); }
+    }
+    if (input_state.keys[SDLK_LALT]) {
+        update_debug_frame = true;
+        u32 key_count = std::min(data.Get<NodeTree>().Size(), 10U);
+        auto rng = std::views::iota(0U, key_count);
+        const auto it = std::ranges::find_if(rng, [&] (const u32 i) { return input_state.keys_down[SDLK_0 + i]; });
+        if (it != std::end(rng)) {
+            const Handle<NodeTree> tree { *it };
+            debug_frame.SetInspector(NodeReference { .tree = tree, .node = data[tree].Root() });
+        }
+    }
+    if (update_debug_frame) { data[debug_frame.tree].MarkDirty(); }
+    if (singleton.Get<TickState>().tick.Value() % 500U == 0U) {
+        data[tick_frame.tree].MarkDirty();
+        tick_frame.Update();
+    }
 }
 TestFrame::TestFrame() {
     const Handle<Node> core_root = B(frame).Node(100U, 400U).Gap(20U).Fill(colors::clear).Build(); {
@@ -82,21 +116,5 @@ TestFrame::TestFrame() {
         Handle<Node> box32 = B(box3).Node(fill).Fill(colors::chocolate).Build();
         Handle<Node> box33 = B(box3).Node(fill).Fill(colors::yellow).Build();
     }
-}
-void DebugSystem::operator()() {
-    InputState& input_state = singleton.Get<InputState>();
-    data[inspector_frame.tree].MarkDirty();
-    if (input_state.left_mouse_down) { if (input_state.keys[SDLK_LALT]) { inspector_frame.ShowElementStructure(singleton.Get<HoveredType>()); } else { inspector_frame.nodes.Hide(); } }
-    if (input_state.keys[SDLK_LALT]) {
-        u32 key_count = std::min(data.Get<NodeTree>().Size(), 10U);
-        auto rng = std::views::iota(0U, key_count);
-        const auto it = std::ranges::find_if(rng, [&] (const u32 i) { return input_state.keys_down[SDLK_0 + i]; });
-        if (it != std::end(rng)) {
-            const Handle<NodeTree> tree { *it };
-            inspector_frame.ShowElementStructure(NodeReference { .tree = tree, .node = data[tree].Root() });
-        }
-    }
-    data[tick_frame.tree].MarkDirty();
-    if (singleton.Get<TickState>().tick.Value() % 500U == 0U) { tick_frame.DisplayInfo(); }
 }
 }
