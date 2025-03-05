@@ -62,6 +62,7 @@ struct Layout {
 
 // Forward
 struct Node;
+struct SubtreeRoot;
 struct NodeTree;
 struct NodeReference {
     Handle<NodeTree> tree;
@@ -74,7 +75,7 @@ using HoveredType = std::optional<NodeReference>;
 struct NodeStyle : LogDestroyWithCount<NodeStyle> {
     SDL_FRect bounding_box { };
     SDL_Color background_color { 0, 0, 0, 0 };
-    HandleOptional<Texture> texture { };
+    OptionalHandle<Texture> texture { };
 
     uint2 position { U32_MAX, U32_MAX };
     uint4 padding { 0U, 0U, 0U, 0U };
@@ -118,17 +119,17 @@ struct NodeTree {
             TTF_DestroyText(text);
         }
     };
-    template <class T> using HandleList = HandleList<T, Handle<Node>>;
     static constexpr u32 DEFAULT_COUNT = 128U;
-    HandleList<NodeStyle> styles { DEFAULT_COUNT };
-    HandleList<NodeProperties> node_properties { DEFAULT_COUNT };
-    HandleList<UniquePointer<TTF_Text, DestroyText>> node_ttf_texts { DEFAULT_COUNT };
-    HandleList<Handle<Node>> parents { DEFAULT_COUNT };
-    HandleList<List<Handle<Node>>> children { DEFAULT_COUNT };
-    HandleList<Handle<Node>> subtree_root { DEFAULT_COUNT };
+    HandleList<NodeStyle, Node> styles { DEFAULT_COUNT };
+    HandleList<NodeProperties, Node> node_properties { DEFAULT_COUNT };
+    HandleList<UniquePointer<TTF_Text, DestroyText>, Node> node_ttf_texts { DEFAULT_COUNT };
+    HandleList<Handle<Node>, Node> parents { DEFAULT_COUNT };
+    HandleList<List<Handle<Node>>, Node> children { DEFAULT_COUNT };
+    HandleList<Handle<SubtreeRoot>, Node> subtree_roots { DEFAULT_COUNT };
 
     b8 display { true };
-    b8 dirty { true };
+    b8 dirty_tree { true };
+    OptionalHandle<SubtreeRoot> dirty_subtree { };
     FrameElements frame_elements { };
 
     NodeTree() = default;
@@ -146,7 +147,11 @@ struct NodeTree {
     void AttachNode(Handle<Node> node, Handle<Node> parent);
 
     void Clear();
-    constexpr void MarkDirty() noexcept { dirty = true; }
+    constexpr void MarkDirty() noexcept { dirty_tree = true; }
+    constexpr void MarkDirty(const Handle<Node> node) noexcept {
+        if (dirty_subtree.IsValid() && dirty_subtree.GetHandle() != subtree_roots[node]) { dirty_tree = true; }
+        else { dirty_subtree = subtree_roots[node]; }
+    }
     constexpr void SetDisplay(const b8 value) noexcept { display = value; }
 
     [[nodiscard]] constexpr b8 GetDisplay() const noexcept { return display; }

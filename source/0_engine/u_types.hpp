@@ -149,12 +149,14 @@ template<class> struct Handle {
     b8 operator==(const Handle&) const = default;
 };
 
-template<class T> struct HandleOptional {
-    [[nodiscard]] constexpr HandleOptional() noexcept : id(U32_MAX) { }
-    [[nodiscard]] constexpr explicit HandleOptional(const u32 value) noexcept : id(value) { }
-    [[nodiscard]] constexpr HandleOptional(const Handle<T> handle) noexcept : id(handle.id) { }
+template<class T> struct OptionalHandle {
+    constexpr OptionalHandle() noexcept : id(U32_MAX) { }
+    constexpr OptionalHandle(std::nullopt_t) noexcept : id(U32_MAX) { }
+    constexpr explicit OptionalHandle(const u32 value) noexcept : id(value) { }
+    constexpr OptionalHandle(const Handle<T> handle) noexcept : id(handle.id) { }
     [[nodiscard]] constexpr bool IsValid() const noexcept { return id != U32_MAX; }
     [[nodiscard]] constexpr Handle<T> GetHandle() const noexcept { return Handle<T> { id }; }
+    constexpr void Reset() noexcept { id = U32_MAX; }
     u32 id;
 };
 

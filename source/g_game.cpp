@@ -243,7 +243,7 @@ static b8 TryQueueFarm(const Planet planet, const FarmType type, Money& money) {
 
 static void ProcessConstructionQueue(const Planet player) {
     ConstructionQueue& construction_queue = player.ConstructionQueue();
-    if (construction_queue.Empty()) { return; }
+    if (construction_queue.empty()) { return; }
     const u32 limit = math::Min(construction_queue.construction_capacity, construction_queue.Size()); // explicit copy
     for (u32 i = 0U; i < limit; i++) { construction_queue[i].progress += 1U; }
     for (u32 i = 0U; i < limit; i++) {

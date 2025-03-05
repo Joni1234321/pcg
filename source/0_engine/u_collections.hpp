@@ -126,12 +126,12 @@ template <typename T> struct List {
     [[nodiscard]] constexpr const_iterator begin() const noexcept { return data.begin(); }
     [[nodiscard]] constexpr const_iterator end() const noexcept { return data.end(); }
 
-    [[nodiscard]] constexpr T& Front() noexcept { return data.front(); }
-    [[nodiscard]] constexpr T& Back() noexcept { return data.back(); }
-    [[nodiscard]] constexpr const T& Front() const noexcept { return data.front(); }
-    [[nodiscard]] constexpr const T& Back() const noexcept { return data.back(); }
+    [[nodiscard]] constexpr T& front() noexcept { return data.front(); }
+    [[nodiscard]] constexpr T& back() noexcept { return data.back(); }
+    [[nodiscard]] constexpr const T& front() const noexcept { return data.front(); }
+    [[nodiscard]] constexpr const T& back() const noexcept { return data.back(); }
 
-    [[nodiscard]] constexpr b8 Empty() const noexcept { return data.empty(); }
+    [[nodiscard]] constexpr b8 empty() const noexcept { return data.empty(); }
     [[nodiscard]] constexpr b8 Contains(const T& value) const noexcept { return std::ranges::find(data, value, std::identity { }) != end(); }
 
     constexpr void Clear() { data.clear(); }
@@ -159,7 +159,7 @@ template <typename T> struct List {
     }
 
     [[nodiscard]] List Limit(const u32 limit) const {
-        if (Empty()) { return List(); }
+        if (empty()) { return List(); }
         auto first = begin();
         auto last = begin() + math::Min(limit, Size());
         return List(first, last);
@@ -176,10 +176,10 @@ protected:
     std::vector<T> data;
 };
 
-template <typename T, typename H = Handle<T>> struct HandleList {
+template <typename T, typename H = T> struct HandleList {
     using iterator = typename List<T>::iterator;
     using const_iterator = typename List<T>::const_iterator;
-    using Handle = H;
+    using Handle = Handle<H>;
 
     constexpr HandleList() : data() { }
     constexpr HandleList(std::initializer_list<T> init_list) : data(std::move(init_list)) { }
@@ -198,7 +198,7 @@ template <typename T, typename H = Handle<T>> struct HandleList {
         data.PushBack(std::move(t));
         return Handle { offset_handle.id + data.Size() - 1U };
     }
-    [[nodiscard]] constexpr b8 Empty() const { return data.Empty(); }
+    [[nodiscard]] constexpr b8 Empty() const { return data.empty(); }
     [[nodiscard]] constexpr u32 Size() const { return data.Size(); }
 
     constexpr void Clear() {
@@ -213,25 +213,25 @@ template <typename T, typename H = Handle<T>> struct HandleList {
 
     [[nodiscard]] constexpr iterator begin() { return data.begin(); }
     [[nodiscard]] constexpr iterator end() { return data.end(); }
-    [[nodiscard]] constexpr T& Front() { return data.Front(); }
-    [[nodiscard]] constexpr T& Back() { return data.Back(); }
+    [[nodiscard]] constexpr T& front() { return data.front(); }
+    [[nodiscard]] constexpr T& back() { return data.back(); }
 
     [[nodiscard]] constexpr const_iterator begin() const noexcept { return data.begin(); }
     [[nodiscard]] constexpr const_iterator end() const noexcept { return data.end(); }
-    [[nodiscard]] constexpr const T& Front() const noexcept { return data.Front(); }
-    [[nodiscard]] constexpr const T& Back() const noexcept { return data.Back(); }
+    [[nodiscard]] constexpr const T& front() const noexcept { return data.front(); }
+    [[nodiscard]] constexpr const T& back() const noexcept { return data.back(); }
 
     [[nodiscard]] constexpr u32 HandleToIndex(const Handle handle) const noexcept {
         STL_ASSERT(ValidHandle(handle), "handle invalidated");
         return handle.id - offset_handle.id;
     }
-    [[nodiscard]] constexpr H IndexToHandle(const u32 index) const noexcept {
+    [[nodiscard]] constexpr Handle IndexToHandle(const u32 index) const noexcept {
         STL_ASSERT(index < Size(), "index bigger than size");
-        return H { offset_handle.id + index };
+        return Handle { offset_handle.id + index };
     }
-    [[nodiscard]] constexpr H IteratorToHandle(const_iterator iterator) const noexcept {
+    [[nodiscard]] constexpr Handle IteratorToHandle(const_iterator iterator) const noexcept {
         STL_ASSERT(iterator > end(), "iterator out of range");
-        return H { offset_handle.id + static_cast<u32>(std::distance(begin(), iterator)) };
+        return Handle { offset_handle.id + static_cast<u32>(std::distance(begin(), iterator)) };
     }
     [[nodiscard]] constexpr b8 ValidHandle(const Handle handle) const { return handle.id - offset_handle.id < Size(); }
     Handle offset_handle { 0U };

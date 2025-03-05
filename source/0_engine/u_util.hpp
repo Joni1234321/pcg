@@ -34,8 +34,8 @@ template <typename Collection> const typename Collection::value_type& RandomValu
 
 namespace pce::math {
 static constexpr f32 PI = std::numbers::pi_v<f32>;
-inline f32 Sin (const f32 t) { return std::sinf(t); }
-inline f32 Cos (const f32 t) { return std::cosf(t); }
+inline f32 Sin(const f32 t) { return std::sinf(t); }
+inline f32 Cos(const f32 t) { return std::cosf(t); }
 constexpr std::pair<u32, u32> Div(const u32 value, const u32 divisor) { return { value / divisor, value % divisor }; }
 template <typename T = void> T Sub(const T& left, const T& right) { return left - right; }
 template <typename T = void> struct Minus {
@@ -53,4 +53,9 @@ template <typename T> constexpr u32 FloorToU32(const T value) { return static_ca
 inline f32 Ceil(const f32 value) { return std::ceil(value); }
 template <typename T> constexpr T Abs(const T value) { return value < 0 ? -value : value; }
 template <typename T> constexpr T Lerp(const T min, const T max, const f32 value) { return value * (max - min) + min; }
+
+template <class _Ty> [[nodiscard]] constexpr const _Ty& max2(const _Ty& _Left, const _Ty& _Right) noexcept(noexcept(_Left < _Right)) { return _Left < _Right ? _Right : _Left; }
+template <class T> struct max {
+    [[nodiscard]] constexpr const T& operator()(const T& left, const T& right) const noexcept(noexcept(left < right)) { return left < right ? right : left; }
+};
 } // namespace pce::math

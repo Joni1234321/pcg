@@ -29,7 +29,7 @@ Handle<Node> NodeTree::AddRoot() {
     (void)node_ttf_texts.EmplaceBack(nullptr);
     (void)parents.EmplaceBack(Root());
     (void)children.EmplaceBack();
-    (void)subtree_root.EmplaceBack(Root());
+    (void)subtree_roots.EmplaceBack(Root().id);
     return Root();
 }
 Handle<Node> NodeTree::AddNode(const Handle<Node> parent) {
@@ -40,7 +40,7 @@ Handle<Node> NodeTree::AddNode(const Handle<Node> parent) {
     (void)children[parent].EmplaceBack(node);
     (void)parents.PushBack(parent);
     (void)children.EmplaceBack();
-    (void)subtree_root.EmplaceBack(Root());
+    (void)subtree_roots.EmplaceBack(Root().id);
     STL_ASSERT(node.id != parent.id, "Assigning node to itself. Recursion!");
     return node;
 }
@@ -67,7 +67,7 @@ void NodeTree::Clear() {
     node_ttf_texts.Clear();
     parents.Clear();
     children.Clear();
-    subtree_root.Clear();
+    subtree_roots.Clear();
 }
 NodeBuilder::NodeBuilder(const Handle<NodeTree> tree, const Layout new_layout, const uint2 position) : node_reference { tree, data[tree].AddRoot() } {
     style.position = position;
@@ -91,7 +91,7 @@ NodeBuilder& NodeBuilder::Fill(const SDL_Color color) {
     return *this;
 }
 NodeBuilder& NodeBuilder::Texture(const Handle<pce::Texture> texture) {
-    style.texture = HandleOptional { texture };
+    style.texture = OptionalHandle { texture };
     return *this;
 }
 NodeBuilder& NodeBuilder::Padding(const u32 padding) {
@@ -164,9 +164,9 @@ Handle<Node> NodeBuilder::Build() const {
     return node_reference.node;
 }
 
-HandleOptional<Node> NodeAt(const NodeTree& tree, const uint2 screen_position) {
+OptionalHandle<Node> NodeAt(const NodeTree& tree, const uint2 screen_position) {
     const auto position_inside_node = [screen_position, &tree] (const Handle<Node> child) -> b8 { return tree.styles[child].IsInside(screen_position); };
-    if (tree.Empty() || !tree.display || !tree.styles[tree.Root()].IsInside(screen_position)) { return HandleOptional<Node> { }; }
+    if (tree.Empty() || !tree.display || !tree.styles[tree.Root()].IsInside(screen_position)) { return OptionalHandle<Node> { }; }
     Handle<Node> node = tree.Root();
     while (true) {
         const List<Handle<Node>>& children = tree.children[node];
@@ -175,20 +175,20 @@ HandleOptional<Node> NodeAt(const NodeTree& tree, const uint2 screen_position) {
         node = *node_iterator;
     }
     while (tree.styles[node].background_color.a == 0U && !tree.styles[node].texture.IsValid()) {
-        if (node == tree.Root()) { return HandleOptional<Node> { }; }
+        if (node == tree.Root()) { return OptionalHandle<Node> { }; }
         node = tree.parents[node];
     }
-    return HandleOptional<Node> { node.id };
+    return OptionalHandle<Node> { node.id };
 }
 HoveredType NodeAt(const uint2 mouse_position) {
     for (const auto [i, tree] : data.Get<NodeTree>() | std::views::enumerate) {
-        const HandleOptional<Node> node = NodeAt(tree, mouse_position);
-        if (node.IsValid()) { return NodeReference { .tree = Handle { data.Get<NodeTree>().IndexToHandle(i) }, .node = node.GetHandle() }; }
+        const OptionalHandle<Node> node = NodeAt(tree, mouse_position);
+        if (node.IsValid()) { return NodeReference { .tree = Handle { data.Get<NodeTree>().IndexToHandle(static_cast<u32>(i)) }, .node = node.GetHandle() }; }
     }
     return std::nullopt;
 }
-void RecalculateTreeLayout(NodeTree& tree, Handle<Node> root) {
-    auto pixels_gap = [&tree] (const Handle<Node> node, const u32 gap) -> u32 { return tree.children[node].Empty() ? 0U : gap * (tree.children[node].Size() - 1U); };
+void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
+    auto pixels_gap = [&tree] (const Handle<Node> node, const u32 gap) -> u32 { return tree.children[node].empty() ? 0U : gap * (tree.children[node].Size() - 1U); };
     auto get_major = [] (const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.x : point.y; };
     auto get_minor = [] (const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.y : point.x; };
     auto get_major_layout = [] (NodeStyle& node_style, const FlexDirection direction) -> LayoutLength& { return direction == horizontal ? node_style.width : node_style.height; };
@@ -199,6 +199,7 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<Node> root) {
     };
 
     // root
+    Handle<Node> root { subtree_root.id };
     if (root == tree.Root()) {
         NodeStyle& root_style = tree.styles[root];
         if (root_style.width.constraint == LayoutLength::parent_constraint) { root_style.width.resolved = singleton.Get<WindowState>().screen_size.x - root_style.position.x; }
@@ -250,7 +251,7 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<Node> root) {
         LayoutLength& minor_layout = get_minor_layout(node_style, node_style.direction);
         if (minor_layout.constraint == LayoutLength::child_constraint) {
             auto get_minor_outer_box_size = [&tree, get_minor, &node_style] (const Handle<Node> child) -> u32 { return get_minor(tree.styles[child].OuterBoxSize(), node_style.direction); };
-            const u32 max_minor = tree.children[node].Empty() ? 0U : std::ranges::max(tree.children[node] | std::views::transform(get_minor_outer_box_size));
+            const u32 max_minor = tree.children[node].empty() ? 0U : std::ranges::max(tree.children[node] | std::views::transform(get_minor_outer_box_size));
             minor_layout.resolved = std::max(max_minor, get_minor(text_size, node_style.direction)) + get_minor(node_style.NonContentSize2(), node_style.direction);
         }
     }
@@ -363,10 +364,17 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<Node> root) {
         const uint2 size = end_position - start_position;
         style.bounding_box = { .x = static_cast<f32>(start_position.x), .y = static_cast<f32>(start_position.y), .w = static_cast<f32>(size.x), .h = static_cast<f32>(size.y) };
     }
+
+    // subtree
+    for (const Handle node : nodes) { //  is part of a subtree if the parent is hugging. Else its parent node is the subtree root (siblings depend on nodes width)
+        const Handle parent { tree.parents[node] };
+        const NodeStyle& parent_style = tree.styles[parent];
+        tree.subtree_roots[node] = parent_style.width.constraint == hug || parent_style.height.constraint == hug ? tree.subtree_roots[parent] : Handle<SubtreeRoot> { parent.id };
+    }
 }
 void AddNodeToFrameElement(NodeTree& tree, const Handle<Node> node) {
     const auto add_type = [&tree] (const ElementType new_type) -> void {
-        auto& [element_type, count] = tree.frame_elements.items_in_a_row.Back();
+        auto& [element_type, count] = tree.frame_elements.items_in_a_row.back();
         if (element_type == new_type && count < UINT8_MAX) { ++count; } else { tree.frame_elements.items_in_a_row.PushBack({ .type = new_type, .count = 1U }); }
     };
 
@@ -384,16 +392,16 @@ void AddNodeToFrameElement(NodeTree& tree, const Handle<Node> node) {
     }
 }
 const FrameElements& GetFrameElements(NodeTree& tree) {
-    if (!tree.dirty) { return tree.frame_elements; }
+    if (!tree.dirty_tree && !tree.dirty_subtree.IsValid()) { return tree.frame_elements; }
+    RecalculateTreeLayout(tree, tree.dirty_tree ? tree.subtree_roots.front() : tree.dirty_subtree.GetHandle() );
 
-    tree.dirty = false;
+    tree.dirty_tree = false;
+    tree.dirty_subtree.Reset();
     tree.frame_elements.items_in_a_row.Clear();
     tree.frame_elements.rectangles.Clear();
     tree.frame_elements.textures.Clear();
     tree.frame_elements.texts.Clear();
-    if (tree.Empty()) { return tree.frame_elements; }
 
-    RecalculateTreeLayout(tree, tree.Root());
     std::stack<Handle<Node>> nodes;
     nodes.push(tree.Root());
     tree.frame_elements.items_in_a_row.PushBack(VariantIndex { .type = ElementType::rectangle, .count = 0U });
@@ -403,6 +411,7 @@ const FrameElements& GetFrameElements(NodeTree& tree) {
         nodes.push_range(tree.children[node]);
         AddNodeToFrameElement(tree, node);
     }
+
     return tree.frame_elements;
 }
 

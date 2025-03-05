@@ -11,7 +11,7 @@ struct OrchestraState {
     List<std::function<void()>> systems;
     List<std::unique_ptr<void, void(*)(void*)>> system_storage;
     List<String> names;
-    List<u32> nano_seconds;
+    List<u32> ns;
 };
 struct Orchestra {
     template <typename T> void Add() {
@@ -20,7 +20,7 @@ struct Orchestra {
         orchestra_state.system_storage.EmplaceBack(ptr, [] (void* p) { delete static_cast<T*>(p); }); // Ensure destruction
         orchestra_state.systems.EmplaceBack([ptr] ()-> void { (*static_cast<T*>(ptr))(); });                     // Store callable functor
         orchestra_state.names.EmplaceBack(typeid(T).name());
-        orchestra_state.nano_seconds.EmplaceBack(1U);
+        orchestra_state.ns.EmplaceBack(1U);
     }
     void RunSystems() {
         using namespace std::chrono;
@@ -29,7 +29,7 @@ struct Orchestra {
             TimePoint start = TimeNow();
             system();
             Duration elapsed = TimeNow() - start;
-            orchestra_state.nano_seconds[i] = static_cast<u32>(elapsed.count());
+            orchestra_state.ns[i] = static_cast<u32>(elapsed.count());
         }
     }
     ~Orchestra() { singleton.Get<OrchestraState>() = { }; }

@@ -41,11 +41,15 @@ struct GameState {
 };
 // ui
 struct UIFlags {
-    enum Flag : u32 { buildings, money, planet, count };
+    enum Flag : u32 { buildings, money, planet, size };
     [[nodiscard]] constexpr b8 Any() const noexcept { return flags.any(); }
     constexpr void Set() noexcept { flags.set(); }
     constexpr void Reset() noexcept { flags.reset(); }
-    std::bitset<static_cast<size_t>(count)> flags;
+    [[nodiscard]] constexpr b8 Only(const Flag flag) const noexcept{
+        std::bitset<static_cast<size_t>(size)> mask { };
+        return flags == mask.set(flag);
+    }
+    std::bitset<static_cast<size_t>(size)> flags;
 };
 constexpr UIFlags& operator&(UIFlags& flags, const UIFlags::Flag flag) {
     flags.flags.set(flag);
@@ -201,13 +205,20 @@ void CosmoClickUISystem::operator()() const {
     const GameState& game_state = singleton.Get<GameState>();
     UIFlags& ui_flags = singleton.Get<UIFlags>();
     GameFrame& game_frame = singleton.Get<GameFrame>();
-    if (ui_flags | UIFlags::planet) { }
+    if (ui_flags | UIFlags::planet) {
+        data[game_frame.tree].MarkDirty(game_frame.planet);
+    }
     if (ui_flags | UIFlags::buildings) { game_frame.shop.Set(std::views::iota(0U, singleton.Get<GameDefines>().buildings.Size())); }
     if (ui_flags | UIFlags::money) {
         game_frame.money.SetValue(game_state.money);
         game_frame.income.SetValue(game_state.income);
     }
-    if (ui_flags.Any()) {
+    UIFlags planet_check {};
+    planet_check & UIFlags::planet;
+    if (ui_flags.Only(UIFlags::planet)) {
+        data[game_frame.tree].MarkDirty(game_frame.planet);
+    }
+    else if (ui_flags.Any()) {
         data[game_frame.tree].MarkDirty();
         ui_flags.Reset();
     }

@@ -12,8 +12,8 @@ namespace pce::ui {
 namespace colors = colors;
 void TickComponent::SetProperty(const Property& property) const {
     static constexpr f32 THOUSANDTH = 0.001F;
-    const auto& [name, ns] = property;
-    data[root.tree].node_properties[root.node].text = std::format("{:.3f}ms | {}", ns * THOUSANDTH * THOUSANDTH, name);
+    const auto& [name, ns, max_ns] = property;
+    data[root.tree].node_properties[root.node].text = std::format("{:.3f}ms | {:.3f}ms | {}", ns * THOUSANDTH * THOUSANDTH, max_ns * THOUSANDTH * THOUSANDTH, name);
 }
 void DebugNodeComponent::SetProperty(const Property& property) const {
     constexpr u32 padding_offset = 10U;
@@ -36,13 +36,22 @@ void DebugNodeComponent::SetProperty(const Property& property) const {
     data[root.tree].node_properties[text].text = std::format("{} [{}, {}]", type, to_string(style.width), to_string(style.height));
     data[root.tree].styles[color_indicator].background_color = style.background_color;
 }
+List<u32> max_ns;
 void TickFrame::Update() {
-    u32 tick = singleton.Get<TickState>().tick.Value();
-    u32 fps = static_cast<u32>(1.0F / singleton.Get<TickState>().delta_time);
-    data[tree].MarkDirty();
-    static constexpr f32 THOUSAND = 1'000.0F;
-    data[tree].node_properties[ticks].text = std::format("{:.3f}ms | Tick: {:>8} | TPS: {:>4} | FPS: {:>4} |", singleton.Get<TickState>().delta_time * THOUSAND, tick, fps, fps);
-    systems.Set(std::views::zip(singleton.Get<OrchestraState>().names, singleton.Get<OrchestraState>().nano_seconds));
+    std::ranges::transform(max_ns, singleton.Get<OrchestraState>().ns, max_ns.begin(), math::max<u32>{});
+
+    if (singleton.Get<TickState>().tick.Value() % 500U == 0U) {
+        u32 tick = singleton.Get<TickState>().tick.Value();
+        u32 fps = static_cast<u32>(1.0F / singleton.Get<TickState>().delta_time);
+        data[tree].MarkDirty();
+        static constexpr f32 THOUSAND = 1'000.0F;
+        static constexpr f32 THOUSANDTH = 0.001F;
+
+        u32 sum_max_ns = std::ranges::fold_left(max_ns, 0U, std::plus{});
+        data[tree].node_properties[ticks].text = std::format("{:.3f}ms | {:.3f}ms | Tick: {:>8} | TPS: {:>4} | FPS: {:>4} |", singleton.Get<TickState>().delta_time * THOUSAND, sum_max_ns * THOUSANDTH * THOUSANDTH, tick, fps, fps);
+        systems.Set(std::views::zip(singleton.Get<OrchestraState>().names, singleton.Get<OrchestraState>().ns, max_ns));
+        max_ns = singleton.Get<OrchestraState>().ns;
+    }
 }
 
 void DebugFrame::SetInspector(const HoveredType hovered) {
@@ -75,14 +84,11 @@ void DebugSystem::operator()() {
     const b8 debug_mode = input_state.keys[SDLK_LALT];
     const b8 detailed_mode = input_state.keys[SDLK_LCTRL];
 
-    if (singleton.Get<TickState>().tick.Value() % 500U == 0U) {
-        data[tick_frame.tree].MarkDirty();
-        tick_frame.Update();
-    }
+    tick_frame.Update();
     data[debug_frame.tree].SetDisplay(debug_mode);
     if (debug_mode) {
         if (!detailed_mode && !tick_frame.systems.Empty()) {
-            data[tick_frame.tree].MarkDirty();
+            data[tick_frame.tree].MarkDirty(tick_frame.systems.parent.node);
             tick_frame.systems.Hide();
         }
         if (input_state.left_mouse_down) { debug_frame.SetInspector(singleton.Get<HoveredType>()); }
