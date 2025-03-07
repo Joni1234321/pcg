@@ -5,7 +5,7 @@
 #include "0_engine/u_types.hpp"
 
 namespace pce {
-enum class AnimationState : u8 { run_once, recycle, repeat, keep_alive, keep_alive_stopped };
+enum class AnimationState : u8 { once, recycle, repeat, persistent, persistent_stopped };
 struct AnimationDesc {
     std::function<void(f32)> action;
     u32 duration_ms;
@@ -23,71 +23,87 @@ struct AnimationSystem {
     static b8 IsRunning(Handle<Animation> animation_handle);
     void operator()() const;
 };
+
+// how it works
+// i want to say spawn particle (x, y)
+// then the particlesystem will push it upwards until it expires
 struct Particle {
-    uint2 position;
+    float2 position;
+    u32 time;
 };
-struct ParticleProtocol {
-    int count;
-    uint2 velocity;
-};
-struct ParticleProtocolHandle {
-    u32 id;
+struct ParticleEmitter {
+    static constexpr u32 DEFAULT_COUNT = 128U;
+
+    float2 velocity;
+    List<Particle> particles { DEFAULT_COUNT };
 };
 struct ParticleSystem {
-    static constexpr u32 DEFAULT_COUNT = 128U;
-    List<ParticleProtocol> protocols { DEFAULT_COUNT };
-    List<List<Particle>> particles { DEFAULT_COUNT };
+    void operator()() const {
+        for (ParticleEmitter& emitter : data.Get<ParticleEmitter>()) {
+            u32 deleted { 0U };
+            for (List<Particle>::iterator it = emitter.particles.begin(); it != emitter.particles.end() - deleted;) {
+                Particle& particle = *it;
+                if (particle.time == 0U) {
+                    auto dist1 = std::distance(std::begin(emitter.particles), it);
+                    auto dist2 = std::distance(std::begin(emitter.particles), emitter.particles.end());
+                    Logger().Log("Removing element at {} {} so new size will be {}", dist1, dist2, emitter.particles.size());
 
-    ParticleProtocolHandle Register(const ParticleProtocol& protocol) {
-        protocols.PushBack(protocol);
-        return ParticleProtocolHandle { particles.Size() - 1U };
-    }
-    [[nodiscard]] ParticleProtocol& GetParticleProtocol(const ParticleProtocolHandle protocol_handle) { return protocols[protocol_handle.id]; }
-    [[nodiscard]] List<Particle>& GetParticles(const ParticleProtocolHandle protocol_handle) { return particles[protocol_handle.id]; }
-    void NewParticle(const ParticleProtocolHandle protocol_handle, Particle&& particle) { GetParticles(protocol_handle).PushBack(particle); }
-    void operator()() const { for (u32 i = 0; i < particles.Size(); i++) { } }
-};
+                    const List<Particle>::iterator last = emitter.particles.end() - 1U - deleted;
+                    deleted++;
+                    if (it == last) { break; }
+                    std::iter_swap(it, last);
+                    continue;
+                }
 
-inline f32 EaseInSine(const f32 t) { return 1 - math::Cos(t * math::PI * 0.5F); }
-inline f32 EaseOutSine(const f32 t) { return 1 - math::Sin(t * math::PI * 0.5F); }
-inline f32 EaseInOutSine(const f32 t) { return -(math::Cos(math::PI * t) - 1) * 0.5F; }
-inline Handle<Animation> AnimationSystem::Register(const AnimationDesc& animation_desc) {
-    Logger().Log("Size of action {} and action {} size {}", sizeof(animation_desc), sizeof(animation_desc.action), data.Get<Animation>().Size());
-    HandleList<Animation>& animations = data.Get<Animation>();
-    const Animation animation { .action = animation_desc.action, .offset_ms = static_cast<u32>(SDL_GetTicks()), .duration_ms = animation_desc.duration_ms, .state = animation_desc.state };
-    for (Handle<Animation> handle { 0U }; handle.id < animations.Size(); ++handle.id) {
-        if (animations[handle].state == AnimationState::recycle) {
-            animations[handle] = animation;
-            return handle;
+                const SDL_Color color = colors::beige;
+                const SDL_FRect rect { .x = static_cast<f32>(particle.position.x), .y = static_cast<f32>(particle.position.y), .w = static_cast<f32>(1000U), .h = static_cast<f32>(10U)};
+                (void)SDL_SetRenderDrawColor(singleton.Get<WindowState>().renderer, color.r, color.g, color.b, color.a);
+                (void)SDL_RenderFillRect(singleton.Get<WindowState>().renderer, &rect);
+                particle.position += emitter.velocity;
+                particle.time -= 1U;
+                ++it;
+            }
+            emitter.particles.resize(emitter.particles.size() - deleted);
         }
     }
-    return animations.PushBack(animation);
+};
+
+inline f32 EaseInSine(const f32 t) { return 1.0F - math::Cos(t * math::PI * 0.5F); }
+inline f32 EaseOutSine(const f32 t) { return 1.0F - math::Sin(t * math::PI * 0.5F); }
+inline f32 EaseInOutSine(const f32 t) { return -(math::Cos(math::PI * t) - 1.0F) * 0.5F; }
+inline Handle<Animation> AnimationSystem::Register(const AnimationDesc& animation_desc) {
+    const Animation animation { .action = animation_desc.action, .offset_ms = static_cast<u32>(SDL_GetTicks()), .duration_ms = animation_desc.duration_ms, .state = animation_desc.state };
+    HandleList<Animation>& animations = data.Get<Animation>();
+    const auto it = std::ranges::find(animations, AnimationState::repeat, &Animation::state);
+    if (it == std::end(animations)) { return animations.PushBack(animation); }
+    *it = animation;
+    return animations.IteratorToHandle(it);
 }
 inline void AnimationSystem::StartAnimation(const Handle<Animation> animation_handle) {
     Animation& animation = data[animation_handle];
     animation.offset_ms = static_cast<u32>(SDL_GetTicks());
     switch (animation.state) {
-        case AnimationState::run_once:
+        case AnimationState::once:
             break;
         case AnimationState::recycle:
             break;
         case AnimationState::repeat:
             break;
-        case AnimationState::keep_alive:
+        case AnimationState::persistent:
             break;
-        case AnimationState::keep_alive_stopped:
-            animation.state = AnimationState::keep_alive;
+        case AnimationState::persistent_stopped:
+            animation.state = AnimationState::persistent;
             break;
     }
 }
 inline b8 AnimationSystem::IsRunning(const Handle<Animation> animation_handle) {
     switch (data[animation_handle].state) {
-        case AnimationState::run_once:
+        case AnimationState::once:
         case AnimationState::repeat:
-        case AnimationState::keep_alive:
+        case AnimationState::persistent:
             return true;
         case AnimationState::recycle:
-        case AnimationState::keep_alive_stopped:
+        case AnimationState::persistent_stopped:
             return false;
         default: STL_ASSERT(false, "Unknown animation state {}", data[animation_handle].state);
             return false;
@@ -98,7 +114,7 @@ inline void AnimationSystem::operator()() const {
     for (Animation& animation : data.Get<Animation>()) {
         f32 t = static_cast<f32>(current_ms - animation.offset_ms) / static_cast<f32>(animation.duration_ms);
         switch (animation.state) {
-            case AnimationState::run_once:
+            case AnimationState::once:
                 if (t >= 1.0F) {
                     t = 1.0F;
                     animation.state = AnimationState::recycle;
@@ -108,13 +124,13 @@ inline void AnimationSystem::operator()() const {
                 continue;
             case AnimationState::repeat:
                 break;
-            case AnimationState::keep_alive:
+            case AnimationState::persistent:
                 if (t >= 1.0F) {
                     t = 1.0F;
-                    animation.state = AnimationState::keep_alive_stopped;
+                    animation.state = AnimationState::persistent_stopped;
                 }
                 break;
-            case AnimationState::keep_alive_stopped:
+            case AnimationState::persistent_stopped:
                 continue;
         }
         const f32 value = EaseInOutSine(t);

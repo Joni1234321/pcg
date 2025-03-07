@@ -69,10 +69,10 @@ void DebugFrame::SetInspector(const HoveredType hovered) {
 
     std::stack<DebugNodeComponent::Property> stack;
     stack.push(DebugNodeComponent::Property { .hovered = hovered.value(), .layer = 0U });
-    List<DebugNodeComponent::Property> nodes { data[hovered->tree].children.Size() };
+    List<DebugNodeComponent::Property> nodes { data[hovered->tree].children.size() };
 
     while (!stack.empty()) {
-        nodes.PushBack(stack.top());
+        nodes.push_back(stack.top());
         const auto [hovered, layer] = stack.top();
         stack.pop();
         for (const Handle child : data[hovered.tree].children[hovered.node] | std::views::reverse) { stack.push(DebugNodeComponent::Property { .hovered = { .tree = hovered.tree, .node = child }, .layer = layer + 1U }); }
@@ -92,7 +92,7 @@ void DebugSystem::operator()() {
             tick_frame.systems.Hide();
         }
         if (input_state.left_mouse_down) { debug_frame.SetInspector(singleton.Get<HoveredType>()); }
-        u32 key_count = std::min(data.Get<NodeTree>().Size(), 10U);
+        u32 key_count = std::min(data.Get<NodeTree>().size(), 10U);
         auto rng = std::views::iota(0U, key_count);
         const auto it = std::ranges::find_if(rng, [&] (const u32 i) { return input_state.keys_down[SDLK_0 + i]; });
         if (it != std::end(rng)) {

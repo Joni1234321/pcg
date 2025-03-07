@@ -16,8 +16,8 @@ Entity PlayerArchetype::Add(const Money money) {
 b8 PlayerArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
-    moneys.SwapBack(entity);
-    construction_queue.SwapBack(entity);
+    moneys.swap_back(entity);
+    construction_queue.swap_back(entity);
 
     return true;
 }
@@ -37,11 +37,11 @@ Entity PlanetArchetype::Add(const pce::Tick tick, const Money money, const Popul
 b8 PlanetArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
-    players.SwapBack(entity);
-    moneys.SwapBack(entity);
-    employed.SwapBack(entity);
-    construction_queue.SwapBack(entity);
-    ages.SwapBack(entity);
+    players.swap_back(entity);
+    moneys.swap_back(entity);
+    employed.swap_back(entity);
+    construction_queue.swap_back(entity);
+    ages.swap_back(entity);
 
     return true;
 }
@@ -83,15 +83,15 @@ Entity StateArchetype::Add(Entity planet) {
 
     constexpr u32 population = 100U;
     (void)planets.EmplaceBack(planet);
-    markets.PushBack(Market { .population = Rand() % population });
+    markets.push_back(Market { .population = Rand() % population });
 
     return entity;
 }
 b8 StateArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
-    planets.SwapBack(entity);
-    markets.SwapBack(entity);
+    planets.swap_back(entity);
+    markets.swap_back(entity);
 
     return true;
 }
@@ -110,8 +110,8 @@ Entity FarmSectorArchetype::Add(Entity planet, FarmType farm_type) {
 b8 FarmSectorArchetype::Remove(const Entity entity) {
     if (!Archetype::Remove(entity)) { return false; }
 
-    planets.SwapBack(entity);
-    types.SwapBack(entity);
+    planets.swap_back(entity);
+    types.swap_back(entity);
 
     return true;
 }

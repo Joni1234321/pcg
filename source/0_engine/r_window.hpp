@@ -37,7 +37,7 @@ struct Window {
     }
     ~Window() {
         singleton.Get<ui::FontCollection>().Clear();
-        data.Get<Texture>().Clear();
+        data.Get<Texture>().clear();
         SDL_DestroyRenderer(singleton.Get<WindowState>().renderer);
         SDL_DestroyWindow(singleton.Get<WindowState>().window);
         TTF_DestroyRendererTextEngine(singleton.Get<WindowState>().text_engine);

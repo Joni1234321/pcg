@@ -45,7 +45,7 @@ template <typename T = void> struct Plus {
     T operator()(const T& left, const T& right) const { return left + right; } // NOLINT(*-overloaded-operator)
 };
 template <typename T = void> struct Size {
-    u32 operator()(const T& container) const { return container.Size(); } // NOLINT(*-overloaded-operator)
+    u32 operator()(const T& container) const { return container.size(); } // NOLINT(*-overloaded-operator)
 };
 template <typename T> constexpr T Max(T left, T right) { return left > right ? left : right; }
 template <typename T> constexpr T Min(T left, T right) { return left < right ? left : right; }

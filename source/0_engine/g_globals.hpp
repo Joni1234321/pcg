@@ -36,6 +36,7 @@ template <class T> HandleList<T> SingletonHandleList<T>::data { 128U };
 struct GlobalDataInstantNoReset {
     template <class T> [[nodiscard]] constexpr HandleList<T>& Get() { return SingletonHandleList<T>::data; }
     template <class T> [[nodiscard]] constexpr T& operator[](Handle<T> handle) { return Get<T>()[handle]; }
+    template <class T> [[nodiscard]] constexpr Handle<T> Create(const T& copy) { return Get<T>().EmplaceBack(std::forward<T>(copy)); }
     template <class T, typename... Args> [[nodiscard]] constexpr Handle<T> Create(Args&&... args) { return Get<T>().EmplaceBack(std::forward<Args>(args)...); }
 };
 template<DefaultConstructible T> struct SingletonNaive2Helper {

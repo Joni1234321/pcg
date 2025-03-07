@@ -184,7 +184,7 @@ void Game::PlayTick(pce::Tick tick, pce::ui::NodeRenderSystem& node_render_syste
     if (!debug) { return; }
 
     auto construction_queue_to_string = [] (const ConstructionQueue& construction_queue) -> String {
-        return { "{:3} / {:3} Q:{:3}", math::Min(construction_queue.Size(), construction_queue.construction_capacity), construction_queue.construction_capacity, construction_queue.Size() };
+        return { "{:3} / {:3} Q:{:3}", math::Min(construction_queue.size(), construction_queue.construction_capacity), construction_queue.construction_capacity, construction_queue.size() };
     };
 
     constexpr u32 width = 20U;
@@ -203,7 +203,7 @@ void Game::PlayTick(pce::Tick tick, pce::ui::NodeRenderSystem& node_render_syste
     planet_table.Print(logger, LoggerTable::COLOR_DISABLED);
 
     const List<BuildingUnderConstruction> display_construction = player_archetype.construction_queue[0U].Limit(5U); //.Limit(10);
-    LoggerTable construction_table("ConstructionQueue", display_construction.Size());
+    LoggerTable construction_table("ConstructionQueue", display_construction.size());
     construction_table.AddColumn("Type", Select(display_construction, [] (const BuildingUnderConstruction& building) -> FarmType { return building.type; }));
     construction_table.AddColumn("Progress", Select(display_construction, [] (const BuildingUnderConstruction& building) -> u16 { return building.progress; }));
     construction_table.AddColumn("Required", Select(display_construction, [] ([[maybe_unused]] const BuildingUnderConstruction& building) -> u16 { return BUILDING_TIME; }));
@@ -244,7 +244,7 @@ static b8 TryQueueFarm(const Planet planet, const FarmType type, Money& money) {
 static void ProcessConstructionQueue(const Planet player) {
     ConstructionQueue& construction_queue = player.ConstructionQueue();
     if (construction_queue.empty()) { return; }
-    const u32 limit = math::Min(construction_queue.construction_capacity, construction_queue.Size()); // explicit copy
+    const u32 limit = math::Min(construction_queue.construction_capacity, construction_queue.size()); // explicit copy
     for (u32 i = 0U; i < limit; i++) { construction_queue[i].progress += 1U; }
     for (u32 i = 0U; i < limit; i++) {
         const u32 idx = limit - i - 1U;

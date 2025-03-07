@@ -94,10 +94,13 @@ private:
 };
 
 template <typename T> struct List {
-    using iterator = typename std::vector<T>::iterator;
-    using const_iterator = typename std::vector<T>::const_iterator;
     using value_type = typename std::vector<T>::value_type;
     using size_type = u32;
+
+    using iterator = typename std::vector<T>::iterator;
+    using const_iterator = typename std::vector<T>::const_iterator;
+    using reverse_iterator       = typename std::vector<T>::reverse_iterator;
+    using const_reverse_iterator = typename std::vector<T>::const_reverse_iterator;
 
     constexpr List() : data() { }
     constexpr List(std::initializer_list<T> init_list) : data(std::move(init_list)) { }
@@ -125,6 +128,10 @@ template <typename T> struct List {
     [[nodiscard]] constexpr iterator end() noexcept { return data.end(); }
     [[nodiscard]] constexpr const_iterator begin() const noexcept { return data.begin(); }
     [[nodiscard]] constexpr const_iterator end() const noexcept { return data.end(); }
+    [[nodiscard]] constexpr reverse_iterator rbegin() noexcept { return data.rbegin(); }
+    [[nodiscard]] constexpr reverse_iterator rend() noexcept { return data.rend(); }
+    [[nodiscard]] constexpr const_reverse_iterator rbegin() const noexcept { return data.rbegin(); }
+    [[nodiscard]] constexpr const_reverse_iterator rend() const noexcept { return data.rend(); }
 
     [[nodiscard]] constexpr T& front() noexcept { return data.front(); }
     [[nodiscard]] constexpr T& back() noexcept { return data.back(); }
@@ -134,20 +141,19 @@ template <typename T> struct List {
     [[nodiscard]] constexpr b8 empty() const noexcept { return data.empty(); }
     [[nodiscard]] constexpr b8 Contains(const T& value) const noexcept { return std::ranges::find(data, value, std::identity { }) != end(); }
 
-    constexpr void Clear() { data.clear(); }
-    constexpr void PopBack() { data.pop_back(); }
-    constexpr void Resize(const u32 size) { data.resize(size); }
-    constexpr void Reserve(const u32 size) { data.reserve(size); }
-    constexpr void EraseAt(const u32 index) { data.erase(data.begin() + index); }
-    constexpr u32 EraseValue(const T& value) { return static_cast<u32>(std::erase(data, value)); }
+    constexpr void clear() noexcept { data.clear(); }
+    constexpr void pop_back() noexcept { data.pop_back(); }
+    constexpr void resize(const u32 size) { data.resize(size); }
+    constexpr void reserve(const u32 size) { data.reserve(size); }
+    constexpr void erase_at(const u32 index) { data.erase(std::begin(data) + index); }
+    constexpr u32 erase_value(const T& value) { return static_cast<u32>(std::erase(data, value)); }
 
-    template <std::_Container_compatible_range<T> _Rng> constexpr void AppendRange(_Rng&& range) { data.append_range(range); }
+    template <std::_Container_compatible_range<T> _Rng> constexpr void append_range(_Rng&& range) { data.append_range(range); }
 
     constexpr void push_back(const T& value) { data.push_back(value); }
-    constexpr void PushBack(const T& t) { data.push_back(t); }
-    constexpr void PushBack(T&& t) { data.push_back(std::move(t)); }
+    constexpr void push_back(T&& t) { data.push_back(std::move(t)); }
 
-    void SwapBack(u32 pos) {
+    void swap_back(u32 pos) {
         std::swap(data[pos], data.back());
         data.pop_back();
     }
@@ -167,76 +173,76 @@ template <typename T> struct List {
 
     template <typename To> [[nodiscard]] constexpr List<To> StaticCast() const {
         List<To> result { };
-        result.Reserve(Size());
+        result.reserve(Size());
         for (u32 i = 0U; i < Size(); i++) { result[i] = static_cast<To>(data[i]); }
         return result;
     }
 
-protected:
     std::vector<T> data;
 };
 
 template <typename T, typename H = T> struct HandleList {
     using iterator = typename List<T>::iterator;
     using const_iterator = typename List<T>::const_iterator;
-    using Handle = Handle<H>;
 
     constexpr HandleList() : data() { }
     constexpr HandleList(std::initializer_list<T> init_list) : data(std::move(init_list)) { }
     explicit constexpr HandleList(u32 size) : data(size) { }
     explicit constexpr HandleList(u32 size, const T& val) : data(size, val) { }
 
-    template <typename... Args> [[nodiscard]] constexpr Handle EmplaceBack(Args&&... args) {
+    template <typename... Args> [[nodiscard]] constexpr Handle<H> EmplaceBack(Args&&... args) {
         data.EmplaceBack(std::forward<Args>(args)...);
-        return Handle { offset_handle.id + data.Size() - 1U };
+        return Handle<H> { offset_handle.id + data.size() - 1U };
     }
-    [[nodiscard]] constexpr Handle PushBack(const T& t) {
-        data.PushBack(t);
-        return Handle { offset_handle.id + data.Size() - 1U };
+    [[nodiscard]] constexpr Handle<H> PushBack(const T& t) {
+        data.push_back(t);
+        return Handle<H> { offset_handle.id + data.size() - 1U };
     }
-    [[nodiscard]] constexpr Handle PushBack(T&& t) {
-        data.PushBack(std::move(t));
-        return Handle { offset_handle.id + data.Size() - 1U };
+    [[nodiscard]] constexpr Handle<H> PushBack(T&& t) {
+        data.push_back(std::move(t));
+        return Handle<H> { offset_handle.id + data.size() - 1U };
     }
-    [[nodiscard]] constexpr b8 Empty() const { return data.empty(); }
-    [[nodiscard]] constexpr u32 Size() const { return data.Size(); }
+    [[nodiscard]] constexpr b8 empty() const noexcept { return data.empty(); }
+    [[nodiscard]] constexpr u32 size() const noexcept { return data.size(); }
 
-    constexpr void Clear() {
-        offset_handle = Handle { offset_handle.id + Size() };
-        data.Clear();
+    constexpr void clear() {
+        offset_handle = Handle<H> { offset_handle.id + size() };
+        data.clear();
     }
 
-    [[nodiscard]] constexpr const T& operator[](const Handle handle) const { return data[HandleToIndex(handle)]; }
-    [[nodiscard]] constexpr T& operator[](const Handle handle) { return data[HandleToIndex(handle)]; }
+    [[nodiscard]] constexpr const T& operator[](const Handle<H> handle) const { return data[HandleToIndex(handle)]; }
+    [[nodiscard]] constexpr T& operator[](const Handle<H> handle) { return data[HandleToIndex(handle)]; }
 
-    [[nodiscard]] constexpr Handle First() const { return offset_handle; }
-
-    [[nodiscard]] constexpr iterator begin() { return data.begin(); }
-    [[nodiscard]] constexpr iterator end() { return data.end(); }
-    [[nodiscard]] constexpr T& front() { return data.front(); }
-    [[nodiscard]] constexpr T& back() { return data.back(); }
-
+    [[nodiscard]] constexpr iterator begin() noexcept { return data.begin(); }
+    [[nodiscard]] constexpr iterator end() noexcept { return data.end(); }
     [[nodiscard]] constexpr const_iterator begin() const noexcept { return data.begin(); }
     [[nodiscard]] constexpr const_iterator end() const noexcept { return data.end(); }
+
+    [[nodiscard]] constexpr T& front() noexcept { return data.front(); }
+    [[nodiscard]] constexpr T& back() noexcept { return data.back(); }
     [[nodiscard]] constexpr const T& front() const noexcept { return data.front(); }
     [[nodiscard]] constexpr const T& back() const noexcept { return data.back(); }
 
-    [[nodiscard]] constexpr u32 HandleToIndex(const Handle handle) const noexcept {
+    [[nodiscard]] constexpr u32 HandleToIndex(const Handle<H> handle) const noexcept {
         STL_ASSERT(ValidHandle(handle), "handle invalidated");
         return handle.id - offset_handle.id;
     }
-    [[nodiscard]] constexpr Handle IndexToHandle(const u32 index) const noexcept {
-        STL_ASSERT(index < Size(), "index bigger than size");
-        return Handle { offset_handle.id + index };
+    [[nodiscard]] constexpr Handle<H> IndexToHandle(const u32 index) const noexcept {
+        STL_ASSERT(index < size(), "index bigger than size");
+        return ::Handle<H> { offset_handle.id + index };
     }
-    [[nodiscard]] constexpr Handle IteratorToHandle(const_iterator iterator) const noexcept {
+    [[nodiscard]] constexpr Handle<H> IteratorToHandle(const_iterator iterator) const noexcept {
         STL_ASSERT(iterator > end(), "iterator out of range");
-        return Handle { offset_handle.id + static_cast<u32>(std::distance(begin(), iterator)) };
+        return ::Handle<H> { offset_handle.id + static_cast<u32>(std::distance(begin(), iterator)) };
     }
-    [[nodiscard]] constexpr b8 ValidHandle(const Handle handle) const { return handle.id - offset_handle.id < Size(); }
-    Handle offset_handle { 0U };
+    [[nodiscard]] constexpr b8 ValidHandle(const Handle<H> handle) const noexcept { return handle.id - offset_handle.id < size(); }
+    [[nodiscard]] constexpr Handle<H> FirstHandle() const noexcept { return offset_handle; }
+    Handle<H> offset_handle { 0U };
 
-private:
+    constexpr void swap_back(const Handle<H> handle) {
+        // std::swap(particle, emitter.particles.back()); emitter.particles.data.data.pop_back();
+    }
+
     List<T> data;
 };
 template <typename K, typename V> class FlatMap {
@@ -254,17 +260,17 @@ public:
     constexpr FlatMap() = default;
     explicit constexpr FlatMap(const u32 initial_size) : keys(initial_size), values(initial_size) { }
     constexpr void PushBack(const K& key, const V& value) {
-        keys.PushBack(key);
-        values.PushBack(value);
+        keys.push_back(key);
+        values.push_back(value);
     }
     constexpr void Erase(const K& key) {
         u32 index = keys.IndexOf(key);
-        keys.EraseAt(index);
-        values.EraseAt(index);
+        keys.erase_at(index);
+        values.erase_at(index);
     }
     constexpr void PushBack(const K& key, V&& value) {
-        keys.PushBack(key);
-        values.PushBack(value);
+        keys.push_back(key);
+        values.push_back(value);
     }
 
     template <class... Args> constexpr void EmplaceBack(const K& key, Args&&... args) {
@@ -273,8 +279,8 @@ public:
     }
 
     constexpr void Clear() {
-        keys.Clear();
-        values.Clear();
+        keys.clear();
+        values.clear();
     }
 
     [[nodiscard]] constexpr b8 HasKey(const K& key) const { return std::ranges::find(keys, key) != keys.end(); }

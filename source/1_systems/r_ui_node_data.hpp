@@ -138,8 +138,8 @@ struct NodeTree {
     NodeTree(NodeTree&&) noexcept = default;
     NodeTree& operator=(NodeTree&&) noexcept = default;
 
-    [[nodiscard]] constexpr Handle<Node> Root() const { return styles.First(); }
-    [[nodiscard]] constexpr b8 Empty() const { return styles.Empty(); }
+    [[nodiscard]] constexpr Handle<Node> Root() const { return styles.FirstHandle(); }
+    [[nodiscard]] constexpr b8 Empty() const { return styles.empty(); }
     [[nodiscard]] Handle<Node> AddRoot();
     [[nodiscard]] Handle<Node> AddNode(Handle<Node> parent);
     [[nodiscard]] Handle<Node> CloneNode(Handle<Node> clone);
@@ -188,7 +188,7 @@ private:
         if (size == new_size) { return; }
         NodeTree& tree = data[parent.tree];
         for (; size < new_size; ++size) {
-            if (nodes.Size() > size) { tree.AttachNode(nodes[size].root.node, parent.node); } else {
+            if (nodes.size() > size) { tree.AttachNode(nodes[size].root.node, parent.node); } else {
                 Component c { parent };
                 nodes.EmplaceBack(c);
             }

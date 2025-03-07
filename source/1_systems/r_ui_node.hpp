@@ -18,7 +18,7 @@ struct NodeInputSystem {
 };
 struct NodeRenderSystem {
     void operator()() const;
-    ~NodeRenderSystem() { data.Get<NodeTree>().Clear(); };
+    ~NodeRenderSystem() { data.Get<NodeTree>().clear(); };
 };
 
 class NodeBuilder {

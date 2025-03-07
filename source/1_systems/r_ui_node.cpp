@@ -23,7 +23,7 @@ const Font& FontCollection::GetFont(const FontSizes size) {
 
 // NodeTree
 Handle<Node> NodeTree::AddRoot() {
-    STL_ASSERT(styles.Empty(), "Setting root non empty tree");
+    STL_ASSERT(styles.empty(), "Setting root non empty tree");
     (void)styles.EmplaceBack();
     (void)node_properties.EmplaceBack();
     (void)node_ttf_texts.EmplaceBack(nullptr);
@@ -33,7 +33,7 @@ Handle<Node> NodeTree::AddRoot() {
     return Root();
 }
 Handle<Node> NodeTree::AddNode(const Handle<Node> parent) {
-    STL_ASSERT(!styles.Empty(), "Adding node before root");
+    STL_ASSERT(!styles.empty(), "Adding node before root");
     const Handle<Node> node = styles.EmplaceBack();
     (void)node_properties.EmplaceBack();
     (void)node_ttf_texts.EmplaceBack(nullptr);
@@ -53,21 +53,21 @@ Handle<Node> NodeTree::CloneNode(const Handle<Node> clone) {
 void NodeTree::DetachNode(const Handle<Node> node) {
     STL_ASSERT(node.id != Root().id, "trying to detach root");
     const Handle parent = parents[node];
-    children[parent].EraseValue(node);
+    children[parent].erase_value(node);
 }
 void NodeTree::AttachNode(const Handle<Node> node, const Handle<Node> parent) {
     assert(node.id != Root().id);
-    children[parent].PushBack(node);
+    children[parent].push_back(node);
     parents[node] = parent;
 }
 
 void NodeTree::Clear() {
-    styles.Clear();
-    node_properties.Clear();
-    node_ttf_texts.Clear();
-    parents.Clear();
-    children.Clear();
-    subtree_roots.Clear();
+    styles.clear();
+    node_properties.clear();
+    node_ttf_texts.clear();
+    parents.clear();
+    children.clear();
+    subtree_roots.clear();
 }
 NodeBuilder::NodeBuilder(const Handle<NodeTree> tree, const Layout new_layout, const uint2 position) : node_reference { tree, data[tree].AddRoot() } {
     style.position = position;
@@ -188,7 +188,7 @@ HoveredType NodeAt(const uint2 mouse_position) {
     return std::nullopt;
 }
 void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
-    auto pixels_gap = [&tree] (const Handle<Node> node, const u32 gap) -> u32 { return tree.children[node].empty() ? 0U : gap * (tree.children[node].Size() - 1U); };
+    auto pixels_gap = [&tree] (const Handle<Node> node, const u32 gap) -> u32 { return tree.children[node].empty() ? 0U : gap * (tree.children[node].size() - 1U); };
     auto get_major = [] (const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.x : point.y; };
     auto get_minor = [] (const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.y : point.x; };
     auto get_major_layout = [] (NodeStyle& node_style, const FlexDirection direction) -> LayoutLength& { return direction == horizontal ? node_style.width : node_style.height; };
@@ -208,7 +208,7 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
 
     // nodes ordered
     List nodes { root };
-    for (u32 i = 0U; i < nodes.Size(); ++i) { nodes.AppendRange(tree.children[nodes[i]]); }
+    for (u32 i = 0U; i < nodes.size(); ++i) { nodes.append_range(tree.children[nodes[i]]); }
 
     // text
     for (const Handle node : nodes) {
@@ -221,8 +221,8 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
         }
 
         const Font& font = singleton.Get<FontCollection>().GetFont(node_properties.font_size);
-        if (ttf_text.Get() == nullptr) { ttf_text.Reset(TTF_CreateText(singleton.Get<WindowState>().text_engine, font.ToSDL(), node_properties.text.CString(), node_properties.text.Size())); } else {
-            TTF_SetTextString(ttf_text.Get(), node_properties.text.CString(), node_properties.text.Size());
+        if (ttf_text.Get() == nullptr) { ttf_text.Reset(TTF_CreateText(singleton.Get<WindowState>().text_engine, font.ToSDL(), node_properties.text.CString(), node_properties.text.size())); } else {
+            TTF_SetTextString(ttf_text.Get(), node_properties.text.CString(), node_properties.text.size());
             TTF_SetTextFont(ttf_text.Get(), font.ToSDL());
         }
         const SDL_Color color = node_style.background_color;
@@ -259,16 +259,16 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
     // fill top down
     List<Handle<Node>> parent_constrained { };
     for (const Handle node : nodes) {
-        parent_constrained.Clear();
+        parent_constrained.clear();
         const NodeStyle& node_style = tree.styles[node];
 
         u32 pixels_taken_major_axis = pixels_gap(node, node_style.resolved_gap);
         for (const Handle child : tree.children[node]) {
             NodeStyle& child_style = tree.styles[child];
             LayoutLength& child_major_layout = get_major_layout(child_style, node_style.direction);
-            if (child_major_layout.constraint == LayoutLength::parent_constraint) { parent_constrained.PushBack(child); } else { pixels_taken_major_axis += get_major(child_style.OuterBoxSize(), node_style.direction); }
+            if (child_major_layout.constraint == LayoutLength::parent_constraint) { parent_constrained.push_back(child); } else { pixels_taken_major_axis += get_major(child_style.OuterBoxSize(), node_style.direction); }
         }
-        if (parent_constrained.Size() > 0U) {
+        if (parent_constrained.size() > 0U) {
             if (pixels_taken_major_axis >= get_major(node_style.InnerBoxSize(), node_style.direction)) {
                 for (const Handle child : parent_constrained) {
                     constexpr u32 min_pixel_size = 10U;
@@ -276,7 +276,7 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
                 }
                 continue;
             }
-            const auto [pixels_per, left_over] = math::Div(get_major(node_style.InnerBoxSize(), node_style.direction) - pixels_taken_major_axis, parent_constrained.Size());
+            const auto [pixels_per, left_over] = math::Div(get_major(node_style.InnerBoxSize(), node_style.direction) - pixels_taken_major_axis, parent_constrained.size());
             for (const Handle child : parent_constrained) { get_major_layout(tree.styles[child], node_style.direction).resolved = pixels_per; }
             get_major_layout(tree.styles[parent_constrained[0U]], node_style.direction).resolved += left_over;
         }
@@ -295,7 +295,7 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
         const u32 node_major_size = get_major(style.InnerBoxSize(), style.direction);
         const u32 children_major_size = get_major_pixels_taken_by_children(node, style.direction);
         if (style.gap_auto) {
-            if (children_major_size < node_major_size && tree.children[node].Size() > 1) { style.resolved_gap = (node_major_size - children_major_size) / (tree.children[node].Size() - 1U); } else {
+            if (children_major_size < node_major_size && tree.children[node].size() > 1) { style.resolved_gap = (node_major_size - children_major_size) / (tree.children[node].size() - 1U); } else {
                 style.resolved_gap = 0U;
             }
         }
@@ -331,7 +331,7 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
         }
         const f32 factor_major = style.direction == horizontal ? factor.x : factor.y;
         const f32 factor_minor = style.direction == horizontal ? factor.y : factor.x;
-        const u32 major_pixels_left = node_major_size - children_major_size - style.resolved_gap * (tree.children[node].Size() - 1U);
+        const u32 major_pixels_left = node_major_size - children_major_size - style.resolved_gap * (tree.children[node].size() - 1U);
         major_position += static_cast<u32>(major_pixels_left * factor_major);
         for (const Handle child : tree.children[node]) {
             NodeStyle& child_style = tree.styles[child];
@@ -375,20 +375,20 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
 void AddNodeToFrameElement(NodeTree& tree, const Handle<Node> node) {
     const auto add_type = [&tree] (const ElementType new_type) -> void {
         auto& [element_type, count] = tree.frame_elements.items_in_a_row.back();
-        if (element_type == new_type && count < UINT8_MAX) { ++count; } else { tree.frame_elements.items_in_a_row.PushBack({ .type = new_type, .count = 1U }); }
+        if (element_type == new_type && count < UINT8_MAX) { ++count; } else { tree.frame_elements.items_in_a_row.push_back({ .type = new_type, .count = 1U }); }
     };
 
     const NodeStyle& style = tree.styles[node];
     const NodeProperties& properties = tree.node_properties[node];
     if (!properties.text.Empty()) {
         add_type(ElementType::text);
-        tree.frame_elements.texts.PushBack(TextElement { .text = tree.node_ttf_texts[node].Get(), .position = { static_cast<f32>(style.InnerBoxPosition().x), static_cast<f32>(style.InnerBoxPosition().y) } });
+        tree.frame_elements.texts.push_back(TextElement { .text = tree.node_ttf_texts[node].Get(), .position = { static_cast<f32>(style.InnerBoxPosition().x), static_cast<f32>(style.InnerBoxPosition().y) } });
     } else if (style.texture.IsValid()) {
         add_type(ElementType::texture);
-        tree.frame_elements.textures.PushBack(TextureElement { .rect = style.OuterRect(), .texture = data[style.texture.GetHandle()].ToSDL() });
+        tree.frame_elements.textures.push_back(TextureElement { .rect = style.OuterRect(), .texture = data[style.texture.GetHandle()].ToSDL() });
     } else if (style.background_color.a != 0U) {
         add_type(ElementType::rectangle);
-        tree.frame_elements.rectangles.PushBack(RectangleElement { .color = style.background_color, .rect = style.OuterRect() });
+        tree.frame_elements.rectangles.push_back(RectangleElement { .color = style.background_color, .rect = style.OuterRect() });
     }
 }
 const FrameElements& GetFrameElements(NodeTree& tree) {
@@ -397,14 +397,14 @@ const FrameElements& GetFrameElements(NodeTree& tree) {
 
     tree.dirty_tree = false;
     tree.dirty_subtree.Reset();
-    tree.frame_elements.items_in_a_row.Clear();
-    tree.frame_elements.rectangles.Clear();
-    tree.frame_elements.textures.Clear();
-    tree.frame_elements.texts.Clear();
+    tree.frame_elements.items_in_a_row.clear();
+    tree.frame_elements.rectangles.clear();
+    tree.frame_elements.textures.clear();
+    tree.frame_elements.texts.clear();
 
     std::stack<Handle<Node>> nodes;
     nodes.push(tree.Root());
-    tree.frame_elements.items_in_a_row.PushBack(VariantIndex { .type = ElementType::rectangle, .count = 0U });
+    tree.frame_elements.items_in_a_row.push_back(VariantIndex { .type = ElementType::rectangle, .count = 0U });
     while (!nodes.empty()) {
         const Handle<Node> node = nodes.top();
         nodes.pop();
@@ -459,7 +459,7 @@ void NodeInputSystem::operator()() const {
         trees[hovered->tree].MarkDirty();
     }
 }
-void NodeRenderSystem::operator()() const {
+void NodeRenderSystem:: operator()() const {
     for (NodeTree& tree : data.Get<NodeTree>() | std::views::reverse | std::views::filter(&NodeTree::GetDisplay)) {
         const FrameElements& frame_elements = GetFrameElements(tree);
         std::span rectangles { frame_elements.rectangles };

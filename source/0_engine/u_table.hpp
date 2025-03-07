@@ -17,19 +17,19 @@ struct Table {
     List<Column> columns { };
     explicit Table(String&& name) : name(std::move(name)) { }
     void AddColumn(String&& title, const List<String>& values) {
-        ASSERT_DBG_RETURN(ColumnCount() == 0 || values.Size() == RowCount(), "Received different amount of values", );
+        ASSERT_DBG_RETURN(ColumnCount() == 0 || values.size() == RowCount(), "Received different amount of values", );
         headers.EmplaceBack(std::move(title));
         columns.EmplaceBack(values);
     }
     template <typename T> void AddColumn(String&& title, const List<T>& values) {
         headers.EmplaceBack(std::move(title));
-        List<String> strings { values.Size() };
+        List<String> strings { values.size() };
         for (const auto& value : values) { strings.EmplaceBack(FormatValue(value)); }
         columns.EmplaceBack(strings);
     }
 
-    [[nodiscard]] constexpr u32 RowCount() const { return columns[0].Size(); }
-    [[nodiscard]] constexpr u32 ColumnCount() const { return columns.Size(); }
+    [[nodiscard]] constexpr u32 RowCount() const { return columns[0].size(); }
+    [[nodiscard]] constexpr u32 ColumnCount() const { return columns.size(); }
     [[nodiscard]] constexpr u32 Size() const { return RowCount() * ColumnCount(); }
 };
 
@@ -41,12 +41,12 @@ struct TableU32 {
     List<Column> columns { };
     explicit TableU32(String&& name) : name(std::move(name)) { }
     void AddColumn(String&& title, const List<u32>& values) {
-        ASSERT_DBG_RETURN(ColumnCount() == 0 || values.Size() == RowCount(), "Received different amount of values", );
+        ASSERT_DBG_RETURN(ColumnCount() == 0 || values.size() == RowCount(), "Received different amount of values", );
         headers.EmplaceBack(std::move(title));
         columns.EmplaceBack(values);
     }
-    [[nodiscard]] constexpr u32 RowCount() const { return columns[0].Size(); }
-    [[nodiscard]] constexpr u32 ColumnCount() const { return columns.Size(); }
+    [[nodiscard]] constexpr u32 RowCount() const { return columns[0].size(); }
+    [[nodiscard]] constexpr u32 ColumnCount() const { return columns.size(); }
 };
 
 inline String TableToString (const TableU32& table) {
@@ -76,10 +76,10 @@ public:
         AddColumn(name, idx);
     }
     template <typename T> void AddColumnFixed(const String& title, const List<T>& values, const u32 width) {
-        ASSERT_DBG_RETURN(values.Size() < rows.Size(), "Received more values than rows in table", );
+        ASSERT_DBG_RETURN(values.size() < rows.size(), "Received more values than rows in table", );
         rows[0U] += std::format("{:>{}} |", title, width);
-        for (u32 i = 0U; i < values.Size(); i++) { rows[i + 1U] += std::format("{:>{}} |", FormatValue(values[i]), width); }
-        for (u32 i = static_cast<u32>(values.Size()) + 1U; i < rows.Size(); ++i) { rows[i] += std::format("{:>{}} |", "XXXX", width); }
+        for (u32 i = 0U; i < values.size(); i++) { rows[i + 1U] += std::format("{:>{}} |", FormatValue(values[i]), width); }
+        for (u32 i = static_cast<u32>(values.size()) + 1U; i < rows.size(); ++i) { rows[i] += std::format("{:>{}} |", "XXXX", width); }
     }
     template <typename T> void AddColumn(const String& title, const List<T>& values) { AddColumnFixed(title, values, title.size() + 1U); }
     String& WriteToLogger (Logger& logger, const LOGGER_COLOR coloring) const {
@@ -87,8 +87,8 @@ public:
         logger.Write("{}", line);
         logger.Write("|{}", rows[0U]);
         logger.Write("{}", line);
-        if (rows.Size() > 1U) {
-            for (u32 i = 1U; i < rows.Size(); i++) {
+        if (rows.size() > 1U) {
+            for (u32 i = 1U; i < rows.size(); i++) {
                 if (coloring == COLOR_ENABLED) { logger.RotateColor(i - 1U); }
                 logger.Write("|{}", rows[i]);
             }
@@ -104,7 +104,7 @@ public:
 };
 
 template <typename T> static void PrintListStats(Logger& logger, const List<T>& list) {
-    const u32 len = list.Size();
+    const u32 len = list.size();
     if (len == 0U) { return; }
     const T max = *std::ranges::max_element(list, std::less(), { });
     const T min = *std::ranges::min_element(list, std::less(), { });

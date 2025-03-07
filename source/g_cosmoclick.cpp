@@ -106,16 +106,22 @@ struct GameFrame : Frame {
     Handle<Node> build_menu { B(frame).Node(700U, hug).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::cerulean).Build() };
     NodeComponentPool<BuildingComponent> shop { B(build_menu).Pool<BuildingComponent>() };
 
+    Handle<ParticleEmitter> emitter = data.Create<ParticleEmitter>( ParticleEmitter { float2{ 0, 0.01F}  });
     Handle<Animation> planet_animation = AnimationSystem::Register(AnimationDesc {
                                                                        .action = [this] (const f32 t) -> void {
                                                                            static constexpr u32 PLANET_PADDING_START = 10U;
                                                                            const u32 padding_value = PLANET_PADDING_START + static_cast<u32>((1-t) * PLANET_BORDER_SIZE);
                                                                            data[tree].styles[planet].padding = uint4 { padding_value, padding_value, padding_value, padding_value };
                                                                            data[tree].styles[planet].background_color = colors::LightenColor(colors::cyan, t);
+                                                                           data[emitter].particles.push_back( Particle{ .position = {400U, 400U}, .time = 1000U } );
+                                                                           data[emitter].particles.push_back( Particle{ .position = {400U, 400U}, .time = 1200U } );
+
                                                                            singleton.Get<UIFlags>() & UIFlags::planet;
                                                                        },
                                                                        .duration_ms = 400U,
-                                                                       .state = AnimationState::keep_alive_stopped });
+                                                                       .state = AnimationState::persistent_stopped });
+
+
 };
 struct CosmoClickSystem {
     Scene scene { Scene::start };
@@ -147,7 +153,7 @@ CosmoClick::CosmoClick() {
         { .name = "Mars Colony", .texture = data.Create<Texture>(Asset("mars-colony.png")), .cost = Money { 500000U }, .income = Income { 40000U } },
         { .name = "Dyson Sphere Segment", .texture = data.Create<Texture>(Asset("dyson-sphere.png")), .cost = Money { 2000000U }, .income = Income { 250000U } }, };
     singleton.Get<GameState>() = GameState {
-        .building_counts = List { singleton.Get<GameDefines>().buildings.Size(), Count { 0U } },
+        .building_counts = List { singleton.Get<GameDefines>().buildings.size(), Count { 0U } },
         .start_time = TimeNow(),
         .seconds_since_start = 0U,
         .money = Money { 100U },
@@ -163,6 +169,7 @@ CosmoClick::CosmoClick() {
     orchestra.Add<CosmoClickUISystem>();
 
     orchestra.Add<AnimationSystem>();
+    orchestra.Add<ParticleSystem>();
     orchestra.Add<NodeRenderSystem>();
     orchestra.Add<PresentSystem>();
 }
@@ -208,7 +215,7 @@ void CosmoClickUISystem::operator()() const {
     if (ui_flags | UIFlags::planet) {
         data[game_frame.tree].MarkDirty(game_frame.planet);
     }
-    if (ui_flags | UIFlags::buildings) { game_frame.shop.Set(std::views::iota(0U, singleton.Get<GameDefines>().buildings.Size())); }
+    if (ui_flags | UIFlags::buildings) { game_frame.shop.Set(std::views::iota(0U, singleton.Get<GameDefines>().buildings.size())); }
     if (ui_flags | UIFlags::money) {
         game_frame.money.SetValue(game_state.money);
         game_frame.income.SetValue(game_state.income);
