@@ -196,4 +196,5 @@ private:
         for (; size > new_size; --size) { tree.DetachNode(nodes[size - 1U].root.node); }
     }
 };
+
 } // namespace pce::ui

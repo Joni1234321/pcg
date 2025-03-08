@@ -99,7 +99,7 @@ template <typename T> struct List {
 
     using iterator = typename std::vector<T>::iterator;
     using const_iterator = typename std::vector<T>::const_iterator;
-    using reverse_iterator       = typename std::vector<T>::reverse_iterator;
+    using reverse_iterator = typename std::vector<T>::reverse_iterator;
     using const_reverse_iterator = typename std::vector<T>::const_reverse_iterator;
 
     constexpr List() : data() { }
@@ -320,5 +320,18 @@ struct Parent : List<Entity> {
     Parent& operator=(Parent&&) = delete;
 };
 
-struct Pool { };
+template <class T> struct Pool {
+    List<T> items;
+    u32 deleted { 0U };
+    constexpr Pool(u32 default_size) : items { default_size } { }
+    void ApplyErase() {
+        if (deleted == 0U) { return; }
+        items.resize(items.size() - deleted);
+        deleted = 0U;
+    }
+    void SwapBackErase(T& item) {
+        T& back = *(items.end() - ++deleted);
+        if (std::addressof(item) != std::addressof(back)) { std::swap(item, back); }
+    }
+};
 } // namespace pce

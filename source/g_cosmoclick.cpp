@@ -45,7 +45,7 @@ struct UIFlags {
     [[nodiscard]] constexpr b8 Any() const noexcept { return flags.any(); }
     constexpr void Set() noexcept { flags.set(); }
     constexpr void Reset() noexcept { flags.reset(); }
-    [[nodiscard]] constexpr b8 Only(const Flag flag) const noexcept{
+    [[nodiscard]] constexpr b8 Only(const Flag flag) const noexcept {
         std::bitset<static_cast<size_t>(size)> mask { };
         return flags == mask.set(flag);
     }
@@ -91,6 +91,8 @@ struct GameFrame : Frame {
     static constexpr u32 PLANET_SIZE = 400U;
     static constexpr u32 PLANET_BORDER_SIZE = 10U;
 
+    Handle<ParticleEmitter> emitter = data.Create<ParticleEmitter>(ParticleEmitter { float2 { 0, -0.01F } });
+
     Handle<Node> game { B(frame).Node(fill).Direction(vertical).Center().Padding2({ 0U, 40U }).Build() };
     Handle<Node> info { B(game).Node(500U, hug).Direction(vertical).Center().Fill(colors::clear).Padding2({ 50U, 4U }).Build() };
     ValueUnit<Money> money { B(info).Component<ValueUnit<Money>>({ Money { 0U }, Unit::cosmos, FontSizes::h1, colors::deep_gold }) };
@@ -99,29 +101,32 @@ struct GameFrame : Frame {
     Handle<Node> planet {
         B(click).Node(PLANET_SIZE + PLANET_BORDER_SIZE).Padding(PLANET_BORDER_SIZE).Fill(colors::white).OnClick([this] (const NodeReference) -> void {
             AnimationSystem::StartAnimation(this->planet_animation);
-            singleton.Get<GameState>().money += Money { 5U };
+            constexpr Money money_per_click { 5U };
+            singleton.Get<GameState>().money += money_per_click;
             singleton.Get<UIFlags>() & UIFlags::money;
+            uint2 mouse_position = singleton.Get<InputState>().mouse_position;
+            String text = std::format("Hej {} ", money_per_click.Value()); //std::to_string(money_per_click.Value());
+            data[emitter].particles.items.push_back(Particle {
+                                                        .position = { static_cast<f32>(mouse_position.x), static_cast<f32>(mouse_position.y) },
+                                                        .time = 4000U,
+                                                        .text = TTF_CreateText(singleton.Get<WindowState>().text_engine,
+                                                                               singleton.Get<FontCollection>().GetFont(FontSizes::h3).ToSDL(), text.CString(),
+                                                                               text.size()) });
         }).Build() };
     Handle<Node> planet_intra { B(planet).Node(fill).Fill(colors::dark_navy_blue).Build() };
     Handle<Node> build_menu { B(frame).Node(700U, hug).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::cerulean).Build() };
     NodeComponentPool<BuildingComponent> shop { B(build_menu).Pool<BuildingComponent>() };
 
-    Handle<ParticleEmitter> emitter = data.Create<ParticleEmitter>( ParticleEmitter { float2{ 0, 0.01F}  });
     Handle<Animation> planet_animation = AnimationSystem::Register(AnimationDesc {
                                                                        .action = [this] (const f32 t) -> void {
                                                                            static constexpr u32 PLANET_PADDING_START = 10U;
-                                                                           const u32 padding_value = PLANET_PADDING_START + static_cast<u32>((1-t) * PLANET_BORDER_SIZE);
+                                                                           const u32 padding_value = PLANET_PADDING_START + static_cast<u32>((1 - t) * PLANET_BORDER_SIZE);
                                                                            data[tree].styles[planet].padding = uint4 { padding_value, padding_value, padding_value, padding_value };
                                                                            data[tree].styles[planet].background_color = colors::LightenColor(colors::cyan, t);
-                                                                           data[emitter].particles.push_back( Particle{ .position = {400U, 400U}, .time = 1000U } );
-                                                                           data[emitter].particles.push_back( Particle{ .position = {400U, 400U}, .time = 1200U } );
-
                                                                            singleton.Get<UIFlags>() & UIFlags::planet;
                                                                        },
                                                                        .duration_ms = 400U,
                                                                        .state = AnimationState::persistent_stopped });
-
-
 };
 struct CosmoClickSystem {
     Scene scene { Scene::start };
@@ -169,8 +174,8 @@ CosmoClick::CosmoClick() {
     orchestra.Add<CosmoClickUISystem>();
 
     orchestra.Add<AnimationSystem>();
-    orchestra.Add<ParticleSystem>();
     orchestra.Add<NodeRenderSystem>();
+    orchestra.Add<ParticleSystem>();
     orchestra.Add<PresentSystem>();
 }
 void CosmoClick::Tick() {
@@ -212,20 +217,15 @@ void CosmoClickUISystem::operator()() const {
     const GameState& game_state = singleton.Get<GameState>();
     UIFlags& ui_flags = singleton.Get<UIFlags>();
     GameFrame& game_frame = singleton.Get<GameFrame>();
-    if (ui_flags | UIFlags::planet) {
-        data[game_frame.tree].MarkDirty(game_frame.planet);
-    }
+    if (ui_flags | UIFlags::planet) { data[game_frame.tree].MarkDirty(game_frame.planet); }
     if (ui_flags | UIFlags::buildings) { game_frame.shop.Set(std::views::iota(0U, singleton.Get<GameDefines>().buildings.size())); }
     if (ui_flags | UIFlags::money) {
         game_frame.money.SetValue(game_state.money);
         game_frame.income.SetValue(game_state.income);
     }
-    UIFlags planet_check {};
+    UIFlags planet_check { };
     planet_check & UIFlags::planet;
-    if (ui_flags.Only(UIFlags::planet)) {
-        data[game_frame.tree].MarkDirty(game_frame.planet);
-    }
-    else if (ui_flags.Any()) {
+    if (ui_flags.Only(UIFlags::planet)) { data[game_frame.tree].MarkDirty(game_frame.planet); } else if (ui_flags.Any()) {
         data[game_frame.tree].MarkDirty();
         ui_flags.Reset();
     }

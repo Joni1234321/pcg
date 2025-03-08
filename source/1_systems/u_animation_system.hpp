@@ -30,40 +30,28 @@ struct AnimationSystem {
 struct Particle {
     float2 position;
     u32 time;
+    TTF_Text* text;
 };
 struct ParticleEmitter {
     static constexpr u32 DEFAULT_COUNT = 128U;
 
     float2 velocity;
-    List<Particle> particles { DEFAULT_COUNT };
+    Pool<Particle> particles { DEFAULT_COUNT };
 };
+
 struct ParticleSystem {
     void operator()() const {
+        constexpr SDL_Color color = colors::black;
+        (void)SDL_SetRenderDrawColor(singleton.Get<WindowState>().renderer, color.r, color.g, color.b, color.a);
+        // const SDL_FRect rect { .x = particle.position.x, .y = particle.position.y, .w = static_cast<f32>(10U), .h = static_cast<f32>(10U) };
         for (ParticleEmitter& emitter : data.Get<ParticleEmitter>()) {
-            u32 deleted { 0U };
-            for (List<Particle>::iterator it = emitter.particles.begin(); it != emitter.particles.end() - deleted;) {
-                Particle& particle = *it;
-                if (particle.time == 0U) {
-                    auto dist1 = std::distance(std::begin(emitter.particles), it);
-                    auto dist2 = std::distance(std::begin(emitter.particles), emitter.particles.end());
-                    Logger().Log("Removing element at {} {} so new size will be {}", dist1, dist2, emitter.particles.size());
-
-                    const List<Particle>::iterator last = emitter.particles.end() - 1U - deleted;
-                    deleted++;
-                    if (it == last) { break; }
-                    std::iter_swap(it, last);
-                    continue;
-                }
-
-                const SDL_Color color = colors::beige;
-                const SDL_FRect rect { .x = static_cast<f32>(particle.position.x), .y = static_cast<f32>(particle.position.y), .w = static_cast<f32>(1000U), .h = static_cast<f32>(10U)};
-                (void)SDL_SetRenderDrawColor(singleton.Get<WindowState>().renderer, color.r, color.g, color.b, color.a);
-                (void)SDL_RenderFillRect(singleton.Get<WindowState>().renderer, &rect);
+            for (Particle& particle : emitter.particles.items | std::views::reverse) {
+                TTF_DrawRendererText(particle.text, particle.position.x, particle.position.y);
                 particle.position += emitter.velocity;
                 particle.time -= 1U;
-                ++it;
+                if (particle.time == 0U) { emitter.particles.SwapBackErase(particle); }
             }
-            emitter.particles.resize(emitter.particles.size() - deleted);
+            emitter.particles.ApplyErase();
         }
     }
 };
@@ -105,7 +93,7 @@ inline b8 AnimationSystem::IsRunning(const Handle<Animation> animation_handle) {
         case AnimationState::recycle:
         case AnimationState::persistent_stopped:
             return false;
-        default: STL_ASSERT(false, "Unknown animation state {}", data[animation_handle].state);
+        default: STL_ASSERT(false, std::format("Unknown animation state {}", data[animation_handle].state));
             return false;
     }
 }
