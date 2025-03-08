@@ -83,11 +83,10 @@ struct String {
 
     constexpr void Add(const String& other) { data += other.data; }
     constexpr void Add(const String&& other) { data += other.data; }
-    [[nodiscard]] constexpr b8 Empty() const { return data.empty(); }
-    [[nodiscard]] constexpr const char *CString() const { return data.c_str(); }
-    [[nodiscard]] u32 Size() const { return static_cast<u32>(data.size()); }
-    [[nodiscard]] u32 size() const { return static_cast<u32>(data.size()); }
-    constexpr void Clear() { data.clear(); }
+    [[nodiscard]] constexpr b8 empty() const { return data.empty(); }
+    [[nodiscard]] constexpr const char *c_str() const { return data.c_str(); }
+    [[nodiscard]] constexpr u32 size() const noexcept { return static_cast<u32>(data.size()); }
+    constexpr void clear() noexcept { data.clear(); }
 
 private:
     std::string data;

@@ -52,10 +52,10 @@ struct Logger {
     ~Logger() { Print(); }
 
     void Print() {
-        if (string.Empty()) { return; }
+        if (string.empty()) { return; }
         ClearColor();
-        (void)std::printf(string.CString()); // NOLINT(*-vararg)
-        string.Clear();
+        (void)std::printf(string.c_str()); // NOLINT(*-vararg)
+        string.clear();
     }
 
     template <typename... Args> constexpr void Log(const char* text, Args... args) {

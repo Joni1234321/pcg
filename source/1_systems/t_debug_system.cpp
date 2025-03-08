@@ -19,7 +19,7 @@ void DebugNodeComponent::SetProperty(const Property& property) const {
     constexpr u32 padding_offset = 10U;
     const NodeStyle& style = data[property.hovered.tree].styles[property.hovered.node];
     const NodeProperties& properties = data[property.hovered.tree].node_properties[property.hovered.node];
-    const String type = !properties.text.Empty() ? properties.text.CString() : style.texture.IsValid() ? "image" : "node";
+    const String type = !properties.text.empty() ? properties.text.c_str() : style.texture.IsValid() ? "image" : "node";
     const auto to_string = [] (LayoutLength c) -> String {
         switch (c.constraint) {
             case LayoutLength::Constraint::child_constraint:

@@ -105,12 +105,12 @@ struct GameFrame : Frame {
             singleton.Get<GameState>().money += money_per_click;
             singleton.Get<UIFlags>() & UIFlags::money;
             uint2 mouse_position = singleton.Get<InputState>().mouse_position;
-            String text = std::format("Hej {} ", money_per_click.Value()); //std::to_string(money_per_click.Value());
+            String text = std::to_string(money_per_click.Value());
             data[emitter].particles.items.push_back(Particle {
                                                         .position = { static_cast<f32>(mouse_position.x), static_cast<f32>(mouse_position.y) },
                                                         .time = 4000U,
                                                         .text = TTF_CreateText(singleton.Get<WindowState>().text_engine,
-                                                                               singleton.Get<FontCollection>().GetFont(FontSizes::h3).ToSDL(), text.CString(),
+                                                                               singleton.Get<FontCollection>().GetFont(FontSizes::h3).ToSDL(), text.c_str(),
                                                                                text.size()) });
         }).Build() };
     Handle<Node> planet_intra { B(planet).Node(fill).Fill(colors::dark_navy_blue).Build() };

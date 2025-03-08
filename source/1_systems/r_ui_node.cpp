@@ -215,14 +215,14 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
         NodeStyle& node_style = tree.styles[node];
         NodeProperties& node_properties = tree.node_properties[node];
         UniquePointer<TTF_Text, NodeTree::DestroyText>& ttf_text = tree.node_ttf_texts[node];
-        if (node_properties.text.Empty()) {
+        if (node_properties.text.empty()) {
             ttf_text.Reset();
             continue;
         }
 
         const Font& font = singleton.Get<FontCollection>().GetFont(node_properties.font_size);
-        if (ttf_text.Get() == nullptr) { ttf_text.Reset(TTF_CreateText(singleton.Get<WindowState>().text_engine, font.ToSDL(), node_properties.text.CString(), node_properties.text.size())); } else {
-            TTF_SetTextString(ttf_text.Get(), node_properties.text.CString(), node_properties.text.size());
+        if (ttf_text.Get() == nullptr) { ttf_text.Reset(TTF_CreateText(singleton.Get<WindowState>().text_engine, font.ToSDL(), node_properties.text.c_str(), node_properties.text.size())); } else {
+            TTF_SetTextString(ttf_text.Get(), node_properties.text.c_str(), node_properties.text.size());
             TTF_SetTextFont(ttf_text.Get(), font.ToSDL());
         }
         const SDL_Color color = node_style.background_color;
@@ -242,7 +242,7 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
         if (node_style.width.constraint != LayoutLength::child_constraint && node_style.height.constraint != LayoutLength::child_constraint) { continue; }
 
         uint2 text_size { 0U, 0U };
-        if (!node_properties.text.Empty()) { (void)TTF_GetTextSize(tree.node_ttf_texts[node].Get(), reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
+        if (!node_properties.text.empty()) { (void)TTF_GetTextSize(tree.node_ttf_texts[node].Get(), reinterpret_cast<i32*>(&text_size.x), reinterpret_cast<i32*>(&text_size.y)); }
         LayoutLength& major_layout = get_major_layout(node_style, node_style.direction);
         if (major_layout.constraint == LayoutLength::child_constraint) {
             const u32 children_major = get_major_pixels_taken_by_children(node, node_style.direction);
@@ -380,7 +380,7 @@ void AddNodeToFrameElement(NodeTree& tree, const Handle<Node> node) {
 
     const NodeStyle& style = tree.styles[node];
     const NodeProperties& properties = tree.node_properties[node];
-    if (!properties.text.Empty()) {
+    if (!properties.text.empty()) {
         add_type(ElementType::text);
         tree.frame_elements.texts.push_back(TextElement { .text = tree.node_ttf_texts[node].Get(), .position = { static_cast<f32>(style.InnerBoxPosition().x), static_cast<f32>(style.InnerBoxPosition().y) } });
     } else if (style.texture.IsValid()) {
