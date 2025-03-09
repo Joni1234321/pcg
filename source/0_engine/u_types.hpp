@@ -40,7 +40,6 @@ using b8 = bool;
 struct float2;
 struct uint2;
 
-
 struct uint2 {
     u32 x;
     u32 y;
@@ -120,12 +119,12 @@ struct uint4 {
 struct float2 {
     f32 x;
     f32 y;
-    constexpr float2 operator+(const float2 other) const { return { x + other.x, y + other.y }; }
-    constexpr float2 operator-(const float2 other) const { return { x - other.x, y - other.y }; }
-    constexpr float2 operator*(const float2 other) const { return { x * other.x, y * other.y }; }
-    constexpr float2 operator/(const float2 other) const { return { x / other.x, y / other.y }; }
-    constexpr float2 operator*(const u32 k) const { return { x * k, y * k }; }
-    constexpr float2 operator/(const u32 k) const { return { x / k, y / k }; }
+    constexpr float2 operator+(const float2 other) const { return float2 { x + other.x, y + other.y }; }
+    constexpr float2 operator-(const float2 other) const { return float2 { x - other.x, y - other.y }; }
+    constexpr float2 operator*(const float2 other) const { return float2 { x * other.x, y * other.y }; }
+    constexpr float2 operator/(const float2 other) const { return float2 { x / other.x, y / other.y }; }
+    constexpr float2 operator*(const f32 k) const { return float2 { x * k, y * k }; }
+    constexpr float2 operator/(const f32 k) const { return float2 { x / k, y / k }; }
     constexpr float2& operator+=(const float2 other) {
         x += other.x;
         y += other.y;
@@ -173,13 +172,13 @@ protected:
     u32 index;
 };
 
-template<class> struct Handle {
+template <class> struct Handle {
     u32 id;
     explicit constexpr Handle(const u32 id) : id(id) { }
     b8 operator==(const Handle&) const = default;
 };
 
-template<class T> struct OptionalHandle {
+template <class T> struct OptionalHandle {
     constexpr OptionalHandle() noexcept : id(U32_MAX) { }
     constexpr OptionalHandle(std::nullopt_t) noexcept : id(U32_MAX) { }
     constexpr explicit OptionalHandle(const u32 value) noexcept : id(value) { }

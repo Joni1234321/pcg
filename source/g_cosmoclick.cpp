@@ -91,7 +91,7 @@ struct GameFrame : Frame {
     static constexpr u32 PLANET_SIZE = 400U;
     static constexpr u32 PLANET_BORDER_SIZE = 10U;
 
-    Handle<ParticleEmitter> emitter = data.Create<ParticleEmitter>(ParticleEmitter { float2 { 0, -0.01F } });
+    Handle<ParticleEmitter> emitter = data.Create<ParticleEmitter>(ParticleEmitter { float2 { 0, -50.0F } });
 
     Handle<Node> game { B(frame).Node(fill).Direction(vertical).Center().Padding2({ 0U, 40U }).Build() };
     Handle<Node> info { B(game).Node(500U, hug).Direction(vertical).Center().Fill(colors::clear).Padding2({ 50U, 4U }).Build() };
@@ -104,14 +104,12 @@ struct GameFrame : Frame {
             constexpr Money money_per_click { 5U };
             singleton.Get<GameState>().money += money_per_click;
             singleton.Get<UIFlags>() & UIFlags::money;
-            uint2 mouse_position = singleton.Get<InputState>().mouse_position;
-            String text = std::to_string(money_per_click.Value());
+            const uint2 mouse_position = singleton.Get<InputState>().mouse_position;
+            const String text = std::to_string(money_per_click.Value());
             data[emitter].particles.items.push_back(Particle {
                                                         .position = { static_cast<f32>(mouse_position.x), static_cast<f32>(mouse_position.y) },
-                                                        .time = 4000U,
-                                                        .text = TTF_CreateText(singleton.Get<WindowState>().text_engine,
-                                                                               singleton.Get<FontCollection>().GetFont(FontSizes::h3).ToSDL(), text.c_str(),
-                                                                               text.size()) });
+                                                        .text = TTF_CreateText(singleton.Get<WindowState>().text_engine, singleton.Get<FontCollection>().GetFont(static_cast<FontSizes>(Rand(static_cast<u32>(FontSizes::body), static_cast<u32>(FontSizes::title)))).ToSDL(), text.c_str(), text.size()),
+                                                        .duration = ms32 { Rand(1000U, 3001U) }, });
         }).Build() };
     Handle<Node> planet_intra { B(planet).Node(fill).Fill(colors::dark_navy_blue).Build() };
     Handle<Node> build_menu { B(frame).Node(700U, hug).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::cerulean).Build() };
@@ -125,7 +123,7 @@ struct GameFrame : Frame {
                                                                            data[tree].styles[planet].background_color = colors::LightenColor(colors::cyan, t);
                                                                            singleton.Get<UIFlags>() & UIFlags::planet;
                                                                        },
-                                                                       .duration_ms = 400U,
+                                                                       .duration = ms32 { 400U },
                                                                        .state = AnimationState::persistent_stopped });
 };
 struct CosmoClickSystem {

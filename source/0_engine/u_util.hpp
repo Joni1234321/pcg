@@ -10,16 +10,20 @@
 namespace pce {
 template <typename T, template<typename> class Skill>concept HasASkill = std::derived_from<T, Skill<T>>;
 template <typename To, typename From> constexpr To& Reinterpret(From& from) { return *reinterpret_cast<To*>(&from); } // NOLINT(*-pro-type-reinterpret-cast)
-inline u32 Rand() {
+[[nodiscard]] inline u32 Rand() {
     static std::random_device random_device;
     static std::mt19937 gen(random_device());
     static std::uniform_int_distribution distribution(0U, U32_MAX);
     return distribution(gen);
 }
-inline u32 Rand(const u32 max) {
-    assert(max > 0);
+[[nodiscard]] inline u32 Rand(const u32 max) {
+    STL_ASSERT(max > 0, "max must be greater than 0");
     return Rand() % max;
 }
+[[nodiscard]] inline u32 Rand(const u32 min, const u32 max) {
+    return min + Rand(max - min);
+}
+
 template <typename Collection> typename Collection::key_type RandomKey(const Collection& collection) {
     if (std::empty(collection)) { throw std::runtime_error("Collection is empty!"); }
     auto iterator = std::next(std::begin(collection), Rand() % std::size(collection));

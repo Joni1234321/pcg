@@ -3,8 +3,10 @@
 // ReSharper disable CppNonExplicitConvertingConstructor
 #pragma once
 
-#include "u_collections.hpp"
-#include "u_types.hpp"
+#include <SDL3/SDL_timer.h>
+
+#include "0_engine/u_collections.hpp"
+#include "0_engine/u_types.hpp"
 
 namespace pce {
 template <typename T, typename TagType, template<typename> class... InheritList> class NamedType : public InheritList<NamedType<T, TagType, InheritList...>>... {
@@ -72,7 +74,8 @@ template <typename T, typename Parameter> std::ostream& operator<<(std::ostream&
     object.print(os);
     return os;
 }
-
+using ms32 = NamedType<u32, struct MilisecondsTag, Arithmetic>;
+inline ms32 TimeNowMS () noexcept { return ms32 { static_cast<u32>(SDL_GetTicks()) }; }
 } // namespace pcg
 
 #include "format"

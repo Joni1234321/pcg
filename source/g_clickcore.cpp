@@ -172,7 +172,7 @@ Scene ClickCore::GameScene() {
         high_score_frame.highscores.Set(std::views::enumerate(game_data.high_scores | std::views::reverse));
         return Scene::game_over;
     }
-    const u32 time_left_ms = static_cast<u32>(duration_cast<Milliseconds>(GAME_TIME - elapsed).count());
+    const u32 time_left_ms = static_cast<u32>(duration_cast<std::chrono::milliseconds>(GAME_TIME - elapsed).count());
     data[game_frame.tree].node_properties[game_frame.score_label].text = std::format("Score {:4}", game.score);
     game_frame.SetTime(time_left_ms);
 
