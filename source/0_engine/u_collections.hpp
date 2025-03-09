@@ -33,7 +33,6 @@ using Milliseconds = std::chrono::milliseconds;
 using Nanoseconds = std::chrono::nanoseconds;
 [[nodiscard]] inline TimePoint TimeNow() noexcept { return std::chrono::high_resolution_clock::now(); }
 // template <typename T> [[nodiscard]] Duration DurationCast (Duration duration) { return std::chrono::duration_cast<T>(duration); }
-
 template <typename T, typename D> class UniquePointer {
     T* pointer;
     [[msvc::no_unique_address]][[no_unique_address]] D destructor { }; // man i love msvc

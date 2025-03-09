@@ -214,7 +214,7 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
     for (const Handle node : nodes) {
         NodeStyle& node_style = tree.styles[node];
         NodeProperties& node_properties = tree.node_properties[node];
-        UniquePointer<TTF_Text, NodeTree::DestroyText>& ttf_text = tree.node_ttf_texts[node];
+        UniquePointer<TTF_Text, DestroyText>& ttf_text = tree.node_ttf_texts[node];
         if (node_properties.text.empty()) {
             ttf_text.Reset();
             continue;

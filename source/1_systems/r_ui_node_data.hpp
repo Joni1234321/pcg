@@ -113,12 +113,6 @@ struct NodeProperties {
     NodeReaction on_hover_out { };
 };
 struct NodeTree {
-    struct DestroyText {
-        void operator()(TTF_Text* text) const {
-            Logger().Destroyed("TTF_Text");
-            TTF_DestroyText(text);
-        }
-    };
     static constexpr u32 DEFAULT_COUNT = 128U;
     HandleList<NodeStyle, Node> styles { DEFAULT_COUNT };
     HandleList<NodeProperties, Node> node_properties { DEFAULT_COUNT };

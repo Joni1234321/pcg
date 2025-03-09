@@ -108,7 +108,7 @@ struct GameFrame : Frame {
             const String text = std::to_string(money_per_click.Value());
             data[emitter].particles.items.push_back(Particle {
                                                         .position = { static_cast<f32>(mouse_position.x), static_cast<f32>(mouse_position.y) },
-                                                        .text = TTF_CreateText(singleton.Get<WindowState>().text_engine, singleton.Get<FontCollection>().GetFont(static_cast<FontSizes>(Rand(static_cast<u32>(FontSizes::body), static_cast<u32>(FontSizes::title)))).ToSDL(), text.c_str(), text.size()),
+                                                        .text = std::unique_ptr<TTF_Text, DestroyText> { TTF_CreateText(singleton.Get<WindowState>().text_engine, singleton.Get<FontCollection>().GetFont(static_cast<FontSizes>(Rand(static_cast<u32>(FontSizes::body), static_cast<u32>(FontSizes::title)))).ToSDL(), text.c_str(), text.size()) },
                                                         .duration = ms32 { Rand(1000U, 3001U) }, });
         }).Build() };
     Handle<Node> planet_intra { B(planet).Node(fill).Fill(colors::dark_navy_blue).Build() };

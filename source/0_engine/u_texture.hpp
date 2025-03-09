@@ -21,4 +21,10 @@ private:
     };
     UniquePointer<SDL_Texture, CloseTexture> texture;
 };
+struct DestroyText {
+    void operator()(TTF_Text* text) const {
+        Logger().Destroyed("TTF_Text");
+        TTF_DestroyText(text);
+    }
+};
 } // namespace pce
