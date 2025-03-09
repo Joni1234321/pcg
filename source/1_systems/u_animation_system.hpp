@@ -9,13 +9,13 @@ namespace pce {
 enum class AnimationState : u8 { once, recycle, repeat, persistent, persistent_stopped };
 struct AnimationDesc {
     std::function<void(f32)> action;
-    ms32 duration;
+    miliseconds32 duration;
     AnimationState state;
 };
 struct Animation {
     std::function<void(f32)> action;
-    ms32 start;
-    ms32 duration;
+    miliseconds32 start;
+    miliseconds32 duration;
     AnimationState state;
 };
 struct AnimationSystem {
@@ -31,8 +31,8 @@ struct AnimationSystem {
 struct Particle {
     float2 position { 0.0F, 0.0F };
     std::unique_ptr<TTF_Text, DestroyText> text { nullptr };
-    ms32 duration { 0U };
-    ms32 start { TimeNowMS() };
+    miliseconds32 duration { 0U };
+    miliseconds32 start { TimeNowMS() };
 };
 struct ParticleEmitter {
     static constexpr u32 DEFAULT_COUNT = 128U;
@@ -45,7 +45,7 @@ struct ParticleSystem {
     void operator()() const {
         constexpr SDL_Color color { colors::black };
         const f32 delta_time { singleton.Get<TickState>().delta_time };
-        const ms32 current_ms { TimeNowMS() };
+        const miliseconds32 current_ms { TimeNowMS() };
         (void)SDL_SetRenderDrawColor(singleton.Get<WindowState>().renderer, color.r, color.g, color.b, color.a);
         for (ParticleEmitter& emitter : data.Get<ParticleEmitter>()) {
             for (Particle& particle : emitter.particles.items | std::views::reverse) {
@@ -100,7 +100,7 @@ inline b8 AnimationSystem::IsRunning(const Handle<Animation> animation_handle) {
     }
 }
 inline void AnimationSystem::operator()() const {
-    const ms32 current_ms { TimeNowMS() };
+    const miliseconds32 current_ms { TimeNowMS() };
     for (Animation& animation : data.Get<Animation>()) {
         f32 t = static_cast<f32>((current_ms - animation.start).Value()) / static_cast<f32>(animation.duration.Value());
         switch (animation.state) {

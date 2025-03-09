@@ -36,19 +36,16 @@ void DebugNodeComponent::SetProperty(const Property& property) const {
     data[root.tree].node_properties[text].text = std::format("{} [{}, {}]", type, to_string(style.width), to_string(style.height));
     data[root.tree].styles[color_indicator].background_color = style.background_color;
 }
-List<ns32> max_ns;
+List<nanoseconds64> max_ns;
 void TickFrame::Update() {
-    std::ranges::transform(max_ns, singleton.Get<OrchestraState>().ns, max_ns.begin(), math::max<ns32>{});
+    std::ranges::transform(max_ns, singleton.Get<OrchestraState>().ns, max_ns.begin(), math::max<nanoseconds64>{});
 
     if (singleton.Get<TickState>().tick.Value() % 500U == 0U) {
         u32 tick = singleton.Get<TickState>().tick.Value();
         u32 fps = static_cast<u32>(1.0F / singleton.Get<TickState>().delta_time);
         data[tree].MarkDirty();
-        static constexpr f32 S_TO_MS = 1'000.0F;
-        static constexpr f32 NS_TO_S = 1.0F / 1'000'000.0F;
-
-        ns32 sum_max_time = std::ranges::fold_left(max_ns, ns32 {0U}, std::plus{});
-        data[tree].node_properties[ticks].text = std::format("{:.3f}ms | {:.3f}ms | Tick: {:>8} | TPS: {:>4} | FPS: {:>4} |", singleton.Get<TickState>().delta_time * S_TO_MS, sum_max_time.Value() * NS_TO_S, tick, fps, fps);
+        nanoseconds64 sum_max_time = std::ranges::fold_left(max_ns, nanoseconds64 { 0U }, std::plus{});
+        data[tree].node_properties[ticks].text = std::format("{:.3f}ms | {:.3f}ms | Tick: {:>8} | TPS: {:>4} | FPS: {:>4} |", singleton.Get<TickState>().delta_time * SECONDS_TO_MS, sum_max_time.Value() * NS_TO_SECONDS, tick, fps, fps);
         systems.Set(std::views::zip(singleton.Get<OrchestraState>().names, singleton.Get<OrchestraState>().ns, max_ns));
         max_ns = singleton.Get<OrchestraState>().ns;
     }

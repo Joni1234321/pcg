@@ -74,11 +74,17 @@ template <typename T, typename Parameter> std::ostream& operator<<(std::ostream&
     object.print(os);
     return os;
 }
-using ms32 = NamedType<u32, struct MilisecondsTag, Arithmetic>;
-using ns32 = NamedType<u32, struct NanosecondsTag, Arithmetic>;
-using s32 = NamedType<u32, struct secondsTag, Arithmetic>;
-inline ms32 TimeNowMS () noexcept { return ms32 { static_cast<u32>(SDL_GetTicks()) }; }
-inline ns32 TimeNowNS () noexcept { return ns32 { static_cast<u32>(SDL_GetTicksNS()) }; }
+using seconds32 = NamedType<u32, struct SecondsTag, Arithmetic>;
+using miliseconds32 = NamedType<u32, struct MilisecondsTag, Arithmetic>;
+using nanoseconds64 = NamedType<u64, struct Nanoseconds64Tag, Arithmetic>;
+inline miliseconds32 TimeNowMS () noexcept { return miliseconds32 { static_cast<u32>(SDL_GetTicks()) }; }
+inline nanoseconds64 TimeNowNS () noexcept { return nanoseconds64 { SDL_GetTicksNS() }; }
+
+static constexpr f32 SECONDS_TO_MS = 1'000.0F;
+static constexpr f32 MS_TO_SECONDS = 1.0F / 1'000.0F;
+static constexpr f32 SECONDS_TO_NS = 1'000'000'000.0F;
+static constexpr f32 NS_TO_SECONDS = 1.0F / 1'000'000'000.0F;
+
 } // namespace pcg
 
 #include "format"

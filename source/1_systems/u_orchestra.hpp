@@ -12,7 +12,7 @@ struct OrchestraState {
     List<std::function<void()>> systems;
     List<std::unique_ptr<void, void(*)(void*)>> system_storage;
     List<String> names;
-    List<ns32> ns;
+    List<nanoseconds64> ns;
 };
 struct Orchestra {
     template <typename T> void Add() {
@@ -24,10 +24,9 @@ struct Orchestra {
         orchestra_state.ns.EmplaceBack(1U);
     }
     void RunSystems() {
-        using namespace std::chrono;
         OrchestraState& orchestra_state = singleton.Get<OrchestraState>();
         for (const auto [i, system] : orchestra_state.systems | std::views::enumerate) {
-            ns32 start = TimeNowNS();
+            nanoseconds64 start = TimeNowNS();
             system();
             orchestra_state.ns[i] = TimeNowNS() - start;
         }

@@ -37,7 +37,7 @@ struct GameState {
     List<Count> building_counts { singleton.Get<GameDefines>().buildings.size(), Count { 0U } };
     Money money { 100U };
     Income income { 0U };
-    ms32 last_tick { TimeNowMS() };
+    miliseconds32 last_tick { TimeNowMS() };
 };
 // systems
 struct CosmoClickSystem {
@@ -123,7 +123,7 @@ struct GameFrame : Frame {
                                                                            GetFont(static_cast<FontSizes>(Rand(static_cast<u32>(FontSizes::body),
                                                                                                                static_cast<u32>(FontSizes::title)))).ToSDL(), text.c_str(),
                                                                            text.size()) },
-                                                        .duration = ms32 { Rand(1000U, 3001U) }, });
+                                                        .duration = miliseconds32 { Rand(1000U, 3001U) }, });
         }).Build() };
     Handle<Node> planet_intra { B(planet).Node(fill).Fill(colors::dark_navy_blue).Build() };
     Handle<Node> build_menu { B(frame).Node(700U, hug).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::cerulean).Build() };
@@ -137,7 +137,7 @@ struct GameFrame : Frame {
                                                                            data[tree].styles[planet].background_color = colors::LightenColor(colors::cyan, t);
                                                                            singleton.Get<UIFlags>() & UIFlags::planet;
                                                                        },
-                                                                       .duration = ms32 { 400U },
+                                                                       .duration = miliseconds32 { 400U },
                                                                        .state = AnimationState::persistent_stopped });
 };
 void CosmoClickSystem::operator()() {
@@ -159,10 +159,10 @@ void CosmoClickSystem::operator()() {
 Scene CosmoClickSystem::GameScene() {
     UIFlags& ui_flags = singleton.Get<UIFlags>();
     GameState& game_data = singleton.Get<GameState>();
-    const ms32 now { TimeNowMS() };
-    constexpr ms32 ms_per_s { 1000U };
-    const s32 delta_s { ((now - game_data.last_tick) / ms_per_s).Value() };
-    if (delta_s > s32 { 0U }) {
+    const miliseconds32 now { TimeNowMS() };
+    constexpr miliseconds32 ms_per_s { 1000U };
+    const seconds32 delta_s { ((now - game_data.last_tick) / ms_per_s).Value() };
+    if (delta_s > seconds32 { 0U }) {
         game_data.money += Money { game_data.income.Value() * delta_s.Value() };
         game_data.last_tick = now;
         ui_flags & UIFlags::money;

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <chrono>
-
 #include "0_engine/u_ecs.hpp"
 #include "0_engine/u_types.hpp"
 #include "1_systems/u_orchestra.hpp"
@@ -11,15 +9,15 @@ using Tick = NamedType<u32, struct TickTag, Arithmetic>;
 
 struct TickState {
     Tick tick { 0U };
-    std::chrono::time_point<std::chrono::high_resolution_clock> last_tick_start;
+    nanoseconds64 last_tick_time { TimeNowNS() };
     f32 delta_time { 1.0F };
 };
 struct TickSystem {
     void operator()() const {
-        using namespace std::chrono;
         TickState& tick_state = singleton.Get<TickState>();
-        tick_state.delta_time = duration<f32>(high_resolution_clock::now() - tick_state.last_tick_start).count();
-        tick_state.last_tick_start = high_resolution_clock::now();
+        const nanoseconds64 time { TimeNowNS() };
+        tick_state.delta_time = (time - tick_state.last_tick_time).Value() * NS_TO_SECONDS;
+        tick_state.last_tick_time = time;
         tick_state.tick += Tick { 1U };
     }
 };
