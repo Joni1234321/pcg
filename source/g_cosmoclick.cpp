@@ -17,6 +17,7 @@ namespace pcg::cosmoclick {
 using namespace pce;
 using namespace pce::ui;
 
+// data
 using Count = NamedType<u32, struct CountTag, Arithmetic>;
 using Money = NamedType<u32, struct MoneyTag, Arithmetic, FormatLongNumber>;
 using Income = NamedType<u32, struct IncomeTag, Arithmetic, FormatLongNumber>;
@@ -33,11 +34,19 @@ struct GameDefines {
     List<Building> buildings;
 };
 struct GameState {
-    List<Count> building_counts { };
-    TimePoint start_time { };
-    u32 seconds_since_start { 0U };
-    Money money { 0U };
+    List<Count> building_counts { singleton.Get<GameDefines>().buildings.size(), Count { 0U } };
+    Money money { 100U };
     Income income { 0U };
+    ms32 last_tick { TimeNowMS() };
+};
+// systems
+struct CosmoClickSystem {
+    Scene scene { Scene::start };
+    void operator()();
+    Scene GameScene();
+};
+struct CosmoClickUISystem {
+    void operator()() const;
 };
 // ui
 struct UIFlags {
@@ -108,7 +117,12 @@ struct GameFrame : Frame {
             const String text = std::to_string(money_per_click.Value());
             data[emitter].particles.items.push_back(Particle {
                                                         .position = { static_cast<f32>(mouse_position.x), static_cast<f32>(mouse_position.y) },
-                                                        .text = std::unique_ptr<TTF_Text, DestroyText> { TTF_CreateText(singleton.Get<WindowState>().text_engine, singleton.Get<FontCollection>().GetFont(static_cast<FontSizes>(Rand(static_cast<u32>(FontSizes::body), static_cast<u32>(FontSizes::title)))).ToSDL(), text.c_str(), text.size()) },
+                                                        .text = std::unique_ptr<TTF_Text, DestroyText> {
+                                                            TTF_CreateText(singleton.Get<WindowState>().text_engine,
+                                                                           singleton.Get<FontCollection>().
+                                                                           GetFont(static_cast<FontSizes>(Rand(static_cast<u32>(FontSizes::body),
+                                                                                                               static_cast<u32>(FontSizes::title)))).ToSDL(), text.c_str(),
+                                                                           text.size()) },
                                                         .duration = ms32 { Rand(1000U, 3001U) }, });
         }).Build() };
     Handle<Node> planet_intra { B(planet).Node(fill).Fill(colors::dark_navy_blue).Build() };
@@ -126,60 +140,6 @@ struct GameFrame : Frame {
                                                                        .duration = ms32 { 400U },
                                                                        .state = AnimationState::persistent_stopped });
 };
-struct CosmoClickSystem {
-    Scene scene { Scene::start };
-    void operator()();
-
-private:
-    Scene GameScene();
-};
-struct CosmoClickUISystem {
-    void operator()() const;
-};
-class CosmoClick : LogLifetimeWithCount<CosmoClick> {
-    Orchestra orchestra { };
-
-public:
-    CosmoClick();
-    void Tick();
-};
-CosmoClick::CosmoClick() {
-    singleton.Get<WindowState>().clear_color = colors::dark_grey;
-    singleton.Get<GameDefines>().buildings = List<Building> {
-        { .name = "Mine", .texture = data.Create<Texture>(Asset("mine-small.png")), .cost = Money { 100U }, .income = Income { 1U } },
-        { .name = "Factory", .texture = data.Create<Texture>(Asset("factory-small.png")), .cost = Money { 500U }, .income = Income { 10U } },
-        { .name = "Spaceport", .texture = data.Create<Texture>(Asset("spaceport-small.png")), .cost = Money { 2000U }, .income = Income { 60U } },
-        { .name = "Off World Colony", .texture = data.Create<Texture>(Asset("off-world-colony-small.png")), .cost = Money { 10000U }, .income = Income { 500U } },
-        { .name = "Asteroid Mining Station", .texture = data.Create<Texture>(Asset("asteroid-mine.jpg")), .cost = Money { 25000U }, .income = Income { 1500U } },
-        { .name = "Lunar Research Base", .texture = data.Create<Texture>(Asset("lunar-base.png")), .cost = Money { 75000U }, .income = Income { 5000U } },
-        { .name = "Orbital Shipyard", .texture = data.Create<Texture>(Asset("orbital-shipyard.png")), .cost = Money { 200000U }, .income = Income { 15000U } },
-        { .name = "Mars Colony", .texture = data.Create<Texture>(Asset("mars-colony.png")), .cost = Money { 500000U }, .income = Income { 40000U } },
-        { .name = "Dyson Sphere Segment", .texture = data.Create<Texture>(Asset("dyson-sphere.png")), .cost = Money { 2000000U }, .income = Income { 250000U } }, };
-    singleton.Get<GameState>() = GameState {
-        .building_counts = List { singleton.Get<GameDefines>().buildings.size(), Count { 0U } },
-        .start_time = TimeNow(),
-        .seconds_since_start = 0U,
-        .money = Money { 100U },
-        .income = Income { 0U } };
-
-    orchestra.Add<DebugSystem>();
-
-    orchestra.Add<TickSystem>();
-    orchestra.Add<InputSystem>();
-    orchestra.Add<NodeInputSystem>();
-
-    orchestra.Add<CosmoClickSystem>();
-    orchestra.Add<CosmoClickUISystem>();
-
-    orchestra.Add<AnimationSystem>();
-    orchestra.Add<NodeRenderSystem>();
-    orchestra.Add<ParticleSystem>();
-    orchestra.Add<PresentSystem>();
-}
-void CosmoClick::Tick() {
-    if (singleton.Get<InputState>().keys_down[SDLK_ESCAPE]) { singleton.Get<TickState>().running = false; }
-    orchestra.RunSystems();
-}
 void CosmoClickSystem::operator()() {
     const Scene start = scene;
     switch (scene) {
@@ -191,22 +151,20 @@ void CosmoClickSystem::operator()() {
             break;
         case Scene::quit:
             Logger().Log("Quit requested");
-            singleton.Get<TickState>().running = false;
+            singleton.Get<InputState>().quit = true;
             break;
     }
     if (scene != start) { singleton.Get<UIFlags>().Set(); }
 }
-
 Scene CosmoClickSystem::GameScene() {
     UIFlags& ui_flags = singleton.Get<UIFlags>();
     GameState& game_data = singleton.Get<GameState>();
-    const TimePoint update_time = TimeNow();
-    const Duration time_since_start = update_time - game_data.start_time;
-    const u32 seconds_since_start = static_cast<u32>(std::chrono::duration_cast<Seconds>(time_since_start).count());
-    const u32 delta_seconds = seconds_since_start - game_data.seconds_since_start;
-    if (delta_seconds > 0U) {
-        game_data.money += Money { game_data.income.Value() * delta_seconds };
-        game_data.seconds_since_start = seconds_since_start;
+    const ms32 now { TimeNowMS() };
+    constexpr ms32 ms_per_s { 1000U };
+    const s32 delta_s { ((now - game_data.last_tick) / ms_per_s).Value() };
+    if (delta_s > s32 { 0U }) {
+        game_data.money += Money { game_data.income.Value() * delta_s.Value() };
+        game_data.last_tick = now;
         ui_flags & UIFlags::money;
     }
     return Scene::game;
@@ -265,8 +223,40 @@ void BuildingComponent::SetProperty(const Property& property) const {
     };
 }
 } // namespace pcg::cosmoclick
-
 void pcg::arcade::RunCosmoClick() {
-    cosmoclick::CosmoClick cosmo_click { };
-    while (pce::singleton.Get<pce::TickState>().running) { cosmo_click.Tick(); }
+    using namespace pce;
+    using namespace cosmoclick;
+    Orchestra orchestra { };
+
+    // Data
+    singleton.Get<WindowState>().clear_color = colors::dark_grey;
+    singleton.Get<GameDefines>().buildings = List {
+        Building { .name = "Mine", .texture = data.Create<Texture>(Asset("mine-small.png")), .cost = Money { 100U }, .income = Income { 1U } },
+        Building { .name = "Factory", .texture = data.Create<Texture>(Asset("factory-small.png")), .cost = Money { 500U }, .income = Income { 10U } },
+        Building { .name = "Spaceport", .texture = data.Create<Texture>(Asset("spaceport-small.png")), .cost = Money { 2000U }, .income = Income { 60U } },
+        Building { .name = "Off World Colony", .texture = data.Create<Texture>(Asset("off-world-colony-small.png")), .cost = Money { 10000U }, .income = Income { 500U } },
+        Building { .name = "Asteroid Mining Station", .texture = data.Create<Texture>(Asset("asteroid-mine.jpg")), .cost = Money { 25000U }, .income = Income { 1500U } },
+        Building { .name = "Lunar Research Base", .texture = data.Create<Texture>(Asset("lunar-base.png")), .cost = Money { 75000U }, .income = Income { 5000U } },
+        Building { .name = "Orbital Shipyard", .texture = data.Create<Texture>(Asset("orbital-shipyard.png")), .cost = Money { 200000U }, .income = Income { 15000U } },
+        Building { .name = "Mars Colony", .texture = data.Create<Texture>(Asset("mars-colony.png")), .cost = Money { 500000U }, .income = Income { 40000U } },
+        Building { .name = "Dyson Sphere Segment", .texture = data.Create<Texture>(Asset("dyson-sphere.png")), .cost = Money { 2000000U }, .income = Income { 250000U } }, };
+
+    singleton.Get<GameState>() = GameState { };
+
+    // Systems
+    orchestra.Add<DebugSystem>();
+
+    orchestra.Add<TickSystem>();
+    orchestra.Add<InputSystem>();
+    orchestra.Add<NodeInputSystem>();
+
+    orchestra.Add<CosmoClickSystem>();
+    orchestra.Add<CosmoClickUISystem>();
+
+    orchestra.Add<AnimationSystem>();
+    orchestra.Add<NodeRenderSystem>();
+    orchestra.Add<ParticleSystem>();
+    orchestra.Add<PresentSystem>();
+
+    while (!singleton.Get<InputState>().quit && !singleton.Get<InputState>().keys_down[SDLK_ESCAPE]) { orchestra.RunSystems(); }
 }

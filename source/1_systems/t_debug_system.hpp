@@ -5,7 +5,7 @@
 
 namespace pce::ui {
 struct TickComponent : NodeComponentBase {
-    using Property = std::tuple<String&, u32, u32>;
+    using Property = std::tuple<String&, ns32, ns32>;
     explicit TickComponent(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(hug).Text(FontSizes::tiny, colors::radiant_orange).Build() } { }
     void SetProperty(const Property& property) const;
 };

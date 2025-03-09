@@ -1,7 +1,6 @@
 #pragma once
 
 #include <bitset>
-#include <chrono>
 #include <format>
 #include <queue>
 #include <set>
@@ -24,15 +23,6 @@ template <typename T> using Stack = std::stack<T>;
 template <class K, class V> using UnorderedMap = std::unordered_map<K, V>;
 template <class T, class C = std::less<T>> using Set = std::set<T, C>;
 template <class T, class C = std::less<T>> using Multiset = std::multiset<T, C>;
-
-using namespace std::chrono_literals;
-using TimePoint = std::chrono::time_point<std::chrono::high_resolution_clock>;
-using Duration = std::chrono::duration;
-using Seconds = std::chrono::seconds;
-using Milliseconds = std::chrono::milliseconds;
-using Nanoseconds = std::chrono::nanoseconds;
-[[nodiscard]] inline TimePoint TimeNow() noexcept { return std::chrono::high_resolution_clock::now(); }
-// template <typename T> [[nodiscard]] Duration DurationCast (Duration duration) { return std::chrono::duration_cast<T>(duration); }
 template <typename T, typename D> class UniquePointer {
     T* pointer;
     [[msvc::no_unique_address]][[no_unique_address]] D destructor { }; // man i love msvc

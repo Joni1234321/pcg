@@ -15,7 +15,7 @@ public:
     using Tag = TagType;
     constexpr explicit NamedType(const T& value) : value(value) { }
     T& Value() { return value; }
-    const T& Value() const { return value; }
+    constexpr [[nodiscard]] const T& Value() const noexcept { return value; }
     explicit operator T() const { return Value(); }
 
 private:
@@ -75,7 +75,10 @@ template <typename T, typename Parameter> std::ostream& operator<<(std::ostream&
     return os;
 }
 using ms32 = NamedType<u32, struct MilisecondsTag, Arithmetic>;
+using ns32 = NamedType<u32, struct NanosecondsTag, Arithmetic>;
+using s32 = NamedType<u32, struct secondsTag, Arithmetic>;
 inline ms32 TimeNowMS () noexcept { return ms32 { static_cast<u32>(SDL_GetTicks()) }; }
+inline ns32 TimeNowNS () noexcept { return ns32 { static_cast<u32>(SDL_GetTicksNS()) }; }
 } // namespace pcg
 
 #include "format"

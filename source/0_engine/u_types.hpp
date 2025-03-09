@@ -2,6 +2,7 @@
 #pragma once
 #include <cstdint>
 #include <type_traits>
+#include <optional>
 
 #if defined(_DEBUG) || defined(NDEBUG)
 #define DEBUG

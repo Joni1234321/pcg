@@ -5,13 +5,14 @@
 
 #include "0_engine/g_globals.hpp"
 #include "0_engine/u_collections.hpp"
+#include "0_engine/u_ecs.hpp"
 
 namespace pce {
 struct OrchestraState {
     List<std::function<void()>> systems;
     List<std::unique_ptr<void, void(*)(void*)>> system_storage;
     List<String> names;
-    List<u32> ns;
+    List<ns32> ns;
 };
 struct Orchestra {
     template <typename T> void Add() {
@@ -26,10 +27,9 @@ struct Orchestra {
         using namespace std::chrono;
         OrchestraState& orchestra_state = singleton.Get<OrchestraState>();
         for (const auto [i, system] : orchestra_state.systems | std::views::enumerate) {
-            TimePoint start = TimeNow();
+            ns32 start = TimeNowNS();
             system();
-            Duration elapsed = TimeNow() - start;
-            orchestra_state.ns[i] = static_cast<u32>(elapsed.count());
+            orchestra_state.ns[i] = TimeNowNS() - start;
         }
     }
     ~Orchestra() { singleton.Get<OrchestraState>() = { }; }

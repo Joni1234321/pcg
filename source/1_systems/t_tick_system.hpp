@@ -13,7 +13,6 @@ struct TickState {
     Tick tick { 0U };
     std::chrono::time_point<std::chrono::high_resolution_clock> last_tick_start;
     f32 delta_time { 1.0F };
-    b8 running { true };
 };
 struct TickSystem {
     void operator()() const {

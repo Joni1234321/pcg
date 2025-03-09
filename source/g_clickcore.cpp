@@ -26,7 +26,7 @@ struct HighScore {
 };
 struct RoundData {
     Score score { 0U };
-    TimePoint start_time;
+    ms32 start_time { TimeNowMS() };
 };
 struct GameData {
     Multiset<HighScore> high_scores { };
@@ -52,7 +52,7 @@ struct MainMenuFrame : Frame {
     Handle<Node> exit_button { B(menu).Node(hug).Text("Exit", FontSizes::h1, colors::ruby_red).Build() };
 };
 struct GameFrame : Frame {
-    void SetTime(const u32 time_ms) const { data[tree].node_properties[time_label].text = std::format("Time {:02}:{:02}.{:02}", time_ms / (1000U * 60U), time_ms / 1000U % 60U, time_ms % 100U); }
+    void SetTime(const ms32 time_ms) const { data[tree].node_properties[time_label].text = std::format("Time {:02}:{:02}.{:02}", time_ms.Value() / (1000U * 60U), time_ms.Value() / 1000U % 60U, time_ms.Value() % 100U); }
 
     Handle<Node> root { B(frame).Node(fill).Center().Direction(vertical).Texture(data.Create<Texture>(Asset("rainforest.jpg"))).Padding2(uint2 { 0U, 30U }).Build() };
     Handle<Node> title { B(root).Node(hug).Text("🎮 GAME TIME 🎮", FontSizes::h1, colors::navy_blue).Padding2(uint2 { 20U, 10U }).Center().Build() };
@@ -146,7 +146,7 @@ Scene ClickCore::MainMenuScene() {
         const MainMenuFrame& main_menu = frames.MainMenuFrame();
         if (data[main_menu.tree].styles[main_menu.start_button].IsInside(input_state.mouse_position)) {
             data[main_menu.tree].SetDisplay(false);
-            game = RoundData { .score = Score { 0U }, .start_time = TimeNow() };
+            game = RoundData { .score = Score { 0U }, .start_time = TimeNowMS() };
             return Scene::game;
         }
         if (data[main_menu.tree].styles[main_menu.settings_button].IsInside(input_state.mouse_position)) { return Scene::game_over; }
@@ -155,8 +155,10 @@ Scene ClickCore::MainMenuScene() {
     return Scene::main_menu;
 }
 Scene ClickCore::GameScene() {
-    static constexpr Seconds GAME_TIME = 20s;
-    const Nanoseconds elapsed = TimeNow() - game.start_time;
+    static constexpr s32 GAME_TIME_SECS { 20U };
+    static constexpr u32 SEC_TO_MS { 1000U };
+    static constexpr ms32 GAME_TIME { GAME_TIME_SECS.Value() * SEC_TO_MS };
+    const ms32 elapsed = TimeNowMS() - game.start_time;
     const GameFrame& game_frame = frames.GameFrame();
     if (elapsed > GAME_TIME) {
         game_data.high_scores.emplace(game.score);
@@ -167,12 +169,12 @@ Scene ClickCore::GameScene() {
         data[high_score_frame.tree].SetDisplay(true);
 
         data[main_menu_frame.tree].node_properties[main_menu_frame.start_button].text = "Play Again";
-        game_frame.SetTime(0);
+        game_frame.SetTime(ms32 { 0U });
         data[game_frame.tree].styles[game_frame.box].background_color.a = 0U;
         high_score_frame.highscores.Set(std::views::enumerate(game_data.high_scores | std::views::reverse));
         return Scene::game_over;
     }
-    const u32 time_left_ms = static_cast<u32>(duration_cast<std::chrono::milliseconds>(GAME_TIME - elapsed).count());
+    const ms32 time_left_ms = GAME_TIME - elapsed;
     data[game_frame.tree].node_properties[game_frame.score_label].text = std::format("Score {:4}", game.score);
     game_frame.SetTime(time_left_ms);
 
