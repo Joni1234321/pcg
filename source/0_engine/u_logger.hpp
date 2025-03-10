@@ -183,11 +183,11 @@ template <typename T> struct LogDestroyWithCount {
 
 template <typename T>concept LongNumberFormattable = requires (T value)
 {
-    { static_cast<f32>(value.Value()) }; // Checks if T can be cast to f32
+    { static_cast<f32>(value.value) }; // Checks if T can be cast to f32
 } && HasASkill<T, FormatLongNumber>;
 
 template <LongNumberFormattable T> String FormatValue(const T value) {
-    const f32 number { static_cast<f32>(value.Value()) };
+    const f32 number { static_cast<f32>(value.value) };
     const char prefix { number < 0.0F ? '-' : ' ' };
     f32 abs_number = math::Abs(number);
     if (abs_number < 1000.0F) { return std::format("{}{}", prefix, number); }

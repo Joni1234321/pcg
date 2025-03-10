@@ -89,7 +89,7 @@ void Game::PlayTick(pce::Tick tick, pce::ui::NodeRenderSystem& node_render_syste
     // Population
     for (const Planet planet : planet_archetype) {
         Percentage growth_rate = Percentage { 1.0F + GROWTH_RATE_PER_MONTH };
-        planet.Unemployed() = Population { planet.TotalPopulation().Value() * growth_rate.Value() };
+        planet.Unemployed() = Population { planet.TotalPopulation().value * growth_rate.value };
     }
     RevenueCapture player_revenue_capture;
     RevenueCapture planet_revenue_capture;
@@ -103,25 +103,25 @@ void Game::PlayTick(pce::Tick tick, pce::ui::NodeRenderSystem& node_render_syste
         Money result = farm.Finance().NetIncome(farm.Stats(), 1U);
 
         constexpr Money wage { 0.05F };
-        const Money wages = Money { farm.Finance().employees.Value() * wage.Value() };
+        const Money wages = Money { farm.Finance().employees.value * wage.value };
         result -= wages;
         farm.PopulationBalance() += wages;
         farm.Finance().assets.financial -= wages;
         farm.Finance().equity -= wages;
 
         const Percentage depreciation_rate { 1.0F / static_cast<f32>(farm.Stats().property_plant_equipment_lifetime) };
-        const Money depreciation { farm.Finance().assets.property_plant_equipment.Value() * depreciation_rate.Value() };
+        const Money depreciation { farm.Finance().assets.property_plant_equipment.value * depreciation_rate.value };
         farm.Finance().assets.property_plant_equipment -= depreciation;
         farm.Finance().equity -= depreciation;
 
         if (result > Money { 0.0F }) {
             constexpr Percentage tax_rate { .2F };
-            const Money player_tax { static_cast<f32>(math::FloorToU32(result.Value() * tax_rate.Value())) };
+            const Money player_tax { static_cast<f32>(math::FloorToU32(result.value * tax_rate.value)) };
             result -= player_tax;
             if (farm.Planet().Player().IsSome()) { farm.Planet().Player().Entity().Balance() += player_tax; } else { farm.Planet().Balance() += player_tax; }
 
             constexpr Percentage dividend_rate { .5F };
-            const Money dividends = Money { result.Value() * dividend_rate.Value() };
+            const Money dividends = Money { result.value * dividend_rate.value };
             result -= dividends;
             farm.Planet().Balance() += dividends;
 
@@ -269,9 +269,9 @@ static QualityOfLife GetQualityOfLife(Planet planet) {
 
     const QualityOfLife quality_of_life = planet.QualityOfLife();
     const QualityOfLifeStage stage = GetQualityOfLifeStage(quality_of_life);
-    const f32 inter_level = (quality_of_life - QualityOfLife { static_cast<f32>(stage) } * QUALITY_OF_LIFE_LEVELS_PER_STAGE).Value();
+    const f32 inter_level = (quality_of_life - QualityOfLife { static_cast<f32>(stage) } * QUALITY_OF_LIFE_LEVELS_PER_STAGE).value;
 
-    Money balance = Money { 0.0F }; //Money { planet.PopulationBalance().Value() / planet.Employed().Value() };
+    Money balance = Money { 0.0F }; //Money { planet.PopulationBalance().value / planet.Employed().value };
 
     // VITAMINS
     // needs should be like vic 3
@@ -281,39 +281,39 @@ static QualityOfLife GetQualityOfLife(Planet planet) {
             // life needs
             // food, water, heating
             // water is free
-            balance -= Money { price_of_food.Value() * inter_level };
+            balance -= Money { price_of_food.value * inter_level };
             break;
-        case QualityOfLifeStage::Surviving: balance -= Money { (price_of_food.Value() * inter_level) + 5.0F };
+        case QualityOfLifeStage::Surviving: balance -= Money { (price_of_food.value * inter_level) + 5.0F };
             break;
-        case QualityOfLifeStage::Struggling: balance -= Money { (price_of_food.Value() * inter_level) + 10.0F };
+        case QualityOfLifeStage::Struggling: balance -= Money { (price_of_food.value * inter_level) + 10.0F };
             break;
         case QualityOfLifeStage::Secure:
             // Basic needs
             // basic types of food
-            balance -= Money { price_of_restaurants.Value() * inter_level };
+            balance -= Money { price_of_restaurants.value * inter_level };
             break;
         case QualityOfLifeStage::Comfortable:
             // nice to have
             // beer car
             // services
-            balance -= Money { price_of_cars.Value() * inter_level };
+            balance -= Money { price_of_cars.value * inter_level };
             break;
         case QualityOfLifeStage::Lavish:
             // luxury
             // wine, watches luxuries
             // more service
-            balance -= Money { price_of_watches.Value() * inter_level };
+            balance -= Money { price_of_watches.value * inter_level };
             break;
         case QualityOfLifeStage::Extravagant:
             // hard luxuries
             // ships spaceships excessive housing
             // servitors
-            balance -= Money { price_of_ships.Value() * inter_level };
+            balance -= Money { price_of_ships.value * inter_level };
             break;
         case QualityOfLifeStage::Dictator:
             // richest guy on earth
             // enslaving
-            balance -= Money { price_of_dictator.Value() * quality_of_life.Value() };
+            balance -= Money { price_of_dictator.value * quality_of_life.value };
             break;
     }
     const QualityOfLife quality_of_life_change { static_cast<f32>(balance > Money { 0.0F }) - static_cast<f32>(balance < Money { 0.0F }) };

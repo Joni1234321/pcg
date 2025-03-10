@@ -18,9 +18,9 @@ using namespace pce;
 using namespace pce::ui;
 
 // data
-using Count = NamedType<u32, struct CountTag, Arithmetic>;
-using Money = NamedType<u32, struct MoneyTag, Arithmetic, FormatLongNumber>;
-using Income = NamedType<u32, struct IncomeTag, Arithmetic, FormatLongNumber>;
+using Count = StrongType<u32, struct CountTag, Arithmetic>;
+using Money = StrongType<u32, struct MoneyTag, Arithmetic, FormatLongNumber>;
+using Income = StrongType<u32, struct IncomeTag, Arithmetic, FormatLongNumber>;
 enum class ValueUnitTextSize : u8 { small, normal, larger };
 enum class Unit : u8 { cosmos, cosmos_per_second };
 enum class Scene : u8 { start, game, quit };
@@ -37,7 +37,7 @@ struct GameState {
     List<Count> building_counts { singleton.Get<GameDefines>().buildings.size(), Count { 0U } };
     Money money { 100U };
     Income income { 0U };
-    miliseconds32 last_tick { TimeNowMS() };
+    miliseconds32 last_income_time { TimeNowMS() };
 };
 // systems
 struct CosmoClickSystem {
@@ -114,7 +114,7 @@ struct GameFrame : Frame {
             singleton.Get<GameState>().money += money_per_click;
             singleton.Get<UIFlags>() & UIFlags::money;
             const uint2 mouse_position = singleton.Get<InputState>().mouse_position;
-            const String text = std::to_string(money_per_click.Value());
+            const String text = std::to_string(money_per_click.value);
             data[emitter].particles.items.push_back(Particle {
                                                         .position = { static_cast<f32>(mouse_position.x), static_cast<f32>(mouse_position.y) },
                                                         .text = std::unique_ptr<TTF_Text, DestroyText> {
@@ -160,11 +160,10 @@ Scene CosmoClickSystem::GameScene() {
     UIFlags& ui_flags = singleton.Get<UIFlags>();
     GameState& game_data = singleton.Get<GameState>();
     const miliseconds32 now { TimeNowMS() };
-    constexpr miliseconds32 ms_per_s { 1000U };
-    const seconds32 delta_s { ((now - game_data.last_tick) / ms_per_s).Value() };
+    const seconds32 delta_s { static_cast<u32>((now - game_data.last_income_time).value * NS_TO_SECONDS) };
     if (delta_s > seconds32 { 0U }) {
-        game_data.money += Money { game_data.income.Value() * delta_s.Value() };
-        game_data.last_tick = now;
+        game_data.money += Money { game_data.income.value * delta_s.value };
+        game_data.last_income_time = now;
         ui_flags & UIFlags::money;
     }
     return Scene::game;

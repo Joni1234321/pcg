@@ -16,13 +16,13 @@ namespace pcg::clickcore {
 using namespace pce;
 using namespace ui;
 
-using Score = NamedType<u32, struct ScoreTag, Arithmetic, FormatLongNumber>;
+using Score = StrongType<u32, struct ScoreTag, Arithmetic, FormatLongNumber>;
 
 enum class Scene : u8 { game, main_menu, game_over, quit };
 
 struct HighScore {
     Score score;
-    std::strong_ordering operator<=>(const HighScore& other) const noexcept { return score.Value() <=> other.score.Value(); }
+    std::strong_ordering operator<=>(const HighScore& other) const noexcept { return score.value <=> other.score.value; }
 };
 struct RoundData {
     Score score { 0U };
@@ -52,7 +52,7 @@ struct MainMenuFrame : Frame {
     Handle<Node> exit_button { B(menu).Node(hug).Text("Exit", FontSizes::h1, colors::ruby_red).Build() };
 };
 struct GameFrame : Frame {
-    void SetTime(const miliseconds32 time_ms) const { data[tree].node_properties[time_label].text = std::format("Time {:02}:{:02}.{:02}", time_ms.Value() / (1000U * 60U), time_ms.Value() / 1000U % 60U, time_ms.Value() % 100U); }
+    void SetTime(const miliseconds32 time_ms) const { data[tree].node_properties[time_label].text = std::format("Time {:02}:{:02}.{:02}", time_ms.value / (1000U * 60U), time_ms.value / 1000U % 60U, time_ms.value % 100U); }
 
     Handle<Node> root { B(frame).Node(fill).Center().Direction(vertical).Texture(data.Create<Texture>(Asset("rainforest.jpg"))).Padding2(uint2 { 0U, 30U }).Build() };
     Handle<Node> title { B(root).Node(hug).Text("🎮 GAME TIME 🎮", FontSizes::h1, colors::navy_blue).Padding2(uint2 { 20U, 10U }).Center().Build() };
@@ -157,7 +157,7 @@ Scene ClickCore::MainMenuScene() {
 Scene ClickCore::GameScene() {
     static constexpr seconds32 GAME_TIME_SECS { 20U };
     static constexpr u32 SEC_TO_MS { 1000U };
-    static constexpr miliseconds32 GAME_TIME { GAME_TIME_SECS.Value() * SEC_TO_MS };
+    static constexpr miliseconds32 GAME_TIME { GAME_TIME_SECS.value * SEC_TO_MS };
     const miliseconds32 elapsed = TimeNowMS() - game.start_time;
     const GameFrame& game_frame = frames.GameFrame();
     if (elapsed > GAME_TIME) {
@@ -193,8 +193,8 @@ Scene ClickCore::GameScene() {
 Scene ClickCore::GameOverScene() {
     constexpr f32 slow_down = 1000.0F;
     const GameFrame& game_frame = frames.GameFrame();
-    data[game_frame.tree].styles[game_frame.box].background_color = colors::AnimateDamp(static_cast<f32>(singleton.Get<TickState>().tick.Value()) / slow_down);
-    data[game_frame.tree].styles[game_frame.score_box].background_color = colors::AnimateDamp(singleton.Get<TickState>().tick.Value() * 1.2F / slow_down);
+    data[game_frame.tree].styles[game_frame.box].background_color = colors::AnimateDamp(static_cast<f32>(singleton.Get<TickState>().tick.value) / slow_down);
+    data[game_frame.tree].styles[game_frame.score_box].background_color = colors::AnimateDamp(singleton.Get<TickState>().tick.value * 1.2F / slow_down);
 
     const Scene scene = MainMenuScene();
     if (scene == Scene::main_menu) { return Scene::game_over; }

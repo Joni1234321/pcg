@@ -102,7 +102,7 @@ inline b8 AnimationSystem::IsRunning(const Handle<Animation> animation_handle) {
 inline void AnimationSystem::operator()() const {
     const miliseconds32 current_ms { TimeNowMS() };
     for (Animation& animation : data.Get<Animation>()) {
-        f32 t = static_cast<f32>((current_ms - animation.start).Value()) / static_cast<f32>(animation.duration.Value());
+        f32 t = static_cast<f32>((current_ms - animation.start).value) / static_cast<f32>(animation.duration.value);
         switch (animation.state) {
             case AnimationState::once:
                 if (t >= 1.0F) {

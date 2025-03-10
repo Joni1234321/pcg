@@ -8,13 +8,13 @@
 #include "1_systems/t_tick_system.hpp"
 
 namespace pcg {
-using Percentage = pce::NamedType<f32, struct PercentageTag, pce::Arithmetic>;
+using Percentage = pce::StrongType<f32, struct PercentageTag, pce::Arithmetic>;
 
-using Money = pce::NamedType<f32, struct MoneyTag, pce::Arithmetic, pce::FormatLongNumber>;
-using Population = pce::NamedType<f32, struct PopulationTag, pce::Arithmetic, pce::FormatLongNumber>;
-using Production = pce::NamedType<u32, struct ProductionTag, pce::Arithmetic>;
+using Money = pce::StrongType<f32, struct MoneyTag, pce::Arithmetic, pce::FormatLongNumber>;
+using Population = pce::StrongType<f32, struct PopulationTag, pce::Arithmetic, pce::FormatLongNumber>;
+using Production = pce::StrongType<u32, struct ProductionTag, pce::Arithmetic>;
 
-using QualityOfLife = pce::NamedType<f32, struct QualityOfLifeTag, pce::Arithmetic>;
+using QualityOfLife = pce::StrongType<f32, struct QualityOfLifeTag, pce::Arithmetic>;
 // theory aktiver og passiver. aktiver is the initial cost of investments
 // https://ordbog.ku.dk/pdf/financial_terminology.pdf
 // https://uwaterloo.ca/economics/sites/default/files/uploads/documents/econ-101-syllabus.pdf
@@ -43,8 +43,8 @@ struct Finance {
     Money last_result;
     Population employees;
 
-    [[nodiscard]] Money NetIncome(const Stats& stats, const u32 cost_of_good) const { return Income(stats, cost_of_good) - Expenses(stats); }                                                      // resultat
-    [[nodiscard]] Percentage ReturnOnAssets(const Stats& stats, const u32 cost_of_good) const { return Percentage { NetIncome(stats, cost_of_good).Value() / static_cast<f32>(assets.Total()) }; } // afkastningsgrad
+    [[nodiscard]] Money NetIncome(const Stats& stats, const u32 cost_of_good) const { return Income(stats, cost_of_good) - Expenses(stats); }                                        // resultat
+    [[nodiscard]] Percentage ReturnOnAssets(const Stats& stats, const u32 cost_of_good) const { return Percentage { NetIncome(stats, cost_of_good).value / assets.Total().value }; } // afkastningsgrad
 private:
     [[nodiscard]] static Money Expenses(const Stats& stats) { return Money { 0.0F }; }
     [[nodiscard]] static Money Income(const Stats& stats, const u32 cost_of_good) { return Money { static_cast<f32>(stats.output_goods * cost_of_good) }; }
@@ -81,7 +81,7 @@ struct Market {
 };
 constexpr QualityOfLife QUALITY_OF_LIFE_LEVELS_PER_STAGE = QualityOfLife { 5.0F };
 static QualityOfLifeStage GetQualityOfLifeStage(const QualityOfLife quality_of_life) {
-    return static_cast<QualityOfLifeStage>(pce::math::Min((quality_of_life / QUALITY_OF_LIFE_LEVELS_PER_STAGE).Value(), static_cast<f32>(QualityOfLifeStage::Extravagant)));
+    return static_cast<QualityOfLifeStage>(pce::math::Min((quality_of_life / QUALITY_OF_LIFE_LEVELS_PER_STAGE).value, static_cast<f32>(QualityOfLifeStage::Extravagant)));
 }
 struct StateArchetype final : Archetype {
     pce::Parent planets;

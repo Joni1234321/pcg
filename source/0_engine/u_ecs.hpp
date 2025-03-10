@@ -9,17 +9,9 @@
 #include "0_engine/u_types.hpp"
 
 namespace pce {
-template <typename T, typename TagType, template<typename> class... InheritList> class NamedType : public InheritList<NamedType<T, TagType, InheritList...>>... {
-public:
-    using ValueType = T;
-    using Tag = TagType;
-    constexpr explicit NamedType(const T& value) : value(value) { }
-    T& Value() { return value; }
-    constexpr [[nodiscard]] const T& Value() const noexcept { return value; }
-    explicit operator T() const { return Value(); }
-
-private:
+template <typename T, typename TagType, template<typename> class... InheritList> struct StrongType : InheritList<StrongType<T, TagType, InheritList...>>... {
     T value;
+    constexpr explicit StrongType(const T& value) : value(value) { }
 };
 template <typename DerivedType, template<typename> class> struct RecurringDerived {
     DerivedType& Derived() { return static_cast<DerivedType&>(*this); }
@@ -29,54 +21,54 @@ template <typename DerivedType, template<typename> class> struct RecurringDerive
 
 template <typename T> struct FormatLongNumber : RecurringDerived<T, FormatLongNumber> { };
 template <typename T> struct Arithmetic : RecurringDerived<T, Arithmetic> {
-    constexpr T operator+(const T& other) const { return T(this->Derived().Value() + other.Value()); }
-    constexpr T operator-(const T& other) const { return T(this->Derived().Value() - other.Value()); }
-    constexpr T operator*(const T& other) const { return T(this->Derived().Value() * other.Value()); }
-    constexpr T operator/(const T& other) const { return T(this->Derived().Value() / other.Value()); }
+    constexpr T operator+(const T& other) const { return T(this->Derived().value + other.value); }
+    constexpr T operator-(const T& other) const { return T(this->Derived().value - other.value); }
+    constexpr T operator*(const T& other) const { return T(this->Derived().value * other.value); }
+    constexpr T operator/(const T& other) const { return T(this->Derived().value / other.value); }
     // Equals operators
     constexpr T& operator+=(const T& other) {
-        this->Derived().Value() += other.Value();
+        this->Derived().value += other.value;
         return this->Derived();
     }
     constexpr T& operator-=(const T& other) {
-        this->Derived().Value() -= other.Value();
+        this->Derived().value -= other.value;
         return this->Derived();
     }
     constexpr T& operator*=(const T& other) {
-        this->Derived().Value() *= other.Value();
+        this->Derived().value *= other.value;
         return this->Derived();
     }
     constexpr T& operator/=(const T& other) {
-        this->Derived().Value() /= other.Value();
+        this->Derived().value /= other.value;
         return this->Derived();
     }
     constexpr T operator++(int) {
         T old = *this->Derived();
-        (void)this->Derived().Value()++;
+        (void)this->Derived().value++;
         return old;
     }
     constexpr T& operator++() {
-        (void)this->Derived().Value()++;
+        (void)this->Derived().value++;
         return this->Derived();
     }
     // Comparison operators
-    constexpr b8 operator==(const T& other) const { return this->Derived().Value() == other.Value(); }
-    constexpr b8 operator!=(const T& other) const { return this->Derived().Value() != other.Value(); }
-    constexpr b8 operator<(const T& other) const { return this->Derived().Value() < other.Value(); }
-    constexpr b8 operator<=(const T& other) const { return this->Derived().Value() <= other.Value(); }
-    constexpr b8 operator>(const T& other) const { return this->Derived().Value() > other.Value(); }
-    constexpr b8 operator>=(const T& other) const { return this->Derived().Value() >= other.Value(); }
+    constexpr b8 operator==(const T& other) const { return this->Derived().value == other.value; }
+    constexpr b8 operator!=(const T& other) const { return this->Derived().value != other.value; }
+    constexpr b8 operator<(const T& other) const { return this->Derived().value < other.value; }
+    constexpr b8 operator<=(const T& other) const { return this->Derived().value <= other.value; }
+    constexpr b8 operator>(const T& other) const { return this->Derived().value > other.value; }
+    constexpr b8 operator>=(const T& other) const { return this->Derived().value >= other.value; }
 };
 template <typename T> struct Printable : RecurringDerived<T, Printable> {
-    void print(std::ostream& os) const { os << this->Derived().Value(); }
+    void print(std::ostream& os) const { os << this->Derived().value; }
 };
-template <typename T, typename Parameter> std::ostream& operator<<(std::ostream& os, const NamedType<T, Parameter>& object) {
+template <typename T, typename Parameter> std::ostream& operator<<(std::ostream& os, const StrongType<T, Parameter>& object) {
     object.print(os);
     return os;
 }
-using seconds32 = NamedType<u32, struct SecondsTag, Arithmetic>;
-using miliseconds32 = NamedType<u32, struct MilisecondsTag, Arithmetic>;
-using nanoseconds64 = NamedType<u64, struct Nanoseconds64Tag, Arithmetic>;
+using seconds32 = StrongType<u32, struct SecondsTag, Arithmetic>;
+using miliseconds32 = StrongType<u32, struct MilisecondsTag, Arithmetic>;
+using nanoseconds64 = StrongType<u64, struct Nanoseconds64Tag, Arithmetic>;
 inline miliseconds32 TimeNowMS () noexcept { return miliseconds32 { static_cast<u32>(SDL_GetTicks()) }; }
 inline nanoseconds64 TimeNowNS () noexcept { return nanoseconds64 { SDL_GetTicksNS() }; }
 
@@ -88,8 +80,8 @@ static constexpr f32 NS_TO_SECONDS = 1.0F / 1'000'000'000.0F;
 } // namespace pcg
 
 #include "format"
-template <typename T, typename Parameter, template <typename> class... Skills> struct std::formatter<pce::NamedType<T, Parameter, Skills...>> : std::formatter<T> {
-    auto format(const pce::NamedType<T, Parameter, Skills...>& data, std::format_context& ctx) const { return std::formatter<T>::format(data.Value(), ctx); }
+template <typename T, typename Parameter, template <typename> class... Skills> struct std::formatter<pce::StrongType<T, Parameter, Skills...>> : std::formatter<T> {
+    auto format(const pce::StrongType<T, Parameter, Skills...>& data, std::format_context& ctx) const { return std::formatter<T>::format(data.value, ctx); }
 };
 template <typename EnumType> requires std::is_enum_v<EnumType>
 struct std::formatter<EnumType> : std::formatter<std::underlying_type_t<EnumType>> {

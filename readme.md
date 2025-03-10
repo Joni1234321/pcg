@@ -27,7 +27,9 @@ install libfreetype6-dev
 `CMake Error at C:/Users/[user]/.vcpkg-clion/vcpkg/installed/x64-mingw-dynamic/share/zlib/vcpkg-cmake-wrapper.cmake:5 (message):
   Broken installation of vcpkg port zlib`
 Go to `view -> tool window -> vcpkg` (bottom) then i unisntalled ZLIB and it worked
-
+# CMake time 10-03-2025
+-- Configuring done (366.5s)  
+-- Generating done (0.6s)
 # Features
 - UI like figma (inspector alt)
 - Systems
