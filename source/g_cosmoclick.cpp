@@ -41,9 +41,7 @@ struct GameState {
 };
 // systems
 struct CosmoClickSystem {
-    Scene scene { Scene::start };
-    void operator()();
-    Scene GameScene();
+    void operator()() const;
 };
 struct CosmoClickUISystem {
     void operator()() const;
@@ -65,7 +63,6 @@ constexpr UIFlags& operator&(UIFlags& flags, const UIFlags::Flag flag) {
     return flags;
 }
 constexpr b8 operator|(const UIFlags& flags, const UIFlags::Flag flag) noexcept { return flags.flags.test(flag); }
-
 template <class T> struct ValueUnit : NodeComponentBase {
     struct Property {
         const T& value;
@@ -140,52 +137,6 @@ struct GameFrame : Frame {
                                                                        .duration = miliseconds32 { 400U },
                                                                        .state = AnimationState::persistent_stopped });
 };
-void CosmoClickSystem::operator()() {
-    const Scene start = scene;
-    switch (scene) {
-        case Scene::start:
-            scene = Scene::game;
-            break;
-        case Scene::game:
-            scene = GameScene();
-            break;
-        case Scene::quit:
-            Logger().Log("Quit requested");
-            singleton.Get<InputState>().quit = true;
-            break;
-    }
-    if (scene != start) { singleton.Get<UIFlags>().Set(); }
-}
-Scene CosmoClickSystem::GameScene() {
-    UIFlags& ui_flags = singleton.Get<UIFlags>();
-    GameState& game_data = singleton.Get<GameState>();
-    const miliseconds32 now { TimeNowMS() };
-    const seconds32 delta_s { static_cast<u32>((now - game_data.last_income_time).value * NS_TO_SECONDS) };
-    if (delta_s > seconds32 { 0U }) {
-        game_data.money += Money { game_data.income.value * delta_s.value };
-        game_data.last_income_time = now;
-        ui_flags & UIFlags::money;
-    }
-    return Scene::game;
-}
-void CosmoClickUISystem::operator()() const {
-    const GameState& game_state = singleton.Get<GameState>();
-    UIFlags& ui_flags = singleton.Get<UIFlags>();
-    GameFrame& game_frame = singleton.Get<GameFrame>();
-    if (ui_flags | UIFlags::planet) { data[game_frame.tree].MarkDirty(game_frame.planet); }
-    if (ui_flags | UIFlags::buildings) { game_frame.shop.Set(std::views::iota(0U, singleton.Get<GameDefines>().buildings.size())); }
-    if (ui_flags | UIFlags::money) {
-        game_frame.money.SetValue(game_state.money);
-        game_frame.income.SetValue(game_state.income);
-    }
-    UIFlags planet_check { };
-    planet_check & UIFlags::planet;
-    if (ui_flags.Only(UIFlags::planet)) { data[game_frame.tree].MarkDirty(game_frame.planet); } else if (ui_flags.Any()) {
-        data[game_frame.tree].MarkDirty();
-        ui_flags.Reset();
-    }
-}
-// ui
 constexpr String UnitToString(const Unit unit) {
     switch (unit) {
         case Unit::cosmos:
@@ -220,6 +171,53 @@ void BuildingComponent::SetProperty(const Property& property) const {
             singleton.Get<UIFlags>() & UIFlags::buildings & UIFlags::money;
         }
     };
+}
+// systems definition
+Scene GameScene() {
+    UIFlags& ui_flags = singleton.Get<UIFlags>();
+    GameState& game_data = singleton.Get<GameState>();
+    const miliseconds32 now { TimeNowMS() };
+    const seconds32 delta_s { static_cast<u32>((now - game_data.last_income_time).value * NS_TO_SECONDS) };
+    if (delta_s > seconds32 { 0U }) {
+        game_data.money += Money { game_data.income.value * delta_s.value };
+        game_data.last_income_time = now;
+        ui_flags & UIFlags::money;
+    }
+    return Scene::game;
+}
+void CosmoClickSystem::operator()() const {
+    Scene& scene { singleton.Get<Scene>() };
+    const Scene start { scene };
+    switch (scene) {
+        case Scene::start:
+            scene = Scene::game;
+            break;
+        case Scene::game:
+            scene = GameScene();
+            break;
+        case Scene::quit:
+            Logger().Log("Quit requested");
+            singleton.Get<InputState>().quit = true;
+            break;
+    }
+    if (scene != start) { singleton.Get<UIFlags>().Set(); }
+}
+void CosmoClickUISystem::operator()() const {
+    const GameState& game_state = singleton.Get<GameState>();
+    UIFlags& ui_flags = singleton.Get<UIFlags>();
+    GameFrame& game_frame = singleton.Get<GameFrame>();
+    if (ui_flags | UIFlags::planet) { data[game_frame.tree].MarkDirty(game_frame.planet); }
+    if (ui_flags | UIFlags::buildings) { game_frame.shop.Set(std::views::iota(0U, singleton.Get<GameDefines>().buildings.size())); }
+    if (ui_flags | UIFlags::money) {
+        game_frame.money.SetValue(game_state.money);
+        game_frame.income.SetValue(game_state.income);
+    }
+    UIFlags planet_check { };
+    planet_check & UIFlags::planet;
+    if (ui_flags.Only(UIFlags::planet)) { data[game_frame.tree].MarkDirty(game_frame.planet); } else if (ui_flags.Any()) {
+        data[game_frame.tree].MarkDirty();
+        ui_flags.Reset();
+    }
 }
 } // namespace pcg::cosmoclick
 void pcg::arcade::RunCosmoClick() {
