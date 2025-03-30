@@ -19,7 +19,7 @@ using namespace pce::ui;
 
 // data
 using Count = StrongType<u32, struct CountTag, Arithmetic>;
-using Money = StrongType<u32, struct MoneyTag, Arithmetic, FormatLongNumber>;
+using Money = StrongType<u64, struct MoneyTag, Arithmetic, FormatLongNumber>;
 using Income = StrongType<u32, struct IncomeTag, Arithmetic, FormatLongNumber>;
 enum class ValueUnitTextSize : u8 { small, normal, larger };
 enum class Unit : u8 { cosmos, cosmos_per_second };
@@ -71,25 +71,25 @@ template <class T> struct ValueUnit : NodeComponentBase {
         SDL_Color color;
     };
     explicit ValueUnit(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(hug).Alignment(top_right).Build() } { }
-    void SetProperty(const Property& property) const;
-    void SetValue(const T& new_value) const { data[root.tree].node_properties[value].text = FormatValue(new_value); }
-
     Handle<Node> value { B(root).Node(hug).Fill(colors::white).Build() };
     Handle<Node> unit { B(root).Node(hug).Fill(colors::white).Build() };
+
+    void SetValue(const T& new_value) const { data[root.tree].node_properties[value].text = FormatValue(new_value); }
+    void SetProperty(const Property& property) const;
 };
 static_assert(NodeComponent<ValueUnit<u32>>);
 struct BuildingComponent : NodeComponentBase {
     using Property = u32;
-    explicit BuildingComponent(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(fill, hug).Gap(6U).Build() } { }
-    void SetProperty(const Property& property) const;
 
-private:
+    explicit BuildingComponent(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(fill, hug).Gap(6U).Build() } { }
     Handle<Node> item { B(root).Node(128U, 64U).Build() };
     Handle<Node> info { B(root).Node(fill, 64U).Direction(vertical).Fill(colors::jet).Padding2({ 4U, 2U }).GapAuto().Build() };
     Handle<Node> name { B(info).Node(hug).Text(FontSizes::body, colors::light_gray).Build() };
     Handle<Node> purchasing_info { B(info).Node(hug).Gap(10U).Build() };
     ValueUnit<Money> money { B(purchasing_info).Component<ValueUnit<Money>>() };
     ValueUnit<Income> income { B(purchasing_info).Component<ValueUnit<Income>>() };
+
+    void SetProperty(const Property& property) const;
 };
 static_assert(NodeComponent<BuildingComponent>);
 
