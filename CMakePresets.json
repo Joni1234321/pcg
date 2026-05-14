@@ -1,0 +1,62 @@
+﻿{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "msys2-ucrt64",
+      "displayName": "MSYS2 UCRT64 (GCC)",
+      "description": "Uses the UCRT64 toolchain and pre-installed SDL3 packages from MSYS2",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/ucrt64",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER":   "D:/tools/msys64/ucrt64/bin/gcc.exe",
+        "CMAKE_CXX_COMPILER": "D:/tools/msys64/ucrt64/bin/g++.exe",
+        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/ucrt64"
+      }
+    },
+    {
+      "name": "msys2-mingw64",
+      "displayName": "MSYS2 MinGW64 (GCC)",
+      "description": "Uses the MinGW64 toolchain and pre-installed SDL3 packages from MSYS2",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/mingw64",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER":   "D:/tools/msys64/mingw64/bin/gcc.exe",
+        "CMAKE_CXX_COMPILER": "D:/tools/msys64/mingw64/bin/g++.exe",
+        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/mingw64"
+      }
+    },
+    {
+      "name": "msys2-clang64",
+      "displayName": "MSYS2 Clang64",
+      "description": "Uses the Clang64 toolchain and pre-installed SDL3 packages from MSYS2",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/clang64",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER":   "D:/tools/msys64/clang64/bin/clang.exe",
+        "CMAKE_CXX_COMPILER": "D:/tools/msys64/clang64/bin/clang++.exe",
+        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/clang64"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "msys2-ucrt64-build",
+      "displayName": "Build (UCRT64)",
+      "configurePreset": "msys2-ucrt64"
+    },
+    {
+      "name": "msys2-mingw64-build",
+      "displayName": "Build (MinGW64)",
+      "configurePreset": "msys2-mingw64"
+    },
+    {
+      "name": "msys2-clang64-build",
+      "displayName": "Build (Clang64)",
+      "configurePreset": "msys2-clang64"
+    }
+  ]
+}
