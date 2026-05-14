@@ -256,4 +256,10 @@ void pcg::arcade::RunCosmoClick() {
     orchestra.Add<PresentSystem>();
 
     while (!singleton.Get<InputState>().quit && !singleton.Get<InputState>().keys_down[SDLK_ESCAPE]) { orchestra.RunSystems(); }
+
+    // Free SDL/TTF-owning game state BEFORE Window destructor calls TTF_Quit/SDL_Quit,
+    // otherwise leftover TTF_Text/SDL_Texture get destroyed during static destruction
+    // (after SDL is dead) and crash with access violation (0xC0000005).
+    data.Get<ParticleEmitter>().clear();
+    data.Get<NodeTree>().clear();
 }

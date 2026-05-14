@@ -54,5 +54,5 @@ struct SingletonNaive {
 };
 
 inline GlobalDataInstantNoReset data { };
-inline SingletonNaive2 singleton { };
+inline SingletonNaive singleton { };
 } // namespace pce
