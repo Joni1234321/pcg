@@ -39,9 +39,7 @@ struct InputSystem {
                     input_state.keys[event.key.key] = true;
                     input_state.keys_down[event.key.key] = true;
                     break;
-                case SDL_EVENT_MOUSE_WHEEL:
-                    input_state.mouse_wheel_y = event.wheel.y;
-                    break;
+                case SDL_EVENT_MOUSE_WHEEL: input_state.mouse_wheel_y = event.wheel.y; break;
                 default: break;
             }
         }
