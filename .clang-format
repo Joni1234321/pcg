@@ -75,7 +75,8 @@ QualifierAlignment: Left
 # --- spaces ------------------------------------------------------------------
 SpaceAfterTemplateKeyword: true
 SpaceBeforeAssignmentOperators: true
-SpaceBeforeParens: Always
+SpaceBeforeParens: ControlStatements
+
 SpaceBeforeRangeBasedForLoopColon: true
 SpaceBeforeCaseColon: false
 SpaceBeforeCtorInitializerColon: true
