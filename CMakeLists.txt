@@ -19,6 +19,7 @@ if (SET_WARNINGS_ENABLED)
 endif ()
 
 
+
 # libs
 if (EXISTS ${CMAKE_SOURCE_DIR}/3rdparty/SDL3/CMakeLists.txt)
 	add_subdirectory(3rdparty/SDL3 EXCLUDE_FROM_ALL)
@@ -42,7 +43,7 @@ else ()
 endif ()
 
 add_executable(pcg
-               src/main.cpp
+               src/pcg.cpp
                src/g_clickcore.cpp
                src/g_cosmoclick.cpp
                src/g_commandstrike.cpp
@@ -59,6 +60,15 @@ target_link_libraries(pcg
 )
 
 target_include_directories(pcg PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+# clang-tidy — resolved after add_executable so it only applies to pcg
+if (SET_CLANG_TIDY)
+	find_program(CLANG_TIDY_PROGRAM clang-tidy REQUIRED)
+	set_target_properties(pcg PROPERTIES
+	                      CXX_CLANG_TIDY "${CLANG_TIDY_PROGRAM};--extra-arg=-std=c++26;--use-color"
+	)
+
+endif ()
 
 add_custom_command(
 		TARGET pcg POST_BUILD

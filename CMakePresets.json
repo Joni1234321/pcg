@@ -2,38 +2,7 @@
   "version": 3,
   "configurePresets": [
     {
-      "name": "ucrt",
-      "displayName": "UCRT64",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/ucrt",
-      "environment": {
-        "PATH": "D:/tools/msys64/ucrt64/bin;D:/tools/msys64/usr/bin;$penv{PATH}"
-      },
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_C_COMPILER":   "D:/tools/msys64/ucrt64/bin/gcc.exe",
-        "CMAKE_CXX_COMPILER": "D:/tools/msys64/ucrt64/bin/g++.exe",
-        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/ucrt64"
-      }
-    },
-    {
-      "name": "gcc",
-      "displayName": "GCC (MinGW64)",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/gcc",
-      "environment": {
-        "PATH": "D:/tools/msys64/mingw64/bin;D:/tools/msys64/usr/bin;$penv{PATH}"
-      },
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_C_COMPILER":   "D:/tools/msys64/mingw64/bin/gcc.exe",
-        "CMAKE_CXX_COMPILER": "D:/tools/msys64/mingw64/bin/g++.exe",
-        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/mingw64"
-      }
-    },
-    {
-      "name": "clang",
-      "displayName": "Clang",
+      "name": "xd",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/clang",
       "environment": {
@@ -44,6 +13,14 @@
         "CMAKE_C_COMPILER":   "D:/tools/msys64/clang64/bin/clang.exe",
         "CMAKE_CXX_COMPILER": "D:/tools/msys64/clang64/bin/clang++.exe",
         "CMAKE_PREFIX_PATH":  "D:/tools/msys64/clang64"
+      }
+    },
+    {
+      "name": "xdc",
+      "inherits": "xd",
+      "binaryDir": "${sourceDir}/out/xdc",
+      "cacheVariables": {
+        "SET_CLANG_TIDY": "ON"
       }
     }
   ]
