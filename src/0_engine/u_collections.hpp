@@ -27,7 +27,7 @@ template <class T, class C = std::less<T>> using Set = std::set<T, C>;
 template <class T, class C = std::less<T>> using Multiset = std::multiset<T, C>;
 template <typename T, typename D> class UniquePointer {
     T* pointer;
-    [[msvc::no_unique_address]][[no_unique_address]] D destructor { }; // man i love msvc
+    [[no_unique_address]] D destructor { };
 public:
     constexpr void Reset(T* new_pointer) noexcept {
         if (pointer != nullptr) { destructor(pointer); }

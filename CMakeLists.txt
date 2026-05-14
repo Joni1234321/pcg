@@ -7,6 +7,13 @@ option(SET_CLANG_TIDY "Enable clang tidy" FALSE)
 
 set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+# ccache
+find_program(CCACHE_PROGRAM ccache)
+message(STATUS "ccache found: ${CCACHE_PROGRAM}")
+set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+set(CMAKE_C_COMPILER_LAUNCHER   ${CCACHE_PROGRAM})
+
 if (SET_WARNINGS_ENABLED)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error -Wall -Wextra -Wpedantic -Werror")
 endif ()
@@ -38,6 +45,7 @@ add_executable(pcg
                src/main.cpp
                src/g_clickcore.cpp
                src/g_cosmoclick.cpp
+               src/g_commandstrike.cpp
                src/g_factory.cpp
                src/g_game.cpp
                src/1_systems/t_debug_system.cpp

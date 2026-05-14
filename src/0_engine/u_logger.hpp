@@ -6,10 +6,7 @@
 #include <ranges>
 #include <array>
 #include <typeinfo>
-#if __has_include(<cxxabi.h>)
 #include <cxxabi.h>
-#include <cstdlib>
-#endif
 #if __has_include(<stacktrace>)
 #include <stacktrace>
 #endif
@@ -25,32 +22,19 @@ namespace pce {
 template <class T> inline const std::string& TypeName() {
     static const std::string cached = [] {
         const char* raw = typeid(T).name();
-#if __has_include(<cxxabi.h>)
         int status = 0;
         char* demangled = abi::__cxa_demangle(raw, nullptr, nullptr, &status);
         std::string result = (status == 0 && demangled) ? std::string { demangled } : std::string { raw };
         std::free(demangled);
         return result;
-#else
-        return std::string { raw };
-#endif
     }();
     return cached;
 }
-#define DISABLE_PREFIX 1 // NOLINT(*-macro-usage)
-#if DISABLE_PREFIX
-constexpr auto LOGGER_PREFIX_NONE = "        | ";
-constexpr auto LOGGER_PREFIX_TIMER = "TIMER   | ";
-constexpr auto LOGGER_PREFIX_LOG = "LOG     | ";
-constexpr auto LOGGER_PREFIX_WARNING = "WARNING | ";
-constexpr auto LOGGER_PREFIX_ERROR = "ERROR   | ";
-#else
-constexpr auto LOGGER_PREFIX_NONE = "";
-constexpr auto LOGGER_PREFIX_TIMER = "";
-constexpr auto LOGGER_PREFIX_LOG = "";
-constexpr auto LOGGER_PREFIX_WARNING = "";
-constexpr auto LOGGER_PREFIX_ERROR = "";
-#endif
+constexpr auto LOGGER_PREFIX_NONE    = "            "; // 12 chars to match [DESTROYED] + space
+constexpr auto LOGGER_PREFIX_TIMER   = "[TIMER    ] ";
+constexpr auto LOGGER_PREFIX_LOG     = "[LOG      ] ";
+constexpr auto LOGGER_PREFIX_WARNING = "[WARNING  ] ";
+constexpr auto LOGGER_PREFIX_ERROR   = "[ERROR    ] ";
 
 #define LOGGER_ERROR_WRITE(MESSAGE) Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__)
 #define LOGGER_ERROR_WRITE_RETURN(MESSAGE, RETURN) Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__); return RETURN
@@ -68,7 +52,13 @@ static constexpr u32 DEFAULT_COLUMN_WIDTH = 12U;
 
 struct Logger {
     // NOLINT(*-struct-pack-align)
-    enum class LOGGER_COLOR : u8 { ORANGE = 202U, YELLOW = 220U, WHITE = 250U, PINK = 189U, RED = 196U };
+    // Values are 256-color SGR foreground codes. SetColor emits them with
+    // the bold attribute ("\033[1;38;5;<n>m") so output is vivid and bold.
+    enum class LOGGER_COLOR : u8 {
+        ORANGE = 130U, YELLOW = 136U, WHITE = 241U, PINK = 127U, RED = 124U,
+        LIGHT_GREEN = 28U, LIGHT_RED = 160U, LIGHT_CYAN = 30U, LIGHT_BLUE = 19U, LIGHT_MAGENTA = 90U,
+        GREY = 102U,
+    };
     Logger() = default;
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
@@ -79,14 +69,24 @@ struct Logger {
     void Print() {
         if (string.empty()) { return; }
         ClearColor();
-        (void)std::printf(string.c_str()); // NOLINT(*-vararg)
+        (void)std::printf("%s", string.c_str());
         string.clear();
     }
 
     template <typename... Args> constexpr void Log(const char* text, Args... args) {
+        SetColor(static_cast<u8>(LOGGER_COLOR::LIGHT_CYAN));
         string += LOGGER_PREFIX_LOG;
         string += std::vformat(text, std::make_format_args(args...));
         string += "\n";
+        ClearColor();
+    }
+
+    template <typename... Args> constexpr void Warning(const char* text, Args... args) {
+        SetColor(static_cast<u8>(LOGGER_COLOR::YELLOW));
+        string += LOGGER_PREFIX_WARNING;
+        string += std::vformat(text, std::make_format_args(args...));
+        string += "\n";
+        ClearColor();
     }
 
     template <typename... Args> constexpr void Error(const char* text, Args... args) {
@@ -96,11 +96,33 @@ struct Logger {
         string += "\n";
         ClearColor();
     }
-    template <typename... Args> constexpr void Tagged(const char* tag, const char* text, Args... args) { Log("[{}] {}", tag, std::vformat(text, std::make_format_args(args...))); }
-    template <typename... Args> constexpr void Destroyed(const char* text, Args... args) { Tagged("Destroy", text, args...); }
-    template <typename... Args> constexpr void Created(const char* text, Args... args) { Tagged("Created", text, args...); }
-    template <typename... Args> constexpr void Moved(const char* text, Args... args) { Tagged("Moved", text, args...); }
-    template <typename... Args> constexpr void Copied(const char* text, Args... args) { Tagged("Copied", text, args...); }
+    template <typename... Args> constexpr void TaggedColored(const u8 color, const char* tag, const char* text, Args... args) {
+        SetColor(color);
+        string += std::format("[{:<9}] ", tag);
+        string += std::vformat(text, std::make_format_args(args...));
+        string += "\n";
+        ClearColor();
+    }
+    template <typename... Args> constexpr void Tagged(const char* tag, const char* text, Args... args) { TaggedColored(static_cast<u8>(LOGGER_COLOR::WHITE), tag, text, args...); }
+    template <typename... Args> constexpr void ColoredLog(const u8 color, const char* text, Args... args) {
+        SetColor(color);
+        string += LOGGER_PREFIX_LOG;
+        string += std::vformat(text, std::make_format_args(args...));
+        string += "\n";
+        ClearColor();
+    }
+    template <typename... Args> constexpr void LogTaggedColored(const u8 color, const char* tag, const char* text, Args... args) {
+        SetColor(color);
+        string += LOGGER_PREFIX_LOG;
+        string += std::format("[{:<9}] ", tag);
+        string += std::vformat(text, std::make_format_args(args...));
+        string += "\n";
+        ClearColor();
+    }
+    template <typename... Args> constexpr void Destroyed(const char* text, Args... args) { LogTaggedColored(static_cast<u8>(LOGGER_COLOR::GREY), "DESTROYED", text, args...); }
+    template <typename... Args> constexpr void Created(const char* text, Args... args) { LogTaggedColored(static_cast<u8>(LOGGER_COLOR::ORANGE), "CREATED", text, args...); }
+    template <typename... Args> constexpr void Moved(const char* text, Args... args) { ColoredLog(static_cast<u8>(LOGGER_COLOR::LIGHT_BLUE), text, args...); }
+    template <typename... Args> constexpr void Copied(const char* text, Args... args) { ColoredLog(static_cast<u8>(LOGGER_COLOR::LIGHT_MAGENTA), text, args...); }
 
     template <typename... Args> constexpr void ErrorWithFile(const char* text, Args... args) {
         SetColor(static_cast<u8>(LOGGER_COLOR::RED));
@@ -120,7 +142,7 @@ struct Logger {
     constexpr void LogLine() { string.Add(LOG_SIMPLE_LINE_STRING); }
     constexpr void LogComplexLine() { string.Add(LOG_LINE_STRING); }
 
-    void SetColor(u8 color) { string.Add(std::format("\033[38;5;{}m", color)); }
+    void SetColor(u8 color) { string.Add(std::format("\033[1;38;5;{}m", color)); }
     void RotateColor(const u32 index) { SetColor(static_cast<u8>(START_COLOR + index * 3U)); }
     constexpr void ClearColor() { string.Add(LOGGER_COLOR_CLEAR); }
 
