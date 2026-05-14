@@ -11,26 +11,16 @@ if (_SET_WARNINGS_ENABLED)
 endif ()
 
 
-if (EXISTS ${CMAKE_SOURCE_DIR}/3rdparty/SDL3/CMakeLists.txt)
-	add_subdirectory(3rdparty/SDL3 EXCLUDE_FROM_ALL)
-	add_subdirectory(3rdparty/SDL3_ttf EXCLUDE_FROM_ALL)
-	add_subdirectory(3rdparty/SDL3_image EXCLUDE_FROM_ALL)
-else ()
-	message(STATUS "3rdparty/ not found, fetching SDL3 via FetchContent...")
-	include(FetchContent)
-	fetchcontent_declare(SDL3
-			GIT_REPOSITORY "https://github.com/libsdl-org/SDL.git"
-			GIT_TAG "release-3.4.8" EXCLUDE_FROM_ALL)
-	fetchcontent_makeavailable(SDL3)
-	fetchcontent_declare(SDL3_ttf
-			GIT_REPOSITORY "https://github.com/libsdl-org/SDL_ttf.git"
-			GIT_TAG "release-3.2.2" EXCLUDE_FROM_ALL)
-	fetchcontent_makeavailable(SDL3_ttf)
-	fetchcontent_declare(SDL3_image
-			GIT_REPOSITORY "https://github.com/libsdl-org/SDL_image.git"
-			GIT_TAG "release-3.4.4" EXCLUDE_FROM_ALL)
-	fetchcontent_makeavailable(SDL3_image)
-endif ()
+# libs
+set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+set(SDL2TTF_SAMPLES OFF CACHE BOOL "" FORCE)
+set(SDL3TTF_SAMPLES OFF CACHE BOOL "" FORCE)
+set(SDL3IMAGE_SAMPLES OFF CACHE BOOL "" FORCE)
+add_subdirectory(3rdparty/SDL3 EXCLUDE_FROM_ALL)
+add_subdirectory(3rdparty/SDL3_ttf EXCLUDE_FROM_ALL)
+add_subdirectory(3rdparty/SDL3_image EXCLUDE_FROM_ALL)
 
 add_executable(pcg
                src/main.cpp
@@ -48,9 +38,7 @@ target_link_libraries(pcg
                       PRIVATE SDL3_image::SDL3_image
 )
 
-set(resources_dir ${CMAKE_SOURCE_DIR}/resources)
-
-target_include_directories(pcg PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/source)
+target_include_directories(pcg PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 #add_custom_command(
 #		TARGET pcg POST_BUILD
