@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 #include <ranges>
 
 #include "0_engine/g_globals.hpp"

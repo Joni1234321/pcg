@@ -11,7 +11,9 @@
 #define SIMD_OPTIMIZE
 #endif // SIMD_OPTIMIZE
 #if defined(_WIN64) || defined(__x86_64__) || defined(__aarch64__)
+#ifndef WIN64
 #define WIN64
+#endif
 #endif // WIN64
 
 #define STL_VERIFY(cond, mesg) _STL_VERIFY(cond, mesg)

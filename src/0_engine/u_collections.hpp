@@ -1,7 +1,9 @@
 #pragma once
 
+#include <algorithm>
 #include <bitset>
 #include <format>
+#include <functional>
 #include <queue>
 #include <set>
 #include <span>
@@ -136,7 +138,7 @@ template <typename T> struct List {
     constexpr void erase_at(const u32 index) { data.erase(std::begin(data) + index); }
     constexpr u32 erase_value(const T& value) { return static_cast<u32>(std::erase(data, value)); }
 
-    template <std::_Container_compatible_range<T> _Rng> constexpr void append_range(_Rng&& range) { data.append_range(range); }
+    template <std::ranges::input_range _Rng> constexpr void append_range(_Rng&& range) { data.append_range(std::forward<_Rng>(range)); }
 
     constexpr void push_back(const T& value) { data.push_back(value); }
     constexpr void push_back(T&& t) { data.push_back(std::move(t)); }

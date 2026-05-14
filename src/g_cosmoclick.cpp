@@ -93,7 +93,7 @@ struct BuildingComponent : NodeComponentBase {
 };
 static_assert(NodeComponent<BuildingComponent>);
 
-struct GameFrame : Frame {
+struct GameFrame : Frame, LogLifetimeWithCount<GameFrame> {
     static constexpr u32 PLANET_SIZE = 400U;
     static constexpr u32 PLANET_BORDER_SIZE = 10U;
 
@@ -223,7 +223,6 @@ void CosmoClickUISystem::operator()() const {
 void pcg::arcade::RunCosmoClick() {
     using namespace pce;
     using namespace cosmoclick;
-    Orchestra orchestra { };
 
     // Data
     singleton.Get<WindowState>().clear_color = colors::dark_grey;
@@ -241,6 +240,7 @@ void pcg::arcade::RunCosmoClick() {
     singleton.Get<GameState>() = GameState { };
 
     // Systems
+    Orchestra orchestra { };
     orchestra.Add<DebugSystem>();
 
     orchestra.Add<TickSystem>();

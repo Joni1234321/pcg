@@ -8,11 +8,15 @@
       "description": "Uses the UCRT64 toolchain and pre-installed SDL3 packages from MSYS2",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/ucrt64",
+      "environment": {
+        "PATH": "D:/tools/msys64/ucrt64/bin;D:/tools/msys64/usr/bin;$penv{PATH}"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER":   "D:/tools/msys64/ucrt64/bin/gcc.exe",
         "CMAKE_CXX_COMPILER": "D:/tools/msys64/ucrt64/bin/g++.exe",
-        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/ucrt64"
+        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/ucrt64",
+        "DOWNLOAD_DEPENDENCIES": "OFF"
       }
     },
     {
@@ -21,11 +25,15 @@
       "description": "Uses the MinGW64 toolchain and pre-installed SDL3 packages from MSYS2",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/mingw64",
+      "environment": {
+        "PATH": "D:/tools/msys64/mingw64/bin;D:/tools/msys64/usr/bin;$penv{PATH}"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER":   "D:/tools/msys64/mingw64/bin/gcc.exe",
         "CMAKE_CXX_COMPILER": "D:/tools/msys64/mingw64/bin/g++.exe",
-        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/mingw64"
+        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/mingw64",
+        "DOWNLOAD_DEPENDENCIES": "OFF"
       }
     },
     {
@@ -34,11 +42,15 @@
       "description": "Uses the Clang64 toolchain and pre-installed SDL3 packages from MSYS2",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/clang64",
+      "environment": {
+        "PATH": "D:/tools/msys64/clang64/bin;D:/tools/msys64/usr/bin;$penv{PATH}"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER":   "D:/tools/msys64/clang64/bin/clang.exe",
         "CMAKE_CXX_COMPILER": "D:/tools/msys64/clang64/bin/clang++.exe",
-        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/clang64"
+        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/clang64",
+        "DOWNLOAD_DEPENDENCIES": "OFF"
       }
     }
   ],

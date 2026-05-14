@@ -5,7 +5,9 @@
 #include <string>
 #include <ranges>
 #include <array>
+#if __has_include(<stacktrace>)
 #include <stacktrace>
+#endif
 
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_types.hpp"
@@ -157,15 +159,18 @@ template <typename T> struct LogLifetimeWithCount {
 };
 template <typename T> u32 LogLifetimeWithCount<T>::log_counter = 0U;
 
+#if defined(__cpp_lib_stacktrace)
 template <typename T> struct LogLifetimeWithStack {
     LogLifetimeWithStack() { Logger().Created("{} {}\n", typeid(T).name(), std::stacktrace::current()); }
     LogLifetimeWithStack(const LogLifetimeWithStack&) { Logger().Copied("{} {}\n", typeid(T).name(), std::stacktrace::current()); }
     LogLifetimeWithStack(LogLifetimeWithStack&&) noexcept { Logger().Moved("{} {}\n", typeid(T).name(), std::stacktrace::current()); }
     ~LogLifetimeWithStack() { Logger().Destroyed("{} {}\n", typeid(T).name(), std::stacktrace::current()); }
 };
+#endif
 template <typename T> struct LogDestroy {
     ~LogDestroy() { Logger().Destroyed("{}", typeid(T).name()); }
 };
+#if defined(__cpp_lib_stacktrace)
 template <typename T> struct LogDestroyWithStack {
     ~LogDestroyWithStack() {
         auto filtered_frames = std::stacktrace::current() | std::views::filter([] (const std::stacktrace_entry& frame) -> bool { return frame.description().contains("pcg") || frame.description().contains("pce"); });
@@ -174,6 +179,7 @@ template <typename T> struct LogDestroyWithStack {
         Logger().Destroyed("{} {}\n", typeid(T).name(), result);
     }
 };
+#endif
 template <typename T> struct LogDestroyWithCount {
     ~LogDestroyWithCount() {
         static u32 count;
