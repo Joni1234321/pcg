@@ -1,13 +1,11 @@
 ﻿{
   "version": 3,
-  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
   "configurePresets": [
     {
-      "name": "msys2-ucrt64",
-      "displayName": "MSYS2 UCRT64 (GCC)",
-      "description": "Uses the UCRT64 toolchain and pre-installed SDL3 packages from MSYS2",
+      "name": "ucrt",
+      "displayName": "UCRT64",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/ucrt64",
+      "binaryDir": "${sourceDir}/out/ucrt",
       "environment": {
         "PATH": "D:/tools/msys64/ucrt64/bin;D:/tools/msys64/usr/bin;$penv{PATH}"
       },
@@ -15,16 +13,14 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER":   "D:/tools/msys64/ucrt64/bin/gcc.exe",
         "CMAKE_CXX_COMPILER": "D:/tools/msys64/ucrt64/bin/g++.exe",
-        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/ucrt64",
-        "DOWNLOAD_DEPENDENCIES": "OFF"
+        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/ucrt64"
       }
     },
     {
-      "name": "msys2-mingw64",
-      "displayName": "MSYS2 MinGW64 (GCC)",
-      "description": "Uses the MinGW64 toolchain and pre-installed SDL3 packages from MSYS2",
+      "name": "gcc",
+      "displayName": "GCC (MinGW64)",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/mingw64",
+      "binaryDir": "${sourceDir}/out/gcc",
       "environment": {
         "PATH": "D:/tools/msys64/mingw64/bin;D:/tools/msys64/usr/bin;$penv{PATH}"
       },
@@ -32,16 +28,14 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER":   "D:/tools/msys64/mingw64/bin/gcc.exe",
         "CMAKE_CXX_COMPILER": "D:/tools/msys64/mingw64/bin/g++.exe",
-        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/mingw64",
-        "DOWNLOAD_DEPENDENCIES": "OFF"
+        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/mingw64"
       }
     },
     {
-      "name": "msys2-clang64",
-      "displayName": "MSYS2 Clang64",
-      "description": "Uses the Clang64 toolchain and pre-installed SDL3 packages from MSYS2",
+      "name": "clang",
+      "displayName": "Clang",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/clang64",
+      "binaryDir": "${sourceDir}/out/clang",
       "environment": {
         "PATH": "D:/tools/msys64/clang64/bin;D:/tools/msys64/usr/bin;$penv{PATH}"
       },
@@ -49,26 +43,8 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER":   "D:/tools/msys64/clang64/bin/clang.exe",
         "CMAKE_CXX_COMPILER": "D:/tools/msys64/clang64/bin/clang++.exe",
-        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/clang64",
-        "DOWNLOAD_DEPENDENCIES": "OFF"
+        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/clang64"
       }
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "msys2-ucrt64-build",
-      "displayName": "Build (UCRT64)",
-      "configurePreset": "msys2-ucrt64"
-    },
-    {
-      "name": "msys2-mingw64-build",
-      "displayName": "Build (MinGW64)",
-      "configurePreset": "msys2-mingw64"
-    },
-    {
-      "name": "msys2-clang64-build",
-      "displayName": "Build (Clang64)",
-      "configurePreset": "msys2-clang64"
     }
   ]
 }
