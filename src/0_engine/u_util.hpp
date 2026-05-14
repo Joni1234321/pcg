@@ -1,9 +1,11 @@
 #pragma once
 
-#include <cassert>
+#include <cmath>
+#include <concepts>
 #include <numbers>
 #include <random>
 #include <stdexcept>
+#include <utility>
 
 #include "0_engine/u_types.hpp"
 
@@ -22,12 +24,12 @@ template <typename To, typename From> constexpr To& Reinterpret(From& from) { re
 }
 [[nodiscard]] inline u32 Rand(const u32 min, const u32 max) { return min + Rand(max - min); }
 
-template <typename Collection> typename Collection::key_type RandomKey(const Collection& collection) {
+template <typename Collection> Collection::key_type RandomKey(const Collection& collection) {
     if (std::empty(collection)) { throw std::runtime_error("Collection is empty!"); }
     auto iterator = std::next(std::begin(collection), Rand() % std::size(collection));
     return iterator->first;
 }
-template <typename Collection> const typename Collection::value_type& RandomValue(const Collection& collection) {
+template <typename Collection> const Collection::value_type& RandomValue(const Collection& collection) {
     if (std::empty(collection)) { throw std::runtime_error("Collection is empty!"); }
     auto iterator = std::next(std::begin(collection), Rand() % std::size(collection));
     return iterator->second;

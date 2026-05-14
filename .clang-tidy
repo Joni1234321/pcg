@@ -5,6 +5,7 @@ Checks: >
   clang-analyzer-*,
   concurrency-*,
   cppcoreguidelines-*,
+  misc-*,
   modernize-*,
   performance-*,
   readability-*,
@@ -15,8 +16,35 @@ Checks: >
   -cppcoreguidelines-avoid-non-const-global-variables,
   -readability-implicit-bool-conversion,
   -modernize-use-auto,
-  -readability-redundant-member-init
+  -readability-redundant-member-init,
+  -bugprone-easily-swappable-parameters
 
 WarningsAsErrors: ""
 HeaderFilterRegex: ".*[/\\\\]src[/\\\\].*"
 FormatStyle: none
+
+CheckOptions:
+  # --- naming: Google style (snake_case) with UPPER_CASE constants ----------
+  readability-identifier-naming.NamespaceCase:            lower_case
+  readability-identifier-naming.ClassCase:                CamelCase
+  readability-identifier-naming.StructCase:               CamelCase
+  readability-identifier-naming.EnumCase:                 CamelCase
+  readability-identifier-naming.EnumConstantCase:         UPPER_CASE
+  readability-identifier-naming.UnionCase:                CamelCase
+  readability-identifier-naming.TypeAliasCase:            CamelCase
+  readability-identifier-naming.TypedefCase:              CamelCase
+  readability-identifier-naming.TemplateParameterCase:    CamelCase
+  readability-identifier-naming.FunctionCase:             CamelCase
+  readability-identifier-naming.MethodCase:               CamelCase
+  readability-identifier-naming.MemberCase:               lower_case
+  readability-identifier-naming.ParameterCase:            lower_case
+  readability-identifier-naming.VariableCase:             lower_case
+  readability-identifier-naming.LocalVariableCase:        lower_case
+  readability-identifier-naming.GlobalVariableCase:       lower_case
+  readability-identifier-naming.StaticVariableCase:       lower_case
+  readability-identifier-naming.ConstantCase:             lower_case
+  readability-identifier-naming.ConstantMemberCase:       UPPER_CASE
+  readability-identifier-naming.ConstexprVariableCase:    UPPER_CASE
+  readability-identifier-naming.StaticConstantCase:       UPPER_CASE
+  readability-identifier-naming.GlobalConstantCase:       UPPER_CASE
+  misc-include-cleaner.IgnoreHeaders: "SDL3/.*;SDL3_ttf/.*;SDL3_image/.*;.*u_types.hpp"

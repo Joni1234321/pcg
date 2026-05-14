@@ -87,13 +87,13 @@ private:
 };
 
 template <typename T> struct List {
-    using value_type = typename std::vector<T>::value_type;
+    using value_type = std::vector<T>::value_type;
     using size_type = u32;
 
-    using iterator = typename std::vector<T>::iterator;
-    using const_iterator = typename std::vector<T>::const_iterator;
-    using reverse_iterator = typename std::vector<T>::reverse_iterator;
-    using const_reverse_iterator = typename std::vector<T>::const_reverse_iterator;
+    using iterator = std::vector<T>::iterator;
+    using const_iterator = std::vector<T>::const_iterator;
+    using reverse_iterator = std::vector<T>::reverse_iterator;
+    using const_reverse_iterator = std::vector<T>::const_reverse_iterator;
 
     constexpr List() : data() { }
     constexpr List(std::initializer_list<T> init_list) : data(std::move(init_list)) { }
@@ -176,8 +176,8 @@ template <typename T> struct List {
 };
 
 template <typename T, typename H = T> struct HandleList {
-    using iterator = typename List<T>::iterator;
-    using const_iterator = typename List<T>::const_iterator;
+    using iterator = List<T>::iterator;
+    using const_iterator = List<T>::const_iterator;
 
     constexpr HandleList() : data() { }
     constexpr HandleList(std::initializer_list<T> init_list) : data(std::move(init_list)) { }

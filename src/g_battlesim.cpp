@@ -1,3 +1,5 @@
+#include <algorithm>
+#include "0_engine/u_util.hpp"
 #include "g_arcade.hpp"
 #include "g_components.hpp"
 
@@ -52,6 +54,10 @@ struct Division {
     u32 anti_tank_guns;
     u32 tanks;
     u32 trucks;
+
+    [[nodiscard]] constexpr u8 Recon() const { return Squads() / 10U; }
+    [[nodiscard]] constexpr u8 Squads() const { return rifles / 10U; }
+    [[nodiscard]] constexpr u8 Batteries () const { return artillery / 6U; }
 };
 
 constexpr Division soviet_rifle_division_1944 {
@@ -76,23 +82,66 @@ constexpr Division german_infantry_division_1944 {
     .trucks = 900,
 };
 
+u8 Calculator(u8 attack, u8 defense) {
+
+}
 void SimulateBattle() {
-    std::array defenders { german_infantry_division_1944, german_infantry_division_1944 };
-    std::array attackers { soviet_rifle_division_1944, soviet_rifle_division_1944, soviet_rifle_division_1944 };
+    List defenders { german_infantry_division_1944, german_infantry_division_1944 };
+    List attackers { soviet_rifle_division_1944, soviet_rifle_division_1944, soviet_rifle_division_1944 };
 
     Division attacker = german_infantry_division_1944;
     Division defender = soviet_rifle_division_1944;
 
-    constexpr u8 ARTILLERY_DAMAGE = 6U;
+    // RANGE 10K main force
+    // recon roll for targets.
+    u8 attacker_targets = 0;
+    const u8 recon_squads = attacker.Recon() / 4U; // commits a quarter of squads
+    for (u8 i = 0; i < recon_squads; ++i) {
+        // mechanic replace with cards. same colour to spot. Closer to number the better
+        u8 recon_dice = Rand(6U);
+        if (recon_dice == 0) {
+            // trap
+            attacker.rifles -= Rand(4, 8);  // killed soldiers
+        }
+        else if (recon_dice == 1) {
+            // contact
+            attacker.rifles -= Rand(3, 6);  // wounded 3-6 soldiers
+            defender.rifles -= Rand(1, 3);
+        }
+        else if (recon_dice == 2) {
+            // nothing
+        }
+        else {
+            attacker_targets += recon_dice - 2;
+        }
+    }
 
-    constexpr u8 TERRAIN_COVER = 1U; // mountain
-    constexpr u8 attackCover = TERRAIN_COVER;
-    constexpr u8 defenseCover = TERRAIN_COVER * 2U;
+    u8 squads_suppressed = 0;
+    // fire missions
+    // 1 battery per target
+    const u8 fire_mission = std::min(attacker.Batteries(), attacker_targets);
+    for (u8 i = 0; i < fire_mission; i++) {
+        u8 hit = Rand(6u);
+        // roll for hit
+        defender.rifles -= hit;
+        // roll for wound/kill
 
-    constexpr u8 ARTILLERY_DAMAGE = pce::saturating_sub(TERRAIN_COVER, );
-        // Range max art preplanned
-        // std::saturating_sub(100, 20);  // libc++ not yet shipped in MSYS2
-        u32 damage = attacker.artillery * (ARTILLERY_DAMAGE - defenseCover);
+        // suppressed squads
+        squads_suppressed += hit * 3;
+    }
+
+    // this is max range
+    // they reload and fire every hour
+
+
+    u8 squads_operating_defender = defender.Squads() - squads_suppressed;
+    // then for range 1K. long range fights open
+    for (u8 i = 0; i < squads_operating_defender; i++) {
+        // mg firing
+        u8 hit = Rand(6U);
+        attacker.rifles -= hit;
+    }
+
 }
 
 // struct MilUnit {

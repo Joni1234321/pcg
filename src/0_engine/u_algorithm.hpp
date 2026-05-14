@@ -23,7 +23,7 @@ constexpr OutputIterator TransformLocal(Iterator1 first1, Iterator1 last1, Itera
 }
 
 template <typename Container1, typename Container2, typename OutputContainer, typename BinaryOperation>
-constexpr typename OutputContainer::iterator Transform(const Container1& container1, const Container2& container2, OutputContainer& out, BinaryOperation binary_operation) {
+constexpr OutputContainer::iterator Transform(const Container1& container1, const Container2& container2, OutputContainer& out, BinaryOperation binary_operation) {
     return TransformLocal(std::begin(container1), std::end(container1), std::begin(container2), std::begin(out), binary_operation);
 }
 
