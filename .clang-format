@@ -1,18 +1,18 @@
-# Generated from CLion C/C++ Code Style settings
 ---
 Language: Cpp
 BasedOnStyle: LLVM
 AccessModifierOffset: -4
+AlignConsecutiveMacros: AcrossEmptyLinesAndComments
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
 AlignOperands: true
 AlignTrailingComments: true
-AllowShortBlocksOnASingleLine: true
-AllowShortCaseLabelsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Always
 AllowShortIfStatementsOnASingleLine: true
 AllowShortLoopsOnASingleLine: true
-AlwaysBreakAfterDefinitionReturnType: false
 AlwaysBreakTemplateDeclarations: No
+BinPackParameters: false
+BitFieldColonSpacing: After
 BraceWrapping: 
   AfterCaseLabel: false
   AfterClass: false
@@ -51,12 +51,21 @@ IndentGotoLabels: false
 IndentPPDirectives: BeforeHash
 IndentWidth: 4
 InsertNewlineAtEOF: true
+KeepEmptyLinesAtTheStartOfBlocks: false
 MacroBlockBegin: ''
 MacroBlockEnd: ''
+PackConstructorInitializers: CurrentLine
+PointerAlignment: Left
+ReferenceAlignment: Left
+ReflowComments: false
+SpaceBeforeCpp11BracedList: true
+SpaceInEmptyBraces: Always
 SpaceInEmptyParentheses: false
 SpacesInAngles: false
 SpacesInConditionalStatement: false
+SpacesInContainerLiterals: false
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
+Standard: Latest
 TabWidth: 4
 ...

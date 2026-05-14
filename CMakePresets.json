@@ -4,7 +4,7 @@
     {
       "name": "xd",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/clang",
+      "binaryDir": "${sourceDir}/out/xd",
       "environment": {
         "PATH": "D:/tools/msys64/clang64/bin;D:/tools/msys64/usr/bin;$penv{PATH}"
       },
@@ -20,7 +20,8 @@
       "inherits": "xd",
       "binaryDir": "${sourceDir}/out/xdc",
       "cacheVariables": {
-        "SET_CLANG_TIDY": "ON"
+        "SET_CLANG_TIDY": "ON",
+        "SET_WARNINGS_ENABLED": "ON"
       }
     }
   ]
