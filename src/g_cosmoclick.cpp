@@ -34,7 +34,7 @@ struct GameDefines {
     List<Building> buildings;
 };
 struct GameState {
-    List<Count> building_counts { singleton.Get<GameDefines>().buildings.size(), Count { 0U } };
+    List<Count> building_counts { Singleton::Get<GameDefines>().buildings.size(), Count { 0U } };
     Money money { 100U };
     Income income { 0U };
     miliseconds32 last_income_time { TimeNowMS() };
@@ -112,14 +112,14 @@ struct GameFrame : Frame, LogLifetimeWithCount<GameFrame> {
             .OnClick([this](const NodeReference) -> void {
                 AnimationSystem::StartAnimation(this->planet_animation);
                 constexpr Money money_per_click { 5U };
-                singleton.Get<GameState>().money += money_per_click;
-                singleton.Get<UIFlags>() & UIFlags::money;
-                const uint2 mouse_position = singleton.Get<InputState>().mouse_position;
+                Singleton::Get<GameState>().money += money_per_click;
+                Singleton::Get<UIFlags>() & UIFlags::money;
+                const uint2 mouse_position = Singleton::Get<InputState>().mouse_position;
                 const String text = std::to_string(money_per_click.value);
                 data[emitter].particles.items.push_back(Particle {
                     .position = { static_cast<f32>(mouse_position.x), static_cast<f32>(mouse_position.y) },
                     .text = std::unique_ptr<TTF_Text, DestroyText> { TTF_CreateText(
-                        singleton.Get<WindowState>().text_engine, singleton.Get<FontCollection>().GetFont(static_cast<FontSizes>(Rand(static_cast<u32>(FontSizes::body), static_cast<u32>(FontSizes::title)))).ToSDL(), text.c_str(), text.size()) },
+                        Singleton::Get<WindowState>().text_engine, Singleton::Get<FontCollection>().GetFont(static_cast<FontSizes>(Rand(static_cast<u32>(FontSizes::body), static_cast<u32>(FontSizes::title)))).ToSDL(), text.c_str(), text.size()) },
                     .duration = miliseconds32 { Rand(1000U, 3001U) },
                 });
             })
@@ -134,7 +134,7 @@ struct GameFrame : Frame, LogLifetimeWithCount<GameFrame> {
                                                                                       const u32 padding_value = PLANET_PADDING_START + static_cast<u32>((1 - t) * PLANET_BORDER_SIZE);
                                                                                       data[tree].styles[planet].padding = uint4 { padding_value, padding_value, padding_value, padding_value };
                                                                                       data[tree].styles[planet].background_color = colors::LightenColor(colors::cyan, t);
-                                                                                      singleton.Get<UIFlags>() & UIFlags::planet;
+                                                                                      Singleton::Get<UIFlags>() & UIFlags::planet;
                                                                                   },
                                                                                    .duration = miliseconds32 { 400U },
                                                                                    .state = AnimationState::persistent_stopped });
@@ -155,27 +155,27 @@ template <class T> void ValueUnit<T>::SetProperty(const Property& property) cons
     data[root.tree].styles[unit].background_color = property.color;
 }
 void BuildingComponent::SetProperty(const Property& property) const {
-    const Count& count = singleton.Get<GameState>().building_counts[property];
-    const Building& building = singleton.Get<GameDefines>().buildings[property];
+    const Count& count = Singleton::Get<GameState>().building_counts[property];
+    const Building& building = Singleton::Get<GameDefines>().buildings[property];
 
     data[root.tree].node_properties[name].text = std::format("[{:04}] {:20}", count, building.name);
     data[root.tree].styles[item].texture = building.texture;
     money.SetProperty({ .value = building.cost, .unit = Unit::cosmos, .font_size = FontSizes::body, .color = colors::gold });
     income.SetProperty({ .value = building.income, .unit = Unit::cosmos_per_second, .font_size = FontSizes::body, .color = colors::silver });
     data[root.tree].node_properties[root.node].on_click = [&building, property](const NodeReference) -> void {
-        GameState& game_state = singleton.Get<GameState>();
+        GameState& game_state = Singleton::Get<GameState>();
         if (game_state.money >= building.cost) {
             ++game_state.building_counts[property];
             game_state.money -= building.cost;
             game_state.income += building.income;
-            singleton.Get<UIFlags>() & UIFlags::buildings& UIFlags::money;
+            Singleton::Get<UIFlags>() & UIFlags::buildings& UIFlags::money;
         }
     };
 }
 // systems definition
 Scene GameScene() {
-    UIFlags& ui_flags = singleton.Get<UIFlags>();
-    GameState& game_data = singleton.Get<GameState>();
+    UIFlags& ui_flags = Singleton::Get<UIFlags>();
+    GameState& game_data = Singleton::Get<GameState>();
     const miliseconds32 now { TimeNowMS() };
     const seconds32 delta_s { static_cast<u32>((now - game_data.last_income_time).value * NS_TO_SECONDS) };
     if (delta_s > seconds32 { 0U }) {
@@ -186,24 +186,24 @@ Scene GameScene() {
     return Scene::game;
 }
 void CosmoClickSystem::operator()() const {
-    Scene& scene { singleton.Get<Scene>() };
+    Scene& scene { Singleton::Get<Scene>() };
     const Scene start { scene };
     switch (scene) {
         case Scene::start: scene = Scene::game; break;
         case Scene::game: scene = GameScene(); break;
         case Scene::quit:
             Logger().Log("Quit requested");
-            singleton.Get<InputState>().quit = true;
+            Singleton::Get<InputState>().quit = true;
             break;
     }
-    if (scene != start) { singleton.Get<UIFlags>().Set(); }
+    if (scene != start) { Singleton::Get<UIFlags>().Set(); }
 }
 void CosmoClickUISystem::operator()() const {
-    const GameState& game_state = singleton.Get<GameState>();
-    UIFlags& ui_flags = singleton.Get<UIFlags>();
-    GameFrame& game_frame = singleton.Get<GameFrame>();
+    const GameState& game_state = Singleton::Get<GameState>();
+    UIFlags& ui_flags = Singleton::Get<UIFlags>();
+    GameFrame& game_frame = Singleton::Get<GameFrame>();
     if (ui_flags | UIFlags::planet) { data[game_frame.tree].MarkDirty(game_frame.planet); }
-    if (ui_flags | UIFlags::buildings) { game_frame.shop.Set(std::views::iota(0U, singleton.Get<GameDefines>().buildings.size())); }
+    if (ui_flags | UIFlags::buildings) { game_frame.shop.Set(std::views::iota(0U, Singleton::Get<GameDefines>().buildings.size())); }
     if (ui_flags | UIFlags::money) {
         game_frame.money.SetValue(game_state.money);
         game_frame.income.SetValue(game_state.income);
@@ -219,12 +219,13 @@ void CosmoClickUISystem::operator()() const {
 }
 } // namespace pcg::cosmoclick
 void pcg::arcade::RunCosmoClick() {
+    pce::Logger().Log("Running cosmo click");
     using namespace pce;
     using namespace cosmoclick;
 
     // Data
-    singleton.Get<WindowState>().clear_color = colors::dark_grey;
-    singleton.Get<GameDefines>().buildings = List {
+    Singleton::Get<WindowState>().clear_color = colors::dark_grey;
+    Singleton::Get<GameDefines>().buildings = List {
         Building { .name = "Mine", .texture = data.Create<Texture>(Asset("mine-small.png")), .cost = Money { 100U }, .income = Income { 1U } },
         Building { .name = "Factory", .texture = data.Create<Texture>(Asset("factory-small.png")), .cost = Money { 500U }, .income = Income { 10U } },
         Building { .name = "Spaceport", .texture = data.Create<Texture>(Asset("spaceport-small.png")), .cost = Money { 2000U }, .income = Income { 60U } },
@@ -236,7 +237,7 @@ void pcg::arcade::RunCosmoClick() {
         Building { .name = "Dyson Sphere Segment", .texture = data.Create<Texture>(Asset("dyson-sphere.png")), .cost = Money { 2000000U }, .income = Income { 250000U } },
     };
 
-    singleton.Get<GameState>() = GameState { };
+    Singleton::Get<GameState>() = GameState { };
 
     // Systems
     Orchestra orchestra { };
@@ -252,9 +253,9 @@ void pcg::arcade::RunCosmoClick() {
     orchestra.Add<AnimationSystem>();
     orchestra.Add<NodeRenderSystem>();
     orchestra.Add<ParticleSystem>();
-    orchestra.Add<PresentSystem>();
+    orchestra.Add<WindowRenderSystem>();
 
-    while (!singleton.Get<InputState>().quit && !singleton.Get<InputState>().keys_down[SDLK_ESCAPE]) { orchestra.RunSystems(); }
+    while (!Singleton::Get<InputState>().quit && !Singleton::Get<InputState>().keys_down[SDLK_ESCAPE]) { orchestra.RunSystems(); }
 
     // Free SDL/TTF-owning game state BEFORE Window destructor calls TTF_Quit/SDL_Quit,
     // otherwise leftover TTF_Text/SDL_Texture get destroyed during static destruction

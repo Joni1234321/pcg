@@ -14,7 +14,7 @@
 namespace pce::ui {
 struct NodeInputSystem {
     void operator()() const;
-    ~NodeInputSystem() { singleton.Get<HoveredType>() = { }; }
+    ~NodeInputSystem() { Singleton::Get<HoveredType>() = { }; }
 };
 struct NodeRenderSystem {
     void operator()() const;

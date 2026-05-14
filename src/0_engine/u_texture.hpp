@@ -9,7 +9,7 @@
 
 namespace pce {
 struct Texture : LogLifetimeWithCount<Texture> {
-    explicit Texture(const AbsolutePath& path) : texture(IMG_LoadTexture(singleton.Get<WindowState>().renderer, path.string().c_str())) {
+    explicit Texture(const AbsolutePath& path) : texture(IMG_LoadTexture(Singleton::Get<WindowState>().renderer, path.string().c_str())) {
         if (texture.Get()) {
             Logger().Created("Texture {} {}", texture->w, texture->h);
         } else {

@@ -20,11 +20,10 @@ b8 Start() {
     constexpr uint2 window_size { 1600U, 900U };
     Window window { window_size };
 
-    SDL_Log("Starting game");
+    Logger().Log("Starting Game");
     pcg::arcade::RunCommandStrike();
-    pcg::arcade::RunCosmoClick();
-    pcg::arcade::RunClickCore();
-
+    // pcg::arcade::RunCosmoClick();
+    // pcg::arcade::RunClickCore();
     Logger().Log("Quitting main loop");
 
     return true;

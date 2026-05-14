@@ -44,9 +44,9 @@ struct ParticleEmitter {
 struct ParticleSystem {
     void operator()() const {
         constexpr SDL_Color color { colors::black };
-        const f32 delta_time { singleton.Get<TickState>().delta_time };
+        const f32 delta_time { Singleton::Get<TickState>().delta_time };
         const miliseconds32 current_ms { TimeNowMS() };
-        (void)SDL_SetRenderDrawColor(singleton.Get<WindowState>().renderer, color.r, color.g, color.b, color.a);
+        (void)SDL_SetRenderDrawColor(Singleton::Get<WindowState>().renderer, color.r, color.g, color.b, color.a);
         for (ParticleEmitter& emitter : data.Get<ParticleEmitter>()) {
             for (Particle& particle : emitter.particles.items | std::views::reverse) {
                 TTF_DrawRendererText(particle.text.get(), particle.position.x, particle.position.y);

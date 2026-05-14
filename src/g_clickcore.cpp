@@ -74,7 +74,7 @@ public:
     [[nodiscard]] constexpr HighScoreFrame& HighScoreFrame();
 };
 class ClickCore {
-    PresentSystem present_system { };
+    WindowRenderSystem present_system { };
     TickSystem tick_system { };
     InputSystem input_system { };
     NodeInputSystem node_input_system { };
@@ -90,7 +90,7 @@ class ClickCore {
 public:
     b8 running = true;
 
-    ClickCore() { singleton.Get<WindowState>().clear_color = colors::dark_slate; }
+    ClickCore() { Singleton::Get<WindowState>().clear_color = colors::dark_slate; }
     void Tick();
 
 private:
@@ -116,7 +116,7 @@ void ClickCore::Tick() {
     input_system();
     debug_system();
     node_input_system();
-    if (singleton.Get<InputState>().keys_down[SDLK_ESCAPE]) { running = false; }
+    if (Singleton::Get<InputState>().keys_down[SDLK_ESCAPE]) { running = false; }
 
     GameLoop();
 
@@ -135,7 +135,7 @@ void ClickCore::GameLoop() {
     }
 }
 Scene ClickCore::MainMenuScene() {
-    const InputState& input_state = singleton.Get<InputState>();
+    const InputState& input_state = Singleton::Get<InputState>();
     if (input_state.left_mouse_down) {
         const MainMenuFrame& main_menu = frames.MainMenuFrame();
         if (data[main_menu.tree].styles[main_menu.start_button].IsInside(input_state.mouse_position)) {
@@ -172,7 +172,7 @@ Scene ClickCore::GameScene() {
     data[game_frame.tree].node_properties[game_frame.score_label].text = std::format("Score {:4}", game.score);
     game_frame.SetTime(time_left_ms);
 
-    const InputState& input_state = singleton.Get<InputState>();
+    const InputState& input_state = Singleton::Get<InputState>();
     if (input_state.left_mouse_down || input_state.left_mouse_up) {
         if (data[game_frame.tree].styles[game_frame.box].IsInside(input_state.mouse_position)) {
             constexpr Score points = Score { 50U };
@@ -187,8 +187,8 @@ Scene ClickCore::GameScene() {
 Scene ClickCore::GameOverScene() {
     constexpr f32 slow_down = 1000.0F;
     const GameFrame& game_frame = frames.GameFrame();
-    data[game_frame.tree].styles[game_frame.box].background_color = colors::AnimateDamp(static_cast<f32>(singleton.Get<TickState>().tick.value) / slow_down);
-    data[game_frame.tree].styles[game_frame.score_box].background_color = colors::AnimateDamp(singleton.Get<TickState>().tick.value * 1.2F / slow_down);
+    data[game_frame.tree].styles[game_frame.box].background_color = colors::AnimateDamp(static_cast<f32>(Singleton::Get<TickState>().tick.value) / slow_down);
+    data[game_frame.tree].styles[game_frame.score_box].background_color = colors::AnimateDamp(Singleton::Get<TickState>().tick.value * 1.2F / slow_down);
 
     const Scene scene = MainMenuScene();
     if (scene == Scene::main_menu) { return Scene::game_over; }
@@ -213,6 +213,7 @@ void HighScoreComponent::SetProperty(const Property& property) const {
 } // namespace pcg::clickcore
 
 void pcg::arcade::RunClickCore() {
+    pce::Logger().Log("Running click core");
     clickcore::ClickCore click_core { };
     while (click_core.running) { click_core.Tick(); }
 }

@@ -19,20 +19,20 @@ struct OrchestraState {
 struct Orchestra {
     template <typename T> void Add() {
         auto ptr = new T(); // Create system instance
-        OrchestraState& orchestra_state = singleton.Get<OrchestraState>();
+        OrchestraState& orchestra_state = Singleton::Get<OrchestraState>();
         orchestra_state.system_storage.EmplaceBack(ptr, [](void* p) { delete static_cast<T*>(p); }); // Ensure destruction
         orchestra_state.systems.EmplaceBack([ptr]() -> void { (*static_cast<T*>(ptr))(); });         // Store callable functor
         orchestra_state.names.EmplaceBack(TypeName<T>().c_str());
         orchestra_state.ns.EmplaceBack(1U);
     }
     void RunSystems() {
-        OrchestraState& orchestra_state = singleton.Get<OrchestraState>();
-        for (const auto [i, system] : std::views::zip(std::views::iota(0u), orchestra_state.systems)) {
+        OrchestraState& orchestra_state = Singleton::Get<OrchestraState>();
+        for (const auto [i, system] : std::views::zip(std::views::iota(0U), orchestra_state.systems)) {
             nanoseconds64 start = TimeNowNS();
             system();
             orchestra_state.ns[i] = TimeNowNS() - start;
         }
     }
-    ~Orchestra() { singleton.Get<OrchestraState>() = { }; }
+    ~Orchestra() { Singleton::Get<OrchestraState>() = { }; }
 };
 } // namespace pce

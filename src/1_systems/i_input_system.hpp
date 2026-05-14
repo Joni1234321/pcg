@@ -19,7 +19,7 @@ struct InputState {
 };
 struct InputSystem {
     void operator()() const {
-        InputState& input_state = singleton.Get<InputState>();
+        InputState& input_state = Singleton::Get<InputState>();
         for (b8& key : input_state.keys_up | std::ranges::views::values) { key = false; }
         for (b8& key : input_state.keys_down | std::ranges::views::values) { key = false; }
         SDL_Event event;

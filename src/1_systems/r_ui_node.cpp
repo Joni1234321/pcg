@@ -202,8 +202,8 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
     Handle<Node> root { subtree_root.id };
     if (root == tree.Root()) {
         NodeStyle& root_style = tree.styles[root];
-        if (root_style.width.constraint == LayoutLength::parent_constraint) { root_style.width.resolved = singleton.Get<WindowState>().screen_size.x - root_style.position.x; }
-        if (root_style.height.constraint == LayoutLength::parent_constraint) { root_style.height.resolved = singleton.Get<WindowState>().screen_size.y - root_style.position.y; }
+        if (root_style.width.constraint == LayoutLength::parent_constraint) { root_style.width.resolved = Singleton::Get<WindowState>().screen_size.x - root_style.position.x; }
+        if (root_style.height.constraint == LayoutLength::parent_constraint) { root_style.height.resolved = Singleton::Get<WindowState>().screen_size.y - root_style.position.y; }
     }
 
     // nodes ordered
@@ -220,9 +220,9 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
             continue;
         }
 
-        const Font& font = singleton.Get<FontCollection>().GetFont(node_properties.font_size);
+        const Font& font = Singleton::Get<FontCollection>().GetFont(node_properties.font_size);
         if (ttf_text.Get() == nullptr) {
-            ttf_text.Reset(TTF_CreateText(singleton.Get<WindowState>().text_engine, font.ToSDL(), node_properties.text.c_str(), node_properties.text.size()));
+            ttf_text.Reset(TTF_CreateText(Singleton::Get<WindowState>().text_engine, font.ToSDL(), node_properties.text.c_str(), node_properties.text.size()));
         } else {
             TTF_SetTextString(ttf_text.Get(), node_properties.text.c_str(), node_properties.text.size());
             TTF_SetTextFont(ttf_text.Get(), font.ToSDL());
@@ -433,13 +433,13 @@ void Propagate(NodeReference node_reference, const NodeReaction& reaction) {
     }
 }
 void NodeInputSystem::operator()() const {
-    HoveredType& hovered = singleton.Get<HoveredType>();
+    HoveredType& hovered = Singleton::Get<HoveredType>();
     HandleList<NodeTree>& trees = data.Get<NodeTree>();
-    if (singleton.Get<InputState>().left_mouse_down && hovered.has_value()) { Propagate(hovered.value(), Click); }
+    if (Singleton::Get<InputState>().left_mouse_down && hovered.has_value()) { Propagate(hovered.value(), Click); }
 
     if (hovered.has_value() && !trees[hovered->tree].styles.ValidHandle(hovered->node)) { hovered = std::nullopt; }
     const HoveredType previous_hovered = hovered;
-    hovered = NodeAt(singleton.Get<InputState>().mouse_position);
+    hovered = NodeAt(Singleton::Get<InputState>().mouse_position);
 
     if (hovered.has_value() && previous_hovered.has_value() && hovered->tree.id == previous_hovered->tree.id && hovered->node.id == previous_hovered->node.id) { return; }
 
@@ -462,14 +462,14 @@ void NodeRenderSystem::operator()() const {
             switch (type) {
                 case ElementType::rectangle: {
                     for (const RectangleElement& element : rectangles.first(count)) {
-                        (void)SDL_SetRenderDrawColor(singleton.Get<WindowState>().renderer, element.color.r, element.color.g, element.color.b, element.color.a);
-                        (void)SDL_RenderFillRect(singleton.Get<WindowState>().renderer, &element.rect);
+                        (void)SDL_SetRenderDrawColor(Singleton::Get<WindowState>().renderer, element.color.r, element.color.g, element.color.b, element.color.a);
+                        (void)SDL_RenderFillRect(Singleton::Get<WindowState>().renderer, &element.rect);
                     }
                     rectangles = rectangles.subspan(count);
                     break;
                 }
                 case ElementType::texture: {
-                    for (const TextureElement& element : textures.first(count)) { (void)SDL_RenderTexture(singleton.Get<WindowState>().renderer, element.texture, nullptr, &element.rect); }
+                    for (const TextureElement& element : textures.first(count)) { (void)SDL_RenderTexture(Singleton::Get<WindowState>().renderer, element.texture, nullptr, &element.rect); }
                     textures = textures.subspan(count);
                     break;
                 }

@@ -56,7 +56,7 @@ struct uint2 {
     u32 x;
     u32 y;
     constexpr uint2() = default;
-    constexpr uint2(u32 x, u32 y) : x(x), y(y) {}
+    constexpr uint2(u32 x, u32 y) : x(x), y(y) { }
     constexpr uint2 operator+(const uint2 other) const { return { x + other.x, y + other.y }; }
     constexpr uint2 operator-(const uint2 other) const { return { x - other.x, y - other.y }; }
     constexpr uint2 operator*(const uint2 other) const { return { x * other.x, y * other.y }; }
@@ -92,7 +92,7 @@ struct uint4 {
     u32 z;
     u32 w;
     constexpr uint4() = default;
-    constexpr uint4(u32 x, u32 y, u32 z, u32 w) : x(x), y(y), z(z), w(w) {}
+    constexpr uint4(u32 x, u32 y, u32 z, u32 w) : x(x), y(y), z(z), w(w) { }
     constexpr uint4 operator+(const uint4 other) const { return { x + other.x, y + other.y, z + other.z, w + other.w }; }
     constexpr uint4 operator-(const uint4 other) const { return { x - other.x, y - other.y, z - other.z, w - other.w }; }
     constexpr uint4 operator*(const uint4 other) const { return { x * other.x, y * other.y, z * other.z, w * other.w }; }
@@ -136,7 +136,7 @@ struct float2 {
     f32 x;
     f32 y;
     constexpr float2() = default;
-    constexpr float2(f32 x, f32 y) : x(x), y(y) {}
+    constexpr float2(f32 x, f32 y) : x(x), y(y) { }
     constexpr float2 operator+(const float2 other) const { return float2 { x + other.x, y + other.y }; }
     constexpr float2 operator-(const float2 other) const { return float2 { x - other.x, y - other.y }; }
     constexpr float2 operator*(const float2 other) const { return float2 { x * other.x, y * other.y }; }

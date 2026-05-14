@@ -34,16 +34,16 @@ void DebugNodeComponent::SetProperty(const Property& property) const {
 }
 List<nanoseconds64> max_ns;
 void TickFrame::Update() {
-    std::ranges::transform(max_ns, singleton.Get<OrchestraState>().ns, max_ns.begin(), math::max<nanoseconds64> { });
+    std::ranges::transform(max_ns, Singleton::Get<OrchestraState>().ns, max_ns.begin(), math::max<nanoseconds64> { });
 
-    if (singleton.Get<TickState>().tick.value % 500U == 0U) {
-        u32 tick = singleton.Get<TickState>().tick.value;
-        u32 fps = static_cast<u32>(1.0F / singleton.Get<TickState>().delta_time);
+    if (Singleton::Get<TickState>().tick.value % 500U == 0U) {
+        u32 tick = Singleton::Get<TickState>().tick.value;
+        u32 fps = static_cast<u32>(1.0F / Singleton::Get<TickState>().delta_time);
         data[tree].MarkDirty();
         nanoseconds64 sum_max_time = std::ranges::fold_left(max_ns, nanoseconds64 { 0U }, std::plus { });
-        data[tree].node_properties[ticks].text = std::format("{:.3f}ms | {:.3f}ms | Tick: {:>8} | TPS: {:>4} | FPS: {:>4} |", singleton.Get<TickState>().delta_time * SECONDS_TO_MS, sum_max_time.value * NS_TO_SECONDS, tick, fps, fps);
-        systems.Set(std::views::zip(singleton.Get<OrchestraState>().names, singleton.Get<OrchestraState>().ns, max_ns));
-        max_ns = singleton.Get<OrchestraState>().ns;
+        data[tree].node_properties[ticks].text = std::format("{:.3f}ms | {:.3f}ms | Tick: {:>8} | TPS: {:>4} | FPS: {:>4} |", Singleton::Get<TickState>().delta_time * SECONDS_TO_MS, sum_max_time.value * NS_TO_SECONDS, tick, fps, fps);
+        systems.Set(std::views::zip(Singleton::Get<OrchestraState>().names, Singleton::Get<OrchestraState>().ns, max_ns));
+        max_ns = Singleton::Get<OrchestraState>().ns;
     }
 }
 
@@ -74,7 +74,7 @@ void DebugFrame::SetInspector(const HoveredType hovered) {
     debug_nodes.Set(nodes);
 }
 void DebugSystem::operator()() {
-    InputState& input_state = singleton.Get<InputState>();
+    InputState& input_state = Singleton::Get<InputState>();
     const b8 debug_mode = input_state.keys[SDLK_LALT];
     const b8 detailed_mode = input_state.keys[SDLK_LCTRL];
 
@@ -85,7 +85,7 @@ void DebugSystem::operator()() {
             data[tick_frame.tree].MarkDirty(tick_frame.systems.parent.node);
             tick_frame.systems.Hide();
         }
-        if (input_state.left_mouse_down) { debug_frame.SetInspector(singleton.Get<HoveredType>()); }
+        if (input_state.left_mouse_down) { debug_frame.SetInspector(Singleton::Get<HoveredType>()); }
         u32 key_count = std::min(data.Get<NodeTree>().size(), 10U);
         auto rng = std::views::iota(0U, key_count);
         const auto it = std::ranges::find_if(rng, [&](const u32 i) { return input_state.keys_down[SDLK_0 + i]; });

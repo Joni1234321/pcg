@@ -11,8 +11,11 @@ Checks: >
   -modernize-use-trailing-return-type,
   -readability-identifier-length,
   -cppcoreguidelines-avoid-magic-numbers,
-  -readability-magic-numbers
-  -cppcoreguidelines-avoid-non-const-global-variables
+  -readability-magic-numbers,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -readability-implicit-bool-conversion,
+  -modernize-use-auto,
+  -readability-redundant-member-init
 
 WarningsAsErrors: ""
 HeaderFilterRegex: ".*[/\\\\]src[/\\\\].*"

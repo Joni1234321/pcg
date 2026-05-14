@@ -43,13 +43,13 @@ struct GameFrame : Frame {
     Handle<Node> ground { B(map).Node(fill, 600U).Fill(colors::forest_green).Build() };
 };
 } // namespace pcg::commandstrike
+
 void pcg::arcade::RunCommandStrike() {
-    pce::Logger().Log("Running command strike");
     using namespace pce;
     using namespace commandstrike;
 
     // data
-    singleton.Get<WindowState>().clear_color = colors::dark_grey;
+    Singleton::Get<WindowState>().clear_color = colors::faded_green;
 
     // systems
     Orchestra orchestra { };
@@ -66,7 +66,7 @@ void pcg::arcade::RunCommandStrike() {
     orchestra.Add<AnimationSystem>();
     orchestra.Add<NodeRenderSystem>();
     orchestra.Add<ParticleSystem>();
-    orchestra.Add<PresentSystem>();
+    orchestra.Add<WindowRenderSystem>();
 
-    while (!singleton.Get<InputState>().quit && !singleton.Get<InputState>().keys_down[SDLK_ESCAPE]) { orchestra.RunSystems(); }
+    while (!Singleton::Get<InputState>().quit && !Singleton::Get<InputState>().keys_down[SDLK_ESCAPE]) { orchestra.RunSystems(); }
 }

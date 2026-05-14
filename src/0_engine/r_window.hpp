@@ -16,7 +16,7 @@ static const RelativePath FONT_BOLD_PATH { "TitilliumWeb-SemiBold.ttf" };
 struct Window {
     explicit Window(const uint2 size) {
         constexpr u32 window_flags = SDL_WINDOW_RESIZABLE;
-        WindowState& window_state = singleton.Get<WindowState>();
+        WindowState& window_state = Singleton::Get<WindowState>();
         if (!SDL_CreateWindowAndRenderer("Video Game", static_cast<i32>(size.x), static_cast<i32>(size.y), window_flags, &window_state.window, &window_state.renderer)) {
             SDL_Log("SDL_CreateWindowAndRenderer failed (%s)", SDL_GetError());
             SDL_Quit();
@@ -33,14 +33,14 @@ struct Window {
         window_state.text_engine = TTF_CreateRendererTextEngine(window_state.renderer);
         window_state.screen_size = size;
 
-        singleton.Get<ui::FontCollection>().SetFontFile(Asset(FONT_PATH));
+        Singleton::Get<ui::FontCollection>().SetFontFile(Asset(FONT_PATH));
     }
     ~Window() {
-        singleton.Get<ui::FontCollection>().Clear();
+        Singleton::Get<ui::FontCollection>().Clear();
         data.Get<Texture>().clear();
-        SDL_DestroyRenderer(singleton.Get<WindowState>().renderer);
-        SDL_DestroyWindow(singleton.Get<WindowState>().window);
-        TTF_DestroyRendererTextEngine(singleton.Get<WindowState>().text_engine);
+        SDL_DestroyRenderer(Singleton::Get<WindowState>().renderer);
+        SDL_DestroyWindow(Singleton::Get<WindowState>().window);
+        TTF_DestroyRendererTextEngine(Singleton::Get<WindowState>().text_engine);
         TTF_Quit();
         SDL_Quit();
     }
