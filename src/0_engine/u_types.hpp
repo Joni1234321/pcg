@@ -16,11 +16,20 @@
 #endif
 #endif // WIN64
 
+#if defined(_MSC_VER)
 #define STL_VERIFY(cond, mesg) _STL_VERIFY(cond, mesg)
+#else
+#include <cassert>
+#define STL_VERIFY(cond, mesg) assert((cond) && (mesg))
+#endif
 #ifdef DEBUG
 #define STL_ASSERT(cond, mesg) STL_VERIFY(cond, mesg)
 #else // DEBUG
+#if defined(_MSC_VER)
 #define STL_ASSERT(cond, mesg) _Analysis_assume_(cond)
+#else
+#define STL_ASSERT(cond, mesg) ((void)(cond))
+#endif
 #endif // !DEBUG
 
 using i8 = int8_t;

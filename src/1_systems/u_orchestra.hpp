@@ -26,7 +26,7 @@ struct Orchestra {
     }
     void RunSystems() {
         OrchestraState& orchestra_state = singleton.Get<OrchestraState>();
-        for (const auto [i, system] : orchestra_state.systems | std::views::enumerate) {
+        for (const auto [i, system] : std::views::zip(std::views::iota(0u), orchestra_state.systems)) {
             nanoseconds64 start = TimeNowNS();
             system();
             orchestra_state.ns[i] = TimeNowNS() - start;

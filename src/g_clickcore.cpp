@@ -171,7 +171,7 @@ Scene ClickCore::GameScene() {
         data[main_menu_frame.tree].node_properties[main_menu_frame.start_button].text = "Play Again";
         game_frame.SetTime(miliseconds32 { 0U });
         data[game_frame.tree].styles[game_frame.box].background_color.a = 0U;
-        high_score_frame.highscores.Set(std::views::enumerate(game_data.high_scores | std::views::reverse));
+        high_score_frame.highscores.Set(std::views::zip(std::views::iota(0u, game_data.high_scores.size()), game_data.high_scores | std::views::reverse));
         return Scene::game_over;
     }
     const miliseconds32 time_left_ms = GAME_TIME - elapsed;

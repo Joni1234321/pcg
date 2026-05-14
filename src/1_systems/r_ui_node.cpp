@@ -181,7 +181,7 @@ OptionalHandle<Node> NodeAt(const NodeTree& tree, const uint2 screen_position) {
     return OptionalHandle<Node> { node.id };
 }
 HoveredType NodeAt(const uint2 mouse_position) {
-    for (const auto [i, tree] : data.Get<NodeTree>() | std::views::enumerate) {
+    for (const auto [i, tree] : std::views::zip(std::views::iota(0u), data.Get<NodeTree>())) {
         const OptionalHandle<Node> node = NodeAt(tree, mouse_position);
         if (node.IsValid()) { return NodeReference { .tree = Handle { data.Get<NodeTree>().IndexToHandle(static_cast<u32>(i)) }, .node = node.GetHandle() }; }
     }
@@ -195,7 +195,7 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
     auto get_minor_layout = [] (NodeStyle& node_style, const FlexDirection direction) -> LayoutLength& { return direction == horizontal ? node_style.height : node_style.width; };
     auto get_major_pixels_taken_by_children = [&tree, &get_major] (const Handle<Node> node, const FlexDirection direction) -> u32 {
         auto get_major_outer_box_size = [&tree, &get_major, &direction] (const Handle<Node> child) -> u32 { return get_major(tree.styles[child].OuterBoxSize(), direction); };
-        return std::ranges::fold_left_first(tree.children[node] | std::views::transform(get_major_outer_box_size), std::plus { }).value_or(0U);
+        return std::ranges::fold_left(tree.children[node] | std::views::transform(get_major_outer_box_size), 0U, std::plus { });
     };
 
     // root
@@ -369,7 +369,7 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
     for (const Handle node : nodes) { //  is part of a subtree if the parent is hugging. Else its parent node is the subtree root (siblings depend on nodes width)
         const Handle parent { tree.parents[node] };
         const NodeStyle& parent_style = tree.styles[parent];
-        tree.subtree_roots[node] = parent_style.width.constraint == hug || parent_style.height.constraint == hug ? tree.subtree_roots[parent] : Handle<SubtreeRoot> { parent.id };
+        tree.subtree_roots[node] = parent_style.width.constraint == LayoutLength::child_constraint || parent_style.height.constraint == LayoutLength::child_constraint ? tree.subtree_roots[parent] : Handle<SubtreeRoot> { parent.id };
     }
 }
 void AddNodeToFrameElement(NodeTree& tree, const Handle<Node> node) {

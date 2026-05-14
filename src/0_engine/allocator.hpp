@@ -136,7 +136,7 @@ inline void TestingEnumerate () {
     v.push_back(1.0);
     v.push_back(1.0);
     v.push_back(1.0);
-    for (auto [i, d] : v | std::views::enumerate) {
+    for (auto [i, d] : std::views::zip(std::views::iota(0u), v)) {
     }
 }
 } // namespace pce::allocator
