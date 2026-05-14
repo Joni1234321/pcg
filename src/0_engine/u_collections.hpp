@@ -16,8 +16,8 @@
 #include "0_engine/u_util.hpp"
 
 namespace pce {
-template <typename T>concept TriviallyConstructible = std::is_trivially_constructible_v<T>;
-template <typename T>concept DefaultConstructible = std::is_default_constructible_v<T>;
+template <typename T> concept TriviallyConstructible = std::is_trivially_constructible_v<T>;
+template <typename T> concept DefaultConstructible = std::is_default_constructible_v<T>;
 
 template <typename T, u32 N> using Array = std::array<T, N>;
 template <typename T> using Span = std::span<T>;
@@ -28,14 +28,15 @@ template <class T, class C = std::less<T>> using Multiset = std::multiset<T, C>;
 template <typename T, typename D> class UniquePointer {
     T* pointer;
     [[no_unique_address]] D destructor { };
+
 public:
     constexpr void Reset(T* new_pointer) noexcept {
         if (pointer != nullptr) { destructor(pointer); }
         pointer = new_pointer;
     }
     constexpr void Reset() noexcept { Reset(nullptr); }
-    [[nodiscard]] constexpr T *Get() const noexcept { return pointer; }
-    constexpr T *operator->() const noexcept { return pointer; }
+    [[nodiscard]] constexpr T* Get() const noexcept { return pointer; }
+    constexpr T* operator->() const noexcept { return pointer; }
 
     constexpr explicit UniquePointer(T* pointer) noexcept : pointer { pointer } { }
     UniquePointer(UniquePointer&& other) noexcept : pointer { std::exchange(other.pointer, nullptr) } { }
@@ -52,7 +53,9 @@ public:
         destructor = std::move(other.destructor);
         return *this;
     }
-    constexpr ~UniquePointer() noexcept { if (pointer != nullptr) { destructor(pointer); } }
+    constexpr ~UniquePointer() noexcept {
+        if (pointer != nullptr) { destructor(pointer); }
+    }
 };
 struct String {
     constexpr String() = default;
@@ -62,12 +65,12 @@ struct String {
     template <typename... Args> constexpr String(const char* text, Args... args) : data(std::vformat(text, std::make_format_args(args...))) { }
 
     operator const char*() const { return data.c_str(); }
-    constexpr b8 operator ==(const String& other) const { return data == other.data; }
-    constexpr String& operator +=(const String& other) {
+    constexpr b8 operator==(const String& other) const { return data == other.data; }
+    constexpr String& operator+=(const String& other) {
         data += other.data;
         return *this;
     }
-    constexpr String& operator +=(const String&& other) {
+    constexpr String& operator+=(const String&& other) {
         data += other.data;
         return *this;
     }
@@ -75,7 +78,7 @@ struct String {
     constexpr void Add(const String& other) { data += other.data; }
     constexpr void Add(const String&& other) { data += other.data; }
     [[nodiscard]] constexpr b8 empty() const { return data.empty(); }
-    [[nodiscard]] constexpr const char *c_str() const { return data.c_str(); }
+    [[nodiscard]] constexpr const char* c_str() const { return data.c_str(); }
     [[nodiscard]] constexpr u32 size() const noexcept { return static_cast<u32>(data.size()); }
     constexpr void clear() noexcept { data.clear(); }
 
@@ -99,10 +102,9 @@ template <typename T> struct List {
     template <class Iter> constexpr List(Iter first, Iter last) : data(first, last) { }
 
     // Generic collection converter  CREDIT goes the bot for this madness
-    template <typename Container> explicit List(const Container& container) requires std::is_constructible_v<
-        std::vector<T>, typename Container::iterator, typename Container::iterator> : data(container.begin(), container.end()) { }
-    template <typename Container> explicit List(Container&& container) requires std::is_constructible_v<
-        std::vector<T>, typename Container::iterator, typename Container::iterator> : data(std::make_move_iterator(container.begin()), std::make_move_iterator(container.end())) { }
+    template <typename Container> explicit List(const Container& container) requires std::is_constructible_v<std::vector<T>, typename Container::iterator, typename Container::iterator> : data(container.begin(), container.end()) { }
+    template <typename Container> explicit List(Container&& container) requires std::is_constructible_v<std::vector<T>, typename Container::iterator, typename Container::iterator>
+        : data(std::make_move_iterator(container.begin()), std::make_move_iterator(container.end())) { }
 
     [[nodiscard]] constexpr u32 size() const noexcept { return static_cast<u32>(data.size()); }
     [[nodiscard]] constexpr u32 Size() const noexcept { return static_cast<u32>(data.size()); }
@@ -150,7 +152,9 @@ template <typename T> struct List {
 
     [[nodiscard]] u32 IndexOf(const T& t) const noexcept {
         u32 pos = 0;
-        for (; pos < Size(); ++pos) { if (t == data[pos]) { break; } }
+        for (; pos < Size(); ++pos) {
+            if (t == data[pos]) { break; }
+        }
         return pos;
     }
 

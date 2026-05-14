@@ -1,5 +1,5 @@
-#include "g_components.hpp"
 #include "0_engine/u_types.hpp"
+#include "g_components.hpp"
 
 //TODO: PLYER  PLANET CONCEPT CONSTRAINTS
 namespace pcg {

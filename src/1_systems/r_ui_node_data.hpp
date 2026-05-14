@@ -50,9 +50,7 @@ struct LayoutLength {
 struct Layout {
     LayoutLength width;
     LayoutLength height;
-    [[nodiscard]] static constexpr LayoutLength::Constraint ToConstraint(const RelativeConstraint related_constraint) {
-        return related_constraint == hug ? LayoutLength::child_constraint : LayoutLength::parent_constraint;
-    }
+    [[nodiscard]] static constexpr LayoutLength::Constraint ToConstraint(const RelativeConstraint related_constraint) { return related_constraint == hug ? LayoutLength::child_constraint : LayoutLength::parent_constraint; }
     Layout(const uint2 size) : width { size.x, LayoutLength::fixed }, height { size.y, LayoutLength::fixed } { }
     Layout(const RelativeConstraint relative_constraint) : width { U32_MAX, ToConstraint(relative_constraint) }, height { U32_MAX, ToConstraint(relative_constraint) } { }
     Layout(const u32 width, const RelativeConstraint height_constraint) : width { width, LayoutLength::fixed }, height { U32_MAX, ToConstraint(height_constraint) } { }
@@ -94,9 +92,7 @@ struct NodeStyle : LogDestroyWithCount<NodeStyle> {
     [[nodiscard]] constexpr uint2 OuterBoxEndPosition() const { return OuterBoxPosition() + OuterBoxSize(); }
     [[nodiscard]] constexpr uint2 InnerBoxPosition() const { return OuterBoxPosition() + uint2 { NonContentSize4().x, NonContentSize4().y }; }
     [[nodiscard]] constexpr uint2 InnerBoxSize() const { return OuterBoxSize() - NonContentSize2(); }
-    [[nodiscard]] constexpr SDL_FRect OuterRect() const {
-        return { .x = static_cast<f32>(OuterBoxPosition().x), .y = static_cast<f32>(OuterBoxPosition().y), .w = static_cast<f32>(OuterBoxSize().x), .h = static_cast<f32>(OuterBoxSize().y) };
-    };
+    [[nodiscard]] constexpr SDL_FRect OuterRect() const { return { .x = static_cast<f32>(OuterBoxPosition().x), .y = static_cast<f32>(OuterBoxPosition().y), .w = static_cast<f32>(OuterBoxSize().x), .h = static_cast<f32>(OuterBoxSize().y) }; }
     [[nodiscard]] constexpr b8 IsInside(const uint2 screen_position) const {
         const uint2 start { static_cast<u32>(bounding_box.x), static_cast<u32>(bounding_box.y) };
         const uint2 relative = screen_position - start;
@@ -143,16 +139,20 @@ struct NodeTree {
     void Clear();
     constexpr void MarkDirty() noexcept { dirty_tree = true; }
     constexpr void MarkDirty(const Handle<Node> node) noexcept {
-        if (dirty_subtree.IsValid() && dirty_subtree.GetHandle() != subtree_roots[node]) { dirty_tree = true; }
-        else { dirty_subtree = subtree_roots[node]; }
+        if (dirty_subtree.IsValid() && dirty_subtree.GetHandle() != subtree_roots[node]) {
+            dirty_tree = true;
+        } else {
+            dirty_subtree = subtree_roots[node];
+        }
     }
     constexpr void SetDisplay(const b8 value) noexcept { display = value; }
 
     [[nodiscard]] constexpr b8 GetDisplay() const noexcept { return display; }
 };
-template <class T> concept NodeComponent = requires (T a, typename T::Property prop)
-{
-    typename T::Property; { a.SetProperty(prop) } -> std::same_as<void>; { a.root } -> std::same_as<NodeReference&>;
+template <class T> concept NodeComponent = requires(T a, typename T::Property prop) {
+    typename T::Property;
+    { a.SetProperty(prop) } -> std::same_as<void>;
+    { a.root } -> std::same_as<NodeReference&>;
 } && std::constructible_from<T, NodeReference> && !std::default_initializable<T>;
 
 template <NodeComponent Component> Component SingleComponent(const NodeReference parent, const typename Component::Property& property) {
@@ -174,7 +174,7 @@ template <NodeComponent Component> struct NodeComponentPool {
     }
     [[nodiscard]] constexpr auto VisibleNodes() const noexcept { return std::span(nodes).first(size); }
     std::optional<u32> GetComponentAtPosition(const uint2 screen_position) const {
-        return find_index_of(VisibleNodes(), true, [this, screen_position] (const Component& c) -> b8 { return data[c.root.tree].styles[c.root.node].IsInside(screen_position); });
+        return find_index_of(VisibleNodes(), true, [this, screen_position](const Component& c) -> b8 { return data[c.root.tree].styles[c.root.node].IsInside(screen_position); });
     }
 
 private:
@@ -182,7 +182,9 @@ private:
         if (size == new_size) { return; }
         NodeTree& tree = data[parent.tree];
         for (; size < new_size; ++size) {
-            if (nodes.size() > size) { tree.AttachNode(nodes[size].root.node, parent.node); } else {
+            if (nodes.size() > size) {
+                tree.AttachNode(nodes[size].root.node, parent.node);
+            } else {
                 Component c { parent };
                 nodes.EmplaceBack(c);
             }

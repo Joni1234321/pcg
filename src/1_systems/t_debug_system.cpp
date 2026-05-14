@@ -20,16 +20,12 @@ void DebugNodeComponent::SetProperty(const Property& property) const {
     const NodeStyle& style = data[property.hovered.tree].styles[property.hovered.node];
     const NodeProperties& properties = data[property.hovered.tree].node_properties[property.hovered.node];
     const String type = !properties.text.empty() ? properties.text.c_str() : style.texture.IsValid() ? "image" : "node";
-    const auto to_string = [] (LayoutLength c) -> String {
+    const auto to_string = [](LayoutLength c) -> String {
         switch (c.constraint) {
-            case LayoutLength::Constraint::child_constraint:
-                return "hug";
-            case LayoutLength::Constraint::parent_constraint:
-                return "fill";
-            case LayoutLength::Constraint::fixed:
-                return std::format("{} px", c.resolved);
-            default:
-                return "unknown";
+            case LayoutLength::Constraint::child_constraint: return "hug";
+            case LayoutLength::Constraint::parent_constraint: return "fill";
+            case LayoutLength::Constraint::fixed: return std::format("{} px", c.resolved);
+            default: return "unknown";
         }
     };
     data[root.tree].styles[root.node].padding.x = padding_offset * property.layer;
@@ -38,13 +34,13 @@ void DebugNodeComponent::SetProperty(const Property& property) const {
 }
 List<nanoseconds64> max_ns;
 void TickFrame::Update() {
-    std::ranges::transform(max_ns, singleton.Get<OrchestraState>().ns, max_ns.begin(), math::max<nanoseconds64>{});
+    std::ranges::transform(max_ns, singleton.Get<OrchestraState>().ns, max_ns.begin(), math::max<nanoseconds64> { });
 
     if (singleton.Get<TickState>().tick.value % 500U == 0U) {
         u32 tick = singleton.Get<TickState>().tick.value;
         u32 fps = static_cast<u32>(1.0F / singleton.Get<TickState>().delta_time);
         data[tree].MarkDirty();
-        nanoseconds64 sum_max_time = std::ranges::fold_left(max_ns, nanoseconds64 { 0U }, std::plus{});
+        nanoseconds64 sum_max_time = std::ranges::fold_left(max_ns, nanoseconds64 { 0U }, std::plus { });
         data[tree].node_properties[ticks].text = std::format("{:.3f}ms | {:.3f}ms | Tick: {:>8} | TPS: {:>4} | FPS: {:>4} |", singleton.Get<TickState>().delta_time * SECONDS_TO_MS, sum_max_time.value * NS_TO_SECONDS, tick, fps, fps);
         systems.Set(std::views::zip(singleton.Get<OrchestraState>().names, singleton.Get<OrchestraState>().ns, max_ns));
         max_ns = singleton.Get<OrchestraState>().ns;
@@ -54,7 +50,8 @@ void TickFrame::Update() {
 void DebugFrame::SetInspector(const HoveredType hovered) {
     if (!hovered.has_value() || hovered->tree == tree) { return; }
     data[tree].MarkDirty();
-    data[tree].node_properties[hovered_label].text = std::format("[{} | {}]", hovered->tree.id, hovered->node.id); {
+    data[tree].node_properties[hovered_label].text = std::format("[{} | {}]", hovered->tree.id, hovered->node.id);
+    {
         const NodeStyle& style = data[hovered->tree].styles[hovered->node];
         const NodeProperties& properties = data[hovered->tree].node_properties[hovered->node];
         data[tree].node_properties[size].text = std::format("{} x {}", style.width.resolved, style.height.resolved);
@@ -91,7 +88,7 @@ void DebugSystem::operator()() {
         if (input_state.left_mouse_down) { debug_frame.SetInspector(singleton.Get<HoveredType>()); }
         u32 key_count = std::min(data.Get<NodeTree>().size(), 10U);
         auto rng = std::views::iota(0U, key_count);
-        const auto it = std::ranges::find_if(rng, [&] (const u32 i) { return input_state.keys_down[SDLK_0 + i]; });
+        const auto it = std::ranges::find_if(rng, [&](const u32 i) { return input_state.keys_down[SDLK_0 + i]; });
         if (it != std::end(rng)) {
             const Handle<NodeTree> tree { *it };
             debug_frame.SetInspector(NodeReference { .tree = tree, .node = data[tree].Root() });
@@ -99,7 +96,8 @@ void DebugSystem::operator()() {
     }
 }
 TestFrame::TestFrame() {
-    const Handle<Node> core_root = B(frame).Node(100U, 400U).Gap(20U).Fill(colors::clear).Build(); {
+    const Handle<Node> core_root = B(frame).Node(100U, 400U).Gap(20U).Fill(colors::clear).Build();
+    {
         const Handle<Node> root = B(core_root).Node(100U, 100U).Padding2({ 5U, 5U }).Fill(colors::forest_green).Build();
         const Handle<Node> box1 = B(root).Node(fill).Fill(colors::yellow).Padding2({ 5U, 5U }).Build();
         Handle<Node> box11 = B(box1).Node(fill).Fill(colors::blue).Build();
@@ -107,21 +105,25 @@ TestFrame::TestFrame() {
 
         Handle<Node> box2 = B(root).Node(fill).Fill(colors::red).Build();
         Handle<Node> box3 = B(root).Node(hug, fill).Padding2({ 10U, 10U }).Fill(colors::black).Build();
-    } {
+    }
+    {
         const Handle<Node> root = B(core_root).Node(100U, 100U).Padding2({ 5U, 5U }).Fill(colors::green).Build();
         Handle<Node> box1 = B(root).Node(fill).Fill(colors::yellow).Padding2({ 5U, 5U }).Build();
         Handle<Node> box2 = B(root).Node(fill).Fill(colors::red).Build();
-    } {
+    }
+    {
         const Handle<Node> root = B(core_root).Node(hug).Padding2({ 5U, 5U }).Direction(vertical).Fill(colors::deep_purple).Build();
         Handle<Node> box1 = B(root).Node(hug).Text("Play", FontSizes::h1, colors::radiant_orange).Padding2({ 10U, 0U }).Build();
         Handle<Node> box2 = B(root).Node(hug).Text("Settings", FontSizes::h1, colors::cool_teal).Padding2({ 10U, 0U }).Build();
         Handle<Node> box3 = B(root).Node(hug).Text("Exit", FontSizes::h1, colors::ruby_red).Padding2({ 10U, 0U }).Build();
-    } {
+    }
+    {
         const Handle<Node> root = B(core_root).Node(100U, 100U).Padding2({ 5U, 5U }).Fill(colors::sea_green).Build();
         Handle<Node> box1 = B(root).Node(fill).Fill(colors::yellow).Padding2({ 5U, 5U }).Build();
         Handle<Node> box2 = B(root).Node(fill).Fill(colors::red).Build();
         Handle<Node> box3 = B(root).Node(hug).Padding2({ 10U, 10U }).Fill(colors::black).Build();
-    } {
+    }
+    {
         constexpr u32 width = 100U;
         const Handle<Node> root = B(core_root).Node(hug, 400U).Padding2({ 5U, 5U }).Fill(colors::forest_green).Build();
         Handle<Node> box1 = B(root).Node(width, fill).Fill(colors::yellow).Padding2({ 5U, 5U }).Build();

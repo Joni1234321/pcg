@@ -12,16 +12,16 @@
 namespace pce {
 struct OrchestraState {
     List<std::function<void()>> systems;
-    List<std::unique_ptr<void, void(*)(void*)>> system_storage;
+    List<std::unique_ptr<void, void (*)(void*)>> system_storage;
     List<String> names;
     List<nanoseconds64> ns;
 };
 struct Orchestra {
     template <typename T> void Add() {
-        auto ptr = new T();                                                                                                                                            // Create system instance
+        auto ptr = new T(); // Create system instance
         OrchestraState& orchestra_state = singleton.Get<OrchestraState>();
-        orchestra_state.system_storage.EmplaceBack(ptr, [] (void* p) { delete static_cast<T*>(p); }); // Ensure destruction
-        orchestra_state.systems.EmplaceBack([ptr] ()-> void { (*static_cast<T*>(ptr))(); });                     // Store callable functor
+        orchestra_state.system_storage.EmplaceBack(ptr, [](void* p) { delete static_cast<T*>(p); }); // Ensure destruction
+        orchestra_state.systems.EmplaceBack([ptr]() -> void { (*static_cast<T*>(ptr))(); });         // Store callable functor
         orchestra_state.names.EmplaceBack(TypeName<T>().c_str());
         orchestra_state.ns.EmplaceBack(1U);
     }

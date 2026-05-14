@@ -8,7 +8,7 @@
 #include "0_engine/u_types.hpp"
 
 namespace pce {
-template <typename T, template<typename> class Skill>concept HasASkill = std::derived_from<T, Skill<T>>;
+template <typename T, template <typename> class Skill> concept HasASkill = std::derived_from<T, Skill<T>>;
 template <typename To, typename From> constexpr To& Reinterpret(From& from) { return *reinterpret_cast<To*>(&from); } // NOLINT(*-pro-type-reinterpret-cast)
 [[nodiscard]] inline u32 Rand() {
     static std::random_device random_device;
@@ -20,9 +20,7 @@ template <typename To, typename From> constexpr To& Reinterpret(From& from) { re
     STL_ASSERT(max > 0, "max must be greater than 0");
     return Rand() % max;
 }
-[[nodiscard]] inline u32 Rand(const u32 min, const u32 max) {
-    return min + Rand(max - min);
-}
+[[nodiscard]] inline u32 Rand(const u32 min, const u32 max) { return min + Rand(max - min); }
 
 template <typename Collection> typename Collection::key_type RandomKey(const Collection& collection) {
     if (std::empty(collection)) { throw std::runtime_error("Collection is empty!"); }

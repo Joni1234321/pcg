@@ -49,10 +49,10 @@ struct TableU32 {
     [[nodiscard]] constexpr u32 ColumnCount() const { return columns.size(); }
 };
 
-inline String TableToString (const TableU32& table) {
+inline String TableToString(const TableU32& table) {
     String header_string = "|";
     for (const String& header : table.headers) { header_string += std::format(" {} |", header); }
-    String line ('-', header_string.size());
+    String line('-', header_string.size());
     String result = std::format("{}\n{}\n{}\n", line, header_string, line);
     for (u32 row = 0U; row < table.RowCount(); row++) {
         result += "|";
@@ -68,6 +68,7 @@ inline String TableToString (const TableU32& table) {
 
 class LoggerTable { // NOLINT(*-struct-pack-align)
     List<String> rows;
+
 public:
     enum LOGGER_COLOR : b8 { COLOR_DISABLED, COLOR_ENABLED };
     LoggerTable(const String& name, const u32 row_count) : rows(row_count + 1U, "") {
@@ -82,7 +83,7 @@ public:
         for (u32 i = static_cast<u32>(values.size()) + 1U; i < rows.size(); ++i) { rows[i] += std::format("{:>{}} |", "XXXX", width); }
     }
     template <typename T> void AddColumn(const String& title, const List<T>& values) { AddColumnFixed(title, values, title.size() + 1U); }
-    String& WriteToLogger (Logger& logger, const LOGGER_COLOR coloring) const {
+    String& WriteToLogger(Logger& logger, const LOGGER_COLOR coloring) const {
         const String line('-', rows[0U].size() + 1U);
         logger.Write("{}", line);
         logger.Write("|{}", rows[0U]);

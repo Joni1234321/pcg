@@ -165,7 +165,7 @@ Handle<Node> NodeBuilder::Build() const {
 }
 
 OptionalHandle<Node> NodeAt(const NodeTree& tree, const uint2 screen_position) {
-    const auto position_inside_node = [screen_position, &tree] (const Handle<Node> child) -> b8 { return tree.styles[child].IsInside(screen_position); };
+    const auto position_inside_node = [screen_position, &tree](const Handle<Node> child) -> b8 { return tree.styles[child].IsInside(screen_position); };
     if (tree.Empty() || !tree.display || !tree.styles[tree.Root()].IsInside(screen_position)) { return OptionalHandle<Node> { }; }
     Handle<Node> node = tree.Root();
     while (true) {
@@ -188,13 +188,13 @@ HoveredType NodeAt(const uint2 mouse_position) {
     return std::nullopt;
 }
 void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
-    auto pixels_gap = [&tree] (const Handle<Node> node, const u32 gap) -> u32 { return tree.children[node].empty() ? 0U : gap * (tree.children[node].size() - 1U); };
-    auto get_major = [] (const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.x : point.y; };
-    auto get_minor = [] (const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.y : point.x; };
-    auto get_major_layout = [] (NodeStyle& node_style, const FlexDirection direction) -> LayoutLength& { return direction == horizontal ? node_style.width : node_style.height; };
-    auto get_minor_layout = [] (NodeStyle& node_style, const FlexDirection direction) -> LayoutLength& { return direction == horizontal ? node_style.height : node_style.width; };
-    auto get_major_pixels_taken_by_children = [&tree, &get_major] (const Handle<Node> node, const FlexDirection direction) -> u32 {
-        auto get_major_outer_box_size = [&tree, &get_major, &direction] (const Handle<Node> child) -> u32 { return get_major(tree.styles[child].OuterBoxSize(), direction); };
+    auto pixels_gap = [&tree](const Handle<Node> node, const u32 gap) -> u32 { return tree.children[node].empty() ? 0U : gap * (tree.children[node].size() - 1U); };
+    auto get_major = [](const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.x : point.y; };
+    auto get_minor = [](const uint2 point, const FlexDirection direction) -> u32 { return direction == horizontal ? point.y : point.x; };
+    auto get_major_layout = [](NodeStyle& node_style, const FlexDirection direction) -> LayoutLength& { return direction == horizontal ? node_style.width : node_style.height; };
+    auto get_minor_layout = [](NodeStyle& node_style, const FlexDirection direction) -> LayoutLength& { return direction == horizontal ? node_style.height : node_style.width; };
+    auto get_major_pixels_taken_by_children = [&tree, &get_major](const Handle<Node> node, const FlexDirection direction) -> u32 {
+        auto get_major_outer_box_size = [&tree, &get_major, &direction](const Handle<Node> child) -> u32 { return get_major(tree.styles[child].OuterBoxSize(), direction); };
         return std::ranges::fold_left(tree.children[node] | std::views::transform(get_major_outer_box_size), 0U, std::plus { });
     };
 
@@ -221,7 +221,9 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
         }
 
         const Font& font = singleton.Get<FontCollection>().GetFont(node_properties.font_size);
-        if (ttf_text.Get() == nullptr) { ttf_text.Reset(TTF_CreateText(singleton.Get<WindowState>().text_engine, font.ToSDL(), node_properties.text.c_str(), node_properties.text.size())); } else {
+        if (ttf_text.Get() == nullptr) {
+            ttf_text.Reset(TTF_CreateText(singleton.Get<WindowState>().text_engine, font.ToSDL(), node_properties.text.c_str(), node_properties.text.size()));
+        } else {
             TTF_SetTextString(ttf_text.Get(), node_properties.text.c_str(), node_properties.text.size());
             TTF_SetTextFont(ttf_text.Get(), font.ToSDL());
         }
@@ -229,13 +231,13 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
         (void)TTF_SetTextColor(ttf_text.Get(), color.r, color.g, color.b, color.a);
     }
 
-    // hug bottom up
-    #define BREAKPOINT 1
-    #if BREAKPOINT
+// hug bottom up
+#define BREAKPOINT 1
+#if BREAKPOINT
     auto reversed_nodes = nodes | std::views::reverse | std::ranges::to<std::vector>();
-    #else
+#else
     auto reversed_nodes = nodes | std::views::reverse;
-    #endif
+#endif
     for (const Handle node : reversed_nodes) {
         NodeStyle& node_style = tree.styles[node];
         NodeProperties& node_properties = tree.node_properties[node];
@@ -250,7 +252,7 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
         }
         LayoutLength& minor_layout = get_minor_layout(node_style, node_style.direction);
         if (minor_layout.constraint == LayoutLength::child_constraint) {
-            auto get_minor_outer_box_size = [&tree, get_minor, &node_style] (const Handle<Node> child) -> u32 { return get_minor(tree.styles[child].OuterBoxSize(), node_style.direction); };
+            auto get_minor_outer_box_size = [&tree, get_minor, &node_style](const Handle<Node> child) -> u32 { return get_minor(tree.styles[child].OuterBoxSize(), node_style.direction); };
             const u32 max_minor = tree.children[node].empty() ? 0U : std::ranges::max(tree.children[node] | std::views::transform(get_minor_outer_box_size));
             minor_layout.resolved = std::max(max_minor, get_minor(text_size, node_style.direction)) + get_minor(node_style.NonContentSize2(), node_style.direction);
         }
@@ -266,7 +268,11 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
         for (const Handle child : tree.children[node]) {
             NodeStyle& child_style = tree.styles[child];
             LayoutLength& child_major_layout = get_major_layout(child_style, node_style.direction);
-            if (child_major_layout.constraint == LayoutLength::parent_constraint) { parent_constrained.push_back(child); } else { pixels_taken_major_axis += get_major(child_style.OuterBoxSize(), node_style.direction); }
+            if (child_major_layout.constraint == LayoutLength::parent_constraint) {
+                parent_constrained.push_back(child);
+            } else {
+                pixels_taken_major_axis += get_major(child_style.OuterBoxSize(), node_style.direction);
+            }
         }
         if (parent_constrained.size() > 0U) {
             if (pixels_taken_major_axis >= get_major(node_style.InnerBoxSize(), node_style.direction)) {
@@ -281,9 +287,8 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
             get_major_layout(tree.styles[parent_constrained[0U]], node_style.direction).resolved += left_over;
         }
 
-        auto children = tree.children[node] | std::views::filter([&tree, &node_style, &get_minor_layout] (const Handle<Node> child) -> bool {
-            return get_minor_layout(tree.styles[child], node_style.direction).constraint == LayoutLength::parent_constraint;
-        });
+        auto children =
+            tree.children[node] | std::views::filter([&tree, &node_style, &get_minor_layout](const Handle<Node> child) -> bool { return get_minor_layout(tree.styles[child], node_style.direction).constraint == LayoutLength::parent_constraint; });
         for (const Handle child : children) { get_minor_layout(tree.styles[child], node_style.direction).resolved = get_minor(node_style.InnerBoxSize(), node_style.direction); }
     }
 
@@ -295,39 +300,23 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
         const u32 node_major_size = get_major(style.InnerBoxSize(), style.direction);
         const u32 children_major_size = get_major_pixels_taken_by_children(node, style.direction);
         if (style.gap_auto) {
-            if (children_major_size < node_major_size && tree.children[node].size() > 1) { style.resolved_gap = (node_major_size - children_major_size) / (tree.children[node].size() - 1U); } else {
+            if (children_major_size < node_major_size && tree.children[node].size() > 1) {
+                style.resolved_gap = (node_major_size - children_major_size) / (tree.children[node].size() - 1U);
+            } else {
                 style.resolved_gap = 0U;
             }
         }
         float2 factor;
         switch (style.alignment) {
-            case top_left:
-                factor = float2 { 0.0F, 0.0F };
-                break;
-            case top_center:
-                factor = float2 { 0.5F, 0.0F };
-                break;
-            case top_right:
-                factor = float2 { 1.0F, 0.0F };
-                break;
-            case left:
-                factor = float2 { 0.0F, 0.5F };
-                break;
-            case center:
-                factor = float2 { 0.5F, 0.5F };
-                break;
-            case right:
-                factor = float2 { 1.0F, 0.5F };
-                break;
-            case bottom_left:
-                factor = float2 { 0.0F, 1.0F };
-                break;
-            case bottom_center:
-                factor = float2 { 0.5F, 1.0F };
-                break;
-            case bottom_right:
-                factor = float2 { 1.0F, 1.0F };
-                break;
+            case top_left: factor = float2 { 0.0F, 0.0F }; break;
+            case top_center: factor = float2 { 0.5F, 0.0F }; break;
+            case top_right: factor = float2 { 1.0F, 0.0F }; break;
+            case left: factor = float2 { 0.0F, 0.5F }; break;
+            case center: factor = float2 { 0.5F, 0.5F }; break;
+            case right: factor = float2 { 1.0F, 0.5F }; break;
+            case bottom_left: factor = float2 { 0.0F, 1.0F }; break;
+            case bottom_center: factor = float2 { 0.5F, 1.0F }; break;
+            case bottom_right: factor = float2 { 1.0F, 1.0F }; break;
         }
         const f32 factor_major = style.direction == horizontal ? factor.x : factor.y;
         const f32 factor_minor = style.direction == horizontal ? factor.y : factor.x;
@@ -373,9 +362,13 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
     }
 }
 void AddNodeToFrameElement(NodeTree& tree, const Handle<Node> node) {
-    const auto add_type = [&tree] (const ElementType new_type) -> void {
+    const auto add_type = [&tree](const ElementType new_type) -> void {
         auto& [element_type, count] = tree.frame_elements.items_in_a_row.back();
-        if (element_type == new_type && count < UINT8_MAX) { ++count; } else { tree.frame_elements.items_in_a_row.push_back({ .type = new_type, .count = 1U }); }
+        if (element_type == new_type && count < UINT8_MAX) {
+            ++count;
+        } else {
+            tree.frame_elements.items_in_a_row.push_back({ .type = new_type, .count = 1U });
+        }
     };
 
     const NodeStyle& style = tree.styles[node];
@@ -393,7 +386,7 @@ void AddNodeToFrameElement(NodeTree& tree, const Handle<Node> node) {
 }
 const FrameElements& GetFrameElements(NodeTree& tree) {
     if (!tree.dirty_tree && !tree.dirty_subtree.IsValid()) { return tree.frame_elements; }
-    RecalculateTreeLayout(tree, tree.dirty_tree ? tree.subtree_roots.front() : tree.dirty_subtree.GetHandle() );
+    RecalculateTreeLayout(tree, tree.dirty_tree ? tree.subtree_roots.front() : tree.dirty_subtree.GetHandle());
 
     tree.dirty_tree = false;
     tree.dirty_subtree.Reset();
@@ -459,7 +452,7 @@ void NodeInputSystem::operator()() const {
         trees[hovered->tree].MarkDirty();
     }
 }
-void NodeRenderSystem:: operator()() const {
+void NodeRenderSystem::operator()() const {
     for (NodeTree& tree : data.Get<NodeTree>() | std::views::reverse | std::views::filter(&NodeTree::GetDisplay)) {
         const FrameElements& frame_elements = GetFrameElements(tree);
         std::span rectangles { frame_elements.rectangles };

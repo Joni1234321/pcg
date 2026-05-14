@@ -37,8 +37,7 @@ struct InputSystem {
                     input_state.keys[event.key.key] = true;
                     input_state.keys_down[event.key.key] = true;
                     break;
-                default:
-                    break;
+                default: break;
             }
         }
 

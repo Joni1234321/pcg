@@ -1,35 +1,35 @@
 // ReSharper disable CppInconsistentNaming
 #pragma once
 #include <cstdint>
-#include <type_traits>
 #include <optional>
+#include <type_traits>
 
 #if defined(_DEBUG) || defined(NDEBUG)
-#define DEBUG
+    #define DEBUG
 #endif // DEBUG
 #if defined(_M_IX86) || defined(_M_X64)
-#define SIMD_OPTIMIZE
+    #define SIMD_OPTIMIZE
 #endif // SIMD_OPTIMIZE
 #if defined(_WIN64) || defined(__x86_64__) || defined(__aarch64__)
-#ifndef WIN64
-#define WIN64
-#endif
+    #ifndef WIN64
+        #define WIN64
+    #endif
 #endif // WIN64
 
 #if defined(_MSC_VER)
-#define STL_VERIFY(cond, mesg) _STL_VERIFY(cond, mesg)
+    #define STL_VERIFY(cond, mesg) _STL_VERIFY(cond, mesg)
 #else
-#include <cassert>
-#define STL_VERIFY(cond, mesg) assert((cond) && (mesg))
+    #include <cassert>
+    #define STL_VERIFY(cond, mesg) assert((cond) && (mesg))
 #endif
 #ifdef DEBUG
-#define STL_ASSERT(cond, mesg) STL_VERIFY(cond, mesg)
+    #define STL_ASSERT(cond, mesg) STL_VERIFY(cond, mesg)
 #else // DEBUG
-#if defined(_MSC_VER)
-#define STL_ASSERT(cond, mesg) _Analysis_assume_(cond)
-#else
-#define STL_ASSERT(cond, mesg) ((void)(cond))
-#endif
+    #if defined(_MSC_VER)
+        #define STL_ASSERT(cond, mesg) _Analysis_assume_(cond)
+    #else
+        #define STL_ASSERT(cond, mesg) ((void)(cond))
+    #endif
 #endif // !DEBUG
 
 using i8 = int8_t;

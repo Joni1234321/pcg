@@ -39,7 +39,7 @@ struct GlobalDataInstantNoReset {
     template <class T> [[nodiscard]] constexpr Handle<T> Create(const T& copy) { return Get<T>().EmplaceBack(std::forward<T>(copy)); }
     template <class T, typename... Args> [[nodiscard]] constexpr Handle<T> Create(Args&&... args) { return Get<T>().EmplaceBack(std::forward<Args>(args)...); }
 };
-template<DefaultConstructible T> struct SingletonNaive2Helper {
+template <DefaultConstructible T> struct SingletonNaive2Helper {
     static T data;
 };
 template <DefaultConstructible T> T SingletonNaive2Helper<T>::data { };

@@ -11,15 +11,15 @@
 
 namespace pcg {
 using pce::Component;
-using pce::String;
-using pce::RandomKey;
-using pce::Span;
 using pce::List;
+using pce::Logger;
 using pce::LoggerTable;
+using pce::RandomKey;
+using pce::Select;
+using pce::Span;
+using pce::String;
 using pce::Table;
 using pce::TableU32;
-using pce::Select;
-using pce::Logger;
 namespace math = pce::math;
 
 struct Player : Entity {
@@ -81,7 +81,6 @@ constexpr f32 PER_MILLION = 1.0F / 1'000'000.0F;
 constexpr u16 BUILDING_TIME = 30U;
 constexpr f32 GROWTH_RATE_PER_MONTH = 0.0025F * PER_MONTH;
 
-
 void Game::PlayTick(pce::Tick tick, pce::ui::NodeRenderSystem& node_render_system, const b8 debug) {
     // Construction
     for (const Player player : player_archetype) { ProcessConstructionQueue(player); }
@@ -118,7 +117,11 @@ void Game::PlayTick(pce::Tick tick, pce::ui::NodeRenderSystem& node_render_syste
             constexpr Percentage tax_rate { .2F };
             const Money player_tax { static_cast<f32>(math::FloorToU32(result.value * tax_rate.value)) };
             result -= player_tax;
-            if (farm.Planet().Player().IsSome()) { farm.Planet().Player().Entity().Balance() += player_tax; } else { farm.Planet().Balance() += player_tax; }
+            if (farm.Planet().Player().IsSome()) {
+                farm.Planet().Player().Entity().Balance() += player_tax;
+            } else {
+                farm.Planet().Balance() += player_tax;
+            }
 
             constexpr Percentage dividend_rate { .5F };
             const Money dividends = Money { result.value * dividend_rate.value };
@@ -166,15 +169,14 @@ void Game::PlayTick(pce::Tick tick, pce::ui::NodeRenderSystem& node_render_syste
     for (const Planet planet : planet_archetype) { planet.QualityOfLife() = GetQualityOfLife(planet); }
     for (Market& market : state_archetype.markets) { market.RecalculateMarkets(); }
 
-
     return;
 
     LoggerTable farm_table { "Farms", farm_archetype.Count };
     farm_table.AddColumn("Type ", farm_archetype.types);
-    farm_table.AddColumn("Assets       ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.assets.Total(); }));
-    farm_table.AddColumn("Equity       ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.equity; }));
-    farm_table.AddColumn("Liabilities  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.liabilities; }));
-    farm_table.AddColumn("Last result  ", Select(farm_archetype.finances, [] (const Finance& finance) -> Money { return finance.last_result; }));
+    farm_table.AddColumn("Assets       ", Select(farm_archetype.finances, [](const Finance& finance) -> Money { return finance.assets.Total(); }));
+    farm_table.AddColumn("Equity       ", Select(farm_archetype.finances, [](const Finance& finance) -> Money { return finance.equity; }));
+    farm_table.AddColumn("Liabilities  ", Select(farm_archetype.finances, [](const Finance& finance) -> Money { return finance.liabilities; }));
+    farm_table.AddColumn("Last result  ", Select(farm_archetype.finances, [](const Finance& finance) -> Money { return finance.last_result; }));
     farm_table.AddColumn("Population balance", farm_archetype.population_balance);
     //string = farm_table.WriteToLogger(logger, LoggerTable::COLOR_DISABLED);
     //(void)TTF_SetTextString(node_render_system[info_text].text, string.CString(), string.size());
@@ -183,7 +185,7 @@ void Game::PlayTick(pce::Tick tick, pce::ui::NodeRenderSystem& node_render_syste
     return;
     if (!debug) { return; }
 
-    auto construction_queue_to_string = [] (const ConstructionQueue& construction_queue) -> String {
+    auto construction_queue_to_string = [](const ConstructionQueue& construction_queue) -> String {
         return { "{:3} / {:3} Q:{:3}", math::Min(construction_queue.size(), construction_queue.construction_capacity), construction_queue.construction_capacity, construction_queue.size() };
     };
 
@@ -204,9 +206,9 @@ void Game::PlayTick(pce::Tick tick, pce::ui::NodeRenderSystem& node_render_syste
 
     const List<BuildingUnderConstruction> display_construction = player_archetype.construction_queue[0U].Limit(5U); //.Limit(10);
     LoggerTable construction_table("ConstructionQueue", display_construction.size());
-    construction_table.AddColumn("Type", Select(display_construction, [] (const BuildingUnderConstruction& building) -> FarmType { return building.type; }));
-    construction_table.AddColumn("Progress", Select(display_construction, [] (const BuildingUnderConstruction& building) -> u16 { return building.progress; }));
-    construction_table.AddColumn("Required", Select(display_construction, [] ([[maybe_unused]] const BuildingUnderConstruction& building) -> u16 { return BUILDING_TIME; }));
+    construction_table.AddColumn("Type", Select(display_construction, [](const BuildingUnderConstruction& building) -> FarmType { return building.type; }));
+    construction_table.AddColumn("Progress", Select(display_construction, [](const BuildingUnderConstruction& building) -> u16 { return building.progress; }));
+    construction_table.AddColumn("Required", Select(display_construction, []([[maybe_unused]] const BuildingUnderConstruction& building) -> u16 { return BUILDING_TIME; }));
     construction_table.Print(logger, LoggerTable::COLOR_DISABLED);
 }
 
@@ -283,10 +285,8 @@ static QualityOfLife GetQualityOfLife(Planet planet) {
             // water is free
             balance -= Money { price_of_food.value * inter_level };
             break;
-        case QualityOfLifeStage::Surviving: balance -= Money { (price_of_food.value * inter_level) + 5.0F };
-            break;
-        case QualityOfLifeStage::Struggling: balance -= Money { (price_of_food.value * inter_level) + 10.0F };
-            break;
+        case QualityOfLifeStage::Surviving: balance -= Money { (price_of_food.value * inter_level) + 5.0F }; break;
+        case QualityOfLifeStage::Struggling: balance -= Money { (price_of_food.value * inter_level) + 10.0F }; break;
         case QualityOfLifeStage::Secure:
             // Basic needs
             // basic types of food

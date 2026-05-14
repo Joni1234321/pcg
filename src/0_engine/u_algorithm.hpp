@@ -11,8 +11,8 @@ template <typename Iterator, typename OutputIterator, typename UnaryOperation> c
     return result;
 }
 
-template <typename Iterator1, typename Iterator2, typename OutputIterator, typename BinaryOperation> constexpr OutputIterator TransformLocal(
-    Iterator1 first1, Iterator1 last1, Iterator2 first2, OutputIterator result, BinaryOperation binary_operation) {
+template <typename Iterator1, typename Iterator2, typename OutputIterator, typename BinaryOperation>
+constexpr OutputIterator TransformLocal(Iterator1 first1, Iterator1 last1, Iterator2 first2, OutputIterator result, BinaryOperation binary_operation) {
     while (first1 != last1) {
         *result = binary_operation(*first1, *first2);
         ++first1;
@@ -22,8 +22,8 @@ template <typename Iterator1, typename Iterator2, typename OutputIterator, typen
     return result;
 }
 
-template <typename Container1, typename Container2, typename OutputContainer, typename BinaryOperation> constexpr typename OutputContainer::iterator Transform(
-    const Container1& container1, const Container2& container2, OutputContainer& out, BinaryOperation binary_operation) {
+template <typename Container1, typename Container2, typename OutputContainer, typename BinaryOperation>
+constexpr typename OutputContainer::iterator Transform(const Container1& container1, const Container2& container2, OutputContainer& out, BinaryOperation binary_operation) {
     return TransformLocal(std::begin(container1), std::end(container1), std::begin(container2), std::begin(out), binary_operation);
 }
 

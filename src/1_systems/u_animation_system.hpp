@@ -73,30 +73,21 @@ inline void AnimationSystem::StartAnimation(const Handle<Animation> animation_ha
     Animation& animation = data[animation_handle];
     animation.start = TimeNowMS();
     switch (animation.state) {
-        case AnimationState::once:
-            break;
-        case AnimationState::recycle:
-            break;
-        case AnimationState::repeat:
-            break;
-        case AnimationState::persistent:
-            break;
-        case AnimationState::persistent_stopped:
-            animation.state = AnimationState::persistent;
-            break;
+        case AnimationState::once: break;
+        case AnimationState::recycle: break;
+        case AnimationState::repeat: break;
+        case AnimationState::persistent: break;
+        case AnimationState::persistent_stopped: animation.state = AnimationState::persistent; break;
     }
 }
 inline b8 AnimationSystem::IsRunning(const Handle<Animation> animation_handle) {
     switch (data[animation_handle].state) {
         case AnimationState::once:
         case AnimationState::repeat:
-        case AnimationState::persistent:
-            return true;
+        case AnimationState::persistent: return true;
         case AnimationState::recycle:
-        case AnimationState::persistent_stopped:
-            return false;
-        default: STL_ASSERT(false, std::format("Unknown animation state {}", data[animation_handle].state));
-            return false;
+        case AnimationState::persistent_stopped: return false;
+        default: STL_ASSERT(false, std::format("Unknown animation state {}", data[animation_handle].state)); return false;
     }
 }
 inline void AnimationSystem::operator()() const {
@@ -110,18 +101,15 @@ inline void AnimationSystem::operator()() const {
                     animation.state = AnimationState::recycle;
                 }
                 break;
-            case AnimationState::recycle:
-                continue;
-            case AnimationState::repeat:
-                break;
+            case AnimationState::recycle: continue;
+            case AnimationState::repeat: break;
             case AnimationState::persistent:
                 if (t >= 1.0F) {
                     t = 1.0F;
                     animation.state = AnimationState::persistent_stopped;
                 }
                 break;
-            case AnimationState::persistent_stopped:
-                continue;
+            case AnimationState::persistent_stopped: continue;
         }
         const f32 value = EaseInOutSine(t);
         animation.action(value);

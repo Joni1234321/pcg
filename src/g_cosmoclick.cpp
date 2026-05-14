@@ -105,44 +105,44 @@ struct GameFrame : Frame, LogLifetimeWithCount<GameFrame> {
     ValueUnit<Income> income { B(info).Component<ValueUnit<Income>>({ Income { 0U }, Unit::cosmos_per_second, FontSizes::h4, colors::silver }) };
     Handle<Node> click { B(game).Node(fill).Padding2(uint2 { 0U, 100U }).Alignment(top_center).Build() };
     Handle<Node> planet {
-        B(click).Node(PLANET_SIZE + PLANET_BORDER_SIZE).Padding(PLANET_BORDER_SIZE).Fill(colors::white).OnClick([this] (const NodeReference) -> void {
-            AnimationSystem::StartAnimation(this->planet_animation);
-            constexpr Money money_per_click { 5U };
-            singleton.Get<GameState>().money += money_per_click;
-            singleton.Get<UIFlags>() & UIFlags::money;
-            const uint2 mouse_position = singleton.Get<InputState>().mouse_position;
-            const String text = std::to_string(money_per_click.value);
-            data[emitter].particles.items.push_back(Particle {
-                                                        .position = { static_cast<f32>(mouse_position.x), static_cast<f32>(mouse_position.y) },
-                                                        .text = std::unique_ptr<TTF_Text, DestroyText> {
-                                                            TTF_CreateText(singleton.Get<WindowState>().text_engine,
-                                                                           singleton.Get<FontCollection>().
-                                                                           GetFont(static_cast<FontSizes>(Rand(static_cast<u32>(FontSizes::body),
-                                                                                                               static_cast<u32>(FontSizes::title)))).ToSDL(), text.c_str(),
-                                                                           text.size()) },
-                                                        .duration = miliseconds32 { Rand(1000U, 3001U) }, });
-        }).Build() };
+        B(click)
+            .Node(PLANET_SIZE + PLANET_BORDER_SIZE)
+            .Padding(PLANET_BORDER_SIZE)
+            .Fill(colors::white)
+            .OnClick([this](const NodeReference) -> void {
+                AnimationSystem::StartAnimation(this->planet_animation);
+                constexpr Money money_per_click { 5U };
+                singleton.Get<GameState>().money += money_per_click;
+                singleton.Get<UIFlags>() & UIFlags::money;
+                const uint2 mouse_position = singleton.Get<InputState>().mouse_position;
+                const String text = std::to_string(money_per_click.value);
+                data[emitter].particles.items.push_back(Particle {
+                    .position = { static_cast<f32>(mouse_position.x), static_cast<f32>(mouse_position.y) },
+                    .text = std::unique_ptr<TTF_Text, DestroyText> { TTF_CreateText(
+                        singleton.Get<WindowState>().text_engine, singleton.Get<FontCollection>().GetFont(static_cast<FontSizes>(Rand(static_cast<u32>(FontSizes::body), static_cast<u32>(FontSizes::title)))).ToSDL(), text.c_str(), text.size()) },
+                    .duration = miliseconds32 { Rand(1000U, 3001U) },
+                });
+            })
+            .Build()
+    };
     Handle<Node> planet_intra { B(planet).Node(fill).Fill(colors::dark_navy_blue).Build() };
     Handle<Node> build_menu { B(frame).Node(700U, hug).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::cerulean).Build() };
     NodeComponentPool<BuildingComponent> shop { B(build_menu).Pool<BuildingComponent>() };
 
-    Handle<Animation> planet_animation = AnimationSystem::Register(AnimationDesc {
-                                                                       .action = [this] (const f32 t) -> void {
-                                                                           static constexpr u32 PLANET_PADDING_START = 10U;
-                                                                           const u32 padding_value = PLANET_PADDING_START + static_cast<u32>((1 - t) * PLANET_BORDER_SIZE);
-                                                                           data[tree].styles[planet].padding = uint4 { padding_value, padding_value, padding_value, padding_value };
-                                                                           data[tree].styles[planet].background_color = colors::LightenColor(colors::cyan, t);
-                                                                           singleton.Get<UIFlags>() & UIFlags::planet;
-                                                                       },
-                                                                       .duration = miliseconds32 { 400U },
-                                                                       .state = AnimationState::persistent_stopped });
+    Handle<Animation> planet_animation = AnimationSystem::Register(AnimationDesc { .action = [this](const f32 t) -> void {
+                                                                                      static constexpr u32 PLANET_PADDING_START = 10U;
+                                                                                      const u32 padding_value = PLANET_PADDING_START + static_cast<u32>((1 - t) * PLANET_BORDER_SIZE);
+                                                                                      data[tree].styles[planet].padding = uint4 { padding_value, padding_value, padding_value, padding_value };
+                                                                                      data[tree].styles[planet].background_color = colors::LightenColor(colors::cyan, t);
+                                                                                      singleton.Get<UIFlags>() & UIFlags::planet;
+                                                                                  },
+                                                                                   .duration = miliseconds32 { 400U },
+                                                                                   .state = AnimationState::persistent_stopped });
 };
 constexpr String UnitToString(const Unit unit) {
     switch (unit) {
-        case Unit::cosmos:
-            return "¤";
-        case Unit::cosmos_per_second:
-            return "¤-s";
+        case Unit::cosmos: return "¤";
+        case Unit::cosmos_per_second: return "¤-s";
     }
     return "unknown unit";
 }
@@ -162,13 +162,13 @@ void BuildingComponent::SetProperty(const Property& property) const {
     data[root.tree].styles[item].texture = building.texture;
     money.SetProperty({ .value = building.cost, .unit = Unit::cosmos, .font_size = FontSizes::body, .color = colors::gold });
     income.SetProperty({ .value = building.income, .unit = Unit::cosmos_per_second, .font_size = FontSizes::body, .color = colors::silver });
-    data[root.tree].node_properties[root.node].on_click = [&building, property] (const NodeReference) -> void {
+    data[root.tree].node_properties[root.node].on_click = [&building, property](const NodeReference) -> void {
         GameState& game_state = singleton.Get<GameState>();
         if (game_state.money >= building.cost) {
             ++game_state.building_counts[property];
             game_state.money -= building.cost;
             game_state.income += building.income;
-            singleton.Get<UIFlags>() & UIFlags::buildings & UIFlags::money;
+            singleton.Get<UIFlags>() & UIFlags::buildings& UIFlags::money;
         }
     };
 }
@@ -181,7 +181,7 @@ Scene GameScene() {
     if (delta_s > seconds32 { 0U }) {
         game_data.money += Money { game_data.income.value * delta_s.value };
         game_data.last_income_time = now;
-        ui_flags & UIFlags::money;
+        ui_flags& UIFlags::money;
     }
     return Scene::game;
 }
@@ -189,12 +189,8 @@ void CosmoClickSystem::operator()() const {
     Scene& scene { singleton.Get<Scene>() };
     const Scene start { scene };
     switch (scene) {
-        case Scene::start:
-            scene = Scene::game;
-            break;
-        case Scene::game:
-            scene = GameScene();
-            break;
+        case Scene::start: scene = Scene::game; break;
+        case Scene::game: scene = GameScene(); break;
         case Scene::quit:
             Logger().Log("Quit requested");
             singleton.Get<InputState>().quit = true;
@@ -213,8 +209,10 @@ void CosmoClickUISystem::operator()() const {
         game_frame.income.SetValue(game_state.income);
     }
     UIFlags planet_check { };
-    planet_check & UIFlags::planet;
-    if (ui_flags.Only(UIFlags::planet)) { data[game_frame.tree].MarkDirty(game_frame.planet); } else if (ui_flags.Any()) {
+    planet_check& UIFlags::planet;
+    if (ui_flags.Only(UIFlags::planet)) {
+        data[game_frame.tree].MarkDirty(game_frame.planet);
+    } else if (ui_flags.Any()) {
         data[game_frame.tree].MarkDirty();
         ui_flags.Reset();
     }
@@ -235,7 +233,8 @@ void pcg::arcade::RunCosmoClick() {
         Building { .name = "Lunar Research Base", .texture = data.Create<Texture>(Asset("lunar-base.png")), .cost = Money { 75000U }, .income = Income { 5000U } },
         Building { .name = "Orbital Shipyard", .texture = data.Create<Texture>(Asset("orbital-shipyard.png")), .cost = Money { 200000U }, .income = Income { 15000U } },
         Building { .name = "Mars Colony", .texture = data.Create<Texture>(Asset("mars-colony.png")), .cost = Money { 500000U }, .income = Income { 40000U } },
-        Building { .name = "Dyson Sphere Segment", .texture = data.Create<Texture>(Asset("dyson-sphere.png")), .cost = Money { 2000000U }, .income = Income { 250000U } }, };
+        Building { .name = "Dyson Sphere Segment", .texture = data.Create<Texture>(Asset("dyson-sphere.png")), .cost = Money { 2000000U }, .income = Income { 250000U } },
+    };
 
     singleton.Get<GameState>() = GameState { };
 

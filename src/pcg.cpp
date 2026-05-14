@@ -1,4 +1,3 @@
-
 #include <SDL3/SDL_main.h>
 
 #include "g_arcade.hpp"
@@ -11,10 +10,10 @@
 #include "0_engine/u_types.hpp"
 
 namespace pce {
+using pce::List;
+using pce::Reinterpret;
 using pcg::game;
 using pcg::player_archetype;
-using pce::Reinterpret;
-using pce::List;
 
 b8 Start() {
     SDL_Log("Loading window");

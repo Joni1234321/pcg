@@ -52,7 +52,7 @@ private:
 enum class FarmType : u8 { Wine, Wheat, Fish, Cows };
 enum class ResourceBuildings : u8 { Wood, Fe, Ag, Au };
 enum class Good : u8 { Wood, Iron, Food, Steel, Coal };
-enum class QualityOfLifeStage : u8 { Dying, Surviving, Struggling, Secure, Comfortable, Lavish, Dictator, Extravagant, };
+enum class QualityOfLifeStage : u8 { Dying, Surviving, Struggling, Secure, Comfortable, Lavish, Dictator, Extravagant };
 
 struct Data {
     std::unordered_map<FarmType, Stats> farm_types;

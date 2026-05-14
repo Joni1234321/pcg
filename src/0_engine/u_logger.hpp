@@ -1,19 +1,19 @@
 #pragma once
 
-#include <cstdio>
-#include <format>
-#include <string>
-#include <ranges>
 #include <array>
-#include <typeinfo>
+#include <cstdio>
 #include <cxxabi.h>
+#include <format>
+#include <ranges>
+#include <string>
+#include <typeinfo>
 #if __has_include(<stacktrace>)
-#include <stacktrace>
+    #include <stacktrace>
 #endif
 
 #include "0_engine/u_collections.hpp"
-#include "0_engine/u_types.hpp"
 #include "0_engine/u_ecs.hpp"
+#include "0_engine/u_types.hpp"
 
 namespace pce {
 // Demangle a type name. GCC/Clang return the Itanium-mangled form from
@@ -30,16 +30,30 @@ template <class T> inline const std::string& TypeName() {
     }();
     return cached;
 }
-constexpr auto LOGGER_PREFIX_NONE    = "            "; // 12 chars to match [DESTROYED] + space
-constexpr auto LOGGER_PREFIX_TIMER   = "[TIMER    ] ";
-constexpr auto LOGGER_PREFIX_LOG     = "[LOG      ] ";
+constexpr auto LOGGER_PREFIX_NONE = "            "; // 12 chars to match [DESTROYED] + space
+constexpr auto LOGGER_PREFIX_TIMER = "[TIMER    ] ";
+constexpr auto LOGGER_PREFIX_LOG = "[LOG      ] ";
 constexpr auto LOGGER_PREFIX_WARNING = "[WARNING  ] ";
-constexpr auto LOGGER_PREFIX_ERROR   = "[ERROR    ] ";
+constexpr auto LOGGER_PREFIX_ERROR = "[ERROR    ] ";
 
-#define LOGGER_ERROR_WRITE(MESSAGE) Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__)
-#define LOGGER_ERROR_WRITE_RETURN(MESSAGE, RETURN) Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__); return RETURN
-#define ASSERT_DBG(CONDITION, MESSAGE) if (!static_cast<b8>(CONDITION)) { pce::Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__); }
-#define ASSERT_DBG_RETURN(CONDITION, MESSAGE, RETURN) if (!static_cast<b8>(CONDITION)) { Logger logger; logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__); return RETURN; }
+#define LOGGER_ERROR_WRITE(MESSAGE) \
+    Logger logger;                  \
+    logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__)
+#define LOGGER_ERROR_WRITE_RETURN(MESSAGE, RETURN)                                    \
+    Logger logger;                                                                    \
+    logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__); \
+    return RETURN
+#define ASSERT_DBG(CONDITION, MESSAGE)                                                    \
+    if (!static_cast<b8>(CONDITION)) {                                                    \
+        pce::Logger logger;                                                               \
+        logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__); \
+    }
+#define ASSERT_DBG_RETURN(CONDITION, MESSAGE, RETURN)                                     \
+    if (!static_cast<b8>(CONDITION)) {                                                    \
+        Logger logger;                                                                    \
+        logger.Error("ASSERT FAILED: {}\nFile:{}\nLine:{}", MESSAGE, __FILE__, __LINE__); \
+        return RETURN;                                                                    \
+    }
 
 static auto LoggerColorSet(const u32 color) { return "\033[38;5;" + std::to_string(color) + "m"; }
 static constexpr auto LOGGER_COLOR_CLEAR = "\033[m";
@@ -54,11 +68,7 @@ struct Logger {
     // NOLINT(*-struct-pack-align)
     // Values are 256-color SGR foreground codes. SetColor emits them with
     // the bold attribute ("\033[1;38;5;<n>m") so output is vivid and bold.
-    enum class LOGGER_COLOR : u8 {
-        ORANGE = 130U, YELLOW = 136U, WHITE = 241U, PINK = 127U, RED = 124U,
-        LIGHT_GREEN = 28U, LIGHT_RED = 160U, LIGHT_CYAN = 30U, LIGHT_BLUE = 19U, LIGHT_MAGENTA = 90U,
-        GREY = 102U,
-    };
+    enum class LOGGER_COLOR : u8 { ORANGE = 130U, YELLOW = 136U, WHITE = 241U, PINK = 127U, RED = 124U, LIGHT_GREEN = 28U, LIGHT_RED = 160U, LIGHT_CYAN = 30U, LIGHT_BLUE = 19U, LIGHT_MAGENTA = 90U, GREY = 102U };
     Logger() = default;
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
@@ -218,7 +228,7 @@ template <typename T> struct LogDestroy {
 #if defined(__cpp_lib_stacktrace)
 template <typename T> struct LogDestroyWithStack {
     ~LogDestroyWithStack() {
-        auto filtered_frames = std::stacktrace::current() | std::views::filter([] (const std::stacktrace_entry& frame) -> bool { return frame.description().contains("pcg") || frame.description().contains("pce"); });
+        auto filtered_frames = std::stacktrace::current() | std::views::filter([](const std::stacktrace_entry& frame) -> bool { return frame.description().contains("pcg") || frame.description().contains("pce"); });
         String result;
         for (const std::stacktrace_entry& frame : filtered_frames) { result += frame.description() + "\n"; }
         Logger().Destroyed("{} {}\n", TypeName<T>(), result);
@@ -232,8 +242,7 @@ template <typename T> struct LogDestroyWithCount {
     }
 };
 
-template <typename T>concept LongNumberFormattable = requires (T value)
-{
+template <typename T> concept LongNumberFormattable = requires(T value) {
     { static_cast<f32>(value.value) }; // Checks if T can be cast to f32
 } && HasASkill<T, FormatLongNumber>;
 
@@ -253,5 +262,5 @@ template <LongNumberFormattable T> String FormatValue(const T value) {
     return std::format("{}{:.2f}{}", prefix, abs_number, suffix);
 }
 template <typename T> String FormatValue(const T value) { return std::format("{} ", value); }
-template < > inline String FormatValue<Entity>(const Entity value) { return value == Entity::NONE ? String { "NONE" } : std::format("{} ", value); }
+template <> inline String FormatValue<Entity>(const Entity value) { return value == Entity::NONE ? String { "NONE" } : std::format("{} ", value); }
 } // namespace pce

@@ -12,12 +12,12 @@ inline constexpr size_t BIG_ALLOCATION_ALIGNMENT = 32;   // 256-bit SIMD operati
 
 #ifdef DEBUG
 inline constexpr size_t NON_USER_SIZE = 2U * sizeof(void*) + BIG_ALLOCATION_ALIGNMENT - 1U;
-#else // !DEBUG
+#else  // !DEBUG
 inline constexpr size_t NON_USER_SIZE = sizeof(void*) + BIG_ALLOCATION_ALIGNMENT - 1U;
 #endif // END !DEBUG
 #ifdef WIN64
 inline constexpr size_t BIG_ALLOCATION_SENTINEL = 0xFAFAFAFAFAFAFAFAULL;
-#else // !WIN64
+#else  // !WIN64
 inline constexpr size_t BIG_ALLOCATION_SENTINEL = 0xFAFAFAFAUL;
 #endif // end !WIN64
 
@@ -28,16 +28,16 @@ template <size_t Size> [[nodiscard]] constexpr size_t GetBlock(const size_t coun
     return count * Size;
 }
 
-template <class Traits> __declspec(allocator) void *AllocateManuallyVectorAligned(const size_t bytes) { // allocate _Bytes manually aligned to at least _Big_allocation_alignment
+template <class Traits> __declspec(allocator) void* AllocateManuallyVectorAligned(const size_t bytes) { // allocate _Bytes manually aligned to at least _Big_allocation_alignment
     const size_t block_size = NON_USER_SIZE + bytes;
     if (block_size <= bytes) { throw std::bad_array_new_length { }; } // overflow?? how is this possible with 64-bit systems
     const uintptr_t ptr_container = reinterpret_cast<uintptr_t>(Traits::Allocate(block_size));
-    STL_VERIFY(ptr_container != 0, "invalid argument"); // validate even in release since we're doing p[-1]
+    STL_VERIFY(ptr_container != 0, "invalid argument");                                                         // validate even in release since we're doing p[-1]
     void* const ptr = reinterpret_cast<void*>(ptr_container + NON_USER_SIZE & ~(BIG_ALLOCATION_ALIGNMENT - 1)); // masked so it starts at least at BIG_ALINGMENT
     static_cast<uintptr_t*>(ptr)[-1] = ptr_container;
-    #ifdef DEBUG
+#ifdef DEBUG
     static_cast<uintptr_t*>(ptr)[-2] = BIG_ALLOCATION_SENTINEL;
-    #endif // defined(DEBUG)
+#endif // defined(DEBUG)
     return ptr;
 }
 inline void AdjustManuallyVectorAligned(void*& ptr, size_t& bytes) { // adjust parameters from _Allocate_manually_vector_aligned to pass to operator delete
@@ -45,11 +45,11 @@ inline void AdjustManuallyVectorAligned(void*& ptr, size_t& bytes) { // adjust p
     const uintptr_t* const ptr_user = static_cast<uintptr_t*>(ptr);
     const uintptr_t ptr_container = ptr_user[-1];
     STL_ASSERT(ptr_user[-2] == BIG_ALLOCATION_SENTINEL, "invalid argument"); // If the following asserts, it likely means that we are performing. an aligned delete on memory coming from an unaligned allocation.
-    #ifdef DEBUG
+#ifdef DEBUG
     constexpr uintptr_t min_back_shift = 2 * sizeof(void*);
-    #else // ^^^ defined(DEBUG) / !defined(DEBUG) vvv
+#else  // ^^^ defined(DEBUG) / !defined(DEBUG) vvv
     constexpr uintptr_t min_back_shift = sizeof(void*);
-    #endif // ^^^ !defined(DEBUG) ^^^
+#endif // ^^^ !defined(DEBUG) ^^^
     const uintptr_t back_shift = reinterpret_cast<uintptr_t>(ptr) - ptr_container;
     STL_VERIFY(back_shift >= min_back_shift && back_shift <= NON_USER_SIZE, "invalid argument"); // Extra paranoia on aligned allocation/deallocation; ensure _Ptr_container is in range [_Min_back_shift, _Non_user_size]
     ptr = reinterpret_cast<void*>(ptr_container);
@@ -62,45 +62,48 @@ template <size_t Alignment> constexpr void Deallocate(void* ptr, size_t bytes) n
     }
     if constexpr (Alignment > __STDCPP_DEFAULT_NEW_ALIGNMENT__) {
         size_t alignment = Alignment;
-        #ifdef SIMD_OPTIMIZE
+#ifdef SIMD_OPTIMIZE
         if (bytes >= BIG_ALLOCATION_THRESHOLD) { alignment = std::max(Alignment, BIG_ALLOCATION_ALIGNMENT); } // boost the alignment of big allocations to help autovectorization
-        #endif // SIMD_OPTIMIZE
+#endif                                                                                                        // SIMD_OPTIMIZE
         operator delete(ptr, bytes, std::align_val_t { alignment });
     } else {
-        #ifdef SIMD_OPTIMIZE
+#ifdef SIMD_OPTIMIZE
         if (bytes >= BIG_ALLOCATION_THRESHOLD) { AdjustManuallyVectorAligned(ptr, bytes); } // boost the alignment of big allocations to help autovectorization
-        #endif // SIMD_OPTIMIZE
+#endif                                                                                      // SIMD_OPTIMIZE
         operator delete(ptr, bytes);
     }
 }
 
 struct DefaultAllocateTraits {
-    __declspec(allocator) static void *Allocate(const size_t bytes) { return operator new(bytes); }
-    __declspec(allocator) static constexpr void *AllocateAligned(const size_t bytes, const size_t align) { return operator new(bytes, std::align_val_t { align }); }
+    __declspec(allocator) static void* Allocate(const size_t bytes) { return operator new(bytes); }
+    __declspec(allocator) static constexpr void* AllocateAligned(const size_t bytes, const size_t align) { return operator new(bytes, std::align_val_t { align }); }
 };
 
-template <size_t Alignment, class Traits = DefaultAllocateTraits> __declspec(allocator) constexpr void *Allocate(const size_t bytes) {
+template <size_t Alignment, class Traits = DefaultAllocateTraits> __declspec(allocator) constexpr void* Allocate(const size_t bytes) {
     if (bytes == 0) { return nullptr; }
     if consteval { return Traits::Allocate(bytes); }
     if constexpr (Alignment > __STDCPP_DEFAULT_NEW_ALIGNMENT__) {
         size_t alignment = Alignment;
-        #ifdef SIMD_OPTIMIZE
+#ifdef SIMD_OPTIMIZE
         if (bytes >= BIG_ALLOCATION_THRESHOLD) { alignment = std::max(Alignment, BIG_ALLOCATION_ALIGNMENT); } // boost the alignment of big allocations to help autovectorization
-        #endif // SIMD_OPTIMIZE
+#endif                                                                                                        // SIMD_OPTIMIZE
         return Traits::AllocateAligned(bytes, alignment);
     } else {
-        #ifdef SIMD_OPTIMIZE
+#ifdef SIMD_OPTIMIZE
         if (bytes >= BIG_ALLOCATION_THRESHOLD) { return AllocateManuallyVectorAligned<Traits>(bytes); } // boost the alignment of big allocations to help autovectorization
-        #endif // SIMD_OPTIMIZE
+#endif                                                                                                  // SIMD_OPTIMIZE
         return Traits::Allocate(bytes);
     }
 }
 
 template <class T> class Allocator {
 public:
-    static_assert(!std::is_const_v<T>, "The C++ Standard forbids containers of const elements " "because allocator<const T> is ill-formed.");
-    static_assert(!std::is_function_v<T>, "The C++ Standard forbids allocators for function elements " "because of [allocator.requirements].");
-    static_assert(!std::is_reference_v<T>, "The C++ Standard forbids allocators for reference elements " "because of [allocator.requirements].");
+    static_assert(!std::is_const_v<T>, "The C++ Standard forbids containers of const elements "
+                                       "because allocator<const T> is ill-formed.");
+    static_assert(!std::is_function_v<T>, "The C++ Standard forbids allocators for function elements "
+                                          "because of [allocator.requirements].");
+    static_assert(!std::is_reference_v<T>, "The C++ Standard forbids allocators for reference elements "
+                                           "because of [allocator.requirements].");
 
     using _From_primary = Allocator;
     using value_type = T;
@@ -120,7 +123,7 @@ public:
         const size_t block = sizeof(T) * count;
         Deallocate<alignment>(ptr, block);
     }
-    [[nodiscard]] static constexpr __declspec(allocator) T *allocate(const u32 count) {
+    [[nodiscard]] static constexpr __declspec(allocator) T* allocate(const u32 count) {
         static_assert(sizeof(value_type) > 0, "value_type must be complete before calling allocate.");
         const i32 alignment = std::max(alignof(T), __STDCPP_DEFAULT_NEW_ALIGNMENT__);
         const size_t block = GetBlock<sizeof(T)>(count);
@@ -129,14 +132,13 @@ public:
     [[nodiscard]] constexpr std::allocation_result<T*> allocate_at_least(const u32 count) { return { allocate(count), count }; }
 };
 
-
-inline void TestingEnumerate () {
+inline void TestingEnumerate() {
     std::vector<double, Allocator<double>> v;
-    v.push_back(1.0); v.push_back(1.0);
     v.push_back(1.0);
     v.push_back(1.0);
     v.push_back(1.0);
-    for (auto [i, d] : std::views::zip(std::views::iota(0u), v)) {
-    }
+    v.push_back(1.0);
+    v.push_back(1.0);
+    for (auto [i, d] : std::views::zip(std::views::iota(0u), v)) { }
 }
 } // namespace pce::allocator

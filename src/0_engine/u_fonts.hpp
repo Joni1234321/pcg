@@ -8,10 +8,7 @@
 
 namespace pce::ui {
 using FontSize = u8;
-enum class FontSizes : FontSize {
-    body    = 16U, h1 = 34U, h2 = 30U, h3 = 24U, h4 = 20U, h5 = 18U, small = 14U, tiny = 12U, title = 52U,
-    massive = 72U
-};
+enum class FontSizes : FontSize { body = 16U, h1 = 34U, h2 = 30U, h3 = 24U, h4 = 20U, h5 = 18U, small = 14U, tiny = 12U, title = 52U, massive = 72U };
 class Font : LogLifetimeWithCount<Font> {
     struct CloseFont {
         void operator()(TTF_Font* font) const {
@@ -25,7 +22,7 @@ public:
     Font(const AbsolutePath& path, const FontSize size) : font(TTF_OpenFont(path.string().c_str(), size)) { Logger().Created("Font {} {}", size, path.string()); }
 
     [[nodiscard]] b8 FailedLoading() const { return font.Get() == nullptr; }
-    [[nodiscard]] constexpr TTF_Font *ToSDL() const { return font.Get(); }
+    [[nodiscard]] constexpr TTF_Font* ToSDL() const { return font.Get(); }
     [[nodiscard]] FontSize GetSize() const { return static_cast<FontSize>(TTF_GetFontSize(font.Get())); }
 };
 class FontCollection {

@@ -13,32 +13,22 @@
 #include "1_systems/u_animation_system.hpp"
 #include "1_systems/u_orchestra.hpp"
 
-
 namespace pcg::commandstrike {
 using namespace pce;
 using namespace pce::ui;
 
 // data
-struct GameDefines {
-
-};
-struct GameState {
-
-};
+struct GameDefines { };
+struct GameState { };
 
 // systems
 struct CommandStrikeSystem {
-    void operator()() const {
-
-    }
+    void operator()() const { }
 };
 
 struct CommandStrikeUISystem {
-    void operator()() const {
-
-    }
+    void operator()() const { }
 };
-
 
 struct GameFrame : Frame {
     Handle<Node> root { B(frame).Node(fill).Gap(10U).Padding(10U).Build() };
@@ -51,8 +41,6 @@ struct GameFrame : Frame {
     Handle<Node> map { B(root).Node(fill).Build() };
     Handle<Node> sky { B(map).Node(fill).Fill(colors::sky_cyan).Build() };
     Handle<Node> ground { B(map).Node(fill, 600U).Fill(colors::forest_green).Build() };
-
-
 };
 } // namespace pcg::commandstrike
 void pcg::arcade::RunCommandStrike() {

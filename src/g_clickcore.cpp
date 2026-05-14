@@ -125,15 +125,9 @@ void ClickCore::Tick() {
 }
 void ClickCore::GameLoop() {
     switch (scene) {
-        case Scene::game:
-            scene = GameScene();
-            break;
-        case Scene::main_menu:
-            scene = MainMenuScene();
-            break;
-        case Scene::game_over:
-            scene = GameOverScene();
-            break;
+        case Scene::game: scene = GameScene(); break;
+        case Scene::main_menu: scene = MainMenuScene(); break;
+        case Scene::game_over: scene = GameOverScene(); break;
         case Scene::quit:
             Logger().Log("Quit requested");
             running = false;

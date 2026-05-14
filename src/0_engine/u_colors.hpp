@@ -1,13 +1,13 @@
 #pragma once
 
-#include <complex>
 #include <SDL3/SDL.h>
+#include <complex>
 
 #include "0_engine/u_types.hpp"
 
 namespace pce::colors {
 inline SDL_Color LightenColor(const SDL_Color color, const f32 factor) {
-    auto lerp = [factor] (const u8 channel, const u8 target) -> u8 { return static_cast<u8>(channel + (target - channel) * factor); };
+    auto lerp = [factor](const u8 channel, const u8 target) -> u8 { return static_cast<u8>(channel + (target - channel) * factor); };
     return SDL_Color { lerp(color.r, 255), lerp(color.g, 255), lerp(color.b, 255), color.a };
 }
 
@@ -82,20 +82,19 @@ constexpr SDL_Color dark_grey { 15U, 15U, 15U, 255U };
 constexpr SDL_Color jet { 60, 55, 68, 255U };
 constexpr SDL_Color cerulean { 0, 112, 144, 255U };
 
-
 // Command Strike
-constexpr SDL_Color soft_blue { 129U, 170U, 180U, 255U }; // #81AAB4 - Soft, muted blue-green
-constexpr SDL_Color deep_teal { 0U, 85U, 102U, 255U };   // #005566 - Dark teal
-constexpr SDL_Color dusk_purple { 88U, 66U, 124U, 255U }; // #58427C - Muted purple
-constexpr SDL_Color warm_gray { 136U, 128U, 124U, 255U }; // #88807C - Neutral warm gray
-constexpr SDL_Color ocean_blue { 0U, 105U, 148U, 255U }; // #006994 - Deep oceanic blue
-constexpr SDL_Color burnt_orange { 208U, 107U, 5U, 255U }; // #D06B05 - Warm, earthy orange
+constexpr SDL_Color soft_blue { 129U, 170U, 180U, 255U };   // #81AAB4 - Soft, muted blue-green
+constexpr SDL_Color deep_teal { 0U, 85U, 102U, 255U };      // #005566 - Dark teal
+constexpr SDL_Color dusk_purple { 88U, 66U, 124U, 255U };   // #58427C - Muted purple
+constexpr SDL_Color warm_gray { 136U, 128U, 124U, 255U };   // #88807C - Neutral warm gray
+constexpr SDL_Color ocean_blue { 0U, 105U, 148U, 255U };    // #006994 - Deep oceanic blue
+constexpr SDL_Color burnt_orange { 208U, 107U, 5U, 255U };  // #D06B05 - Warm, earthy orange
 constexpr SDL_Color royal_purple { 177U, 92U, 194U, 255U }; // #B15CC2 - Vibrant purple
-constexpr SDL_Color forest_green { 75U, 133U, 57U, 255U }; // #4B8539 - Deep forest green
-constexpr SDL_Color sky_cyan { 105U, 232U, 255U, 255U }; // #69E8FF - Bright cyan
-constexpr SDL_Color charcoal_gray { 63U, 63U, 63U, 255U }; // #3F3F3F - Dark charcoal gray
-constexpr SDL_Color steel_gray { 120U, 120U, 120U, 255U }; // #787878 - Mid-tone gray
-constexpr SDL_Color ash_gray { 124U, 124U, 124U, 255U }; // #7C7C7C - Muted ash gray
+constexpr SDL_Color forest_green { 75U, 133U, 57U, 255U };  // #4B8539 - Deep forest green
+constexpr SDL_Color sky_cyan { 105U, 232U, 255U, 255U };    // #69E8FF - Bright cyan
+constexpr SDL_Color charcoal_gray { 63U, 63U, 63U, 255U };  // #3F3F3F - Dark charcoal gray
+constexpr SDL_Color steel_gray { 120U, 120U, 120U, 255U };  // #787878 - Mid-tone gray
+constexpr SDL_Color ash_gray { 124U, 124U, 124U, 255U };    // #7C7C7C - Muted ash gray
 
 inline SDL_Color AnimateFast(const f32 t) {
     const u8 red = static_cast<u8>((std::sin(t * 0.5F + 0.0F) * 0.5F + 0.5F) * 255U);
