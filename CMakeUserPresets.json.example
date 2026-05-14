@@ -1,0 +1,17 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "environment": {
+        "PATH": "D:/tools/msys64/clang64/bin;D:/tools/msys64/usr/bin;$penv{PATH}"
+      },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER":   "D:/tools/msys64/clang64/bin/clang.exe",
+        "CMAKE_CXX_COMPILER": "D:/tools/msys64/clang64/bin/clang++.exe",
+        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/clang64"
+      }
+    }
+  ]
+}

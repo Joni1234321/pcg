@@ -17,11 +17,12 @@ using pcg::player_archetype;
 
 b8 Start() {
     SDL_Log("Loading window");
-    constexpr uint2 window_size { 1600U, 900U };
+    constexpr uint2 window_size { 2500U, 1500U };
     Window window { window_size };
 
     Logger().Log("Starting Game");
-    pcg::arcade::RunCommandStrike();
+    pcg::arcade::RunBattleSim();
+    // pcg::arcade::RunCommandStrike();
     // pcg::arcade::RunCosmoClick();
     // pcg::arcade::RunClickCore();
     Logger().Log("Quitting main loop");

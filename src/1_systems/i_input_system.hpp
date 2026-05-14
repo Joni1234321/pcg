@@ -16,12 +16,14 @@ struct InputState {
     b8 left_mouse_down { false };
     b8 left_mouse_up { false };
     uint2 mouse_position { };
+    f32 mouse_wheel_y { 0.0F };
 };
 struct InputSystem {
     void operator()() const {
         InputState& input_state = Singleton::Get<InputState>();
         for (b8& key : input_state.keys_up | std::ranges::views::values) { key = false; }
         for (b8& key : input_state.keys_down | std::ranges::views::values) { key = false; }
+        input_state.mouse_wheel_y = 0.0F;
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
@@ -36,6 +38,9 @@ struct InputSystem {
                 case SDL_EVENT_KEY_DOWN:
                     input_state.keys[event.key.key] = true;
                     input_state.keys_down[event.key.key] = true;
+                    break;
+                case SDL_EVENT_MOUSE_WHEEL:
+                    input_state.mouse_wheel_y = event.wheel.y;
                     break;
                 default: break;
             }

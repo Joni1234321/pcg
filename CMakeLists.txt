@@ -41,6 +41,7 @@ add_executable(pcg
                src/g_clickcore.cpp
                src/g_cosmoclick.cpp
                src/g_commandstrike.cpp
+               src/g_battlesim.cpp
                src/g_factory.cpp
                src/g_game.cpp
                src/1_systems/t_debug_system.cpp

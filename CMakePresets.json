@@ -2,17 +2,20 @@
   "version": 3,
   "configurePresets": [
     {
-      "name": "xd",
+      "name": "base",
+      "hidden": true,
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/xd",
-      "environment": {
-        "PATH": "D:/tools/msys64/clang64/bin;D:/tools/msys64/usr/bin;$penv{PATH}"
-      },
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_C_COMPILER":   "D:/tools/msys64/clang64/bin/clang.exe",
-        "CMAKE_CXX_COMPILER": "D:/tools/msys64/clang64/bin/clang++.exe",
-        "CMAKE_PREFIX_PATH":  "D:/tools/msys64/clang64"
+        "CMAKE_C_COMPILER":   "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "xd",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/out/xd",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
