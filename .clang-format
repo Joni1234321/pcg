@@ -1,71 +1,162 @@
 ---
 Language: Cpp
 BasedOnStyle: LLVM
+Standard: Latest
+
+# --- indentation -------------------------------------------------------------
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+ConstructorInitializerIndentWidth: 4
 AccessModifierOffset: -4
-AlignConsecutiveMacros: AcrossEmptyLinesAndComments
-AlignConsecutiveAssignments: false
-AlignConsecutiveDeclarations: false
-AlignOperands: true
-AlignTrailingComments: true
-AllowShortBlocksOnASingleLine: Always
-AllowShortIfStatementsOnASingleLine: true
-AllowShortLoopsOnASingleLine: true
-AlwaysBreakTemplateDeclarations: No
-BinPackParameters: false
-BitFieldColonSpacing: After
-BraceWrapping: 
-  AfterCaseLabel: false
-  AfterClass: false
-  AfterControlStatement: false
-  AfterEnum: false
-  AfterFunction: false
-  AfterNamespace: false
-  AfterStruct: false
-  AfterUnion: false
-  AfterExternBlock: false
-  BeforeCatch: false
-  BeforeElse: false
-  BeforeLambdaBody: false
-  BeforeWhile: false
-  SplitEmptyFunction: false
-  SplitEmptyRecord: false
-  SplitEmptyNamespace: false
-BreakBeforeBraces: Custom
-BreakBeforeTernaryOperators: false
-BreakConstructorInitializers: AfterColon
-BreakConstructorInitializersBeforeComma: false
-ColumnLimit: 220
-CompactNamespaces: true
-ConstructorInitializerAllOnOneLineOrOnePerLine: false
-Cpp11BracedListStyle: false
-IncludeCategories: 
-  - Regex: '^<.*'
-    Priority: 1
-  - Regex: '^".*'
-    Priority: 2
-  - Regex: '.*'
-    Priority: 3
-IncludeIsMainRegex: '([-_](test|unittest))?$'
 IndentCaseLabels: true
+IndentCaseBlocks: false
 IndentGotoLabels: false
 IndentPPDirectives: BeforeHash
-IndentWidth: 4
-InsertNewlineAtEOF: true
-KeepEmptyLinesAtTheStartOfBlocks: false
-MacroBlockBegin: ''
-MacroBlockEnd: ''
+IndentExternBlock: NoIndent
+NamespaceIndentation: None
+LambdaBodyIndentation: Signature
+
+# --- line width --------------------------------------------------------------
+ColumnLimit: 250
+ReflowComments: Never
+
+# --- braces (attach everything) ----------------------------------------------
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel:     false
+  AfterClass:         false
+  AfterControlStatement: Never
+  AfterEnum:          false
+  AfterFunction:      false
+  AfterNamespace:     false
+  AfterObjCDeclaration: false
+  AfterStruct:        false
+  AfterUnion:         false
+  AfterExternBlock:   false
+  BeforeCatch:        false
+  BeforeElse:         false
+  BeforeLambdaBody:   false
+  BeforeWhile:        false
+  IndentBraces:       false
+  SplitEmptyFunction: false
+  SplitEmptyRecord:   false
+  SplitEmptyNamespace: false
+
+Cpp11BracedListStyle: false      # spaces inside {} like { x, y }
+SpaceBeforeCpp11BracedList: true
+
+# --- "on single line" rules --------------------------------------------------
+AllowShortBlocksOnASingleLine: Always
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: All
+AllowShortLambdasOnASingleLine: All
+AllowShortEnumsOnASingleLine: true
+AllowShortCompoundRequirementOnASingleLine: true
+CompactNamespaces: true
+FixNamespaceComments: false
+
+# --- return type / template breaks ------------------------------------------
+BreakAfterReturnType: Automatic
+BreakTemplateDeclarations: No
+BreakConstructorInitializers: AfterColon
 PackConstructorInitializers: CurrentLine
+RequiresClausePosition: SingleLine
+RequiresExpressionIndentation: OuterScope
+
+# --- pointer/reference alignment --------------------------------------------
 PointerAlignment: Left
 ReferenceAlignment: Left
-ReflowComments: false
-SpaceBeforeCpp11BracedList: true
+QualifierAlignment: Left
+
+# --- spaces ------------------------------------------------------------------
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: Always
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceBeforeCaseColon: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceInEmptyBlock: true
 SpaceInEmptyBraces: Always
-SpaceInEmptyParentheses: false
-SpacesInAngles: false
-SpacesInConditionalStatement: false
+SpacesInAngles: Never
 SpacesInContainerLiterals: false
-SpacesInCStyleCastParentheses: false
-SpacesInParentheses: false
-Standard: Latest
-TabWidth: 4
-...
+SpacesInSquareBrackets: false
+SpacesBeforeTrailingComments: 1
+SpacesInLineCommentPrefix:
+  Minimum: 1
+  Maximum: -1
+BitFieldColonSpacing: After
+SpacesInParens: Never
+SpacesInParensOptions:
+  InCStyleCasts:           false
+  InConditionalStatements: false
+  InEmptyParentheses:      false
+  Other:                   false
+
+# --- alignment ---------------------------------------------------------------
+AlignAfterOpenBracket: Align
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
+AlignConsecutiveAssignments:
+  Enabled: false
+AlignConsecutiveDeclarations:
+  Enabled: false
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+AlignConsecutiveBitFields:
+  Enabled: true
+AlignOperands: Align
+AlignEscapedNewlines: Left
+AlignArrayOfStructures: None
+
+# --- bin packing / wrapping --------------------------------------------------
+BinPackArguments: true
+BinPackParameters: BinPack
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+ExperimentalAutoDetectBinPacking: false
+BreakBeforeBinaryOperators: None
+BreakBeforeConceptDeclarations: Never
+BreakBeforeInlineASMColon: OnlyMultiline
+BreakStringLiterals: true
+PenaltyReturnTypeOnItsOwnLine: 1000
+
+# --- empty lines -------------------------------------------------------------
+MaxEmptyLinesToKeep: 1
+KeepEmptyLines:
+  AtEndOfFile: false
+  AtStartOfBlock: false
+  AtStartOfFile: false
+EmptyLineBeforeAccessModifier: LogicalBlock
+EmptyLineAfterAccessModifier: Never
+InsertNewlineAtEOF: true
+
+# --- includes ----------------------------------------------------------------
+SortIncludes: CaseSensitive
+IncludeBlocks: Preserve
+IncludeCategories:
+  - Regex:    '^<.*'
+    Priority: 1
+  - Regex:    '^".*'
+    Priority: 2
+  - Regex:    '.*'
+    Priority: 3
+IncludeIsMainRegex: '([-_](test|unittest))?$'
+
+# --- misc --------------------------------------------------------------------
+DerivePointerAlignment: false
+SeparateDefinitionBlocks: Leave
+RemoveSemicolon: true
+RemoveBracesLLVM: false
+InsertBraces: true
+SortUsingDeclarations: Lexicographic
+EnumTrailingComma: Remove
+InsertTrailingCommas: None
+
