@@ -14,12 +14,6 @@ message(STATUS "ccache found: ${CCACHE_PROGRAM}")
 set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
 set(CMAKE_C_COMPILER_LAUNCHER   ${CCACHE_PROGRAM})
 
-if (SET_WARNINGS_ENABLED)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error -Wall -Wextra -Wpedantic -Werror")
-endif ()
-
-
-
 # libs
 if (EXISTS ${CMAKE_SOURCE_DIR}/3rdparty/SDL3/CMakeLists.txt)
 	add_subdirectory(3rdparty/SDL3 EXCLUDE_FROM_ALL)
@@ -60,6 +54,10 @@ target_link_libraries(pcg
 )
 
 target_include_directories(pcg PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+if (SET_WARNINGS_ENABLED)
+	target_compile_options(pcg PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif ()
 
 # clang-tidy — resolved after add_executable so it only applies to pcg
 if (SET_CLANG_TIDY)

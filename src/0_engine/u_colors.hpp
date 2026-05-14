@@ -6,6 +6,7 @@
 #include "0_engine/u_types.hpp"
 
 namespace pce::colors {
+// NOLINTBEGIN(*-use-designated-initializers)
 inline SDL_Color LightenColor(const SDL_Color color, const f32 factor) {
     auto lerp = [factor](const u8 channel, const u8 target) -> u8 { return static_cast<u8>(channel + (target - channel) * factor); };
     return SDL_Color { lerp(color.r, 255), lerp(color.g, 255), lerp(color.b, 255), color.a };
@@ -110,4 +111,5 @@ inline SDL_Color AnimateDamp(const f32 t) {
     const u8 blue = static_cast<u8>(base + amp * std::sin(t * 1.1F + 4.0F));
     return SDL_Color { red, green, blue, 255U };
 }
+// NOLINTEND(*-use-designated-initializers)
 }
