@@ -5,6 +5,11 @@
 #include <string>
 #include <ranges>
 #include <array>
+#include <typeinfo>
+#if __has_include(<cxxabi.h>)
+#include <cxxabi.h>
+#include <cstdlib>
+#endif
 #if __has_include(<stacktrace>)
 #include <stacktrace>
 #endif
@@ -14,6 +19,24 @@
 #include "0_engine/u_ecs.hpp"
 
 namespace pce {
+// Demangle a type name. GCC/Clang return the Itanium-mangled form from
+// typeid(T).name() (e.g. "N3pce7TextureE"); MSVC already returns a readable
+// name. This helper produces a readable name on both.
+template <class T> inline const std::string& TypeName() {
+    static const std::string cached = [] {
+        const char* raw = typeid(T).name();
+#if __has_include(<cxxabi.h>)
+        int status = 0;
+        char* demangled = abi::__cxa_demangle(raw, nullptr, nullptr, &status);
+        std::string result = (status == 0 && demangled) ? std::string { demangled } : std::string { raw };
+        std::free(demangled);
+        return result;
+#else
+        return std::string { raw };
+#endif
+    }();
+    return cached;
+}
 #define DISABLE_PREFIX 1 // NOLINT(*-macro-usage)
 #if DISABLE_PREFIX
 constexpr auto LOGGER_PREFIX_NONE = "        | ";
@@ -134,16 +157,16 @@ private:
 };
 
 template <typename T> struct LogLifetime {
-    LogLifetime() { Logger().Created("{}", typeid(T).name()); }
-    LogLifetime(const LogLifetime&) { Logger().Copied("{}", typeid(T).name()); }
-    LogLifetime(LogLifetime&&) noexcept { Logger().Moved("{}", typeid(T).name()); }
-    ~LogLifetime() { Logger().Destroyed("{}", typeid(T).name()); }
+    LogLifetime() { Logger().Created("{}", TypeName<T>()); }
+    LogLifetime(const LogLifetime&) { Logger().Copied("{}", TypeName<T>()); }
+    LogLifetime(LogLifetime&&) noexcept { Logger().Moved("{}", TypeName<T>()); }
+    ~LogLifetime() { Logger().Destroyed("{}", TypeName<T>()); }
 };
 template <typename T> struct LogLifetimeWithCount {
-    LogLifetimeWithCount() { Logger().Created("{} {}", typeid(T).name(), log_id); }
-    LogLifetimeWithCount(const LogLifetimeWithCount&) noexcept { Logger().Copied("{} {}", typeid(T).name(), log_id); }
-    LogLifetimeWithCount(LogLifetimeWithCount&& other) noexcept { Logger().Moved("{} {} -> {}", typeid(T).name(), other.log_id, log_id); }
-    ~LogLifetimeWithCount() { Logger().Destroyed("{} {}", typeid(T).name(), log_id); }
+    LogLifetimeWithCount() { Logger().Created("{} {}", TypeName<T>(), log_id); }
+    LogLifetimeWithCount(const LogLifetimeWithCount&) noexcept { Logger().Copied("{} {}", TypeName<T>(), log_id); }
+    LogLifetimeWithCount(LogLifetimeWithCount&& other) noexcept { Logger().Moved("{} {} -> {}", TypeName<T>(), other.log_id, log_id); }
+    ~LogLifetimeWithCount() { Logger().Destroyed("{} {}", TypeName<T>(), log_id); }
     LogLifetimeWithCount& operator=(const LogLifetimeWithCount& other) {
         if (this == &other) { return *this; }
         log_id = other.log_id;
@@ -161,14 +184,14 @@ template <typename T> u32 LogLifetimeWithCount<T>::log_counter = 0U;
 
 #if defined(__cpp_lib_stacktrace)
 template <typename T> struct LogLifetimeWithStack {
-    LogLifetimeWithStack() { Logger().Created("{} {}\n", typeid(T).name(), std::stacktrace::current()); }
-    LogLifetimeWithStack(const LogLifetimeWithStack&) { Logger().Copied("{} {}\n", typeid(T).name(), std::stacktrace::current()); }
-    LogLifetimeWithStack(LogLifetimeWithStack&&) noexcept { Logger().Moved("{} {}\n", typeid(T).name(), std::stacktrace::current()); }
-    ~LogLifetimeWithStack() { Logger().Destroyed("{} {}\n", typeid(T).name(), std::stacktrace::current()); }
+    LogLifetimeWithStack() { Logger().Created("{} {}\n", TypeName<T>(), std::stacktrace::current()); }
+    LogLifetimeWithStack(const LogLifetimeWithStack&) { Logger().Copied("{} {}\n", TypeName<T>(), std::stacktrace::current()); }
+    LogLifetimeWithStack(LogLifetimeWithStack&&) noexcept { Logger().Moved("{} {}\n", TypeName<T>(), std::stacktrace::current()); }
+    ~LogLifetimeWithStack() { Logger().Destroyed("{} {}\n", TypeName<T>(), std::stacktrace::current()); }
 };
 #endif
 template <typename T> struct LogDestroy {
-    ~LogDestroy() { Logger().Destroyed("{}", typeid(T).name()); }
+    ~LogDestroy() { Logger().Destroyed("{}", TypeName<T>()); }
 };
 #if defined(__cpp_lib_stacktrace)
 template <typename T> struct LogDestroyWithStack {
@@ -176,14 +199,14 @@ template <typename T> struct LogDestroyWithStack {
         auto filtered_frames = std::stacktrace::current() | std::views::filter([] (const std::stacktrace_entry& frame) -> bool { return frame.description().contains("pcg") || frame.description().contains("pce"); });
         String result;
         for (const std::stacktrace_entry& frame : filtered_frames) { result += frame.description() + "\n"; }
-        Logger().Destroyed("{} {}\n", typeid(T).name(), result);
+        Logger().Destroyed("{} {}\n", TypeName<T>(), result);
     }
 };
 #endif
 template <typename T> struct LogDestroyWithCount {
     ~LogDestroyWithCount() {
         static u32 count;
-        Logger().Destroyed("{} {}", typeid(T).name(), ++count);
+        Logger().Destroyed("{} {}", TypeName<T>(), ++count);
     }
 };
 

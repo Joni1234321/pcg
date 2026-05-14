@@ -7,6 +7,7 @@
 #include "0_engine/g_globals.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_ecs.hpp"
+#include "0_engine/u_logger.hpp"
 
 namespace pce {
 struct OrchestraState {
@@ -21,7 +22,7 @@ struct Orchestra {
         OrchestraState& orchestra_state = singleton.Get<OrchestraState>();
         orchestra_state.system_storage.EmplaceBack(ptr, [] (void* p) { delete static_cast<T*>(p); }); // Ensure destruction
         orchestra_state.systems.EmplaceBack([ptr] ()-> void { (*static_cast<T*>(ptr))(); });                     // Store callable functor
-        orchestra_state.names.EmplaceBack(typeid(T).name());
+        orchestra_state.names.EmplaceBack(TypeName<T>().c_str());
         orchestra_state.ns.EmplaceBack(1U);
     }
     void RunSystems() {

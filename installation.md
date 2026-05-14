@@ -1,11 +1,7 @@
 
-# Installing vcpkg 
-https://learn.microsoft.com/en-us/vcpkg/get_started/get-started?pivots=shell-powershell
-```bash
-git clone https://github.com/microsoft/vcpkg.git
-cd vcpkg; .\bootstrap-vcpkg.bat
-$env:VCPKG_ROOT = "D:\tools\vcpkg"
-$env:PATH = "$env:VCPKG_ROOT;$env:PATH"
+# Download sdl3 
+```shell
+./setup.sh
 ```
 
 
