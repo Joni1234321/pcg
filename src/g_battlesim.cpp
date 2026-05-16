@@ -130,10 +130,6 @@ void SimulateBattle() {
         squads_suppressed += hit * 3;
     }
 
-    // this is max range
-    // they reload and fire every hour
-
-
     u8 squads_operating_defender = defender.Squads() - squads_suppressed;
     // then for range 1K. long range fights open
     for (u8 i = 0; i < squads_operating_defender; i++) {

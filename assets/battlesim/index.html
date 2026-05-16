@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Battle Simulator</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  #details.open { display: flex !important; }
+  #popup-overlay.open { display: flex !important; }
+  td.num { font-variant-numeric: tabular-nums; }
+  #atk-units tr:nth-child(odd), #def-units tr:nth-child(odd) { background: #eaeade; }
+  #atk-units tr:nth-child(even), #def-units tr:nth-child(even) { background: #f5f5ee; }
+  #rounds tr:nth-child(odd) { background: #f8f8f0; }
+  #rounds tr:nth-child(even) { background: #fffff0; }
+  #rounds tr:hover { background: #e8e0c8; }
+  @media (max-width: 860px) { .flex { flex-wrap: wrap; } }
+</style>
+</head>
+<body class="bg-neutral-900 text-neutral-300 min-h-screen flex flex-col items-center p-6">
+
+<div id="card" class="w-full max-w-5xl flex flex-col">
+
+  <!-- Header -->
+  <div class="bg-red-900 flex items-center px-5 py-2.5 gap-3 border-b-4 border-red-950 tracking-widest">
+    <h1 class="flex-1 text-lg font-bold text-white uppercase text-center">Combat Report</h1>
+  </div>
+
+  <!-- Banner -->
+  <div class="flex border-2 border-t-0 border-neutral-700 bg-neutral-700 gap-0.5">
+    <!-- Attacker -->
+    <div class="flex-1 flex flex-col">
+      <div class="p-2 bg-neutral-800 border-l-[3px] border-neutral-500">
+        <div class="text-[0.65rem] text-neutral-500 uppercase">Combat Value</div>
+        <div class="text-2xl font-bold text-red-400" id="atk-cv"></div>
+      </div>
+      <div class="px-3 py-2 bg-neutral-500 text-white">
+        <h3 class="font-bold" id="atk-name"></h3>
+        <div class="text-[0.65rem] uppercase tracking-wider text-neutral-200">Attacker</div>
+      </div>
+    </div>
+    <!-- Outcome -->
+    <div class="w-64 min-w-[200px] bg-neutral-900 flex flex-col items-center justify-center gap-1 p-3">
+      <div class="text-[0.65rem] text-neutral-500 uppercase" id="verdict"></div>
+      <div class="text-sm font-bold text-amber-400 text-center" id="winner"></div>
+      <hr class="w-3/5 border-neutral-700">
+      <div class="text-3xl font-bold text-white" id="score"></div>
+    </div>
+    <!-- Defender -->
+    <div class="flex-1 flex flex-col">
+      <div class="p-2 bg-neutral-800 border-l-[3px] border-red-900">
+        <div class="text-[0.65rem] text-neutral-500 uppercase">Combat Value</div>
+        <div class="text-2xl font-bold text-red-400" id="def-cv"></div>
+      </div>
+      <div class="px-3 py-2 bg-red-900 text-white">
+        <h3 class="font-bold" id="def-name"></h3>
+        <div class="text-[0.65rem] uppercase tracking-wider text-neutral-200">Defender</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toggle -->
+  <div id="toggle-bar" class="bg-neutral-950 px-4 py-1.5 cursor-pointer select-none border-2 border-t-0 border-neutral-700 text-sm text-neutral-500 hover:bg-neutral-800 transition-colors font-mono">[+] Details</div>
+
+  <!-- Details -->
+  <div id="details" class="hidden border-2 border-t-0 border-neutral-700 bg-neutral-700 gap-0.5">
+    <!-- Attacker units -->
+    <div class="flex-1 flex flex-col">
+      <div class="text-[0.65rem] text-white px-2 py-1 uppercase tracking-wider bg-neutral-500">Unit Strengths</div>
+      <table class="w-full text-sm border-collapse"><thead><tr class="bg-neutral-800 text-[0.65rem] text-neutral-500 uppercase">
+        <th class="text-left px-2 py-1 font-semibold">Type</th>
+        <th class="text-right px-2 py-1 font-semibold">Before</th>
+        <th class="text-right px-2 py-1 font-semibold">After</th>
+        <th class="text-right px-2 py-1 font-semibold">Lost</th>
+      </tr></thead><tbody id="atk-units"></tbody></table>
+    </div>
+    <!-- Rounds -->
+    <div class="w-[420px] min-w-[320px] flex flex-col">
+      <div class="text-[0.65rem] text-neutral-500 px-2 py-1 uppercase bg-neutral-800">Combat Rounds</div>
+      <table class="w-full text-xs border-collapse"><thead><tr class="bg-neutral-800 text-[0.65rem] text-neutral-500 uppercase">
+        <th class="text-left px-2 py-1 font-semibold">Phase</th>
+        <th class="text-left px-2 py-1 font-semibold">Attacker</th>
+        <th class="text-left px-2 py-1 font-semibold">Defender</th>
+        <th class="text-right px-2 py-1 font-semibold">Atk−</th>
+        <th class="text-right px-2 py-1 font-semibold">Def−</th>
+      </tr></thead><tbody id="rounds"></tbody></table>
+    </div>
+    <!-- Defender units -->
+    <div class="flex-1 flex flex-col">
+      <div class="text-[0.65rem] text-white px-2 py-1 uppercase tracking-wider bg-red-900">Unit Strengths</div>
+      <table class="w-full text-sm border-collapse"><thead><tr class="bg-neutral-800 text-[0.65rem] text-neutral-500 uppercase">
+        <th class="text-left px-2 py-1 font-semibold">Type</th>
+        <th class="text-right px-2 py-1 font-semibold">Before</th>
+        <th class="text-right px-2 py-1 font-semibold">After</th>
+        <th class="text-right px-2 py-1 font-semibold">Lost</th>
+      </tr></thead><tbody id="def-units"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- Popup -->
+<div id="popup-overlay" class="hidden fixed inset-0 bg-black/60 z-50 items-center justify-center">
+  <div class="bg-neutral-800 border-2 border-neutral-700 w-[520px] max-w-[95vw]">
+    <div class="px-4 py-3 text-lg font-bold text-neutral-500 border-b border-neutral-700" id="popup-title"></div>
+    <div class="p-4 flex flex-col gap-2.5">
+      <div class="text-[0.65rem] text-neutral-500 uppercase">Attacker Action</div>
+      <div class="text-sm text-neutral-200 pb-2" id="popup-atk-action"></div>
+      <div class="text-[0.65rem] text-neutral-500 uppercase">Defender Action</div>
+      <div class="text-sm text-neutral-200 pb-2" id="popup-def-action"></div>
+      <div class="flex gap-3 pt-2 border-t border-neutral-700">
+        <span class="text-xl font-bold flex-1 text-neutral-400" id="popup-atk-loss"></span>
+        <span class="text-xl font-bold flex-1 text-right text-red-700" id="popup-def-loss"></span>
+      </div>
+    </div>
+    <div class="bg-neutral-900 px-3 py-1.5 text-xs text-neutral-500 text-center">click anywhere to dismiss</div>
+  </div>
+</div>
+
+<script src="battle.js"></script>
+</body>
+</html>

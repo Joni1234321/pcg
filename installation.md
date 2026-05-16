@@ -14,7 +14,36 @@ sudo apt-get install -y clang-format-22
 sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-22 100
 
 clang-format --version
+```
 
+## Donwload laptop something about keys
+```bash
+# 1. Clean up duplicate LLVM repo files
+sudo rm -f /etc/apt/sources.list.d/archive_uri-http_apt_llvm_org_noble_-noble.list \
+           /etc/apt/sources.list.d/archive_uri-https_apt_llvm_org_noble_-noble.list \
+           /etc/apt/sources.list.d/llvm-22.list
+
+# 2. Import the GPG key (--no-check-certificate is acceptable here since we're just fetching a public key)
+wget --no-check-certificate -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/llvm.gpg
+
+# 3. Add the repo (using http to avoid TLS issue)
+echo "deb [arch=amd64] http://apt.llvm.org/noble/ llvm-toolchain-noble-22 main" | sudo tee /etc/apt/sources.list.d/llvm-22.list
+
+# 4. Install
+sudo apt-get update && sudo apt-get install clang-22
+
+# Move 
+sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-22 100
+sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-22 100
+```
+
+## Ubuntu
+```bash
+sudo apt-get install libasound2-dev libpulse-dev libx11-dev libxext-dev \
+  libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
+  libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
+  libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev \
+  libpipewire-0.3-dev libwayland-dev libdecor-0-dev
 ```
 
 # Installing msys2
