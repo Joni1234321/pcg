@@ -12,11 +12,11 @@ h1 span{color:#666;font-size:10px;margin-left:14px;letter-spacing:.06em}
 
 /* -- layout -- */
 .body{display:flex;gap:12px;padding:10px 12px}
-.col-map{flex:0 0 560px;position:relative}
+.col-map{flex:0 0 460px;position:relative}
 .col-side{flex:1;min-width:300px;max-width:420px;display:flex;flex-direction:column;gap:6px}
 
 /* -- hex grid -- */
-#hex-grid{position:relative;width:540px;height:940px;margin:0 auto}
+#hex-grid{position:relative;width:440px;height:800px;margin:0 auto}
 
 /* zone labels */
 .zone{position:absolute;left:-6px;font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:#999;
@@ -51,6 +51,8 @@ h1 span{color:#666;font-size:10px;margin-left:14px;letter-spacing:.06em}
 .hex-info{position:absolute;inset:3px;display:flex;flex-direction:column;align-items:center;padding-top:6px}
 .hex-id{font-size:11px;font-weight:700;color:#333;text-shadow:0 0 3px rgba(255,255,255,.8)}
 .hex-ter{font-size:8px;color:#555;margin-top:1px}
+
+.hex-edge{opacity:.4;pointer-events:none}
 
 /* -- units in hex -- */
 .hex-units{position:absolute;bottom:6px;left:0;right:0;
@@ -164,14 +166,14 @@ h1 span{color:#666;font-size:10px;margin-left:14px;letter-spacing:.06em}
     <!-- OOB: Attacker -->
     <div class="oob-hdr atk">394th Infantry Rgt (Attacker)</div>
     <table class="oob-tbl">
-      <thead><tr><th>Unit</th><th>Type</th><th>Men</th><th>MG</th><th>Mor</th><th>CV</th><th>M</th><th>Status</th><th>Ent</th><th>Hex</th></tr></thead>
+      <thead><tr><th>Unit</th><th>Type</th><th>Men</th><th>MG</th><th>Mor</th><th>AT</th><th>CV</th><th>M</th><th>Status</th><th>Ent</th><th>Hex</th></tr></thead>
       <tbody id="oob-a"></tbody>
     </table>
 
     <!-- OOB: Defender -->
     <div class="oob-hdr def">1028th Rifle Rgt (Defender)</div>
     <table class="oob-tbl">
-      <thead><tr><th>Unit</th><th>Type</th><th>Men</th><th>MG</th><th>Mor</th><th>CV</th><th>M</th><th>Status</th><th>Ent</th><th>Hex</th></tr></thead>
+      <thead><tr><th>Unit</th><th>Type</th><th>Men</th><th>MG</th><th>Mor</th><th>AT</th><th>CV</th><th>M</th><th>Status</th><th>Ent</th><th>Hex</th></tr></thead>
       <tbody id="oob-d"></tbody>
     </table>
 
