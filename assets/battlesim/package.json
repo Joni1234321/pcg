@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "milsymbol": "^3.0.4",
     "typescript": "^6.0.3"
   }
 }

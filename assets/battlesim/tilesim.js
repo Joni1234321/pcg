@@ -45,14 +45,14 @@ const TERRAIN_DATA = [
 const SUPP = ["READY", "DISRUPTED", "SUPPRESSED", "PINNED"];
 const PH = ["DEPLOY", "RECON", "ARTILLERY", "ASSAULT", "MOVEMENT"];
 // SIDC codes (15-char, MIL-STD-2525C)
-const SIDC_ATK_INF = "SFGPUCI---F---"; // friendly infantry bn
-const SIDC_DEF_INF = "SHGPUCI---F---"; // hostile infantry bn
-const SIDC_ATK_RCN = "SFGPUCR---D---"; // friendly recon plt
-const SIDC_ATK_ART = "SFGPUCF---F---"; // friendly art bn
-const SIDC_DEF_ART = "SHGPUCF---E---"; // hostile art btry
-const SIDC_UNK = "SHGPUCI---F---"; // unknown hostile (shown foggy)
+const SIDC_ATK_INF = "SFGPUCI----F---"; // friendly infantry bn
+const SIDC_DEF_INF = "SHGPUCI----F---"; // hostile infantry bn
+const SIDC_ATK_RCN = "SFGPUCR----D---"; // friendly recon plt
+const SIDC_ATK_ART = "SFGPUCF----F---"; // friendly art bn
+const SIDC_DEF_ART = "SHGPUCF----E---"; // hostile art btry
+const SIDC_UNK = "SHGPUCI----F---"; // unknown hostile (shown foggy)
 // hex layout
-const HW = 110, HH = 127;
+const HW = 124, HH = 143;
 const CS = HW + 4, RS = Math.floor(HH * .75) + 4, HO = Math.floor(CS / 2);
 const CLIP = "polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)";
 const MAP_PAD_TOP = 40;
@@ -107,7 +107,7 @@ function symSvg(sidc, size) {
     let s = _svgCache.get(key);
     if (!s) {
         if (typeof ms !== "undefined") {
-            s = new ms.Symbol(sidc, { size }).asSVG();
+            s = new ms.Symbol(sidc, { size, frame: true, fill: true, strokeWidth: 3 }).asSVG();
         }
         else {
             s = `<span style="font-size:${size}px;color:#888">[${sidc.substring(4, 7)}]</span>`;
@@ -123,8 +123,8 @@ function detachRecon(parent) {
     parent.rifles -= rif;
     parent.mg = Math.max(0, parent.mg - 1);
     return {
-        id: parent.id + "/R",
-        name: parent.name + "/R",
+        id: parent.id + " R",
+        name: parent.name + " R",
         rgt: parent.rgt,
         side: parent.side,
         type: "recon",
@@ -185,7 +185,7 @@ function initBattle() {
 }
 function mkBn(name, rgt, side, men, rifles, mg, mortar, morale, tile) {
     return {
-        id: name + "/" + rgt.replace("th", ""),
+        id: name + " / " + rgt.replace("th", ""),
         name, rgt, side, type: "inf", size: "bn",
         men, rifles, mg, mortar, morale,
         suppression: 0, tile, revealed: side === "atk",
@@ -310,6 +310,15 @@ function doRecon() {
             }
         }
     }
+    // Recon returns to parent after scouting
+    for (const r of units.filter(u => u.type === "recon" && u.side === "atk" && !u.routed)) {
+        const par = units.find(u => u.id === r.parent);
+        if (par && !par.routed && r.tile !== par.tile) {
+            const from = r.tile;
+            r.tile = par.tile;
+            addLog(`${r.id} returns to ${par.id} at ${LABELS[r.tile]}`, "recon");
+        }
+    }
 }
 // -- 2. ARTILLERY (off-map) ---------------------------------------
 function doArtillery() {
@@ -385,11 +394,20 @@ function doAssault() {
     }
     const plan = new Map();
     for (const a of units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed)) {
-        const targets = ADJ[a.tile]
+        // Forward targets first, then lateral flanking after breakthrough
+        let targets = ADJ[a.tile]
             .filter(t => ROW[t] < ROW[a.tile])
             .filter(t => units.some(u => u.side === "def" && u.tile === t && !u.routed && u.revealed));
         if (units.some(u => u.side === "def" && u.tile === a.tile && !u.routed))
             targets.push(a.tile);
+        // Flank: if no forward targets, attack lateral defenders
+        if (targets.length === 0) {
+            targets = ADJ[a.tile]
+                .filter(t => ROW[t] === ROW[a.tile])
+                .filter(t => units.some(u => u.side === "def" && u.tile === t && !u.routed && u.revealed));
+            if (targets.length > 0)
+                addLog(`${a.id} flanks from ${LABELS[a.tile]}`, "combat");
+        }
         if (!targets.length)
             continue;
         const best = targets.reduce((a2, b2) => {
@@ -417,6 +435,11 @@ function resolveCombat(atks, defs, ti, attackedTiles) {
     const defCV = defs.reduce((s, d) => s + cv(d), 0);
     if (atkCV <= 0 || defCV <= 0)
         return;
+    // flanking assault bonus: attackers on same row as target
+    const isFlankAssault = atks.some(a => ROW[a.tile] === ROW[ti] && a.tile !== ti);
+    const flankMul = isFlankAssault ? 1.2 : 1.0;
+    if (isFlankAssault)
+        addLog(`  flanking assault: x1.2 attacker CV`, "combat");
     // flanking fire from adjacent un-attacked defenders
     let flankCV = 0;
     const flankFrom = [];
@@ -439,7 +462,7 @@ function resolveCombat(atks, defs, ti, attackedTiles) {
     if (entMul > 1)
         addLog(`  defenders entrenched: x${entMul} bonus`, "combat");
     const tAmen = atks.reduce((s, a) => s + a.men, 0);
-    const rawRatio = atkCV / totalDefCV;
+    const rawRatio = (atkCV * flankMul) / totalDefCV;
     const avgS = defs.reduce((s, d) => s + d.suppression, 0) / defs.length;
     const eff = rawRatio / (tile.mul * entMul) + avgS * 0.15;
     let ar, dr;
@@ -479,9 +502,19 @@ function resolveCombat(atks, defs, ti, attackedTiles) {
         applyCas(d, l);
         d.morale = clamp(d.morale - Math.ceil(l / 8), 0, 100);
         dLoss += l;
-        if (d.morale <= 20 || d.men < 100) {
-            d.routed = true;
-            addLog(`  X ${d.id} ROUTS (${d.men} flee)`, "result");
+        if (d.morale <= 25 || d.men < 100) {
+            const rear = ADJ[d.tile].filter(t => ROW[t] < ROW[d.tile] &&
+                !units.some(u2 => u2.side === "atk" && u2.tile === t && !u2.routed));
+            if (rear.length && d.morale > 10 && d.men >= 40) {
+                const from = d.tile;
+                d.tile = rear[rand(rear.length)];
+                d.entrenched = false;
+                addLog(`  ${d.id} RETREATS ${LABELS[from]} -> ${LABELS[d.tile]} (M:${d.morale})`, "move");
+            }
+            else {
+                d.routed = true;
+                addLog(`  X ${d.id} ROUTS (${d.men} flee)`, "result");
+            }
         }
     }
     const alive = atks.filter(a => !a.routed);
@@ -529,10 +562,19 @@ function doMovement() {
             moved = true;
         }
     }
-    // Infantry battalions advance
+    // Infantry battalions advance or hold to flank
     for (const a of units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed)) {
         if (units.some(u => u.side === "def" && u.tile === a.tile && !u.routed))
             continue;
+        // Hold to flank if defenders on adjacent lateral tiles
+        const latEnemy = ADJ[a.tile]
+            .filter(t => ROW[t] === ROW[a.tile])
+            .some(t => units.some(u => u.side === "def" && u.tile === t && !u.routed));
+        if (latEnemy) {
+            addLog(`${a.id} holds ${LABELS[a.tile]} -- flanking adjacent defenders`, "move");
+            moved = true;
+            continue;
+        }
         const fw = ADJ[a.tile].filter(t => ROW[t] < ROW[a.tile]);
         if (!fw.length)
             continue;
@@ -610,7 +652,7 @@ function renderGrid(f) {
     let html = "";
     // off-map defender art (top)
     html += `<div class="offmap offmap-def">`
-        + `<div class="offmap-sym">${symSvg(SIDC_DEF_ART, 28)}</div>`
+        + `<div class="offmap-sym">${symSvg(SIDC_DEF_ART, 24)}</div>`
         + `<div class="offmap-info"><div class="offmap-nm">1028th Art Btry</div>`
         + `<div class="offmap-det">${f.defGuns}x 76mm | ${f.defGuns > 0 ? "READY" : "DESTROYED"}</div></div></div>`;
     // zone labels
@@ -639,9 +681,12 @@ function renderGrid(f) {
     // off-map attacker art (bottom)
     const botY = MAP_PAD_TOP + 4 * RS + HH + 8;
     html += `<div class="offmap offmap-atk" style="top:${botY}px">`
-        + `<div class="offmap-sym">${symSvg(SIDC_ATK_ART, 28)}</div>`
+        + `<div class="offmap-sym">${symSvg(SIDC_ATK_ART, 24)}</div>`
         + `<div class="offmap-info"><div class="offmap-nm">394th Art Bn</div>`
         + `<div class="offmap-det">${f.atkGuns}x 105mm | ${f.atkGuns > 0 ? "READY" : "DESTROYED"}</div></div></div>`;
+    // scale indicator
+    const scaleY = MAP_PAD_TOP + 4 * RS + HH + 46;
+    html += `<div class="map-scale" style="top:${scaleY}px">1 hex ~ 500m across</div>`;
     g.innerHTML = html;
 }
 function mkUnits(on) {
@@ -659,20 +704,19 @@ function mkUnit(u, z) {
     const fog = !u.revealed && u.side === "def";
     const sup = u.suppression > 0 ? ` u-s${u.suppression}` : "";
     const cls = u.side === "atk" ? "u-atk" : "u-def";
-    const szPx = u.size === "plt" ? 22 : 30;
+    const szPx = u.size === "plt" ? 18 : 24;
     if (fog) {
         return `<div class="unit ${cls} u-fog" style="z-index:${z}" title="Unidentified enemy unit">`
-            + `<div class="u-sym">${symSvg(SIDC_UNK, 24)}</div>`
+            + `<div class="u-sym">${symSvg(SIDC_UNK, 20)}</div>`
             + `<div class="u-label">???</div></div>`;
     }
     const ent = u.entrenched ? " ENT" : "";
     const st = u.suppression > 0 ? " " + SUPP[u.suppression].substring(0, 4) : "";
     const tip = `${u.id}  ${u.men} men  CV:${cv(u)}  ${u.mg}MG ${u.mortar}Mor  M:${u.morale}  ${SUPP[u.suppression]}${u.entrenched ? "  ENTRENCHED" : ""}`;
-    const typeLabel = u.type === "recon" ? "RCN" : "";
-    return `<div class="unit ${cls}${sup}" style="z-index:${z}" title="${esc(tip)}">`
+    const rcn = u.type === "recon";
+    return `<div class="unit ${cls}${sup}${rcn ? " u-rcn" : ""}" style="z-index:${z}" title="${esc(tip)}">`
         + `<div class="u-sym">${symSvg(u.sidc, szPx)}</div>`
-        + `<div class="u-label">${u.men} CV:${cv(u)}${ent}${st}</div>`
-        + (typeLabel ? `<div class="u-type">${typeLabel}</div>` : "")
+        + `<div class="u-label">${u.name} ${u.men} CV:${cv(u)}${ent}${st}</div>`
         + `</div>`;
 }
 // -- OOB tables ---------------------------------------------------
@@ -692,12 +736,12 @@ function renderOOB(fu) {
 function oobRow(u, known) {
     const indent = u.parent ? "oob-sub" : "";
     if (!known)
-        return `<tr class="oob-tr fog"><td class="oob-bn ${indent}">${esc(u.name)}</td><td colspan="9" class="oob-unk">???</td></tr>`;
+        return `<tr class="oob-tr fog"><td class="oob-bn ${indent}">${esc(u.id)}</td><td colspan="9" class="oob-unk">???</td></tr>`;
     const cls = u.routed ? "oob-tr rt" : "oob-tr";
     const sup = u.suppression > 0 && !u.routed ? ` s${u.suppression}` : "";
     const typeStr = u.type === "recon" ? "RCN" : "INF";
     return `<tr class="${cls}${sup}">`
-        + `<td class="oob-bn ${indent}">${esc(u.name)}</td>`
+        + `<td class="oob-bn ${indent}">${esc(u.id)}</td>`
         + `<td class="oob-ty">${typeStr}</td>`
         + `<td class="oob-n">${u.routed ? "--" : u.men}</td>`
         + `<td class="oob-n">${u.mg}</td>`
@@ -758,7 +802,7 @@ function renderResults() {
             const lost = iu.men - Math.max(0, fu.men);
             const r = fu.routed ? ' class="rt"' : '';
             const typeStr = iu.type === "recon" ? "RCN" : "INF";
-            h += `<tr${r}><td>${esc(iu.name)}</td><td>${typeStr}</td><td>${iu.men}</td><td>-></td>`
+            h += `<tr${r}><td>${esc(iu.id)}</td><td>${typeStr}</td><td>${iu.men}</td><td>-></td>`
                 + `<td>${fu.routed ? "0" : Math.max(0, fu.men)}</td>`
                 + `<td class="res-lost">-${lost}</td>`
                 + `<td>${iu.mg}->${fu.mg}</td><td>${iu.mortar}->${fu.mortar}</td>`
