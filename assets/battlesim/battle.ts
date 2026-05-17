@@ -240,6 +240,99 @@ function simulate(attacker: Division, defender: Division): { attacker: Division;
   // so this is the factor of triangle. 
   // Companies Front. 1 comp. 2 bat. 4 reg. 8 div. 16 corps. 
   // Companies Equipment. 1 comp. 3 bat. 9 reg. 27 div. 81 corops.
+
+  // so for a tradeoff. smaller tiles are like more micromanagement for a real scale war.
+  // but less for a bigger war. On the other hand you are expeceted that your battles will be automated by the ai with CV only.
+
+  // i would like a duel setup. that uses companies as the main level of units. instead of batt like hoi4
+  // the wite 2 setup is a bit wierd. i like the range ammo abstraction
+  // so i would like to try and expand on that with more ideas. with direct dice rolls for each company * strength
+
+  // the further down i go in abstraction the more odds are easier to manage. And requires better AI i guess. 
+  // So a squad fightning another squad can more become  1:1 victory.
+  // but div would have to be 2:1
+
+
+  // Battalion semi sufficient.
+  // Regiment smallest self sufficinet. unit. it has arty, rifle, and anti tank.
+  // so each company attacks...
+
+  // so do i have an idea??? maybe. 
+  // the attacker tries to attack with each company. the defender rolls a dice to see if they defend
+  // the attackere wins often if they are 2:1 
+  
+  // so the idea is that the game stores each company as state.
+  // adn then they get reinforceed. but maybe i should go more abstract like other war games. 
+  // that means div level of complexity?
+
+  // so instead of doing dice roll for each attack on  atrench. to be a simple dice roll for each regiment instead
+  
+
+  // suppression logic. 1 105 battery. disrupted. 2 batteries suppressed. 4 batteries pinned. 8 batteries stunned.
+  // ok. you have a regiment attacking another regiment. 3 battalions. So 3 unique targets.
+  // ai generated scenario
+  // I/II/III 394th vs I/II/III 1028th
+  // 394th has art bat. with 3 batteries of 12 med guns + 12 heavy guns. 1028th has 8 guns left.
+  // I/1028 - defending village. II/1028 - defending hilltop east. III/1028 - defending woods south 
+
+
+  // RECON: 0500 0700
+  // I/394 recons village (recon platoon). draws MG fire. Finds 2 strongpoints. loses 8 
+  // II/394 spots trench. finds gap. lose 3 men
+  // III/394 moves through woods. Ambushed lose 23. attacks 6 
+  // 394 found I/1028 II/1028. 1 gap. 1 strongpoint
+
+  // 0700 0800 ARTILLERY
+  // Planning. Strong point. 4 Batteries. Trenches 2 Batteries. Woods 2 Batteries
+  // I/1028th lose 40 rifle. 1mg permanent. suppressed. Half effective. 1hr 
+  // II/1028th lose 25 rifle. half suppress (trench). 25% effecctive.
+  // III/1028th lose 10. Random fire. No suppression (hidden). 
+  
+  // 0800 1100 ASSAULT
+  // Planning. Main force attacks gap. 
+  // II/394 attacks hill gap with support
+  // III/394 suppresses village
+  // I/394 also attacks gap north??? how does this make sense?
+
+
+  // MAIN ATTACK 
+  // II/1028 (675 vs 1650) 2.4 : 1. 
+
+  // lets assume a hex has 12 features. villages/forrests/fields/hills.
+  // flatland: 4 villages 4 fields 2 hills 2 forrests.
+  // city: 8 villages 1 hill 2 forrests 1 field
+  // hill: 2 villages 2 fields 6 hills 2 forrest
+  // light woods: 4 villages 4 forrests 2 fields 2 hills
+  // heavy woods: 2 villages 8 forrests 2 hills
+
+  // ok for this regiment battle we assume its a 1v1 on a 2|3|2 hex grid.
+  // ai automatically handles the hex positioning. 
+  // 50/50 either front or middle row. scouts has to detect where the enemy is.  
+  // then artillery suppresses each tile. 
+
+
+  // 0500 scout round. find positions and determine attacks
+  //   I/394 recon tile 01
+  //  II/394 recon tile 02
+  // III/394 recon tile 03
+  // outcomes. ambush. attacked. scouted. weakpoints. strongpoints
+
+  // 0700 artillery round.  suppression
+  // outcomes. suppressed. pinned. stunned. no effect. destroyed
+  
+  // 0900 assault round. take ground.
+  //   I/394 attacks tile 11.
+  //  II/394 attacks tile 12
+  // III/394 supports tile 11.
+  // outcomes. defenders held. defenders retreat. defenders rout. defenders counterattack. 
+  // modifiers. flanks. ambushed.
+
+  // battalion commander moves 
+  // does that make sense? 
+  // 
+  
+  
+
   return { attacker, defender, rounds };
 }
 
