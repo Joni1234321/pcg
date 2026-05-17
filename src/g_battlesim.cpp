@@ -137,7 +137,7 @@ void SimulateBattle() {
         u8 hit = Rand(6U);
         attacker.rifles -= hit;
     }
-
+    
 }
 
 // struct MilUnit {
