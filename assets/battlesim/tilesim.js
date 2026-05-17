@@ -57,6 +57,7 @@ const SUPP = ["READY", "DISRUPTED", "SUPPRESSED", "PINNED"];
 const SIDC_ATK_INF = "SFGPUCI----F---"; // friendly infantry bn
 const SIDC_DEF_INF = "SHGPUCI----F---"; // hostile infantry bn
 const SIDC_ATK_RCN = "SFGPUCR----D---"; // friendly recon plt
+const SIDC_ATK_SPT = "SFGPUCI----D---"; // friendly support co
 const SIDC_ATK_ART = "SFGPUCF----F---"; // friendly art bn
 const SIDC_DEF_ART = "SHGPUCF----E---"; // hostile art btry
 const SIDC_UNK = "SHGPUCI----F---"; // unknown hostile (shown foggy)
@@ -85,8 +86,7 @@ let steps = [];
 let stepIdx = 0;
 let scoutingBns = new Set(); // bn IDs doing recon this turn
 let scoutCount = new Map(); // consecutive recon turns per bn
-let atkSupport = { hmg: 8, hmortar: 4, at: 4 };
-let supportTarget = ""; // bn ID receiving support this hour
+let reserveCommitted = false;
 // -- Helpers ------------------------------------------------------
 function rand(a, b) {
     if (b === undefined)
@@ -114,7 +114,7 @@ function applyCas(u, n) {
         u.at--;
 }
 function snap(reconOut = false) {
-    return { turn, reconOut, units: units.map(u => ({ ...u })), atkGuns, defGuns, atkSupport: { ...atkSupport }, logEnd: fullLog.length, over };
+    return { turn, reconOut, units: units.map(u => ({ ...u })), atkGuns, defGuns, logEnd: fullLog.length, over };
 }
 // milsymbol SVG cache
 const _svgCache = new Map();
@@ -203,18 +203,25 @@ function initBattle() {
             defTiles.push(t);
     }
     units = [
+        // 2 maneuver bns on flanks
         mkBn("I", "394th", "atk", 820, 700, 12, 6, 85, 21),
-        mkBn("II", "394th", "atk", 790, 670, 12, 6, 80, 22),
-        mkBn("III", "394th", "atk", 850, 740, 14, 8, 90, 23),
+        mkBn("II", "394th", "atk", 790, 670, 12, 6, 80, 24),
+        // reserve bn (center, held back)
+        mkBn("III", "394th", "atk", 850, 740, 14, 8, 90, 22),
+        // support company (follows main effort)
+        mkSpt("Spt", "394th", 22),
+        // defenders
         mkBn("I", "1028th", "def", 680, 580, 8, 4, 70, defTiles[0]),
         mkBn("II", "1028th", "def", 720, 620, 10, 6, 75, defTiles[1]),
         mkBn("III", "1028th", "def", 650, 560, 8, 4, 65, defTiles[2]),
     ];
+    // mark reserve
+    units[2].entrenched = false;
+    reserveCommitted = false;
     // one defender forward as outpost
     const defIdx = rand(3);
-    units[3 + defIdx].tile = [11, 12, 13][rand(3)];
-    units[3 + defIdx].entrenched = false;
-    atkSupport = { hmg: 8, hmortar: 4, at: 4 };
+    units[4 + defIdx].tile = [11, 12, 13][rand(3)];
+    units[4 + defIdx].entrenched = false;
     atkGuns = 12;
     defGuns = 8;
     turn = 1;
@@ -235,13 +242,25 @@ function mkBn(name, rgt, side, men, rifles, mg, mortar, morale, tile) {
         sidc: side === "atk" ? SIDC_ATK_INF : SIDC_DEF_INF,
     };
 }
+function mkSpt(name, rgt, tile) {
+    return {
+        id: name + "/" + rgt.replace("th", ""),
+        name, rgt, side: "atk", type: "support", size: "co",
+        men: 120, rifles: 40, mg: 8, mortar: 4, at: 4,
+        morale: 80, suppression: 0, tile,
+        revealed: true, routed: false, entrenched: false,
+        sidc: SIDC_ATK_SPT,
+    };
+}
 function simulateAll() {
     steps = [];
     const atk = units.filter(u => u.side === "atk" && u.type === "inf");
+    const spt = units.find(u => u.type === "support");
     const def = units.filter(u => u.side === "def");
     addLog("== 394th Infantry Rgt  vs  1028th Rifle Rgt ==", "hdr");
     addLog(`394th: ${atk.reduce((s, u) => s + u.men, 0)} men  CV:${atk.reduce((s, u) => s + cv(u), 0)}  |  Off-map: ${atkGuns}x 105mm`, "info");
-    addLog(`394th Support: ${atkSupport.hmg} HMG, ${atkSupport.hmortar}x 120mm, ${atkSupport.at} AT guns`, "info");
+    if (spt)
+        addLog(`394th Spt Co: ${spt.mg} HMG, ${spt.mortar}x 120mm, ${spt.at} AT (CV:${cv(spt)})`, "info");
     addLog(`1028th: ${def.reduce((s, u) => s + u.men, 0)} men  CV:${def.reduce((s, u) => s + cv(u), 0)}  |  Off-map: ${defGuns}x 76mm  |  ENTRENCHED`, "info");
     addLog("Objective: breach the main line and reach the A-row.", "info");
     steps.push(snap());
@@ -251,16 +270,16 @@ function simulateAll() {
             if (!u.routed)
                 u.suppression = Math.max(0, u.suppression - 1);
         addLog(`\n==== ${hourStr(turn)} HRS ====`, "hdr");
-        // Turn 1: detach recon platoons
+        // Turn 1: detach recon platoons (maneuver bns only, not reserve)
         if (turn === 1) {
-            for (const bn of units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed)) {
+            for (const bn of units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed && u.id !== "III/394")) {
                 const r = detachRecon(bn);
                 units.push(r);
                 addLog(`${r.id} detaches from ${bn.id} (${r.men} men, ${r.mg} MG)`, "recon");
             }
         }
         decideTurnActions();
-        allocateSupport();
+        checkReserveCommit();
         // Scouting bns: advance recon forward
         doReconAdvance();
         steps.push(snap(true));
@@ -271,10 +290,10 @@ function simulateAll() {
         counterBattery();
         // Each bn: assault adjacent enemies or advance
         doCombatAndMovement();
+        // Support company follows main effort
+        moveSupportCompany();
         // Defender artillery interdiction
         fireDefArt();
-        // Return support weapons to regimental pool (with attrition)
-        detachSupport();
         checkEnd();
         steps.push(snap());
     }
@@ -284,6 +303,12 @@ function decideTurnActions() {
     scoutingBns.clear();
     const anyRevealed = units.some(u => u.side === "def" && !u.routed && u.revealed);
     for (const bn of units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed)) {
+        // Reserve stays put until committed
+        if (bn.id === "III/394" && !reserveCommitted) {
+            addLog(`${bn.id}: in reserve`, "info");
+            scoutingBns.add(bn.id); // prevent advancing
+            continue;
+        }
         const sameEnemy = units.some(u => u.side === "def" && u.tile === bn.tile && !u.routed);
         const prev = scoutCount.get(bn.id) || 0;
         // Move if: in contact, OR any defender is revealed, OR scouted 2+ turns already
@@ -298,23 +323,37 @@ function decideTurnActions() {
         addLog(`${bn.id}: orders recon patrol ahead`, "recon");
     }
 }
-// -- Support allocation -------------------------------------------
-function allocateSupport() {
-    // Assign regimental support weapons to the main effort battalion
-    // Priority: bn closest to enemy, or bn about to assault
-    supportTarget = "";
-    if (atkSupport.hmg <= 0 && atkSupport.hmortar <= 0 && atkSupport.at <= 0)
+// -- Reserve & Support --------------------------------------------
+function checkReserveCommit() {
+    if (reserveCommitted)
         return;
+    const reserve = units.find(u => u.id === "III/394" && u.type === "inf" && !u.routed);
+    if (!reserve) {
+        reserveCommitted = true;
+        return;
+    }
+    const maneuverBns = units.filter(u => u.side === "atk" && u.type === "inf" && u.id !== "III/394");
+    const anyRouted = maneuverBns.some(u => u.routed);
+    const bothEngaged = maneuverBns.filter(u => !u.routed).every(u => units.some(d => d.side === "def" && !d.routed && (d.tile === u.tile || ADJ[u.tile].includes(d.tile))));
+    const lateGame = turn >= 6;
+    if (anyRouted || (bothEngaged && turn >= 3) || lateGame) {
+        reserveCommitted = true;
+        addLog(`III/394 committed from reserve!`, "info");
+    }
+}
+function moveSupportCompany() {
+    const spt = units.find(u => u.type === "support" && !u.routed);
+    if (!spt)
+        return;
+    // Follow the most forward engaged bn (main effort)
     const candidates = units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed && !scoutingBns.has(u.id));
     if (!candidates.length)
         return;
-    // pick bn with adjacent revealed enemy (closest to contact), breaking ties by lowest row
     let best = null;
     let bestScore = -1;
     for (const bn of candidates) {
-        const adjEnemy = ADJ[bn.tile].filter(t => units.some(u => u.side === "def" && u.tile === t && !u.routed && u.revealed));
-        const sameEnemy = units.some(u => u.side === "def" && u.tile === bn.tile && !u.routed);
-        const score = (sameEnemy ? 100 : 0) + adjEnemy.length * 10 + (6 - ROW[bn.tile]);
+        const adjEnemy = ADJ[bn.tile].filter(t => units.some(u => u.side === "def" && u.tile === t && !u.routed && u.revealed)).length;
+        const score = adjEnemy * 10 + (6 - ROW[bn.tile]);
         if (score > bestScore) {
             bestScore = score;
             best = bn;
@@ -322,47 +361,23 @@ function allocateSupport() {
     }
     if (!best)
         return;
-    supportTarget = best.id;
-    // temporarily attach support weapons to the bn for this hour
-    best.mg += atkSupport.hmg;
-    best.mortar += atkSupport.hmortar;
-    best.at += atkSupport.at;
-    addLog(`Support wpns -> ${best.id}: +${atkSupport.hmg} HMG, +${atkSupport.hmortar}x 120mm, +${atkSupport.at} AT`, "info");
-}
-function detachSupport() {
-    // remove support weapons from the bn after actions resolve
-    if (!supportTarget)
+    // Move support toward the main effort bn (one step, stay behind or on same tile)
+    if (spt.tile === best.tile)
         return;
-    const bn = units.find(u => u.id === supportTarget);
-    if (bn) {
-        // support weapons may have been lost to casualties — clamp
-        const lostHmg = Math.max(0, atkSupport.hmg - bn.mg);
-        const lostMor = Math.max(0, atkSupport.hmortar - bn.mortar);
-        const lostAt = Math.max(0, atkSupport.at - bn.at);
-        bn.mg = Math.max(0, bn.mg - atkSupport.hmg);
-        bn.mortar = Math.max(0, bn.mortar - atkSupport.hmortar);
-        bn.at = Math.max(0, bn.at - atkSupport.at);
-        if (lostHmg + lostMor + lostAt > 0) {
-            atkSupport.hmg = Math.max(0, atkSupport.hmg - lostHmg);
-            atkSupport.hmortar = Math.max(0, atkSupport.hmortar - lostMor);
-            atkSupport.at = Math.max(0, atkSupport.at - lostAt);
-            addLog(`Support losses: ${lostHmg ? `-${lostHmg} HMG ` : ""}${lostMor ? `-${lostMor} mortar ` : ""}${lostAt ? `-${lostAt} AT` : ""}(pool: ${atkSupport.hmg}/${atkSupport.hmortar}/${atkSupport.at})`, "info");
-        }
+    const target = best.tile;
+    // find adjacent tile closest to target, prefer staying one row behind
+    const path = ADJ[spt.tile].filter(t => ROW[t] <= ROW[spt.tile] || t === target);
+    if (path.includes(target)) {
+        spt.tile = target;
     }
     else {
-        // bn was routed while carrying support — lose some
-        if (d6() <= 3) {
-            atkSupport.hmg = Math.max(0, atkSupport.hmg - 1);
-        }
-        if (d6() <= 2) {
-            atkSupport.hmortar = Math.max(0, atkSupport.hmortar - 1);
-        }
-        if (d6() <= 2) {
-            atkSupport.at = Math.max(0, atkSupport.at - 1);
-        }
-        addLog(`Support wpns lost with routed bn (pool: ${atkSupport.hmg}/${atkSupport.hmortar}/${atkSupport.at})`, "result");
+        // move toward target: pick tile that minimizes row distance
+        const toward = ADJ[spt.tile]
+            .filter(t => ROW[t] < ROW[spt.tile] || ROW[t] === ROW[spt.tile])
+            .sort((a, b) => Math.abs(ROW[a] - ROW[target]) - Math.abs(ROW[b] - ROW[target]));
+        if (toward.length)
+            spt.tile = toward[0];
     }
-    supportTarget = "";
 }
 // -- Recon --------------------------------------------------------
 function doReconAdvance() {
@@ -640,10 +655,20 @@ function doCombatAndMovement() {
 }
 function resolveCombat(atks, defs, ti, attackedTiles) {
     const tile = tiles[ti];
-    const atkCV = atks.reduce((s, a) => s + cv(a), 0);
+    let atkCV = atks.reduce((s, a) => s + cv(a), 0);
     const defCV = defs.reduce((s, d) => s + cv(d), 0);
     if (atkCV <= 0 || defCV <= 0)
         return;
+    // Support company fire: adds CV if on same tile or adjacent to assaulting units
+    let sptCV = 0;
+    for (const spt of units.filter(u => u.type === "support" && u.side === "atk" && !u.routed)) {
+        const sptTiles = [spt.tile, ...ADJ[spt.tile]];
+        if (atks.some(a => sptTiles.includes(a.tile)) || sptTiles.includes(ti)) {
+            sptCV = cv(spt);
+            addLog(`  Spt Co fire support: +CV:${sptCV}`, "combat");
+        }
+    }
+    atkCV += sptCV;
     const isFlankAssault = atks.some(a => ROW[a.tile] === ROW[ti] && a.tile !== ti);
     const flankMul = isFlankAssault ? 1.2 : 1.0;
     if (isFlankAssault)
@@ -928,7 +953,7 @@ function mkUnit(u, z) {
     const fog = !u.revealed && u.side === "def";
     const sup = u.suppression > 0 ? ` u-s${u.suppression}` : "";
     const cls = u.side === "atk" ? "u-atk" : "u-def";
-    const szPx = u.size === "plt" ? 14 : 18;
+    const szPx = u.size === "bn" ? 18 : u.size === "co" ? 16 : 14;
     if (fog) {
         return `<div class="unit ${cls} u-fog" style="z-index:${z}" title="Unidentified enemy unit">`
             + `<div class="u-sym">${symSvg(SIDC_UNK, 16)}</div>`
@@ -945,13 +970,16 @@ function mkUnit(u, z) {
 }
 // -- OOB tables ---------------------------------------------------
 function renderOOB(fu) {
-    // Attacker: interleave parent bn with its recon sub-unit
+    // Attacker: interleave parent bn with its recon sub-unit, then support co
     let aHtml = "";
     for (const bn of fu.filter(u => u.side === "atk" && u.type === "inf")) {
         aHtml += oobRow(bn, true);
         const rcn = fu.find(u => u.parent === bn.id);
         if (rcn)
             aHtml += oobRow(rcn, true);
+    }
+    for (const spt of fu.filter(u => u.side === "atk" && u.type === "support")) {
+        aHtml += oobRow(spt, true);
     }
     $("oob-a").innerHTML = aHtml;
     // Defender
@@ -963,7 +991,7 @@ function oobRow(u, known) {
         return `<tr class="oob-tr fog"><td class="oob-bn ${indent}">${esc(u.id)}</td><td colspan="10" class="oob-unk">???</td></tr>`;
     const cls = u.routed ? "oob-tr rt" : "oob-tr";
     const sup = u.suppression > 0 && !u.routed ? ` s${u.suppression}` : "";
-    const typeStr = u.type === "recon" ? "RCN" : "INF";
+    const typeStr = u.type === "recon" ? "RCN" : u.type === "support" ? "SPT" : "INF";
     return `<tr class="${cls}${sup}">`
         + `<td class="oob-bn ${indent}">${esc(u.id)}</td>`
         + `<td class="oob-ty">${typeStr}</td>`
@@ -1016,7 +1044,7 @@ function renderResults() {
     }
     const fs = steps[steps.length - 1];
     let h = `<div class="res-v">${esc(verdict)}</div>`;
-    h += `<div class="res-sub">${hourStr(1)}–${hourStr(fs.turn)} (${fs.turn} hrs)  |  Atk Art: ${fs.atkGuns}/${steps[0].atkGuns} guns  |  Def Art: ${fs.defGuns}/${steps[0].defGuns} guns  |  Spt: ${fs.atkSupport.hmg}/${steps[0].atkSupport.hmg} HMG, ${fs.atkSupport.hmortar}/${steps[0].atkSupport.hmortar} Mor, ${fs.atkSupport.at}/${steps[0].atkSupport.at} AT</div>`;
+    h += `<div class="res-sub">${hourStr(1)}–${hourStr(fs.turn)} (${fs.turn} hrs)  |  Atk Art: ${fs.atkGuns}/${steps[0].atkGuns} guns  |  Def Art: ${fs.defGuns}/${steps[0].defGuns} guns</div>`;
     for (const side of ["atk", "def"]) {
         const label = side === "atk" ? "394th Infantry Regiment" : "1028th Rifle Regiment";
         h += `<div class="res-rgt">${esc(label)}</div>`;
@@ -1028,7 +1056,7 @@ function renderResults() {
                 continue;
             const lost = iu.men - Math.max(0, fu.men);
             const r = fu.routed ? ' class="rt"' : '';
-            const typeStr = iu.type === "recon" ? "RCN" : "INF";
+            const typeStr = iu.type === "recon" ? "RCN" : iu.type === "support" ? "SPT" : "INF";
             h += `<tr${r}><td>${esc(iu.id)}</td><td>${typeStr}</td><td>${iu.men}</td><td>-></td>`
                 + `<td>${fu.routed ? "0" : Math.max(0, fu.men)}</td>`
                 + `<td class="res-lost">-${lost}</td>`
