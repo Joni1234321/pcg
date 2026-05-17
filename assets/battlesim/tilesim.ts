@@ -50,7 +50,7 @@ interface Unit {
 interface Tile { index: number; terrain: string; mul: number; }
 interface LogEntry { text: string; type: "hdr"|"info"|"recon"|"arty"|"combat"|"move"|"result"; }
 interface Frame {
-  turn: number; phase: number; units: Unit[];
+  turn: number; reconOut: boolean; units: Unit[];
   atkGuns: number; defGuns: number;
   logEnd: number; over: boolean;
 }
@@ -58,35 +58,45 @@ interface Frame {
 // -- Grid constants -----------------------------------------------
 
 const LABELS = [
+  "R1","R2","R3","R4",
   "A1","A2","A3",
   "B1","B2","B3","B4",
   "C1","C2","C3",
   "D1","D2","D3","D4",
   "E1","E2","E3",
+  "F1","F2","F3","F4",
 ];
-const N_TILES = 17;
+const N_TILES = 25;
 
 const ADJ: number[][] = [
-  /*  0 A1 */ [1, 3, 4],
-  /*  1 A2 */ [0, 2, 4, 5],
-  /*  2 A3 */ [1, 5, 6],
-  /*  3 B1 */ [0, 4, 7],
-  /*  4 B2 */ [0, 1, 3, 5, 7, 8],
-  /*  5 B3 */ [1, 2, 4, 6, 8, 9],
-  /*  6 B4 */ [2, 5, 9],
-  /*  7 C1 */ [3, 4, 8, 10, 11],
-  /*  8 C2 */ [4, 5, 7, 9, 11, 12],
-  /*  9 C3 */ [5, 6, 8, 12, 13],
-  /* 10 D1 */ [7, 11, 14],
-  /* 11 D2 */ [7, 8, 10, 12, 14, 15],
-  /* 12 D3 */ [8, 9, 11, 13, 15, 16],
-  /* 13 D4 */ [9, 12, 16],
-  /* 14 E1 */ [10, 11, 15],
-  /* 15 E2 */ [11, 12, 14, 16],
-  /* 16 E3 */ [12, 13, 15],
+  /*  0 R1 */ [1, 4],
+  /*  1 R2 */ [0, 2, 4, 5],
+  /*  2 R3 */ [1, 3, 5, 6],
+  /*  3 R4 */ [2, 6],
+  /*  4 A1 */ [0, 1, 5, 7, 8],
+  /*  5 A2 */ [1, 2, 4, 6, 8, 9],
+  /*  6 A3 */ [2, 3, 5, 9, 10],
+  /*  7 B1 */ [4, 8, 11],
+  /*  8 B2 */ [4, 5, 7, 9, 11, 12],
+  /*  9 B3 */ [5, 6, 8, 10, 12, 13],
+  /* 10 B4 */ [6, 9, 13],
+  /* 11 C1 */ [7, 8, 12, 14, 15],
+  /* 12 C2 */ [8, 9, 11, 13, 15, 16],
+  /* 13 C3 */ [9, 10, 12, 16, 17],
+  /* 14 D1 */ [11, 15, 18],
+  /* 15 D2 */ [11, 12, 14, 16, 18, 19],
+  /* 16 D3 */ [12, 13, 15, 17, 19, 20],
+  /* 17 D4 */ [13, 16, 20],
+  /* 18 E1 */ [14, 15, 19, 21, 22],
+  /* 19 E2 */ [15, 16, 18, 20, 22, 23],
+  /* 20 E3 */ [16, 17, 19, 23, 24],
+  /* 21 F1 */ [18, 22],
+  /* 22 F2 */ [18, 19, 21, 23],
+  /* 23 F3 */ [19, 20, 22, 24],
+  /* 24 F4 */ [20, 23],
 ];
-const ROW = [0,0,0, 1,1,1,1, 2,2,2, 3,3,3,3, 4,4,4];
-const ZONES = ["DEFENDER REAR","MAIN LINE","NO MAN'S LAND","APPROACH","ATTACKER START"];
+const ROW = [0,0,0,0, 1,1,1, 2,2,2,2, 3,3,3, 4,4,4,4, 5,5,5, 6,6,6,6];
+const ZONES = ["DEFENDER EXIT","DEFENDER REAR","MAIN LINE","NO MAN'S LAND","APPROACH","FORWARD POS","ATTACKER START"];
 
 const TERRAIN_DATA: {name:string; mul:number}[] = [
   { name:"field",  mul:1.0 },
@@ -96,7 +106,6 @@ const TERRAIN_DATA: {name:string; mul:number}[] = [
   { name:"ridge",  mul:1.7 },
 ];
 const SUPP = ["READY","DISRUPTED","SUPPRESSED","PINNED"];
-const PH   = ["DEPLOY","RECON","ARTILLERY","ASSAULT","MOVEMENT"];
 
 // SIDC codes (15-char, MIL-STD-2525C)
 const SIDC_ATK_INF  = "SFGPUCI----F---";   // friendly infantry bn
@@ -114,8 +123,8 @@ const MAP_PAD_TOP = 40;
 
 const HP: {x:number;y:number}[] = [];
 {
-  const rows = [[0,1,2],[3,4,5,6],[7,8,9],[10,11,12,13],[14,15,16]];
-  for (let r = 0; r < 5; r++) {
+  const rows = [[0,1,2,3],[4,5,6],[7,8,9,10],[11,12,13],[14,15,16,17],[18,19,20],[21,22,23,24]];
+  for (let r = 0; r < 7; r++) {
     const off = rows[r].length === 3 ? HO : 0;
     for (let c = 0; c < rows[r].length; c++) {
       HP[rows[r][c]] = { x: off + c * CS, y: MAP_PAD_TOP + r * RS };
@@ -128,10 +137,12 @@ const HP: {x:number;y:number}[] = [];
 let tiles: Tile[] = [];
 let units: Unit[] = [];
 let fullLog: LogEntry[] = [];
-let turn = 0, phase = 0, over = false;
+let turn = 0, over = false;
 let atkGuns = 12, defGuns = 8;
 let steps: Frame[] = [];
 let stepIdx = 0;
+let scoutingBns = new Set<string>(); // bn IDs doing recon this turn
+let scoutCount = new Map<string, number>(); // consecutive recon turns per bn
 
 // -- Helpers ------------------------------------------------------
 
@@ -141,6 +152,7 @@ function rand(a: number, b?: number): number {
 }
 function d6(): number { return rand(1, 6); }
 function clamp(v: number, lo: number, hi: number): number { return Math.max(lo, Math.min(hi, v)); }
+function hourStr(t: number): string { return String(t + 5).padStart(2, '0') + '00'; }
 function $(id: string): HTMLElement { return document.getElementById(id)!; }
 function esc(s: string): string { const el = document.createElement("span"); el.textContent = s; return el.innerHTML; }
 function addLog(t: string, ty: LogEntry["type"] = "info"): void { fullLog.push({ text: t, type: ty }); }
@@ -157,8 +169,8 @@ function applyCas(u: Unit, n: number): void {
   if (actual >= 50 && u.mortar > 0 && d6() <= 2) u.mortar--;
 }
 
-function snap(): Frame {
-  return { turn, phase, units: units.map(u => ({ ...u })), atkGuns, defGuns, logEnd: fullLog.length, over };
+function snap(reconOut = false): Frame {
+  return { turn, reconOut, units: units.map(u => ({ ...u })), atkGuns, defGuns, logEnd: fullLog.length, over };
 }
 
 // milsymbol SVG cache
@@ -184,8 +196,8 @@ function detachRecon(parent: Unit): Unit {
   parent.rifles -= rif;
   parent.mg = Math.max(0, parent.mg - 1);
   return {
-    id: parent.id + " R",
-    name: parent.name + " R",
+    id: parent.id + "/R",
+    name: parent.name + "/R",
     rgt: parent.rgt,
     side: parent.side,
     type: "recon",
@@ -210,36 +222,53 @@ function detachRecon(parent: Unit): Unit {
 function initBattle(): void {
   _svgCache.clear();
 
-  const pool = [
-    "field","village","field",
-    "forest","hill","village","ridge",
-    "field","field","field",
-    "field","hill","field","field",
-    "field","field","field",
+  const pool: string[] = [
+    "field","field","field","field",         // R-row (exit)
+    "field","field","field",                 // A-row (rear)
+    "hill","village","forest","ridge",       // B-row (main line - strong terrain)
+    "field","field","field",                 // C-row (no man's land)
+    "field","hill","field","field",          // D-row (approach)
+    "field","field","field",                 // E-row (forward)
+    "field","field","field","field",         // F-row (attacker start)
   ];
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = rand(i + 1); [pool[i], pool[j]] = [pool[j], pool[i]];
+  // shuffle B-row terrain (indices 7-10) among themselves
+  for (let i = 10; i > 7; i--) {
+    const j = 7 + rand(i - 7 + 1); [pool[i], pool[j]] = [pool[j], pool[i]];
   }
+  // light randomization on other rows
+  if (d6() >= 4) pool[4 + rand(3)] = ["hill","village"][rand(2)];
+  if (d6() >= 5) pool[11 + rand(3)] = "hill";
   tiles = pool.map((t, i) => {
     const info = TERRAIN_DATA.find(x => x.name === t)!;
     return { index: i, terrain: t, mul: info.mul };
   });
 
+  // place defenders on best adjacent B-row tiles
+  const bRow = [7, 8, 9, 10];
+  bRow.sort((a, b) => tiles[b].mul - tiles[a].mul);
+  const defTiles: number[] = [bRow[0]];
+  for (const t of bRow) {
+    if (defTiles.length >= 3) break;
+    if (!defTiles.includes(t) && defTiles.some(dt => ADJ[dt].includes(t))) defTiles.push(t);
+  }
+  for (const t of bRow) { if (defTiles.length >= 3) break; if (!defTiles.includes(t)) defTiles.push(t); }
+
   units = [
-    mkBn("I",   "394th",  "atk", 820, 700, 12, 6,  85, 15),
-    mkBn("II",  "394th",  "atk", 790, 670, 12, 6,  80, 15),
-    mkBn("III", "394th",  "atk", 850, 740, 14, 8,  90, 15),
-    mkBn("I",   "1028th", "def", 680, 580, 8,  4,  70, 3),
-    mkBn("II",  "1028th", "def", 720, 620, 10, 6,  75, 5),
-    mkBn("III", "1028th", "def", 650, 560, 8,  4,  65, 6),
+    mkBn("I",   "394th",  "atk", 820, 700, 12, 6,  85, 21),
+    mkBn("II",  "394th",  "atk", 790, 670, 12, 6,  80, 22),
+    mkBn("III", "394th",  "atk", 850, 740, 14, 8,  90, 23),
+    mkBn("I",   "1028th", "def", 680, 580, 8,  4,  70, defTiles[0]),
+    mkBn("II",  "1028th", "def", 720, 620, 10, 6,  75, defTiles[1]),
+    mkBn("III", "1028th", "def", 650, 560, 8,  4,  65, defTiles[2]),
   ];
   // one defender forward as outpost
   const defIdx = rand(3);
-  units[3 + defIdx].tile = [7, 8, 9][rand(3)];
+  units[3 + defIdx].tile = [11, 12, 13][rand(3)];
   units[3 + defIdx].entrenched = false;
 
   atkGuns = 12; defGuns = 8;
-  turn = 1; phase = 0; over = false;
+  turn = 1; over = false;
+  scoutCount.clear();
   fullLog = [];
   simulateAll();
   stepIdx = 0;
@@ -250,7 +279,7 @@ function mkBn(name: string, rgt: string, side: "atk"|"def",
   men: number, rifles: number, mg: number, mortar: number,
   morale: number, tile: number): Unit {
   return {
-    id: name + " / " + rgt.replace("th",""),
+    id: name + "/" + rgt.replace("th",""),
     name, rgt, side, type: "inf", size: "bn",
     men, rifles, mg, mortar, morale,
     suppression: 0, tile, revealed: side === "atk",
@@ -270,40 +299,70 @@ function simulateAll(): void {
   steps.push(snap());
 
   while (!over) {
-    phase++;
-    if (phase > 4) {
-      phase = 1; turn++;
-      for (const u of units) if (!u.routed) u.suppression = Math.max(0, u.suppression - 1);
-      addLog(`\n==== TURN ${turn} ====`, "hdr");
+    turn++;
+    for (const u of units) if (!u.routed) u.suppression = Math.max(0, u.suppression - 1);
+    addLog(`\n==== ${hourStr(turn)} HRS ====`, "hdr");
+
+    // Turn 1: detach recon platoons
+    if (turn === 1) {
+      for (const bn of units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed)) {
+        const r = detachRecon(bn);
+        units.push(r);
+        addLog(`${r.id} detaches from ${bn.id} (${r.men} men, ${r.mg} MG)`, "recon");
+      }
     }
-    switch (phase) {
-      case 1: doRecon(); break;
-      case 2: doArtillery(); break;
-      case 3: doAssault(); break;
-      case 4: doMovement(); break;
-    }
+
+    decideTurnActions();
+
+    // Scouting bns: advance recon forward
+    doReconAdvance();
+    steps.push(snap(true));
+
+    // Recon spots and returns
+    doReconSpotAndReturn();
+
+    // Artillery -- both sides fire when they have targets
+    fireAtkArt();
+    counterBattery();
+
+    // Each bn: assault adjacent enemies or advance
+    doCombatAndMovement();
+
+    // Defender artillery interdiction
+    fireDefArt();
+
     checkEnd();
     steps.push(snap());
   }
 }
 
-// -- 1. RECON -----------------------------------------------------
+// -- Turn decisions -----------------------------------------------
 
-function doRecon(): void {
-  addLog("-- Recon  0500-0700 --", "hdr");
-
-  // Turn 1: detach recon platoons from attacker battalions
-  if (turn === 1) {
-    const bns = units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed);
-    for (const bn of bns) {
-      const r = detachRecon(bn);
-      units.push(r);
-      addLog(`${r.id} detaches from ${bn.id} (${r.men} men, ${r.mg} MG)`, "recon");
+function decideTurnActions(): void {
+  scoutingBns.clear();
+  const anyRevealed = units.some(u => u.side === "def" && !u.routed && u.revealed);
+  for (const bn of units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed)) {
+    const sameEnemy = units.some(u => u.side === "def" && u.tile === bn.tile && !u.routed);
+    const prev = scoutCount.get(bn.id) || 0;
+    // Move if: in contact, OR any defender is revealed, OR scouted 2+ turns already
+    if (sameEnemy || anyRevealed || prev >= 2) {
+      addLog(`${bn.id}: advancing`, "info");
+      scoutCount.set(bn.id, 0);
+      continue;
     }
+    // Otherwise send recon patrol
+    scoutingBns.add(bn.id);
+    scoutCount.set(bn.id, prev + 1);
+    addLog(`${bn.id}: orders recon patrol ahead`, "recon");
   }
+}
 
-  // Advance recon platoons forward
-  const recons = units.filter(u => u.type === "recon" && u.side === "atk" && !u.routed);
+// -- Recon --------------------------------------------------------
+
+function doReconAdvance(): void {
+  // Advance recon platoons forward (only for scouting battalions)
+  const recons = units.filter(u => u.type === "recon" && u.side === "atk" && !u.routed
+    && u.parent && scoutingBns.has(u.parent));
   for (const r of recons) {
     // withdraw if on tile with enemy
     if (units.some(u => u.side === "def" && u.tile === r.tile && !u.routed)) {
@@ -327,7 +386,9 @@ function doRecon(): void {
       addLog(`${r.id} scouts ${LABELS[from]} -> ${LABELS[r.tile]}`, "recon");
     }
   }
+}
 
+function doReconSpotAndReturn(): void {
   // Recon platoons auto-spot their current tile
   for (const r of units.filter(u => u.type === "recon" && u.side === "atk" && !u.routed)) {
     for (const d of units.filter(u => u.side === "def" && u.tile === r.tile && !u.routed && !u.revealed)) {
@@ -373,53 +434,46 @@ function doRecon(): void {
   }
 }
 
-// -- 2. ARTILLERY (off-map) ---------------------------------------
+// -- ARTILLERY (callable from any phase) -------------------------
 
-function doArtillery(): void {
-  addLog("-- Artillery  0700-0900 --", "hdr");
-
-  // ATTACKER: 394th Art Bn
-  if (atkGuns > 0) {
-    const tgt = new Set<number>();
-    for (const u of units) if (u.side === "def" && u.revealed && !u.routed) tgt.add(u.tile);
-    if (tgt.size === 0) {
-      addLog(`394th Art Bn (${atkGuns}x 105mm): no targets spotted`, "arty");
-    } else {
-      const targets = [...tgt];
-      const perTgt = Math.ceil(atkGuns / targets.length);
-      let used = 0;
-      for (const ti of targets) {
-        const guns = Math.min(perTgt, atkGuns - used);
-        used += guns;
-        for (const d of units.filter(u => u.side === "def" && u.tile === ti && !u.routed)) {
-          let cas = 0;
-          for (let g = 0; g < guns; g++) cas += Math.floor(rand(3, 8) / tiles[ti].mul);
-          applyCas(d, cas);
-          const sl = guns >= 7 ? 3 : guns >= 4 ? 2 : guns >= 2 ? 1 : 0;
-          d.suppression = Math.max(d.suppression, sl);
-          d.morale = clamp(d.morale - rand(3, 7), 0, 100);
-          addLog(`394th Art (${guns}x 105mm) -> ${LABELS[ti]}: ${d.id} -${cas} men, ${SUPP[d.suppression]}`, "arty");
-        }
-      }
+function fireAtkArt(): void {
+  if (atkGuns <= 0) return;
+  const tgt = new Set<number>();
+  for (const u of units) if (u.side === "def" && u.revealed && !u.routed) tgt.add(u.tile);
+  if (tgt.size === 0) return;
+  const targets = [...tgt];
+  const perTgt = Math.ceil(atkGuns / targets.length);
+  let used = 0;
+  for (const ti of targets) {
+    const guns = Math.min(perTgt, atkGuns - used);
+    used += guns;
+    for (const d of units.filter(u => u.side === "def" && u.tile === ti && !u.routed)) {
+      let cas = 0;
+      for (let g = 0; g < guns; g++) cas += Math.floor(rand(3, 8) / tiles[ti].mul);
+      applyCas(d, cas);
+      const sl = guns >= 7 ? 3 : guns >= 4 ? 2 : guns >= 2 ? 1 : 0;
+      d.suppression = Math.max(d.suppression, sl);
+      d.morale = clamp(d.morale - rand(3, 7), 0, 100);
+      addLog(`394th Art (${guns}x 105mm) -> ${LABELS[ti]}: ${d.id} -${cas} men, ${SUPP[d.suppression]}`, "arty");
     }
   }
+}
 
-  // DEFENDER: 1028th Art Btry
-  if (defGuns > 0) {
-    const atkTiles: number[] = [];
-    for (const u of units) if (u.side === "atk" && u.type === "inf" && !u.routed && !atkTiles.includes(u.tile)) atkTiles.push(u.tile);
-    if (atkTiles.length > 0) {
-      const ti = atkTiles[rand(atkTiles.length)];
-      const tgts = units.filter(u => u.side === "atk" && u.tile === ti && !u.routed);
-      for (const a of tgts) {
-        const cas = Math.max(1, Math.floor(rand(2, 5) * defGuns / Math.max(1, tgts.length) / tiles[ti].mul));
-        applyCas(a, cas);
-        addLog(`1028th Art (${defGuns}x 76mm) -> ${LABELS[ti]}: ${a.id} -${cas} men`, "arty");
-      }
-    }
+function fireDefArt(): void {
+  if (defGuns <= 0) return;
+  const atkTiles: number[] = [];
+  for (const u of units) if (u.side === "atk" && u.type === "inf" && !u.routed && !atkTiles.includes(u.tile)) atkTiles.push(u.tile);
+  if (atkTiles.length === 0) return;
+  const ti = atkTiles[rand(atkTiles.length)];
+  const tgts = units.filter(u => u.side === "atk" && u.tile === ti && !u.routed);
+  for (const a of tgts) {
+    const cas = Math.max(1, Math.floor(rand(2, 5) * defGuns / Math.max(1, tgts.length) / tiles[ti].mul));
+    applyCas(a, cas);
+    addLog(`1028th Art (${defGuns}x 76mm) -> ${LABELS[ti]}: ${a.id} -${cas} men`, "arty");
   }
+}
 
-  // counter-battery
+function counterBattery(): void {
   if (atkGuns > 0 && defGuns > 0 && d6() >= 5) {
     defGuns--; addLog(`Counter-battery: 1028th Art loses 1 gun (${defGuns} left)`, "arty");
   }
@@ -428,52 +482,93 @@ function doArtillery(): void {
   }
 }
 
-// -- 3. ASSAULT ---------------------------------------------------
+// -- COMBAT & MOVEMENT (per-unit decisions, no phases) -----------
 
-function doAssault(): void {
-  addLog("-- Assault  0900-1100 --", "hdr");
-
-  // Recon platoons withdraw from contested tiles before assault
+function doCombatAndMovement(): void {
+  // Recon platoons withdraw from contested tiles
   for (const r of units.filter(u => u.type === "recon" && !u.routed)) {
     if (units.some(u => u.side !== r.side && u.tile === r.tile && !u.routed)) {
       const back = ADJ[r.tile].filter(t => r.side === "atk" ? ROW[t] > ROW[r.tile] : ROW[t] < ROW[r.tile]);
       if (back.length) {
         const from = r.tile; r.tile = back[rand(back.length)];
-        addLog(`${r.id} withdraws before assault: ${LABELS[from]} -> ${LABELS[r.tile]}`, "move");
+        addLog(`${r.id} withdraws: ${LABELS[from]} -> ${LABELS[r.tile]}`, "move");
       }
     }
   }
 
+  // Each non-scouting bn either assaults or advances
   const plan = new Map<number, Unit[]>();
-  for (const a of units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed)) {
-    // Forward targets first, then lateral flanking after breakthrough
+  const advancers: Unit[] = [];
+
+  for (const a of units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed
+    && !scoutingBns.has(u.id))) {
+    // Forward targets first, then lateral flanking
     let targets = ADJ[a.tile]
       .filter(t => ROW[t] < ROW[a.tile])
       .filter(t => units.some(u => u.side === "def" && u.tile === t && !u.routed && u.revealed));
     if (units.some(u => u.side === "def" && u.tile === a.tile && !u.routed)) targets.push(a.tile);
-    // Flank: if no forward targets, attack lateral defenders
     if (targets.length === 0) {
       targets = ADJ[a.tile]
         .filter(t => ROW[t] === ROW[a.tile])
         .filter(t => units.some(u => u.side === "def" && u.tile === t && !u.routed && u.revealed));
       if (targets.length > 0) addLog(`${a.id} flanks from ${LABELS[a.tile]}`, "combat");
     }
-    if (!targets.length) continue;
 
-    const best = targets.reduce((a2, b2) => {
-      const s = (ti: number) => units.filter(u => u.side === "def" && u.tile === ti && !u.routed).reduce((x, u) => x + cv(u), 0);
-      return s(b2) < s(a2) ? b2 : a2;
-    });
-    if (!plan.has(best)) plan.set(best, []);
-    plan.get(best)!.push(a);
+    if (targets.length) {
+      const best = targets.reduce((a2, b2) => {
+        const s = (ti: number) => units.filter(u => u.side === "def" && u.tile === ti && !u.routed).reduce((x, u) => x + cv(u), 0);
+        return s(b2) < s(a2) ? b2 : a2;
+      });
+      if (!plan.has(best)) plan.set(best, []);
+      plan.get(best)!.push(a);
+    } else {
+      advancers.push(a);
+    }
   }
 
-  if (plan.size === 0) { addLog("No engagements.", "info"); return; }
+  // Execute assaults
+  if (plan.size > 0) {
+    const attackedTiles = new Set(plan.keys());
+    for (const [ti, atks] of plan) {
+      const ds = units.filter(u => u.side === "def" && u.tile === ti && !u.routed);
+      if (ds.length > 0) resolveCombat(atks, ds, ti, attackedTiles);
+    }
+  }
 
-  const attackedTiles = new Set(plan.keys());
-  for (const [ti, atks] of plan) {
-    const ds = units.filter(u => u.side === "def" && u.tile === ti && !u.routed);
-    if (ds.length > 0) resolveCombat(atks, ds, ti, attackedTiles);
+  // Advance non-assaulting bns
+  for (const a of advancers) {
+    if (units.some(u => u.side === "def" && u.tile === a.tile && !u.routed)) continue;
+    const latEnemy = ADJ[a.tile]
+      .filter(t => ROW[t] === ROW[a.tile])
+      .some(t => units.some(u => u.side === "def" && u.tile === t && !u.routed));
+    if (latEnemy) {
+      addLog(`${a.id} holds ${LABELS[a.tile]} -- flanking adjacent defenders`, "move");
+      continue;
+    }
+    const fw = ADJ[a.tile].filter(t => ROW[t] < ROW[a.tile]);
+    if (!fw.length) continue;
+    fw.sort((x, y) => {
+      const dx = units.filter(u => u.side === "def" && u.tile === x && !u.routed).length;
+      const dy = units.filter(u => u.side === "def" && u.tile === y && !u.routed).length;
+      if (dx !== dy) return dx - dy;
+      const fx = units.filter(u => u.side === "atk" && u.type === "inf" && u.tile === x && !u.routed).length;
+      const fy = units.filter(u => u.side === "atk" && u.type === "inf" && u.tile === y && !u.routed).length;
+      return fx - fy;
+    });
+    const from = a.tile; a.tile = fw[0];
+    for (const r of units.filter(u => u.type === "recon" && u.parent === a.id && !u.routed)) {
+      r.tile = a.tile;
+    }
+    addLog(`${a.id} advances ${LABELS[from]} -> ${LABELS[a.tile]}`, "move");
+  }
+
+  // Defender retreat
+  for (const d of units.filter(u => u.side === "def" && !u.routed && u.morale < 35)) {
+    const bk = ADJ[d.tile].filter(t => ROW[t] < ROW[d.tile]);
+    if (!bk.length) continue;
+    const from = d.tile; d.tile = bk[rand(bk.length)];
+    d.entrenched = false;
+    addLog(`${d.id} retreats ${LABELS[from]} -> ${LABELS[d.tile]} (M:${d.morale}, lost entrenchment)`, "move");
   }
 }
 
@@ -483,12 +578,10 @@ function resolveCombat(atks: Unit[], defs: Unit[], ti: number, attackedTiles: Se
   const defCV = defs.reduce((s, d) => s + cv(d), 0);
   if (atkCV <= 0 || defCV <= 0) return;
 
-  // flanking assault bonus: attackers on same row as target
   const isFlankAssault = atks.some(a => ROW[a.tile] === ROW[ti] && a.tile !== ti);
   const flankMul = isFlankAssault ? 1.2 : 1.0;
   if (isFlankAssault) addLog(`  flanking assault: x1.2 attacker CV`, "combat");
 
-  // flanking fire from adjacent un-attacked defenders
   let flankCV = 0;
   const flankFrom: string[] = [];
   for (const adj of ADJ[ti]) {
@@ -501,7 +594,6 @@ function resolveCombat(atks: Unit[], defs: Unit[], ti: number, attackedTiles: Se
   const totalDefCV = defCV + flankCV;
   if (flankCV > 0) addLog(`  flanking fire from ${[...new Set(flankFrom)].join(",")}: +CV:${flankCV}`, "combat");
 
-  // entrenchment
   const entMul = defs.some(d => d.entrenched) ? 1.3 : 1.0;
   if (entMul > 1) addLog(`  defenders entrenched: x${entMul} bonus`, "combat");
 
@@ -555,77 +647,16 @@ function resolveCombat(atks: Unit[], defs: Unit[], ti: number, attackedTiles: Se
   addLog(`${atks.map(a => a.id).join("+")} -> ${LABELS[ti]}: ${out}  [CV ${rawRatio.toFixed(1)}:1 ter x${(tile.mul * entMul).toFixed(1)} -> ${eff.toFixed(1)} eff]  A-${aLoss} D-${dLoss}`, "combat");
 }
 
-// -- 4. MOVEMENT --------------------------------------------------
-
-function doMovement(): void {
-  addLog("-- Movement  1100-1200 --", "hdr");
-  let moved = false;
-
-  // Recon platoons advance
-  for (const r of units.filter(u => u.type === "recon" && u.side === "atk" && !u.routed)) {
-    if (units.some(u => u.side === "def" && u.tile === r.tile && !u.routed)) continue;
-    const fw = ADJ[r.tile]
-      .filter(t => ROW[t] < ROW[r.tile])
-      .sort((a, b) => {
-        const oa = units.filter(u => u.tile === a && !u.routed).length;
-        const ob = units.filter(u => u.tile === b && !u.routed).length;
-        return oa - ob;
-      });
-    if (fw.length) {
-      const from = r.tile; r.tile = fw[0];
-      addLog(`${r.id} scouts ahead: ${LABELS[from]} -> ${LABELS[r.tile]}`, "move");
-      moved = true;
-    }
-  }
-
-  // Infantry battalions advance or hold to flank
-  for (const a of units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed)) {
-    if (units.some(u => u.side === "def" && u.tile === a.tile && !u.routed)) continue;
-    // Hold to flank if defenders on adjacent lateral tiles
-    const latEnemy = ADJ[a.tile]
-      .filter(t => ROW[t] === ROW[a.tile])
-      .some(t => units.some(u => u.side === "def" && u.tile === t && !u.routed));
-    if (latEnemy) {
-      addLog(`${a.id} holds ${LABELS[a.tile]} -- flanking adjacent defenders`, "move");
-      moved = true; continue;
-    }
-    const fw = ADJ[a.tile].filter(t => ROW[t] < ROW[a.tile]);
-    if (!fw.length) continue;
-    fw.sort((x, y) => {
-      const dx = units.filter(u => u.side === "def" && u.tile === x && !u.routed).length;
-      const dy = units.filter(u => u.side === "def" && u.tile === y && !u.routed).length;
-      if (dx !== dy) return dx - dy;
-      const fx = units.filter(u => u.side === "atk" && u.type === "inf" && u.tile === x && !u.routed).length;
-      const fy = units.filter(u => u.side === "atk" && u.type === "inf" && u.tile === y && !u.routed).length;
-      return fx - fy;
-    });
-    const from = a.tile; a.tile = fw[0];
-    addLog(`${a.id} advances ${LABELS[from]} -> ${LABELS[a.tile]}`, "move");
-    moved = true;
-  }
-
-  // Defender retreat
-  for (const d of units.filter(u => u.side === "def" && !u.routed && u.morale < 35)) {
-    const bk = ADJ[d.tile].filter(t => ROW[t] < ROW[d.tile]);
-    if (!bk.length) continue;
-    const from = d.tile; d.tile = bk[rand(bk.length)];
-    d.entrenched = false;
-    addLog(`${d.id} retreats ${LABELS[from]} -> ${LABELS[d.tile]} (M:${d.morale}, lost entrenchment)`, "move");
-    moved = true;
-  }
-  if (!moved) addLog("No movement.", "info");
-}
-
 // -- Victory ------------------------------------------------------
 
 function checkEnd(): void {
-  const breach = units.filter(u => u.side === "atk" && !u.routed && u.type === "inf" && ROW[u.tile] === 0);
+  const breach = units.filter(u => u.side === "atk" && !u.routed && u.type === "inf" && ROW[u.tile] <= 1);
   const defAlive = units.filter(u => u.side === "def" && !u.routed);
   const atkAlive = units.filter(u => u.side === "atk" && !u.routed && u.type === "inf");
   if (breach.length)      { over = true; addLog(`\n* ATTACKER VICTORY -- ${breach[0].id} reached ${LABELS[breach[0].tile]}`, "result"); }
   else if (!defAlive.length) { over = true; addLog("\n* ATTACKER VICTORY -- all defenders routed", "result"); }
   else if (!atkAlive.length) { over = true; addLog("\n* DEFENDER VICTORY -- all attackers routed", "result"); }
-  else if (turn >= 10)       { over = true; addLog(`\n* STALEMATE -- ${turn} turns`, "result"); }
+  else if (turn >= 12)       { over = true; addLog(`\n* STALEMATE -- nightfall (1800)`, "result"); }
 }
 
 // =================================================================
@@ -657,9 +688,9 @@ function renderGrid(f: Frame): void {
     + `<div class="offmap-det">${f.defGuns}x 76mm | ${f.defGuns > 0 ? "READY" : "DESTROYED"}</div></div></div>`;
 
   // zone labels
-  for (let r = 0; r < 5; r++) {
+  for (let r = 0; r < 7; r++) {
     const y = MAP_PAD_TOP + r * RS + Math.floor(HH / 2) - 6;
-    const cls = r <= 1 ? "zone zone-def" : r >= 3 ? "zone zone-atk" : "zone zone-nml";
+    const cls = r <= 2 ? "zone zone-def" : r >= 4 ? "zone zone-atk" : "zone zone-nml";
     html += `<div class="${cls}" style="top:${y}px">${ZONES[r]}</div>`;
   }
 
@@ -678,29 +709,49 @@ function renderGrid(f: Frame): void {
       +   `<span class="hex-id">${LABELS[i]}</span>`
       +   `<span class="hex-ter">${esc(t.terrain)} x${t.mul}</span>`
       + `</div>`
-      + `<div class="hex-units">${mkUnits(onTile)}</div>`
+      + `<div class="hex-units">${mkUnits(onTile, f.reconOut)}</div>`
       + `</div>`;
   }
 
   // off-map attacker art (bottom)
-  const botY = MAP_PAD_TOP + 4 * RS + HH + 8;
+  const botY = MAP_PAD_TOP + 6 * RS + HH + 8;
   html += `<div class="offmap offmap-atk" style="top:${botY}px">`
     + `<div class="offmap-sym">${symSvg(SIDC_ATK_ART, 24)}</div>`
     + `<div class="offmap-info"><div class="offmap-nm">394th Art Bn</div>`
     + `<div class="offmap-det">${f.atkGuns}x 105mm | ${f.atkGuns > 0 ? "READY" : "DESTROYED"}</div></div></div>`;
 
+  // recon arrows (parent -> recon tile) during recon phase
+  if (f.reconOut) {
+    const rcns = f.units.filter(u => u.type === "recon" && !u.routed && u.parent);
+    for (const r of rcns) {
+      const par = f.units.find(u => u.id === r.parent);
+      if (!par || par.tile === r.tile) continue;
+      const from = HP[par.tile], to = HP[r.tile];
+      const x1 = from.x + HW / 2, y1 = from.y + HH / 2;
+      const x2 = to.x + HW / 2, y2 = to.y + HH / 2;
+      html += `<svg class="rcn-arrow" style="position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:20">`
+        + `<defs><marker id="ah" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">`
+        + `<path d="M0,0 L8,3 L0,6" fill="#2080c0"/></marker></defs>`
+        + `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#2080c0" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#ah)"/>`
+        + `</svg>`;
+    }
+  }
+
   // scale indicator
-  const scaleY = MAP_PAD_TOP + 4 * RS + HH + 46;
+  const scaleY = MAP_PAD_TOP + 6 * RS + HH + 46;
   html += `<div class="map-scale" style="top:${scaleY}px">1 hex ~ 500m across</div>`;
 
   g.innerHTML = html;
 }
 
-function mkUnits(on: Unit[]): string {
-  // sort: defenders first, then attackers; infantry before recon
-  const sorted = [...on].sort((a, b) => {
+function mkUnits(on: Unit[], reconOut: boolean): string {
+  // recon only visible when deployed (reconOut snapshot)
+  const visible = on.filter(u => {
+    if (u.type === "recon") return reconOut;
+    return true;
+  });
+  const sorted = [...visible].sort((a, b) => {
     if (a.side !== b.side) return a.side === "def" ? -1 : 1;
-    if (a.type !== b.type) return a.type === "inf" ? -1 : 1;
     return 0;
   });
   return sorted.map((u, i) => mkUnit(u, 10 + i)).join("");
@@ -710,11 +761,11 @@ function mkUnit(u: Unit, z: number): string {
   const fog = !u.revealed && u.side === "def";
   const sup = u.suppression > 0 ? ` u-s${u.suppression}` : "";
   const cls = u.side === "atk" ? "u-atk" : "u-def";
-  const szPx = u.size === "plt" ? 18 : 24;
+  const szPx = u.size === "plt" ? 14 : 18;
 
   if (fog) {
     return `<div class="unit ${cls} u-fog" style="z-index:${z}" title="Unidentified enemy unit">`
-      + `<div class="u-sym">${symSvg(SIDC_UNK, 20)}</div>`
+      + `<div class="u-sym">${symSvg(SIDC_UNK, 16)}</div>`
       + `<div class="u-label">???</div></div>`;
   }
 
@@ -725,7 +776,7 @@ function mkUnit(u: Unit, z: number): string {
 
   return `<div class="unit ${cls}${sup}${rcn ? " u-rcn" : ""}" style="z-index:${z}" title="${esc(tip)}">`
     + `<div class="u-sym">${symSvg(u.sidc, szPx)}</div>`
-    + `<div class="u-label">${u.name} ${u.men} CV:${cv(u)}${ent}${st}</div>`
+    + `<div class="u-label"><div class="u-name">${u.id}</div>${u.men} CV:${cv(u)}${ent}${st}</div>`
     + `</div>`;
 }
 
@@ -781,10 +832,11 @@ function renderLog(logEnd: number): void {
   el.scrollTop = el.scrollHeight;
 }
 
-// -- Phase / controls ---------------------------------------------
+// -- Status / controls --------------------------------------------
 
 function renderPhaseBar(f: Frame): void {
-  $("phase").textContent = `TURN ${f.turn}  |  ${PH[f.phase]}`;
+  const label = f.over ? "RESULT" : hourStr(f.turn);
+  $("phase").textContent = label;
   $("step").textContent = `${stepIdx + 1} / ${steps.length}`;
   ($("progress") as HTMLElement).style.width = `${(stepIdx / Math.max(1, steps.length - 1)) * 100}%`;
 }
@@ -807,7 +859,7 @@ function renderResults(): void {
   }
 
   let h = `<div class="res-v">${esc(verdict)}</div>`;
-  h += `<div class="res-sub">Turns: ${steps[steps.length-1].turn}  |  Atk Art: ${steps[steps.length-1].atkGuns}/${steps[0].atkGuns} guns  |  Def Art: ${steps[steps.length-1].defGuns}/${steps[0].defGuns} guns</div>`;
+  h += `<div class="res-sub">${hourStr(1)}–${hourStr(steps[steps.length-1].turn)} (${steps[steps.length-1].turn} hrs)  |  Atk Art: ${steps[steps.length-1].atkGuns}/${steps[0].atkGuns} guns  |  Def Art: ${steps[steps.length-1].defGuns}/${steps[0].defGuns} guns</div>`;
 
   for (const side of ["atk", "def"] as const) {
     const label = side === "atk" ? "394th Infantry Regiment" : "1028th Rifle Regiment";
@@ -844,5 +896,27 @@ $("prev").addEventListener("click", () => { if (stepIdx > 0) { stepIdx--; render
 $("next").addEventListener("click", () => { if (stepIdx < steps.length - 1) { stepIdx++; renderFrame(); } });
 $("skip").addEventListener("click", () => { stepIdx = steps.length - 1; renderFrame(); });
 $("reset").addEventListener("click", initBattle);
+
+// Keyboard hotkeys
+document.addEventListener("keydown", (e: KeyboardEvent) => {
+  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+  switch (e.key) {
+    case "ArrowRight": case "d": case ".":
+      if (stepIdx < steps.length - 1) { stepIdx++; renderFrame(); }
+      e.preventDefault(); break;
+    case "ArrowLeft": case "a": case ",":
+      if (stepIdx > 0) { stepIdx--; renderFrame(); }
+      e.preventDefault(); break;
+    case "End": case "s":
+      stepIdx = steps.length - 1; renderFrame();
+      e.preventDefault(); break;
+    case "Home": case "w":
+      stepIdx = 0; renderFrame();
+      e.preventDefault(); break;
+    case "r":
+      initBattle();
+      e.preventDefault(); break;
+  }
+});
 
 initBattle();
