@@ -329,7 +329,20 @@ function simulate(attacker: Division, defender: Division): { attacker: Division;
 
   // battalion commander moves 
   // does that make sense? 
+  
+  // so order goes like this 
+  // recon -> art ->  attacker move, defender react
   // 
+
+  // ww2 casual data:
+  // Attacking infantry in the open: 2-4% of engaged strength per day
+  // Attacking infantry with fire support: 1-3%
+  // Defending infantry in prepared positions: 0.5-1.5%
+  // Defending infantry in the open: 2-3% (artillery eats you)
+  // Urban combat (both sides): 3-6%  
+
+  // we also have position (3-6 km) /  zone (10-20km)  attack / defense.
+
   
   
 
