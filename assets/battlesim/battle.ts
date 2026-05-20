@@ -64,6 +64,18 @@ const DIVISIONS: Record<string, Division> = {
   },
 };
 
+// organization knowledge
+// squad - large enough to maneuver alone. small enough for one guy to lead it
+// platoon - achieves fire and maneuver. small enough to keep track of all people
+// company - largest frontline unit (500 m depth. so each platoon can reach with small arms. 150 m distance so each platoon doesnt get hit by artillery)
+// battalion - smallest independent. contains food
+// regiment - often contains its own type. Inf reg, contains inf bat
+// division - contains mix of regiments. Combined arms
+// Operational:
+// corps; contains multiple division. and unique support units. like heavy arty. that can be assigned to any sub unit
+// army - 
+
+
 const UNIT_KEYS: [keyof Division, string][] = [
   ["manpower",       "Manpower"],
   ["rifles",         "Rifles"],
@@ -147,12 +159,63 @@ function simulate(attacker: Division, defender: Division): { attacker: Division;
   
 
   // now for defense thresholds. without buildup
-  // 01K: half battalion. observation only. march through it 
-  // 02K: 1 battalion strength regiment, can delay 12-24hrs (kampfgruppe 45)
-  // 05K: 1 regiment. hold probing attacks and unsupported assults. But prepared attack it falls down (soviet rifle quiet sector)
+  //  1K: half battalion. observation only. march through it 
+  //  2K: 1 battalion strength regiment, can delay 12-24hrs (kampfgruppe 45)
+  //  5K: 1 regiment. hold probing attacks and unsupported assults. But prepared attack it falls down (soviet rifle quiet sector)
   // 10K: 1 division. 2 : 1 repel. 3 : 1 hold for a day (normandy)
   // 15K: 1 division + attachments. 4 : 1 (cassino / stalingrad tractor factory)
 
+  // from rifle company handbook fm 7-10 1944 
+  // move
+  // day / night. 
+
+  // attack
+  // battalion   has reconned the are
+  // approach march (day). 300 yds max split / less if woods. (visibile). Wpn squad at back. Mortar follow each platoon. patrols and scouts at side and front
+  // march. if both platoon takes their. then reserve moves
+  // one platoon at a time. unless faster is important
+  // zone of attack 
+
+
+  // defense    
+  // frontage: poor observation / field of fire:  500 yds (woods)
+  // frontage: good observation / field of fire: 1000 yds (plains/fields)
+  // unlikely to be attacked: above 1000 yds
+  // depth: max 500 yds. each unit can reach eachother in small arms (m1 range is 500) (rifle support range)
+  // depth: min 150 yds. each unit should not be hit by same artillery
+
+  // defense. hold: fire at effective range. delay: Fire above effective range. 
+  
+
+  // day: hold woods (few at field)
+  // night: hold fields (few in woods
+  
+  // platoon defense
+  // (FRONTLINE) repel with range
+  // (SUPPORT) support frontline, limit penetration, counterattack, protect flanks
+  // frontage (by fire ): 250 yds (woods). 500 yds (fields). 500+ (fields, clear vision)
+  // frontage (physical): 300 yds (rest is by fire)
+  
+  // squad deploymnet: flanks so they have mutual overlap in middle
+  // 60 mm deployment: arm and hand reach. 100 yds
+  // defense: trench or foxhole
+  //    
+
+  // so i guess each unit is one o fthe following
+  // attack / defense / support
+  // move / hold / attack
+
+
+  // regiment defense   
+  // frontage: 2000 yds (woods). 5000 yds (field). 
+  // battalion defense:
+  // frontage: 1000 yds (woods). 2000 yds (field). 2500 yds (open field) 3500 yds (swamp/stream)
+  // depth: 800-1400 yds
+
+  // clearing woods / deep  defense (good observability by enemy), camuflage  
+
+
+  // supply classes
 
   // field fortifications
   // 02K: 04K power. 
@@ -339,12 +402,9 @@ function simulate(attacker: Division, defender: Division): { attacker: Division;
   // Attacking infantry with fire support: 1-3%
   // Defending infantry in prepared positions: 0.5-1.5%
   // Defending infantry in the open: 2-3% (artillery eats you)
-  // Urban combat (both sides): 3-6%  
+  // Urban combat (boh sides): 3-6%  
 
   // we also have position (3-6 km) /  zone (10-20km)  attack / defense.
-
-  
-  
 
   return { attacker, defender, rounds };
 }
