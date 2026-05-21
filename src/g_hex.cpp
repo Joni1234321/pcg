@@ -19,6 +19,12 @@ using namespace pce::ui;
 void arcade::RunHex() {
     Singleton::Get<WindowState>().clear_color = colors::light_sky_blue;
 
+    HexMap& hex_map = Singleton::Get<HexMap>();
+    hex_map.size = 80.0F;
+    hex_map.positions.push_back(float2 { 600.0F, 200.0F });
+    hex_map.positions.push_back(float2 { 1000.0F, 200.0F });
+    hex_map.positions.push_back(float2 { 600.0F, 400.0F });
+
     // Systems
     Orchestra orchestra { };
     orchestra.Add<DebugSystem>();
