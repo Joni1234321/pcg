@@ -1,6 +1,7 @@
 #include "r_ui_node.hpp"
 
 #include <ranges>
+#include <span>
 
 #include "0_engine/r_window.hpp"
 #include "0_engine/u_colors.hpp"
@@ -69,16 +70,16 @@ void NodeTree::Clear() {
     children.clear();
     subtree_roots.clear();
 }
-NodeBuilder::NodeBuilder(const Handle<NodeTree> tree, const Layout new_layout, const uint2 position) : node_reference { tree, data[tree].AddRoot() } {
+NodeBuilder::NodeBuilder(const Handle<NodeTree> tree, const Layout new_layout, const uint2 position) : node_reference { tree, globalData[tree].AddRoot() } {
     style.position = position;
     style.width = new_layout.width;
     style.height = new_layout.height;
 }
-NodeBuilder::NodeBuilder(const Handle<NodeTree> tree, const Handle<Node> parent, const Layout new_layout) : node_reference { tree, data[tree].AddNode(parent) } {
+NodeBuilder::NodeBuilder(const Handle<NodeTree> tree, const Handle<Node> parent, const Layout new_layout) : node_reference { tree, globalData[tree].AddNode(parent) } {
     style.width = new_layout.width;
     style.height = new_layout.height;
 }
-NodeBuilder::NodeBuilder(const NodeReference parent, const Layout new_layout) : node_reference { parent.tree, data[parent.tree].AddNode(parent.node) } {
+NodeBuilder::NodeBuilder(const NodeReference parent, const Layout new_layout) : node_reference { parent.tree, globalData[parent.tree].AddNode(parent.node) } {
     style.width = new_layout.width;
     style.height = new_layout.height;
 }
@@ -160,7 +161,7 @@ NodeBuilder& NodeBuilder::OnClick(NodeReaction&& reaction) {
     return *this;
 }
 Handle<Node> NodeBuilder::Build() const {
-    data[node_reference.tree].MarkDirty();
+    globalData[node_reference.tree].MarkDirty();
     return node_reference.node;
 }
 
@@ -181,9 +182,9 @@ OptionalHandle<Node> NodeAt(const NodeTree& tree, const uint2 screen_position) {
     return OptionalHandle<Node> { node.id };
 }
 HoveredType NodeAt(const uint2 mouse_position) {
-    for (const auto [i, tree] : std::views::zip(std::views::iota(0u), data.Get<NodeTree>())) {
+    for (const auto [i, tree] : std::views::zip(std::views::iota(0u), globalData.Get<NodeTree>())) {
         const OptionalHandle<Node> node = NodeAt(tree, mouse_position);
-        if (node.IsValid()) { return NodeReference { .tree = Handle { data.Get<NodeTree>().IndexToHandle(static_cast<u32>(i)) }, .node = node.GetHandle() }; }
+        if (node.IsValid()) { return NodeReference { .tree = Handle { globalData.Get<NodeTree>().IndexToHandle(static_cast<u32>(i)) }, .node = node.GetHandle() }; }
     }
     return std::nullopt;
 }
@@ -378,7 +379,7 @@ void AddNodeToFrameElement(NodeTree& tree, const Handle<Node> node) {
         tree.frame_elements.texts.push_back(TextElement { .text = tree.node_ttf_texts[node].Get(), .position = { static_cast<f32>(style.InnerBoxPosition().x), static_cast<f32>(style.InnerBoxPosition().y) } });
     } else if (style.texture.IsValid()) {
         add_type(ElementType::texture);
-        tree.frame_elements.textures.push_back(TextureElement { .rect = style.OuterRect(), .texture = data[style.texture.GetHandle()].ToSDL() });
+        tree.frame_elements.textures.push_back(TextureElement { .rect = style.OuterRect(), .texture = globalData[style.texture.GetHandle()].ToSDL() });
     } else if (style.background_color.a != 0U) {
         add_type(ElementType::rectangle);
         tree.frame_elements.rectangles.push_back(RectangleElement { .color = style.background_color, .rect = style.OuterRect() });
@@ -410,21 +411,21 @@ const FrameElements& GetFrameElements(NodeTree& tree) {
 
 void Hover(const NodeReference node_reference) {
     // Logger().Log("Hover {}", NodeSystem::node_trees[node_reference.tree].node_properties[node_reference.node].text);
-    const NodeProperties& properties = data[node_reference.tree].node_properties[node_reference.node];
+    const NodeProperties& properties = globalData[node_reference.tree].node_properties[node_reference.node];
     if (properties.on_hover) { properties.on_hover(node_reference); }
 }
 void HoverOut(const NodeReference node_reference) {
     // Logger().Log("Hover Out {}", NodeSystem::node_trees[node_reference.tree].node_properties[node_reference.node].text);
-    const NodeProperties& properties = data[node_reference.tree].node_properties[node_reference.node];
+    const NodeProperties& properties = globalData[node_reference.tree].node_properties[node_reference.node];
     if (properties.on_hover_out) { properties.on_hover_out(node_reference); }
 }
 void Click(const NodeReference node_reference) {
     // Logger().Log("Clicked {}", data[node_reference.tree].node_properties[node_reference.node].text);
-    const NodeProperties& properties = data[node_reference.tree].node_properties[node_reference.node];
+    const NodeProperties& properties = globalData[node_reference.tree].node_properties[node_reference.node];
     if (properties.on_click) { properties.on_click(node_reference); }
 }
 void Propagate(NodeReference node_reference, const NodeReaction& reaction) {
-    const NodeTree& tree = data[node_reference.tree];
+    const NodeTree& tree = globalData[node_reference.tree];
     const Handle<Node> root = tree.Root();
     while (true) {
         std::invoke(reaction, node_reference);
@@ -434,7 +435,7 @@ void Propagate(NodeReference node_reference, const NodeReaction& reaction) {
 }
 void NodeInputSystem::operator()() const {
     HoveredType& hovered = Singleton::Get<HoveredType>();
-    HandleList<NodeTree>& trees = data.Get<NodeTree>();
+    HandleList<NodeTree>& trees = globalData.Get<NodeTree>();
     if (Singleton::Get<InputState>().left_mouse_down && hovered.has_value()) { Propagate(hovered.value(), Click); }
 
     if (hovered.has_value() && !trees[hovered->tree].styles.ValidHandle(hovered->node)) { hovered = std::nullopt; }
@@ -453,7 +454,7 @@ void NodeInputSystem::operator()() const {
     }
 }
 void NodeRenderSystem::operator()() const {
-    for (NodeTree& tree : data.Get<NodeTree>() | std::views::reverse | std::views::filter(&NodeTree::GetDisplay)) {
+    for (NodeTree& tree : globalData.Get<NodeTree>() | std::views::reverse | std::views::filter(&NodeTree::GetDisplay)) {
         const FrameElements& frame_elements = GetFrameElements(tree);
         std::span rectangles { frame_elements.rectangles };
         std::span textures { frame_elements.textures };

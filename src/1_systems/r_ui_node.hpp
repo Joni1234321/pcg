@@ -2,8 +2,6 @@
 
 #include <SDL3/SDL_render.h>
 
-#include "r_ui_node.hpp"
-
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_texture.hpp"
 #include "0_engine/u_types.hpp"
@@ -18,13 +16,13 @@ struct NodeInputSystem {
 };
 struct NodeRenderSystem {
     void operator()() const;
-    ~NodeRenderSystem() { data.Get<NodeTree>().clear(); }
+    ~NodeRenderSystem() { globalData.Get<NodeTree>().clear(); }
 };
 
 class NodeBuilder {
     NodeReference node_reference;
-    NodeStyle& style { data[node_reference.tree].styles[node_reference.node] };
-    NodeProperties& properties { data[node_reference.tree].node_properties[node_reference.node] };
+    NodeStyle& style { globalData[node_reference.tree].styles[node_reference.node] };
+    NodeProperties& properties { globalData[node_reference.tree].node_properties[node_reference.node] };
 
 public:
     NodeBuilder(Handle<NodeTree> tree, Layout new_layout, uint2 position);
@@ -75,7 +73,7 @@ protected:
     [[nodiscard]] static NodeBuilderHelper B(const NodeReference parent) { return NodeBuilderHelper(parent); }
 };
 struct Frame {
-    Handle<NodeTree> tree { data.Create<NodeTree>() };
+    Handle<NodeTree> tree { globalData.Create<NodeTree>() };
     Handle<Node> frame { NodeBuilder(tree, fill, uint2 { 0U, 0U }).Build() };
 
 protected:

@@ -42,6 +42,7 @@ add_executable(pcg
                src/g_cosmoclick.cpp
                src/g_commandstrike.cpp
                src/g_battlesim.cpp
+               src/g_hex.cpp
                src/g_hexbattle.cpp
                src/g_factory.cpp
                src/g_game.cpp

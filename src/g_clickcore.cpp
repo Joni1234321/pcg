@@ -52,15 +52,15 @@ struct MainMenuFrame : Frame {
     Handle<Node> exit_button { B(menu).Node(hug).Text("Exit", FontSizes::h1, colors::ruby_red).Build() };
 };
 struct GameFrame : Frame {
-    void SetTime(const miliseconds32 time_ms) const { data[tree].node_properties[time_label].text = std::format("Time {:02}:{:02}.{:02}", time_ms.value / (1000U * 60U), time_ms.value / 1000U % 60U, time_ms.value % 100U); }
+    void SetTime(const miliseconds32 time_ms) const { globalData[tree].node_properties[time_label].text = std::format("Time {:02}:{:02}.{:02}", time_ms.value / (1000U * 60U), time_ms.value / 1000U % 60U, time_ms.value % 100U); }
 
-    Handle<Node> root { B(frame).Node(fill).Center().Direction(vertical).Texture(data.Create<Texture>(Asset("rainforest.jpg"))).Padding2(uint2 { 0U, 30U }).Build() };
+    Handle<Node> root { B(frame).Node(fill).Center().Direction(vertical).Texture(globalData.Create<Texture>(Asset("rainforest.jpg"))).Padding2(uint2 { 0U, 30U }).Build() };
     Handle<Node> title { B(root).Node(hug).Text("🎮 GAME TIME 🎮", FontSizes::h1, colors::navy_blue).Padding2(uint2 { 20U, 10U }).Center().Build() };
     Handle<Node> score_box { B(root).Node(hug).Padding2(uint2 { 10U, 5U }).Fill(colors::forest_green).Direction(vertical).Center().Build() };
     Handle<Node> time_label { B(score_box).Node(hug).Text("Time: 00:00.00", FontSizes::h2, colors::light_gray).Padding(5U).Build() };
     Handle<Node> score_label { B(score_box).Node(hug).Text("Score: 0000", FontSizes::h2, colors::gold).Padding(5U).Build() };
     Handle<Node> game_area { B(root).Node(fill).Padding2(uint2 { 300U, 100U }).Build() };
-    Handle<Node> box { B(game_area).Node(100U).Fill(colors::ruby_red).Texture(data.Create<Texture>(Asset("parrot.jpg"))).Padding(5U).Build() };
+    Handle<Node> box { B(game_area).Node(100U).Fill(colors::ruby_red).Texture(globalData.Create<Texture>(Asset("parrot.jpg"))).Padding(5U).Build() };
 };
 
 class ClickCoreFrames {
@@ -100,15 +100,15 @@ private:
     Scene GameOverScene();
 };
 constexpr MainMenuFrame& ClickCoreFrames::MainMenuFrame() {
-    data[main_menu_frame.tree].MarkDirty();
+    globalData[main_menu_frame.tree].MarkDirty();
     return main_menu_frame;
 }
 constexpr GameFrame& ClickCoreFrames::GameFrame() {
-    data[game_frame.tree].MarkDirty();
+    globalData[game_frame.tree].MarkDirty();
     return game_frame;
 }
 constexpr HighScoreFrame& ClickCoreFrames::HighScoreFrame() {
-    data[high_score_frame.tree].MarkDirty();
+    globalData[high_score_frame.tree].MarkDirty();
     return high_score_frame;
 }
 void ClickCore::Tick() {
@@ -138,13 +138,13 @@ Scene ClickCore::MainMenuScene() {
     const InputState& input_state = Singleton::Get<InputState>();
     if (input_state.left_mouse_down) {
         const MainMenuFrame& main_menu = frames.MainMenuFrame();
-        if (data[main_menu.tree].styles[main_menu.start_button].IsInside(input_state.mouse_position)) {
-            data[main_menu.tree].SetDisplay(false);
+        if (globalData[main_menu.tree].styles[main_menu.start_button].IsInside(input_state.mouse_position)) {
+            globalData[main_menu.tree].SetDisplay(false);
             game = RoundData { .score = Score { 0U }, .start_time = TimeNowMS() };
             return Scene::game;
         }
-        if (data[main_menu.tree].styles[main_menu.settings_button].IsInside(input_state.mouse_position)) { return Scene::game_over; }
-        if (data[main_menu.tree].styles[main_menu.exit_button].IsInside(input_state.mouse_position)) { return Scene::quit; }
+        if (globalData[main_menu.tree].styles[main_menu.settings_button].IsInside(input_state.mouse_position)) { return Scene::game_over; }
+        if (globalData[main_menu.tree].styles[main_menu.exit_button].IsInside(input_state.mouse_position)) { return Scene::quit; }
     }
     return Scene::main_menu;
 }
@@ -159,27 +159,27 @@ Scene ClickCore::GameScene() {
 
         const MainMenuFrame& main_menu_frame = frames.MainMenuFrame();
         HighScoreFrame& high_score_frame = frames.HighScoreFrame();
-        data[main_menu_frame.tree].SetDisplay(true);
-        data[high_score_frame.tree].SetDisplay(true);
+        globalData[main_menu_frame.tree].SetDisplay(true);
+        globalData[high_score_frame.tree].SetDisplay(true);
 
-        data[main_menu_frame.tree].node_properties[main_menu_frame.start_button].text = "Play Again";
+        globalData[main_menu_frame.tree].node_properties[main_menu_frame.start_button].text = "Play Again";
         game_frame.SetTime(miliseconds32 { 0U });
-        data[game_frame.tree].styles[game_frame.box].background_color.a = 0U;
+        globalData[game_frame.tree].styles[game_frame.box].background_color.a = 0U;
         high_score_frame.highscores.Set(std::views::zip(std::views::iota(0u, game_data.high_scores.size()), game_data.high_scores | std::views::reverse));
         return Scene::game_over;
     }
     const miliseconds32 time_left_ms = GAME_TIME - elapsed;
-    data[game_frame.tree].node_properties[game_frame.score_label].text = std::format("Score {:4}", game.score);
+    globalData[game_frame.tree].node_properties[game_frame.score_label].text = std::format("Score {:4}", game.score);
     game_frame.SetTime(time_left_ms);
 
     const InputState& input_state = Singleton::Get<InputState>();
     if (input_state.left_mouse_down || input_state.left_mouse_up) {
-        if (data[game_frame.tree].styles[game_frame.box].IsInside(input_state.mouse_position)) {
+        if (globalData[game_frame.tree].styles[game_frame.box].IsInside(input_state.mouse_position)) {
             constexpr Score points = Score { 50U };
             game.score += points;
-            const uint2 area = data[game_frame.tree].styles[game_frame.game_area].OuterBoxSize() - data[game_frame.tree].styles[game_frame.box].OuterBoxSize();
+            const uint2 area = globalData[game_frame.tree].styles[game_frame.game_area].OuterBoxSize() - globalData[game_frame.tree].styles[game_frame.box].OuterBoxSize();
             const uint4 random_position = uint4 { Rand(area.x), Rand(area.y), 0U, 0U };
-            data[game_frame.tree].styles[game_frame.game_area].padding = random_position;
+            globalData[game_frame.tree].styles[game_frame.game_area].padding = random_position;
         }
     }
     return Scene::game;
@@ -187,16 +187,16 @@ Scene ClickCore::GameScene() {
 Scene ClickCore::GameOverScene() {
     constexpr f32 slow_down = 1000.0F;
     const GameFrame& game_frame = frames.GameFrame();
-    data[game_frame.tree].styles[game_frame.box].background_color = colors::AnimateDamp(static_cast<f32>(Singleton::Get<TickState>().tick.value) / slow_down);
-    data[game_frame.tree].styles[game_frame.score_box].background_color = colors::AnimateDamp(Singleton::Get<TickState>().tick.value * 1.2F / slow_down);
+    globalData[game_frame.tree].styles[game_frame.box].background_color = colors::AnimateDamp(static_cast<f32>(Singleton::Get<TickState>().tick.value) / slow_down);
+    globalData[game_frame.tree].styles[game_frame.score_box].background_color = colors::AnimateDamp(Singleton::Get<TickState>().tick.value * 1.2F / slow_down);
 
     const Scene scene = MainMenuScene();
     if (scene == Scene::main_menu) { return Scene::game_over; }
     if (scene == Scene::game) {
         const HighScoreFrame& high_score_frame = frames.HighScoreFrame();
-        data[game_frame.tree].styles[game_frame.box].background_color = colors::ruby_red;
-        data[game_frame.tree].styles[game_frame.score_box].background_color = colors::forest_green;
-        data[high_score_frame.tree].SetDisplay(false);
+        globalData[game_frame.tree].styles[game_frame.box].background_color = colors::ruby_red;
+        globalData[game_frame.tree].styles[game_frame.score_box].background_color = colors::forest_green;
+        globalData[high_score_frame.tree].SetDisplay(false);
         return Scene::game;
     }
     return scene;
@@ -206,9 +206,9 @@ void HighScoreComponent::SetProperty(const Property& property) const {
     const b8 alternate = i % 2 == 0;
     const SDL_Color primary = alternate ? colors::deep_purple : colors::radiant_orange;
     const SDL_Color secondary = !alternate ? colors::deep_purple : colors::radiant_orange;
-    data[root.tree].styles[root.node].background_color = primary;
-    data[root.tree].styles[score].background_color = secondary;
-    data[root.tree].node_properties[score].text = std::format("{:05}", high_score.score);
+    globalData[root.tree].styles[root.node].background_color = primary;
+    globalData[root.tree].styles[score].background_color = secondary;
+    globalData[root.tree].node_properties[score].text = std::format("{:05}", high_score.score);
 }
 } // namespace pcg::clickcore
 

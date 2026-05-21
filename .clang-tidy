@@ -12,6 +12,7 @@ Checks: >
   -modernize-use-trailing-return-type,
   -readability-identifier-length,
   -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
   -readability-magic-numbers,
   -cppcoreguidelines-avoid-non-const-global-variables,
   -readability-implicit-bool-conversion,

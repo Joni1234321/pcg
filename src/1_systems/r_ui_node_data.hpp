@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <variant>
 
 #include <SDL3_ttf/SDL_ttf.h>
 
@@ -174,13 +173,13 @@ template <NodeComponent Component> struct NodeComponentPool {
     }
     [[nodiscard]] constexpr auto VisibleNodes() const noexcept { return std::span(nodes).first(size); }
     std::optional<u32> GetComponentAtPosition(const uint2 screen_position) const {
-        return find_index_of(VisibleNodes(), true, [this, screen_position](const Component& c) -> b8 { return data[c.root.tree].styles[c.root.node].IsInside(screen_position); });
+        return find_index_of(VisibleNodes(), true, [this, screen_position](const Component& c) -> b8 { return globalData[c.root.tree].styles[c.root.node].IsInside(screen_position); });
     }
 
 private:
     void SetSize(const u32 new_size) noexcept {
         if (size == new_size) { return; }
-        NodeTree& tree = data[parent.tree];
+        NodeTree& tree = globalData[parent.tree];
         for (; size < new_size; ++size) {
             if (nodes.size() > size) {
                 tree.AttachNode(nodes[size].root.node, parent.node);

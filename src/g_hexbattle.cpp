@@ -10,7 +10,6 @@
 
 #include "g_arcade.hpp"
 
-#include "0_engine/r_window.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
 #include "0_engine/u_logger.hpp"
@@ -22,7 +21,6 @@
 #include "1_systems/r_ui_node.hpp"
 #include "1_systems/t_debug_system.hpp"
 #include "1_systems/t_tick_system.hpp"
-#include "1_systems/u_animation_system.hpp"
 
 namespace pcg::hexbattle {
 using namespace pce;
@@ -39,9 +37,7 @@ static const std::array<const char*, ROWS> ROW_NAMES { "A", "B", "C", "D", "E", 
 [[nodiscard]] static u32 ColOf(const u32 i) { return i % COLS; }
 [[nodiscard]] static u32 RowOf(const u32 i) { return i / COLS; }
 
-[[nodiscard]] static String Label(const u32 i) {
-    return String { "{}{}", ROW_NAMES[RowOf(i)], ColOf(i) + 1U };
-}
+[[nodiscard]] static String Label(const u32 i) { return String { "{}{}", ROW_NAMES[RowOf(i)], ColOf(i) + 1U }; }
 
 // Flat-top odd-q offset hex neighbours
 [[nodiscard]] static List<u32> ComputeAdj(const u32 i) {
@@ -49,14 +45,14 @@ static const std::array<const char*, ROWS> ROW_NAMES { "A", "B", "C", "D", "E", 
     const i32 c = static_cast<i32>(ColOf(i));
     const i32 r = static_cast<i32>(RowOf(i));
     const b8 odd = (c % 2) == 1;
-    struct CR { i32 c, r; };
+    struct CR {
+        i32 c, r;
+    };
     const std::array<CR, 6> odd_nbrs { { { c, r - 1 }, { c, r + 1 }, { c - 1, r }, { c - 1, r + 1 }, { c + 1, r }, { c + 1, r + 1 } } };
     const std::array<CR, 6> even_nbrs { { { c, r - 1 }, { c, r + 1 }, { c - 1, r - 1 }, { c - 1, r }, { c + 1, r - 1 }, { c + 1, r } } };
     const auto& nbrs = odd ? odd_nbrs : even_nbrs;
     for (const auto& [nc, nr] : nbrs) {
-        if (nc >= 0 && nc < static_cast<i32>(COLS) && nr >= 0 && nr < static_cast<i32>(ROWS)) {
-            result.push_back(TileIdx(static_cast<u32>(nc), static_cast<u32>(nr)));
-        }
+        if (nc >= 0 && nc < static_cast<i32>(COLS) && nr >= 0 && nr < static_cast<i32>(ROWS)) { result.push_back(TileIdx(static_cast<u32>(nc), static_cast<u32>(nr))); }
     }
     return result;
 }
@@ -90,9 +86,9 @@ struct Unit {
     b8 routed;
     b8 entrenched;
     String parent;
-    i32 objective;       // -1 = none
+    i32 objective; // -1 = none
     b8 objective_complete;
-    String stance;       // "hold" | "delay" | ""
+    String stance; // "hold" | "delay" | ""
     i32 delay_turns;
     String activity;
     i32 reorg_turns;
@@ -131,9 +127,7 @@ struct Frame_ {
     return String { "{:02}{:02}", hh, mm };
 }
 
-[[nodiscard]] static i32 CV(const Unit& u) {
-    return static_cast<i32>(std::round(u.rifles / 10.0F + static_cast<f32>(u.mg) + static_cast<f32>(u.mortar) * 0.67F + static_cast<f32>(u.at) * 1.5F));
-}
+[[nodiscard]] static i32 CV(const Unit& u) { return static_cast<i32>(std::round(u.rifles / 10.0F + static_cast<f32>(u.mg) + static_cast<f32>(u.mortar) * 0.67F + static_cast<f32>(u.at) * 1.5F)); }
 
 static void ApplyCas(Unit& u, const i32 n) {
     const i32 actual = std::min(n, std::max(0, u.men));
@@ -172,11 +166,11 @@ struct Sim {
     }
 
     [[nodiscard]] static f32 TerrainMul(const std::string_view name) {
-        if (name == "field") return 1.0F;
-        if (name == "hill") return 1.5F;
-        if (name == "village") return 1.8F;
-        if (name == "forest") return 2.0F;
-        if (name == "ridge") return 1.7F;
+        if (name == "field") { return 1.0F; }
+        if (name == "hill") { return 1.5F; }
+        if (name == "village") { return 1.8F; }
+        if (name == "forest") { return 2.0F; }
+        if (name == "ridge") { return 1.7F; }
         return 1.0F;
     }
 
@@ -197,9 +191,7 @@ struct Sim {
         return f;
     }
 
-    Unit MkCo(const String& bn, const u32 num, const String& rgt, const Side side,
-              const i32 men, const i32 rifles, const i32 mg, const i32 mortar, const i32 at,
-              const i32 morale, const u32 tile) const {
+    Unit MkCo(const String& bn, const u32 num, const String& rgt, const Side side, const i32 men, const i32 rifles, const i32 mg, const i32 mortar, const i32 at, const i32 morale, const u32 tile) const {
         Unit u { };
         u.name = String { "{}/{}", num, bn };
         u.rgt = rgt;
@@ -228,9 +220,7 @@ struct Sim {
         return u;
     }
 
-    [[nodiscard]] b8 ParentStartsWithRSV(const Unit& u) const {
-        return u.parent.size() >= 4U && std::string_view { u.parent.c_str() }.starts_with("RSV/");
-    }
+    [[nodiscard]] b8 ParentStartsWithRSV(const Unit& u) const { return u.parent.size() >= 4U && std::string_view { u.parent.c_str() }.starts_with("RSV/"); }
 
     void Init() {
         // Terrain
@@ -241,9 +231,13 @@ struct Sim {
         tiles.clear();
         for (u32 r = 0U; r < ROWS; ++r) {
             std::array<const char*, COLS> tab { };
-            if (r <= 2U) { tab = TERR_DEF; }
-            else if (r >= 5U) { tab = TERR_ATK; }
-            else { tab = TERR_MID; }
+            if (r <= 2U) {
+                tab = TERR_DEF;
+            } else if (r >= 5U) {
+                tab = TERR_ATK;
+            } else {
+                tab = TERR_MID;
+            }
             // shuffle
             std::array<const char*, COLS> shuf = tab;
             for (i32 i = static_cast<i32>(COLS) - 1; i > 0; --i) {
@@ -271,9 +265,13 @@ struct Sim {
         // Defenders
         List<u32> row_c, row_d, row_b;
         for (u32 i = 0U; i < N_TILES; ++i) {
-            if (RowOf(i) == 2U) { row_c.push_back(i); }
-            else if (RowOf(i) == 3U) { row_d.push_back(i); }
-            else if (RowOf(i) == 1U) { row_b.push_back(i); }
+            if (RowOf(i) == 2U) {
+                row_c.push_back(i);
+            } else if (RowOf(i) == 3U) {
+                row_d.push_back(i);
+            } else if (RowOf(i) == 1U) {
+                row_b.push_back(i);
+            }
         }
         // sort row_d by terrain.mul desc
         std::ranges::sort(row_d.data, [&](const u32 a, const u32 b) { return tiles[a].mul > tiles[b].mul; });
@@ -281,8 +279,11 @@ struct Sim {
         List<u32> def_front;
         for (const u32 t : row_c) { def_front.push_back(t); }
         if (!row_d.empty()) { def_front.push_back(row_d[0]); }
-        if (row_d.size() > 1U) { def_front.push_back(row_d[1]); }
-        else if (!row_d.empty()) { def_front.push_back(row_d[0]); }
+        if (row_d.size() > 1U) {
+            def_front.push_back(row_d[1]);
+        } else if (!row_d.empty()) {
+            def_front.push_back(row_d[0]);
+        }
 
         List<u32> def_rear;
         for (u32 i = 0U; i < 3U && i < row_b.size(); ++i) { def_rear.push_back(row_b[i]); }
@@ -415,15 +416,19 @@ struct Sim {
             i32 best_dist = 999;
             for (const u32 t : obj_tiles) {
                 if (assigned[t]) { continue; }
-                const i32 dist = std::abs(static_cast<i32>(ColOf(t)) - col)
-                                 + std::abs(static_cast<i32>(RowOf(t)) - static_cast<i32>(RowOf(co.tile)));
-                if (dist < best_dist) { best_dist = dist; best = static_cast<i32>(t); }
+                const i32 dist = std::abs(static_cast<i32>(ColOf(t)) - col) + std::abs(static_cast<i32>(RowOf(t)) - static_cast<i32>(RowOf(co.tile)));
+                if (dist < best_dist) {
+                    best_dist = dist;
+                    best = static_cast<i32>(t);
+                }
             }
             if (best == -1) {
                 for (const u32 t : obj_tiles) {
-                    const i32 dist = std::abs(static_cast<i32>(ColOf(t)) - col)
-                                     + std::abs(static_cast<i32>(RowOf(t)) - static_cast<i32>(RowOf(co.tile)));
-                    if (dist < best_dist) { best_dist = dist; best = static_cast<i32>(t); }
+                    const i32 dist = std::abs(static_cast<i32>(ColOf(t)) - col) + std::abs(static_cast<i32>(RowOf(t)) - static_cast<i32>(RowOf(co.tile)));
+                    if (dist < best_dist) {
+                        best_dist = dist;
+                        best = static_cast<i32>(t);
+                    }
                 }
             }
             co.objective = best;
@@ -472,7 +477,10 @@ struct Sim {
             for (const u32 t : row_tiles) {
                 if (assigned[t]) { continue; }
                 const i32 dist = std::abs(static_cast<i32>(ColOf(t)) - col);
-                if (dist < best_dist) { best_dist = dist; best = static_cast<i32>(t); }
+                if (dist < best_dist) {
+                    best_dist = dist;
+                    best = static_cast<i32>(t);
+                }
             }
             if (best == -1 && !row_tiles.empty()) { best = static_cast<i32>(row_tiles[0]); }
             co.stance = "hold";
@@ -487,8 +495,11 @@ struct Sim {
     void CheckDefenderOrders() {
         if (def_order_hold_turns > 0U) {
             def_order_hold_turns--;
-            if (def_order_hold_turns == 0U) { IssueDefOrders(); }
-            else { AddLog(String { "DEF: new orders in {}", def_order_hold_turns }, LogType::info); }
+            if (def_order_hold_turns == 0U) {
+                IssueDefOrders();
+            } else {
+                AddLog(String { "DEF: new orders in {}", def_order_hold_turns }, LogType::info);
+            }
             return;
         }
         List<Unit*> def_cos;
@@ -522,7 +533,10 @@ struct Sim {
             }
             b8 atk_on_c = false;
             for (const Unit& u : units) {
-                if (u.side == Side::atk && !u.routed && RowOf(u.tile) <= 2U) { atk_on_c = true; break; }
+                if (u.side == Side::atk && !u.routed && RowOf(u.tile) <= 2U) {
+                    atk_on_c = true;
+                    break;
+                }
             }
             const b8 main_lost = main_line == 0U || weak >= (main_line + 1U) / 2U;
             if (main_lost || atk_on_c) {
@@ -536,16 +550,16 @@ struct Sim {
     void CheckOrderCompletion() {
         if (order_hold_turns > 0U) {
             order_hold_turns--;
-            if (order_hold_turns == 0U) { IssueOrders(); }
-            else { AddLog(String { "ATK: new orders in {}", order_hold_turns }, LogType::info); }
+            if (order_hold_turns == 0U) {
+                IssueOrders();
+            } else {
+                AddLog(String { "ATK: new orders in {}", order_hold_turns }, LogType::info);
+            }
             return;
         }
         List<Unit*> atk_cos;
         for (Unit& u : units) {
-            if (u.side == Side::atk && u.type == UnitType::inf && !u.routed
-                && u.objective >= 0 && !ParentStartsWithRSV(u)) {
-                atk_cos.push_back(&u);
-            }
+            if (u.side == Side::atk && u.type == UnitType::inf && !u.routed && u.objective >= 0 && !ParentStartsWithRSV(u)) { atk_cos.push_back(&u); }
         }
         if (atk_cos.empty()) { return; }
 
@@ -556,7 +570,10 @@ struct Sim {
             const b8 past_obj = RowOf(co->tile) < RowOf(obj);
             b8 obj_clear = true;
             for (const Unit& u : units) {
-                if (u.side == Side::def && u.tile == obj && !u.routed) { obj_clear = false; break; }
+                if (u.side == Side::def && u.tile == obj && !u.routed) {
+                    obj_clear = false;
+                    break;
+                }
             }
             if ((on_obj || past_obj) && obj_clear) {
                 co->objective_complete = true;
@@ -566,7 +583,10 @@ struct Sim {
 
         b8 all_done = true;
         for (const Unit* co : atk_cos) {
-            if (!co->objective_complete) { all_done = false; break; }
+            if (!co->objective_complete) {
+                all_done = false;
+                break;
+            }
         }
         if (!all_done) { return; }
         if (order_set >= 3U) { return; }
@@ -585,21 +605,29 @@ struct Sim {
                 if (u.side == Side::atk && ParentStartsWithRSV(u) && !u.routed) { has_reserve = true; }
                 if (u.side == Side::atk && !ParentStartsWithRSV(u) && u.type == UnitType::inf) {
                     any_fwd = true;
-                    if (u.routed) { routed_count++; }
-                    else {
+                    if (u.routed) {
+                        routed_count++;
+                    } else {
                         b8 engaged = false;
                         for (const Unit& d : units) {
                             if (d.side == Side::def && !d.routed) {
-                                if (d.tile == u.tile) { engaged = true; break; }
-                                if (adj[u.tile].Contains(d.tile)) { engaged = true; break; }
+                                if (d.tile == u.tile) {
+                                    engaged = true;
+                                    break;
+                                }
+                                if (adj[u.tile].Contains(d.tile)) {
+                                    engaged = true;
+                                    break;
+                                }
                             }
                         }
                         if (!engaged) { all_engaged = false; }
                     }
                 }
             }
-            if (!has_reserve) { reserve_committed = true; }
-            else {
+            if (!has_reserve) {
+                reserve_committed = true;
+            } else {
                 const b8 late_game = turn >= 6U;
                 if (routed_count >= 2U || (any_fwd && all_engaged && turn >= 3U) || late_game) {
                     reserve_committed = true;
@@ -616,7 +644,10 @@ struct Sim {
                         for (u32 i = 0U; i < N_TILES; ++i) {
                             if (RowOf(i) != target_row) { continue; }
                             const i32 dist = std::abs(static_cast<i32>(ColOf(i)) - col);
-                            if (dist < best_dist) { best_dist = dist; best = static_cast<i32>(i); }
+                            if (dist < best_dist) {
+                                best_dist = dist;
+                                best = static_cast<i32>(i);
+                            }
                         }
                         r.objective = best;
                         r.objective_complete = false;
@@ -638,7 +669,10 @@ struct Sim {
                 if (std::string_view { u.parent.c_str() } != bn_full) { continue; }
                 for (const Unit& a : units) {
                     if (a.side == Side::atk && !a.routed) {
-                        if (a.tile == u.tile || adj[u.tile].Contains(a.tile)) { under_pressure = true; break; }
+                        if (a.tile == u.tile || adj[u.tile].Contains(a.tile)) {
+                            under_pressure = true;
+                            break;
+                        }
                     }
                 }
                 if (under_pressure) { break; }
@@ -656,17 +690,26 @@ struct Sim {
             b8 def_here = false;
             for (const Unit& u : units) {
                 if (u.tile != i || u.routed) { continue; }
-                if (u.side == Side::atk) { atk_here = true; }
-                else if (u.side == Side::def) { def_here = true; }
+                if (u.side == Side::atk) {
+                    atk_here = true;
+                } else if (u.side == Side::def) {
+                    def_here = true;
+                }
             }
-            if (atk_here && !def_here) { tiles[i].owner = Side::atk; }
-            else if (def_here && !atk_here) { tiles[i].owner = Side::def; }
+            if (atk_here && !def_here) {
+                tiles[i].owner = Side::atk;
+            } else if (def_here && !atk_here) {
+                tiles[i].owner = Side::def;
+            }
         }
     }
 
     void UpdateFog() {
         for (u32 i = 0U; i < N_TILES; ++i) {
-            if (tiles[i].owner == Side::atk) { known_atk[i] = true; continue; }
+            if (tiles[i].owner == Side::atk) {
+                known_atk[i] = true;
+                continue;
+            }
             for (const Unit& u : units) {
                 if (u.side == Side::atk && !u.routed && (u.tile == i || adj[u.tile].Contains(i))) {
                     known_atk[i] = true;
@@ -675,7 +718,10 @@ struct Sim {
             }
         }
         for (u32 i = 0U; i < N_TILES; ++i) {
-            if (tiles[i].owner == Side::def) { known_def[i] = true; continue; }
+            if (tiles[i].owner == Side::def) {
+                known_def[i] = true;
+                continue;
+            }
             for (const Unit& u : units) {
                 if (u.side == Side::def && !u.routed && (u.tile == i || adj[u.tile].Contains(i))) {
                     known_def[i] = true;
@@ -720,15 +766,16 @@ struct Sim {
                 if (RowOf(t) >= RowOf(d.tile)) { continue; }
                 b8 blocked = false;
                 for (const Unit& u : units) {
-                    if (u.side == Side::atk && u.tile == t && !u.routed) { blocked = true; break; }
+                    if (u.side == Side::atk && u.tile == t && !u.routed) {
+                        blocked = true;
+                        break;
+                    }
                 }
                 if (!blocked) { rear.push_back(t); }
             }
             if (rear.empty()) { continue; }
             const i32 obj_col = static_cast<i32>(ColOf(static_cast<u32>(d.objective)));
-            std::ranges::sort(rear.data, [&](const u32 a, const u32 b) {
-                return std::abs(static_cast<i32>(ColOf(a)) - obj_col) < std::abs(static_cast<i32>(ColOf(b)) - obj_col);
-            });
+            std::ranges::sort(rear.data, [&](const u32 a, const u32 b) { return std::abs(static_cast<i32>(ColOf(a)) - obj_col) < std::abs(static_cast<i32>(ColOf(b)) - obj_col); });
             const u32 from = d.tile;
             d.tile = rear[0];
             d.entrenched = false;
@@ -787,9 +834,7 @@ struct Sim {
                     }
                     return false;
                 };
-                auto passable = [&](const u32 t) {
-                    return !enemy_on(t) && friendly_count(t) < CapacityOf(tiles[t].terrain);
-                };
+                auto passable = [&](const u32 t) { return !enemy_on(t) && friendly_count(t) < CapacityOf(tiles[t].terrain); };
 
                 List<u32> opts;
                 for (const u32 t : adj[a.tile]) {
@@ -816,7 +861,10 @@ struct Sim {
                 a.tile = dest;
                 AddLog(String { "{} marches {} -> {} (-{}MP)", a.id, Label(from), Label(dest), actual_cost }, LogType::move);
                 AutoSpot(units[ui]);
-                if (entering_zoc) { a.activity = "Deploying"; break; }
+                if (entering_zoc) {
+                    a.activity = "Deploying";
+                    break;
+                }
             }
             if (InEnemyZoc(a.tile, a.side) && a.activity != String { "Deploying" }) { a.activity = "In Contact"; }
         }
@@ -826,7 +874,11 @@ struct Sim {
         List<u32> spot_tiles { u.tile };
         for (const u32 t : adj[u.tile]) { spot_tiles.push_back(t); }
         for (const u32 ti : spot_tiles) {
-            if (u.side == Side::atk) { known_atk[ti] = true; } else { known_def[ti] = true; }
+            if (u.side == Side::atk) {
+                known_atk[ti] = true;
+            } else {
+                known_def[ti] = true;
+            }
             for (Unit& e : units) {
                 if (e.side == u.side || e.tile != ti || e.routed || e.revealed) { continue; }
                 const std::string_view terrain { tiles[ti].terrain.c_str() };
@@ -926,7 +978,13 @@ struct Sim {
         }
 
         const b8 is_delay = std::ranges::any_of(defs.data, [](const Unit* d) { return d->stance == String { "delay" }; });
-        if (is_delay) { ar *= 0.5F; dr *= 0.4F; for (Unit* d : defs) { if (d->stance == String { "delay" }) { d->delay_turns++; } } }
+        if (is_delay) {
+            ar *= 0.5F;
+            dr *= 0.4F;
+            for (Unit* d : defs) {
+                if (d->stance == String { "delay" }) { d->delay_turns++; }
+            }
+        }
         const f32 cas_mod = std::string_view { tile.terrain.c_str() } == "forest" ? 0.6F : 1.0F;
 
         const i32 a_loss = std::max(1, static_cast<i32>(std::floor(t_a_men * ar * (0.7F + Frand() * 0.6F) * cas_mod)));
@@ -934,7 +992,10 @@ struct Sim {
             const i32 l = std::max(1, static_cast<i32>(std::round(a_loss * static_cast<f32>(a->men) / static_cast<f32>(std::max(1, t_a_men)))));
             ApplyCas(*a, l);
             a->morale = Clamp(a->morale - static_cast<i32>(std::ceil(l / 10.0F)), 0, 100);
-            if (a->morale <= 15 || a->men < 80) { a->routed = true; AddLog(String { "X {} ROUTS", a->id }, LogType::result); }
+            if (a->morale <= 15 || a->men < 80) {
+                a->routed = true;
+                AddLog(String { "X {} ROUTS", a->id }, LogType::result);
+            }
         }
 
         i32 d_loss = 0;
@@ -950,7 +1011,10 @@ struct Sim {
                     if (RowOf(t) >= RowOf(d->tile)) { continue; }
                     b8 blocked = false;
                     for (const Unit& u2 : units) {
-                        if (u2.side == Side::atk && u2.tile == t && !u2.routed) { blocked = true; break; }
+                        if (u2.side == Side::atk && u2.tile == t && !u2.routed) {
+                            blocked = true;
+                            break;
+                        }
                     }
                     if (!blocked) { rear.push_back(t); }
                 }
@@ -970,7 +1034,10 @@ struct Sim {
                     if (RowOf(t) >= RowOf(d->tile)) { continue; }
                     b8 blocked = false;
                     for (const Unit& u2 : units) {
-                        if (u2.side == Side::atk && u2.tile == t && !u2.routed) { blocked = true; break; }
+                        if (u2.side == Side::atk && u2.tile == t && !u2.routed) {
+                            blocked = true;
+                            break;
+                        }
                     }
                     if (!blocked) { rear.push_back(t); }
                 }
@@ -988,11 +1055,17 @@ struct Sim {
 
         b8 d_holds = false;
         for (const Unit* d : defs) {
-            if (!d->routed && d->tile == ti) { d_holds = true; break; }
+            if (!d->routed && d->tile == ti) {
+                d_holds = true;
+                break;
+            }
         }
         b8 a_alive = false;
         for (const Unit* a : atks) {
-            if (!a->routed) { a_alive = true; break; }
+            if (!a->routed) {
+                a_alive = true;
+                break;
+            }
         }
         String result;
         if (!d_holds && a_alive) {
@@ -1004,11 +1077,13 @@ struct Sim {
             }
             result = String { "TAKES {}", Label(ti) };
         } else if (a_alive) {
-            for (Unit* a : atks) { if (!a->routed) { a->activity = "Engaging"; } }
-            for (Unit* d : defs) { if (!d->routed && d->tile == ti) { d->activity = d->stance == String { "delay" } ? "Delaying" : "Defending"; } }
-            result = eff >= 2.0F ? String { "hammers {}", Label(ti) } :
-                     eff >= 1.4F ? String { "presses {}", Label(ti) } :
-                     String { "repelled from {}", Label(ti) };
+            for (Unit* a : atks) {
+                if (!a->routed) { a->activity = "Engaging"; }
+            }
+            for (Unit* d : defs) {
+                if (!d->routed && d->tile == ti) { d->activity = d->stance == String { "delay" } ? "Delaying" : "Defending"; }
+            }
+            result = eff >= 2.0F ? String { "hammers {}", Label(ti) } : eff >= 1.4F ? String { "presses {}", Label(ti) } : String { "repelled from {}", Label(ti) };
         } else {
             result = String { "repelled from {}", Label(ti) };
         }
@@ -1068,7 +1143,10 @@ struct Sim {
                 for (const Unit& u : units) {
                     if (u.side == Side::def && u.tile == plan_tiles[pi] && !u.routed) { s += CV(u); }
                 }
-                if (s < weakest_cv) { weakest_cv = s; weakest_idx = pi; }
+                if (s < weakest_cv) {
+                    weakest_cv = s;
+                    weakest_idx = pi;
+                }
             }
             const u32 weak_tile = plan_tiles[weakest_idx];
             for (u32 ai = 0U; ai < attacker_indices.size(); ++ai) {
@@ -1095,7 +1173,10 @@ struct Sim {
             if (d.side != Side::def || d.routed || d.morale >= 35) { continue; }
             b8 in_contact = false;
             for (const Unit& u : units) {
-                if (u.side == Side::atk && !u.routed && adj[d.tile].Contains(u.tile)) { in_contact = true; break; }
+                if (u.side == Side::atk && !u.routed && adj[d.tile].Contains(u.tile)) {
+                    in_contact = true;
+                    break;
+                }
             }
             if (in_contact) { continue; }
             List<u32> bk;
@@ -1115,16 +1196,21 @@ struct Sim {
         if (order_set >= 3U) {
             all_orders_done = true;
             for (const Unit& u : units) {
-                if (u.side == Side::atk && u.type == UnitType::inf && !u.routed && u.objective >= 0
-                    && !u.objective_complete) { all_orders_done = false; break; }
+                if (u.side == Side::atk && u.type == UnitType::inf && !u.routed && u.objective >= 0 && !u.objective_complete) {
+                    all_orders_done = false;
+                    break;
+                }
             }
         }
         b8 def_alive = false;
         b8 atk_alive = false;
         for (const Unit& u : units) {
             if (u.routed) { continue; }
-            if (u.side == Side::def) { def_alive = true; }
-            else if (u.side == Side::atk && u.type == UnitType::inf) { atk_alive = true; }
+            if (u.side == Side::def) {
+                def_alive = true;
+            } else if (u.side == Side::atk && u.type == UnitType::inf) {
+                atk_alive = true;
+            }
         }
         if (all_orders_done) {
             over = true;
@@ -1145,8 +1231,11 @@ struct Sim {
         steps.clear();
         i32 atk_cv = 0, def_cv = 0;
         for (const Unit& u : units) {
-            if (u.side == Side::atk) { atk_cv += CV(u); }
-            else if (u.side == Side::def) { def_cv += CV(u); }
+            if (u.side == Side::atk) {
+                atk_cv += CV(u);
+            } else if (u.side == Side::def) {
+                def_cv += CV(u);
+            }
         }
         AddLog("== 394th Inf Rgt vs 1028th Rifle Rgt ==", LogType::hdr);
         AddLog(String { "394th CV: {}   1028th CV: {} (entrenched)", atk_cv, def_cv }, LogType::info);
@@ -1158,13 +1247,20 @@ struct Sim {
                 if (!u.routed) { u.suppression = std::max(0, u.suppression - 1); }
             }
             for (Unit& u : units) {
-                if (u.routed) { u.activity = "Routed"; continue; }
+                if (u.routed) {
+                    u.activity = "Routed";
+                    continue;
+                }
                 if (u.side == Side::def) {
                     u.activity = u.entrenched ? (u.stance == String { "delay" } ? "Delaying" : "Holding") : "Moving";
                 } else {
-                    if (ParentStartsWithRSV(u) && !reserve_committed) { u.activity = "Reserve"; }
-                    else if (u.reorg_turns > 0) { u.activity = "Reorganizing"; }
-                    else { u.activity = "Waiting"; }
+                    if (ParentStartsWithRSV(u) && !reserve_committed) {
+                        u.activity = "Reserve";
+                    } else if (u.reorg_turns > 0) {
+                        u.activity = "Reorganizing";
+                    } else {
+                        u.activity = "Waiting";
+                    }
                 }
             }
             AddLog(String { "==== T{} {} ====", turn, TStr(turn) }, LogType::hdr);
@@ -1183,7 +1279,10 @@ struct Sim {
             steps.push_back(Snap());
 
             // Safety: cap simulation to a reasonable upper bound to guarantee termination
-            if (turn > 40U) { over = true; break; }
+            if (turn > 40U) {
+                over = true;
+                break;
+            }
         }
     }
 };
@@ -1196,11 +1295,11 @@ constexpr u32 TILE_W = 130U;
 constexpr u32 TILE_H = 100U;
 
 [[nodiscard]] static SDL_Color TerrainColor(const std::string_view name) {
-    if (name == "field") return SDL_Color { 196U, 188U, 130U, 255U };
-    if (name == "hill") return SDL_Color { 180U, 140U, 90U, 255U };
-    if (name == "village") return SDL_Color { 175U, 175U, 175U, 255U };
-    if (name == "forest") return SDL_Color { 60U, 110U, 60U, 255U };
-    if (name == "ridge") return SDL_Color { 130U, 100U, 70U, 255U };
+    if (name == "field") { return SDL_Color { 196U, 188U, 130U, 255U }; }
+    if (name == "hill") { return SDL_Color { 180U, 140U, 90U, 255U }; }
+    if (name == "village") { return SDL_Color { 175U, 175U, 175U, 255U }; }
+    if (name == "forest") { return SDL_Color { 60U, 110U, 60U, 255U }; }
+    if (name == "ridge") { return SDL_Color { 130U, 100U, 70U, 255U }; }
     return colors::gray;
 }
 
@@ -1320,23 +1419,36 @@ public:
     }
 
 private:
-    [[nodiscard]] static b8 KeyPressed(const UnorderedMap<SDL_Keycode, b8>& keys, const SDL_Keycode k) {
-        return keys.contains(k) && keys.at(k);
-    }
+    [[nodiscard]] static b8 KeyPressed(const UnorderedMap<SDL_Keycode, b8>& keys, const SDL_Keycode k) { return keys.contains(k) && keys.at(k); }
 
     void HandleInput(const InputState& input) {
         // Buttons
         if (input.left_mouse_down) {
-            if (data[ui.tree].styles[ui.btn_prev].IsInside(input.mouse_position)) { Prev(); return; }
-            if (data[ui.tree].styles[ui.btn_next].IsInside(input.mouse_position)) { Next(); return; }
-            if (data[ui.tree].styles[ui.btn_skip].IsInside(input.mouse_position)) { Skip(); return; }
-            if (data[ui.tree].styles[ui.btn_reset].IsInside(input.mouse_position)) { Reset(); return; }
-            if (data[ui.tree].styles[ui.btn_view].IsInside(input.mouse_position)) { ToggleView(); return; }
+            if (globalData[ui.tree].styles[ui.btn_prev].IsInside(input.mouse_position)) {
+                Prev();
+                return;
+            }
+            if (globalData[ui.tree].styles[ui.btn_next].IsInside(input.mouse_position)) {
+                Next();
+                return;
+            }
+            if (globalData[ui.tree].styles[ui.btn_skip].IsInside(input.mouse_position)) {
+                Skip();
+                return;
+            }
+            if (globalData[ui.tree].styles[ui.btn_reset].IsInside(input.mouse_position)) {
+                Reset();
+                return;
+            }
+            if (globalData[ui.tree].styles[ui.btn_view].IsInside(input.mouse_position)) {
+                ToggleView();
+                return;
+            }
 
             // Tile click
             for (u32 r = 0U; r < ROWS; ++r) {
                 for (u32 c = 0U; c < COLS; ++c) {
-                    if (data[ui.tree].styles[ui.tile_nodes[r][c].border].IsInside(input.mouse_position)) {
+                    if (globalData[ui.tree].styles[ui.tile_nodes[r][c].border].IsInside(input.mouse_position)) {
                         selected_tile = static_cast<i32>(TileIdx(c, r));
                         UpdateTileInfo();
                         return;
@@ -1347,23 +1459,52 @@ private:
 
         // Keys
         const auto& keys = input.keys_down;
-        if (KeyPressed(keys, SDLK_RIGHT) || KeyPressed(keys, SDLK_D) || KeyPressed(keys, SDLK_PERIOD)) { Next(); }
-        else if (KeyPressed(keys, SDLK_LEFT) || KeyPressed(keys, SDLK_A) || KeyPressed(keys, SDLK_COMMA)) { Prev(); }
-        else if (KeyPressed(keys, SDLK_END) || KeyPressed(keys, SDLK_S)) { Skip(); }
-        else if (KeyPressed(keys, SDLK_HOME) || KeyPressed(keys, SDLK_W)) { step_idx = 0U; Refresh(); }
-        else if (KeyPressed(keys, SDLK_R)) { Reset(); }
-        else if (KeyPressed(keys, SDLK_V)) { ToggleView(); }
+        if (KeyPressed(keys, SDLK_RIGHT) || KeyPressed(keys, SDLK_D) || KeyPressed(keys, SDLK_PERIOD)) {
+            Next();
+        } else if (KeyPressed(keys, SDLK_LEFT) || KeyPressed(keys, SDLK_A) || KeyPressed(keys, SDLK_COMMA)) {
+            Prev();
+        } else if (KeyPressed(keys, SDLK_END) || KeyPressed(keys, SDLK_S)) {
+            Skip();
+        } else if (KeyPressed(keys, SDLK_HOME) || KeyPressed(keys, SDLK_W)) {
+            step_idx = 0U;
+            Refresh();
+        } else if (KeyPressed(keys, SDLK_R)) {
+            Reset();
+        } else if (KeyPressed(keys, SDLK_V)) {
+            ToggleView();
+        }
     }
 
-    void Prev() { if (step_idx > 0U) { step_idx--; Refresh(); } }
-    void Next() { if (step_idx + 1U < sim.steps.size()) { step_idx++; Refresh(); } }
-    void Skip() { if (!sim.steps.empty()) { step_idx = sim.steps.size() - 1U; Refresh(); } }
-    void Reset() { sim = Sim { }; sim.Init(); step_idx = 0U; selected_tile = -1; Refresh(); }
+    void Prev() {
+        if (step_idx > 0U) {
+            step_idx--;
+            Refresh();
+        }
+    }
+    void Next() {
+        if (step_idx + 1U < sim.steps.size()) {
+            step_idx++;
+            Refresh();
+        }
+    }
+    void Skip() {
+        if (!sim.steps.empty()) {
+            step_idx = sim.steps.size() - 1U;
+            Refresh();
+        }
+    }
+    void Reset() {
+        sim = Sim { };
+        sim.Init();
+        step_idx = 0U;
+        selected_tile = -1;
+        Refresh();
+    }
     void ToggleView() {
         view_side = view_side == Side::atk ? Side::def : Side::atk;
         const String txt = view_side == Side::atk ? String { "View: ATK" } : String { "View: DEF" };
-        data[ui.tree].node_properties[ui.btn_view].text = txt;
-        data[ui.tree].styles[ui.btn_view].background_color = view_side == Side::atk ? colors::royal_blue : colors::ruby_red;
+        globalData[ui.tree].node_properties[ui.btn_view].text = txt;
+        globalData[ui.tree].styles[ui.btn_view].background_color = view_side == Side::atk ? colors::royal_blue : colors::ruby_red;
         Refresh();
     }
 
@@ -1374,11 +1515,9 @@ private:
         // Phase label
         const char* order_lbl = f.order_set == 1U ? "Seize D" : f.order_set == 2U ? "Seize C" : "Seize B";
         const char* def_lbl = f.def_order_set == 1U ? "Hold C+D" : f.def_order_set == 2U ? "Hold C" : "Hold B";
-        const String phase = f.over
-            ? String { "RESULT — turn {}", f.turn }
-            : String { "T{} {}  |  ATK: {}  |  DEF: {}", f.turn, TStr(f.turn), order_lbl, def_lbl };
-        data[ui.tree].node_properties[ui.phase_lbl].text = phase;
-        data[ui.tree].node_properties[ui.step_lbl].text = String { "{} / {}", step_idx + 1U, sim.steps.size() };
+        const String phase = f.over ? String { "RESULT — turn {}", f.turn } : String { "T{} {}  |  ATK: {}  |  DEF: {}", f.turn, TStr(f.turn), order_lbl, def_lbl };
+        globalData[ui.tree].node_properties[ui.phase_lbl].text = phase;
+        globalData[ui.tree].node_properties[ui.step_lbl].text = String { "{} / {}", step_idx + 1U, sim.steps.size() };
 
         // Tiles
         for (u32 i = 0U; i < N_TILES; ++i) {
@@ -1388,10 +1527,10 @@ private:
             const Tile& t = sim.tiles[i];
             const b8 known = view_side == Side::atk ? f.known_atk[i] : f.known_def[i];
 
-            data[ui.tree].styles[tn.border].background_color = OwnerBorderColor(f.owners[i]);
-            data[ui.tree].styles[tn.inner].background_color = known ? TerrainColor(std::string_view { t.terrain.c_str() }) : colors::dark_gray;
-            data[ui.tree].node_properties[tn.label].text = Label(i);
-            data[ui.tree].node_properties[tn.terrain_lbl].text = known ? String { "{} x{:.1f}", t.terrain, t.mul } : String { "???" };
+            globalData[ui.tree].styles[tn.border].background_color = OwnerBorderColor(f.owners[i]);
+            globalData[ui.tree].styles[tn.inner].background_color = known ? TerrainColor(std::string_view { t.terrain.c_str() }) : colors::dark_gray;
+            globalData[ui.tree].node_properties[tn.label].text = Label(i);
+            globalData[ui.tree].node_properties[tn.terrain_lbl].text = known ? String { "{} x{:.1f}", t.terrain, t.mul } : String { "???" };
 
             // Units text
             String units_txt;
@@ -1405,7 +1544,7 @@ private:
                 const char marker = u.entrenched ? '#' : (u.routed ? 'X' : '*');
                 units_txt += String { "{}{} {} m{} cv{}", tag, marker, u.id, u.men, CV(u) };
             }
-            data[ui.tree].node_properties[tn.units_text].text = units_txt;
+            globalData[ui.tree].node_properties[tn.units_text].text = units_txt;
         }
 
         // Log: combat-relevant entries for the current turn
@@ -1418,16 +1557,16 @@ private:
             log_txt += e.text;
             lines++;
         }
-        data[ui.tree].node_properties[ui.log_body].text = log_txt;
+        globalData[ui.tree].node_properties[ui.log_body].text = log_txt;
 
         UpdateTileInfo();
-        data[ui.tree].MarkDirty();
+        globalData[ui.tree].MarkDirty();
     }
 
     void UpdateTileInfo() {
         if (selected_tile < 0 || sim.steps.empty()) {
-            data[ui.tree].node_properties[ui.tile_info_title].text = "Click a tile";
-            data[ui.tree].node_properties[ui.tile_info_body].text = "";
+            globalData[ui.tree].node_properties[ui.tile_info_title].text = "Click a tile";
+            globalData[ui.tree].node_properties[ui.tile_info_body].text = "";
             return;
         }
         const u32 ti = static_cast<u32>(selected_tile);
@@ -1435,7 +1574,7 @@ private:
         const Tile& t = sim.tiles[ti];
         const b8 known = view_side == Side::atk ? f.known_atk[ti] : f.known_def[ti];
 
-        data[ui.tree].node_properties[ui.tile_info_title].text = String { "Hex {}  ({} x{:.1f})", Label(ti), t.terrain, t.mul };
+        globalData[ui.tree].node_properties[ui.tile_info_title].text = String { "Hex {}  ({} x{:.1f})", Label(ti), t.terrain, t.mul };
 
         String body;
         body += String { "Owner: {}", f.owners[ti] == Side::atk ? "Attacker" : f.owners[ti] == Side::def ? "Defender" : "Neutral" };

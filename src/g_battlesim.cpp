@@ -1,11 +1,9 @@
 #include <algorithm>
 #include "0_engine/u_util.hpp"
 #include "g_arcade.hpp"
-#include "g_components.hpp"
 
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
-#include "0_engine/u_numerics.hpp"
 #include "0_engine/u_types.hpp"
 
 #include "1_systems/i_input_system.hpp"
@@ -57,7 +55,7 @@ struct Division {
 
     [[nodiscard]] constexpr u8 Recon() const { return Squads() / 10U; }
     [[nodiscard]] constexpr u8 Squads() const { return rifles / 10U; }
-    [[nodiscard]] constexpr u8 Batteries () const { return artillery / 6U; }
+    [[nodiscard]] constexpr u8 Batteries() const { return artillery / 6U; }
 };
 
 constexpr Division soviet_rifle_division_1944 {
@@ -82,9 +80,7 @@ constexpr Division german_infantry_division_1944 {
     .trucks = 900,
 };
 
-u8 Calculator(u8 attack, u8 defense) {
-
-}
+u8 Calculator(u8 attack, u8 defense) { }
 void SimulateBattle() {
     List defenders { german_infantry_division_1944, german_infantry_division_1944 };
     List attackers { soviet_rifle_division_1944, soviet_rifle_division_1944, soviet_rifle_division_1944 };
@@ -101,17 +97,14 @@ void SimulateBattle() {
         u8 recon_dice = Rand(6U);
         if (recon_dice == 0) {
             // trap
-            attacker.rifles -= Rand(4, 8);  // killed soldiers
-        }
-        else if (recon_dice == 1) {
+            attacker.rifles -= Rand(4, 8); // killed soldiers
+        } else if (recon_dice == 1) {
             // contact
-            attacker.rifles -= Rand(3, 6);  // wounded 3-6 soldiers
+            attacker.rifles -= Rand(3, 6); // wounded 3-6 soldiers
             defender.rifles -= Rand(1, 3);
-        }
-        else if (recon_dice == 2) {
+        } else if (recon_dice == 2) {
             // nothing
-        }
-        else {
+        } else {
             attacker_targets += recon_dice - 2;
         }
     }
@@ -137,7 +130,6 @@ void SimulateBattle() {
         u8 hit = Rand(6U);
         attacker.rifles -= hit;
     }
-    
 }
 
 // struct MilUnit {
@@ -353,12 +345,12 @@ struct RoundPopupFrame : Frame {
 
     void Update(const u32 idx) {
         const RoundEntry& r = info.rounds[idx];
-        data[tree].node_properties[phase_lbl].text = std::format("Round #{} — {}", idx + 1U, r.phase);
-        data[tree].node_properties[atk_txt].text = r.attacker_action;
-        data[tree].node_properties[def_txt].text = r.defender_action;
-        data[tree].node_properties[atk_loss].text = std::format("Atk  -{}", r.attacker_losses);
-        data[tree].node_properties[def_loss].text = std::format("Def  -{}", r.defender_losses);
-        data[tree].MarkDirty();
+        globalData[tree].node_properties[phase_lbl].text = std::format("Round #{} — {}", idx + 1U, r.phase);
+        globalData[tree].node_properties[atk_txt].text = r.attacker_action;
+        globalData[tree].node_properties[def_txt].text = r.defender_action;
+        globalData[tree].node_properties[atk_loss].text = std::format("Atk  -{}", r.attacker_losses);
+        globalData[tree].node_properties[def_loss].text = std::format("Def  -{}", r.defender_losses);
+        globalData[tree].MarkDirty();
     }
 };
 
@@ -383,10 +375,10 @@ struct StatusBarFrame : Frame {
     void Set(const u32 idx, const f32 pct, const String& msg) {
         if (idx >= NUM_ENTRIES) { return; }
         const u32 fill_px = static_cast<u32>(std::clamp(pct, 0.0F, 1.0F) * static_cast<f32>(BAR_WIDTH));
-        data[tree].styles[Handle<Node> { entries[idx].bar_fill }].width = LayoutLength { fill_px, LayoutLength::fixed };
-        data[tree].node_properties[Handle<Node> { entries[idx].pct_txt }].text = std::format("{}%", static_cast<u32>(std::clamp(pct, 0.0F, 1.0F) * 100.0F));
-        data[tree].node_properties[Handle<Node> { entries[idx].msg_txt }].text = msg;
-        data[tree].MarkDirty();
+        globalData[tree].styles[Handle<Node> { entries[idx].bar_fill }].width = LayoutLength { fill_px, LayoutLength::fixed };
+        globalData[tree].node_properties[Handle<Node> { entries[idx].pct_txt }].text = std::format("{}%", static_cast<u32>(std::clamp(pct, 0.0F, 1.0F) * 100.0F));
+        globalData[tree].node_properties[Handle<Node> { entries[idx].msg_txt }].text = msg;
+        globalData[tree].MarkDirty();
     }
 
 private:
@@ -432,8 +424,8 @@ public:
 
     BattleSim() {
         Singleton::Get<WindowState>().clear_color = colors::dark_dark_brown;
-        data[details_frame.tree].SetDisplay(false);
-        data[popup_frame.tree].SetDisplay(false);
+        globalData[details_frame.tree].SetDisplay(false);
+        globalData[popup_frame.tree].SetDisplay(false);
         status_bar.Set(0, 1.00F, "Terrain & weather loaded");
         status_bar.Set(1, 0.86F, "Supply routes computed");
         status_bar.Set(2, 0.55F, "Combat resolution");
@@ -452,24 +444,24 @@ public:
         // Details button toggle
         const InputState& input = Singleton::Get<InputState>();
         if (input.left_mouse_down) {
-            if (data[banner_frame.tree].styles[banner_frame.btn_row].IsInside(input.mouse_position)) {
+            if (globalData[banner_frame.tree].styles[banner_frame.btn_row].IsInside(input.mouse_position)) {
                 details_visible = !details_visible;
-                data[details_frame.tree].SetDisplay(details_visible);
-                data[popup_frame.tree].SetDisplay(false);
-                data[banner_frame.tree].node_properties[banner_frame.btn_label].text = details_visible ? "▲  Details" : "▼  Details";
-                data[banner_frame.tree].MarkDirty();
+                globalData[details_frame.tree].SetDisplay(details_visible);
+                globalData[popup_frame.tree].SetDisplay(false);
+                globalData[banner_frame.tree].node_properties[banner_frame.btn_label].text = details_visible ? "▲  Details" : "▼  Details";
+                globalData[banner_frame.tree].MarkDirty();
             }
         }
 
         // Round row clicks and popup dismiss
         if (input.left_mouse_down) {
-            if (data[popup_frame.tree].display) {
-                data[popup_frame.tree].SetDisplay(false);
+            if (globalData[popup_frame.tree].display) {
+                globalData[popup_frame.tree].SetDisplay(false);
             } else if (details_visible) {
                 for (u32 i = 0U; i < details_frame.round_rows.size(); ++i) {
-                    if (data[details_frame.tree].styles[details_frame.round_rows[i]].IsInside(input.mouse_position)) {
+                    if (globalData[details_frame.tree].styles[details_frame.round_rows[i]].IsInside(input.mouse_position)) {
                         popup_frame.Update(i);
-                        data[popup_frame.tree].SetDisplay(true);
+                        globalData[popup_frame.tree].SetDisplay(true);
                         break;
                     }
                 }
@@ -482,11 +474,11 @@ public:
         // After first banner layout: pin details frame below banner and set clip rect.
         // Use btn_row bounding box bottom edge — frame.bounding_box.h is the full window height.
         if (!banner_measured) {
-            const SDL_FRect& bb = data[banner_frame.tree].styles[banner_frame.btn_row].bounding_box;
+            const SDL_FRect& bb = globalData[banner_frame.tree].styles[banner_frame.btn_row].bounding_box;
             if (bb.h > 0.0F) {
                 banner_bottom = static_cast<u32>(bb.y + bb.h);
-                data[details_frame.tree].styles[details_frame.frame].padding = uint4 { 0U, banner_bottom, 0U, 0U };
-                data[details_frame.tree].MarkDirty();
+                globalData[details_frame.tree].styles[details_frame.frame].padding = uint4 { 0U, banner_bottom, 0U, 0U };
+                globalData[details_frame.tree].MarkDirty();
                 banner_measured = true;
             }
         }

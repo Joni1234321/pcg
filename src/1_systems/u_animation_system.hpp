@@ -47,7 +47,7 @@ struct ParticleSystem {
         const f32 delta_time { Singleton::Get<TickState>().delta_time };
         const miliseconds32 current_ms { TimeNowMS() };
         (void)SDL_SetRenderDrawColor(Singleton::Get<WindowState>().renderer, color.r, color.g, color.b, color.a);
-        for (ParticleEmitter& emitter : data.Get<ParticleEmitter>()) {
+        for (ParticleEmitter& emitter : globalData.Get<ParticleEmitter>()) {
             for (Particle& particle : emitter.particles.items | std::views::reverse) {
                 TTF_DrawRendererText(particle.text.get(), particle.position.x, particle.position.y);
                 particle.position += emitter.velocity * delta_time;
@@ -63,14 +63,14 @@ inline f32 EaseOutSine(const f32 t) { return 1.0F - math::Sin(t * math::PI * 0.5
 inline f32 EaseInOutSine(const f32 t) { return -(math::Cos(math::PI * t) - 1.0F) * 0.5F; }
 inline Handle<Animation> AnimationSystem::Register(const AnimationDesc& animation_desc) {
     const Animation animation { .action = animation_desc.action, .start = TimeNowMS(), .duration = animation_desc.duration, .state = animation_desc.state };
-    HandleList<Animation>& animations = data.Get<Animation>();
+    HandleList<Animation>& animations = globalData.Get<Animation>();
     const auto it = std::ranges::find(animations, AnimationState::repeat, &Animation::state);
     if (it == std::end(animations)) { return animations.PushBack(animation); }
     *it = animation;
     return animations.IteratorToHandle(it);
 }
 inline void AnimationSystem::StartAnimation(const Handle<Animation> animation_handle) {
-    Animation& animation = data[animation_handle];
+    Animation& animation = globalData[animation_handle];
     animation.start = TimeNowMS();
     switch (animation.state) {
         case AnimationState::once: break;
@@ -81,7 +81,7 @@ inline void AnimationSystem::StartAnimation(const Handle<Animation> animation_ha
     }
 }
 inline b8 AnimationSystem::IsRunning(const Handle<Animation> animation_handle) {
-    switch (data[animation_handle].state) {
+    switch (globalData[animation_handle].state) {
         case AnimationState::once:
         case AnimationState::repeat:
         case AnimationState::persistent: return true;
@@ -92,7 +92,7 @@ inline b8 AnimationSystem::IsRunning(const Handle<Animation> animation_handle) {
 }
 inline void AnimationSystem::operator()() const {
     const miliseconds32 current_ms { TimeNowMS() };
-    for (Animation& animation : data.Get<Animation>()) {
+    for (Animation& animation : globalData.Get<Animation>()) {
         f32 t = static_cast<f32>((current_ms - animation.start).value) / static_cast<f32>(animation.duration.value);
         switch (animation.state) {
             case AnimationState::once:

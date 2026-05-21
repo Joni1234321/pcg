@@ -53,6 +53,6 @@ struct Singleton {
     }
 };
 
-inline GlobalDataInstantNoReset data { };
+inline GlobalDataInstantNoReset globalData { };
 inline Singleton singleton { };
 } // namespace pce

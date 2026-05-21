@@ -21,7 +21,9 @@ b8 Start() {
     Window window { window_size };
 
     Logger().Log("Starting Game");
-    pcg::arcade::RunHexBattle();
+    pcg::arcade::RunHex();
+    // pcg::arcade::RunMinimal();
+    // pcg::arcade::RunHexBattle();
     // pcg::arcade::RunBattleSim();
     // pcg::arcade::RunCommandStrike();
     // pcg::arcade::RunCosmoClick();
