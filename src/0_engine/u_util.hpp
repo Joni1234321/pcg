@@ -38,6 +38,7 @@ template <typename Collection> const Collection::value_type& RandomValue(const C
 
 namespace pce::math {
 static constexpr f32 PI = std::numbers::pi_v<f32>;
+static constexpr f32 Sqrt3 = std::numbers::sqrt3_v<float>;
 static constexpr f32 DEG_2_RAD = PI / 180.0F;
 inline f32 Sin(const f32 t) { return std::sinf(t); }
 inline f32 Cos(const f32 t) { return std::cosf(t); }

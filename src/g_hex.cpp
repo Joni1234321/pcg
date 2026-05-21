@@ -21,9 +21,7 @@ void arcade::RunHex() {
 
     HexMap& hex_map = Singleton::Get<HexMap>();
     hex_map.size = 80.0F;
-    hex_map.positions.push_back(float2 { 600.0F, 200.0F });
-    hex_map.positions.push_back(float2 { 1000.0F, 200.0F });
-    hex_map.positions.push_back(float2 { 600.0F, 400.0F });
+    hex_map.AddMap({200.0F, 200.0F}, {10, 10});
 
     // Systems
     Orchestra orchestra { };

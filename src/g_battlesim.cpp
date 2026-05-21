@@ -370,7 +370,7 @@ struct StatusBarFrame : Frame {
     Handle<Node> outer { B(frame).Node(fill, fill).Alignment(bottom_right).Build() };
     Handle<Node> panel { B(outer).Node(PANEL_WIDTH, hug).Direction(vertical).Gap(1U).Fill(colors::dark_slate).Padding(2U).Build() };
 
-    std::array<StatusEntry, NUM_ENTRIES> entries = BuildEntries();
+    Array<StatusEntry, NUM_ENTRIES> entries = BuildEntries();
 
     void Set(const u32 idx, const f32 pct, const String& msg) {
         if (idx >= NUM_ENTRIES) { return; }
@@ -382,8 +382,8 @@ struct StatusBarFrame : Frame {
     }
 
 private:
-    std::array<StatusEntry, NUM_ENTRIES> BuildEntries() {
-        std::array<StatusEntry, NUM_ENTRIES> result { };
+    Array<StatusEntry, NUM_ENTRIES> BuildEntries() {
+        Array<StatusEntry, NUM_ENTRIES> result { };
         for (u32 i = 0U; i < NUM_ENTRIES; ++i) {
             const SDL_Color row_bg = (i % 2U == 0U) ? colors::dark_dark_brown : colors::dark_gray;
             const Handle<Node> row = B(panel).Node(fill, hug).Direction(horizontal).Gap(6U).Fill(row_bg).Padding2({ 6U, 4U }).Build();

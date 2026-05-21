@@ -31,7 +31,7 @@ constexpr u32 COLS = 4U;
 constexpr u32 ROWS = 8U;
 constexpr u32 N_TILES = COLS * ROWS;
 
-static const std::array<const char*, ROWS> ROW_NAMES { "A", "B", "C", "D", "E", "F", "G", "H" };
+static const Array<const char*, ROWS> ROW_NAMES { "A", "B", "C", "D", "E", "F", "G", "H" };
 
 [[nodiscard]] static u32 TileIdx(const u32 c, const u32 r) { return r * COLS + c; }
 [[nodiscard]] static u32 ColOf(const u32 i) { return i % COLS; }
@@ -48,8 +48,8 @@ static const std::array<const char*, ROWS> ROW_NAMES { "A", "B", "C", "D", "E", 
     struct CR {
         i32 c, r;
     };
-    const std::array<CR, 6> odd_nbrs { { { c, r - 1 }, { c, r + 1 }, { c - 1, r }, { c - 1, r + 1 }, { c + 1, r }, { c + 1, r + 1 } } };
-    const std::array<CR, 6> even_nbrs { { { c, r - 1 }, { c, r + 1 }, { c - 1, r - 1 }, { c - 1, r }, { c + 1, r - 1 }, { c + 1, r } } };
+    const Array<CR, 6> odd_nbrs { { { c, r - 1 }, { c, r + 1 }, { c - 1, r }, { c - 1, r + 1 }, { c + 1, r }, { c + 1, r + 1 } } };
+    const Array<CR, 6> even_nbrs { { { c, r - 1 }, { c, r + 1 }, { c - 1, r - 1 }, { c - 1, r }, { c + 1, r - 1 }, { c + 1, r } } };
     const auto& nbrs = odd ? odd_nbrs : even_nbrs;
     for (const auto& [nc, nr] : nbrs) {
         if (nc >= 0 && nc < static_cast<i32>(COLS) && nr >= 0 && nr < static_cast<i32>(ROWS)) { result.push_back(TileIdx(static_cast<u32>(nc), static_cast<u32>(nr))); }
@@ -224,13 +224,13 @@ struct Sim {
 
     void Init() {
         // Terrain
-        const std::array<const char*, COLS> TERR_DEF { "forest", "ridge", "village", "hill" };
-        const std::array<const char*, COLS> TERR_MID { "field", "hill", "forest", "field" };
-        const std::array<const char*, COLS> TERR_ATK { "field", "field", "hill", "field" };
+        const Array<const char*, COLS> TERR_DEF { "forest", "ridge", "village", "hill" };
+        const Array<const char*, COLS> TERR_MID { "field", "hill", "forest", "field" };
+        const Array<const char*, COLS> TERR_ATK { "field", "field", "hill", "field" };
 
         tiles.clear();
         for (u32 r = 0U; r < ROWS; ++r) {
-            std::array<const char*, COLS> tab { };
+            Array<const char*, COLS> tab { };
             if (r <= 2U) {
                 tab = TERR_DEF;
             } else if (r >= 5U) {
@@ -239,7 +239,7 @@ struct Sim {
                 tab = TERR_MID;
             }
             // shuffle
-            std::array<const char*, COLS> shuf = tab;
+            Array<const char*, COLS> shuf = tab;
             for (i32 i = static_cast<i32>(COLS) - 1; i > 0; --i) {
                 const u32 j = Rand(static_cast<u32>(i + 1));
                 std::swap(shuf[i], shuf[j]);
@@ -289,7 +289,7 @@ struct Sim {
         for (u32 i = 0U; i < 3U && i < row_b.size(); ++i) { def_rear.push_back(row_b[i]); }
         while (def_rear.size() < 3U && !row_b.empty()) { def_rear.push_back(row_b[0]); }
 
-        const std::array<const char*, 3> def_bn_names { "I", "II", "III" };
+        const Array<const char*, 3> def_bn_names { "I", "II", "III" };
         u32 di = 0U;
         for (u32 bi = 0U; bi < def_bn_names.size(); ++bi) {
             const String bn { def_bn_names[bi] };
@@ -332,7 +332,7 @@ struct Sim {
         }
         while (atk_rear.size() < 3U && !atk_rear_cands.empty()) { atk_rear.push_back(atk_rear_cands[0]); }
 
-        const std::array<const char*, 3> atk_bn_names { "I", "II", "III" };
+        const Array<const char*, 3> atk_bn_names { "I", "II", "III" };
         u32 ai = 0U;
         for (u32 bi = 0U; bi < atk_bn_names.size(); ++bi) {
             const String bn { atk_bn_names[bi] };
@@ -1339,7 +1339,7 @@ struct HexBattleFrame : Frame {
     Handle<Node> grid_panel { B(body).Node(fill, fill).Direction(vertical).Gap(0U).Fill(colors::black).Padding(4U).Build() };
     Handle<Node> grid_rows { B(grid_panel).Node(fill, fill).Direction(vertical).Gap(2U).Build() };
 
-    std::array<std::array<TileNode, COLS>, ROWS> tile_nodes { };
+    Array<Array<TileNode, COLS>, ROWS> tile_nodes { };
 
     Handle<Node> side { B(body).Node(620U, fill).Direction(vertical).Gap(6U).Build() };
     Handle<Node> tile_info { B(side).Node(fill, 220U).Direction(vertical).Fill(colors::dark_gray).Padding(8U).Gap(3U).Build() };

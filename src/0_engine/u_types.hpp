@@ -130,7 +130,7 @@ struct uint4 {
 
     constexpr b8 operator==(const uint4 other) const { return x == other.x && y == other.y && z == other.z && w == other.w; }
     constexpr b8 operator!=(const uint4 other) const { return !(*this == other); }
-    // constexpr u32& operator[](u32 pos) { return *std::array { &x, &y, &z, &w }[pos]; }
+    // constexpr u32& operator[](u32 pos) { return *Array { &x, &y, &z, &w }[pos]; }
 };
 struct float2 {
     f32 x;

@@ -2,6 +2,7 @@
 #include <SDL3/SDL_render.h>
 #include <array>
 #include <cmath>
+#include <numbers>
 
 #include "0_engine/g_globals.hpp"
 #include "0_engine/r_window_state.hpp"
@@ -13,48 +14,60 @@
 
 namespace pce {
 
-// struct Hex {
-//     float2 position;
-//     SDL_Color color;
-// };
+// https://www.redblobgames.com/grids/hexagons/
+constexpr u32 HEX_CORNERS = 6;
+constexpr float2 HEX_SPACING {math::Sqrt3, 1.5F};
+const Array<float2, HEX_CORNERS> HEX_ANGLE = { { float2 { math::Cos(-30.0F * math::DEG_2_RAD), math::Sin(-30.0F * math::DEG_2_RAD) }, float2 { math::Cos(30.0F * math::DEG_2_RAD), math::Sin(30.0F * math::DEG_2_RAD) }, // NOLINT(*-throwing-static-initialization)
+                                                      float2 { math::Cos(90.0F * math::DEG_2_RAD), math::Sin(90.0F * math::DEG_2_RAD) }, float2 { math::Cos(150.0F * math::DEG_2_RAD), math::Sin(150.0F * math::DEG_2_RAD) },
+                                                      float2 { math::Cos(210.0F * math::DEG_2_RAD), math::Sin(210.0F * math::DEG_2_RAD) }, float2 { math::Cos(270.0F * math::DEG_2_RAD), math::Sin(270.0F * math::DEG_2_RAD) } } };
+
+
+struct Hex {
+    float2 position;
+    SDL_Color color;
+    Hex(float2 position, SDL_Color color) : position(position), color(color) {}
+};
 struct HexMap {
-    List<float2> positions { };
+    List<Hex> hexes { };
     f32 size { };
-    SDL_Color color { };
+    void AddMap(float2 start_position, uint2 map_size) {
+        for (u32 y = 0; y < map_size.y; y++) {
+            for (u32 x = 0; x < map_size.x; x++) {
+                float2 index{
+                    static_cast<f32>(x) + (y & 1 ? 0.5F : 0.0F),
+                    static_cast<f32>(y)
+                };
+                hexes.push_back(Hex{ start_position + index * size * HEX_SPACING, colors::radiant_orange});
+            }
+        }
+    }
 };
 
-constexpr u32 HEX_CORNERS = 6;
-const std::array<float2, HEX_CORNERS> HEX_ANGLE = { { float2 { std::cos(-30.0F * math::DEG_2_RAD), std::sin(-30.0F * math::DEG_2_RAD) }, float2 { std::cos(30.0F * math::DEG_2_RAD), std::sin(30.0F * math::DEG_2_RAD) },
-                                                      float2 { std::cos(90.0F * math::DEG_2_RAD), std::sin(90.0F * math::DEG_2_RAD) }, float2 { std::cos(150.0F * math::DEG_2_RAD), std::sin(150.0F * math::DEG_2_RAD) },
-                                                      float2 { std::cos(210.0F * math::DEG_2_RAD), std::sin(210.0F * math::DEG_2_RAD) }, float2 { std::cos(270.0F * math::DEG_2_RAD), std::sin(270.0F * math::DEG_2_RAD) } } };
-struct HexRenderSystem {
-    void operator()() const;
-    // ~HexRenderSystem() { globalData.Get<HexMap>().clear(); }
-};
-inline void AppendHex(List<SDL_Vertex>& verts, const float2 hex_size, const float2& position, const SDL_FColor color) {
-    std::array<SDL_FPoint, HEX_CORNERS> points { };
+inline void AppendHex(List<SDL_Vertex>& vertecies, const float2 hex_size, const float2& position, const SDL_FColor color) {
+    Array<SDL_FPoint, HEX_CORNERS> points { };
     for (u32 i = 0; i < HEX_CORNERS; i++) {
         const float2 vertex = position + hex_size * HEX_ANGLE[i];
         points[i] = SDL_FPoint { .x = vertex.x, .y = vertex.y };
     }
     for (u32 i = 0; i < HEX_CORNERS; i++) {
-        verts.push_back(SDL_Vertex { .position = { .x = position.x, .y = position.y }, .color = color, .tex_coord = { } });
-        verts.push_back(SDL_Vertex { .position = points[i], .color = color, .tex_coord = { } });
-        verts.push_back(SDL_Vertex { .position = points[(i + 1) % 6], .color = color, .tex_coord = { } });
+        vertecies.push_back(SDL_Vertex { .position = { .x = position.x, .y = position.y }, .color = color, .tex_coord = { } });
+        vertecies.push_back(SDL_Vertex { .position = points[i], .color = color, .tex_coord = { } });
+        vertecies.push_back(SDL_Vertex { .position = points[(i + 1) % 6], .color = color, .tex_coord = { } });
     }
 }
-inline void HexRenderSystem::operator()() const {
-    SDL_Renderer* sdl_renderer = Singleton::Get<WindowState>().renderer;
-    const HexMap& hex_map = Singleton::Get<HexMap>();
-    const float2 hex_size { hex_map.size, hex_map.size };
 
-    List<SDL_Vertex> verts;
-    for (const float2& position : hex_map.positions) {
-        AppendHex(verts, hex_size, position, colors::ToSDL_FColor(colors::red));
-        AppendHex(verts, hex_size * 0.9F, position,  colors::ToSDL_FColor(colors::beige));
+struct HexRenderSystem {
+    void operator()() const {
+        SDL_Renderer* sdl_renderer = Singleton::Get<WindowState>().renderer;
+        const HexMap& hex_map = Singleton::Get<HexMap>();
+        const float2 hex_size { hex_map.size, hex_map.size };
+
+        List<SDL_Vertex> vertecies;
+        for (const Hex& hex : hex_map.hexes) {
+            AppendHex(vertecies, hex_size, hex.position, colors::ToSDL_FColor(colors::black));
+            AppendHex(vertecies, hex_size * 0.96F, hex.position,  colors::ToSDL_FColor(hex.color));
+        }
+        SDL_RenderGeometry(sdl_renderer, nullptr, vertecies.data.data(), static_cast<int>(vertecies.size()), nullptr, 0);
     }
-    // create hexes
-    SDL_RenderGeometry(sdl_renderer, nullptr, verts.data.data(), static_cast<int>(verts.size()), nullptr, 0);
-}
-
+};
 }

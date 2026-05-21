@@ -251,7 +251,7 @@ template <LongNumberFormattable T> String FormatValue(const T value) {
     const char prefix { number < 0.0F ? '-' : ' ' };
     f32 abs_number = math::Abs(number);
     if (abs_number < 1000.0F) { return std::format("{}{}", prefix, number); }
-    static constexpr std::array LONG_NUMBER_SUFFIX = { 'K', 'M', 'B', 'T', 'Q', 'P', 'S' };
+    static constexpr Array LONG_NUMBER_SUFFIX = { 'K', 'M', 'B', 'T', 'Q', 'P', 'S' };
     char suffix = ' ';
     for (const char current_suffix : LONG_NUMBER_SUFFIX) {
         constexpr f32 one_thousand = 1'000.0F;
