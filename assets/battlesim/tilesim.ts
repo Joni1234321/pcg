@@ -48,56 +48,63 @@ interface Unit {
   parent?: string;
 }
 
-interface Tile { index: number; terrain: string; mul: number; }
+interface Tile { index: number; terrain: string; mul: number; owner: "atk"|"def"|"neutral"; }
 interface LogEntry { text: string; type: "hdr"|"info"|"recon"|"arty"|"combat"|"move"|"result"; }
 interface Frame {
   turn: number; reconOut: boolean; units: Unit[];
+  owners: ("atk"|"def"|"neutral")[];
+  known: boolean[]; // tile is known to attacker (revealed enemies / fog cleared)
   atkGuns: number; defGuns: number;
   logEnd: number; over: boolean;
 }
 
 // -- Grid constants -----------------------------------------------
+// 4 columns × 10 rows = 40 tiles, flat-top hexes ("odd-q" offset: odd cols shifted down)
+// Row A = top (deep defender rear), Row J = bottom (deep attacker rear)
+// Maneuver warfare: full contact from turn 1 — defenders on rows B-C, attackers G-H.
 
-const LABELS = [
-  "R1","R2","R3","R4",
-  "A1","A2","A3",
-  "B1","B2","B3","B4",
-  "C1","C2","C3",
-  "D1","D2","D3","D4",
-  "E1","E2","E3",
-  "F1","F2","F3","F4",
-];
-const N_TILES = 25;
+const COLS = 4, ROWS = 10;
+const N_TILES = COLS * ROWS;
+const ROW_NAMES = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
 
-const ADJ: number[][] = [
-  /*  0 R1 */ [1, 4],
-  /*  1 R2 */ [0, 2, 4, 5],
-  /*  2 R3 */ [1, 3, 5, 6],
-  /*  3 R4 */ [2, 6],
-  /*  4 A1 */ [0, 1, 5, 7, 8],
-  /*  5 A2 */ [1, 2, 4, 6, 8, 9],
-  /*  6 A3 */ [2, 3, 5, 9, 10],
-  /*  7 B1 */ [4, 8, 11],
-  /*  8 B2 */ [4, 5, 7, 9, 11, 12],
-  /*  9 B3 */ [5, 6, 8, 10, 12, 13],
-  /* 10 B4 */ [6, 9, 13],
-  /* 11 C1 */ [7, 8, 12, 14, 15],
-  /* 12 C2 */ [8, 9, 11, 13, 15, 16],
-  /* 13 C3 */ [9, 10, 12, 16, 17],
-  /* 14 D1 */ [11, 15, 18],
-  /* 15 D2 */ [11, 12, 14, 16, 18, 19],
-  /* 16 D3 */ [12, 13, 15, 17, 19, 20],
-  /* 17 D4 */ [13, 16, 20],
-  /* 18 E1 */ [14, 15, 19, 21, 22],
-  /* 19 E2 */ [15, 16, 18, 20, 22, 23],
-  /* 20 E3 */ [16, 17, 19, 23, 24],
-  /* 21 F1 */ [18, 22],
-  /* 22 F2 */ [18, 19, 21, 23],
-  /* 23 F3 */ [19, 20, 22, 24],
-  /* 24 F4 */ [20, 23],
+const LABELS: string[] = [];
+for (let r = 0; r < ROWS; r++) {
+  for (let c = 0; c < COLS; c++) LABELS.push(ROW_NAMES[r] + (c + 1));
+}
+
+function tileIdx(c: number, r: number): number { return r * COLS + c; }
+function colOf(i: number): number { return i % COLS; }
+
+const ROW: number[] = [];
+for (let i = 0; i < N_TILES; i++) ROW.push(Math.floor(i / COLS));
+
+// flat-top "odd-q" offset neighbour formula
+const ADJ: number[][] = [];
+for (let i = 0; i < N_TILES; i++) {
+  const c = colOf(i), r = ROW[i];
+  const odd = (c % 2) === 1;  // odd columns are offset DOWN by half a hex
+  const nbrs: [number, number][] = odd
+    ? [[c, r - 1], [c, r + 1], [c - 1, r], [c - 1, r + 1], [c + 1, r], [c + 1, r + 1]]
+    : [[c, r - 1], [c, r + 1], [c - 1, r - 1], [c - 1, r], [c + 1, r - 1], [c + 1, r]];
+  ADJ.push(
+    nbrs.filter(([nc, nr]) => nc >= 0 && nc < COLS && nr >= 0 && nr < ROWS)
+        .map(([nc, nr]) => tileIdx(nc, nr))
+  );
+}
+
+// Zone labels — maneuver warfare (everything under attack from turn 1)
+const ZONES = [
+  "DEFENSE IN DEPTH",  // A — deep defender rear
+  "MAIN DEFENSE LINE", // B — defender front
+  "FORWARD LINE",      // C — defender forward screen
+  "BREACH",            // D — attacker already pushing
+  "EXPLOITATION",      // E
+  "EXPLOITATION",      // F
+  "ATTACK ASSEMBLY",   // G — attacker front
+  "ASSAULT LINE",      // H — attacker main body
+  "SUPPORT",           // I — attacker support
+  "ATTACKER REAR",     // J
 ];
-const ROW = [0,0,0,0, 1,1,1, 2,2,2,2, 3,3,3, 4,4,4,4, 5,5,5, 6,6,6,6];
-const ZONES = ["DEFENDER EXIT","DEFENDER REAR","MAIN LINE","NO MAN'S LAND","APPROACH","FORWARD POS","ATTACKER START"];
 
 const TERRAIN_DATA: {name:string; mul:number}[] = [
   { name:"field",  mul:1.0 },
@@ -108,28 +115,33 @@ const TERRAIN_DATA: {name:string; mul:number}[] = [
 ];
 const SUPP = ["READY","DISRUPTED","SUPPRESSED","PINNED"];
 
-// SIDC codes (15-char, MIL-STD-2525C)
-const SIDC_ATK_INF  = "SFGPUCI----F---";   // friendly infantry bn
-const SIDC_DEF_INF  = "SHGPUCI----F---";   // hostile infantry bn
+// SIDC codes (15-char, MIL-STD-2525C). Position 12 = echelon; "E" = company.
+const SIDC_ATK_INF  = "SFGPUCI----E---";   // friendly infantry company
+const SIDC_DEF_INF  = "SHGPUCI----E---";   // hostile infantry company
 const SIDC_ATK_RCN  = "SFGPUCR----D---";   // friendly recon plt
-const SIDC_ATK_SPT  = "SFGPUCI----D---";   // friendly support co
-const SIDC_ATK_ART  = "SFGPUCF----F---";   // friendly art bn
-const SIDC_DEF_ART  = "SHGPUCF----E---";   // hostile art btry
-const SIDC_UNK      = "SHGPUCI----F---";   // unknown hostile (shown foggy)
+const SIDC_ATK_SPT  = "SFGPUCI----D---";   // friendly support plt
+const SIDC_ATK_ART  = "SFGPUCF----E---";   // friendly arty battery
+const SIDC_DEF_ART  = "SHGPUCF----E---";   // hostile arty battery
+const SIDC_UNK      = "SHGPUCI----E---";   // unknown hostile (shown foggy)
 
-// hex layout
-const HW = 104, HH = 120;
-const CS = HW + 4, RS = Math.floor(HH * .75) + 4, HO = Math.floor(CS / 2);
-const CLIP = "polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)";
+// hex layout — flat-top orientation (flat edges at top/bottom, vertices left/right)
+// HW = vertex-to-vertex width = 2s, HH = flat-to-flat height = s√3
+const HW = 120, HH = 104;
+const CS = Math.floor(HW * 0.75) + 4;  // column-to-column spacing (3s/2 + gap)
+const RS = HH + 4;                      // row-to-row spacing within a column
+const HO = Math.floor(RS / 2);          // vertical offset for 3-tile (odd) columns
+const CLIP = "polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)";
 const MAP_PAD_TOP = 40;
+const MAP_PAD_LEFT = 130;   // wide left margin so row-letter zone labels fit
 
 const HP: {x:number;y:number}[] = [];
 {
-  const rows = [[0,1,2,3],[4,5,6],[7,8,9,10],[11,12,13],[14,15,16,17],[18,19,20],[21,22,23,24]];
-  for (let r = 0; r < 7; r++) {
-    const off = rows[r].length === 3 ? HO : 0;
-    for (let c = 0; c < rows[r].length; c++) {
-      HP[rows[r][c]] = { x: off + c * CS, y: MAP_PAD_TOP + r * RS };
+  // Flat-top rectangular grid: every column has ROWS tiles.
+  // Odd-indexed columns (1, 3, 5) are offset DOWN by HO = RS/2 so hex centres tessellate.
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const off = (c % 2) === 1 ? HO : 0;
+      HP[tileIdx(c, r)] = { x: MAP_PAD_LEFT + c * CS, y: MAP_PAD_TOP + off + r * RS };
     }
   }
 }
@@ -143,8 +155,7 @@ let turn = 0, over = false;
 let atkGuns = 12, defGuns = 8;
 let steps: Frame[] = [];
 let stepIdx = 0;
-let scoutingBns = new Set<string>(); // bn IDs doing recon this turn
-let scoutCount = new Map<string, number>(); // consecutive recon turns per bn
+let knownToAtk: boolean[] = []; // per-tile fog state for attacker side
 let reserveCommitted = false;
 
 // -- Helpers ------------------------------------------------------
@@ -155,7 +166,12 @@ function rand(a: number, b?: number): number {
 }
 function d6(): number { return rand(1, 6); }
 function clamp(v: number, lo: number, hi: number): number { return Math.max(lo, Math.min(hi, v)); }
-function hourStr(t: number): string { return String(t + 5).padStart(2, '0') + '00'; }
+// 15-minute turns. Turn 1 = 14:00, turn 2 = 14:15, ...
+function tStr(t: number): string {
+  const totalMin = 14 * 60 + (t - 1) * 15;
+  const hh = Math.floor(totalMin / 60), mm = totalMin % 60;
+  return String(hh).padStart(2, '0') + String(mm).padStart(2, '0');
+}
 function $(id: string): HTMLElement { return document.getElementById(id)!; }
 function esc(s: string): string { const el = document.createElement("span"); el.textContent = s; return el.innerHTML; }
 function addLog(t: string, ty: LogEntry["type"] = "info"): void { fullLog.push({ text: t, type: ty }); }
@@ -174,7 +190,13 @@ function applyCas(u: Unit, n: number): void {
 }
 
 function snap(reconOut = false): Frame {
-  return { turn, reconOut, units: units.map(u => ({ ...u })), atkGuns, defGuns, logEnd: fullLog.length, over };
+  return {
+    turn, reconOut,
+    units: units.map(u => ({ ...u })),
+    owners: tiles.map(t => t.owner),
+    known: knownToAtk.slice(),
+    atkGuns, defGuns, logEnd: fullLog.length, over,
+  };
 }
 
 // milsymbol SVG cache
@@ -193,332 +215,444 @@ function symSvg(sidc: string, size: number): string {
   return s;
 }
 
-function detachRecon(parent: Unit): Unit {
-  const men = 35;
-  const rif = 30;
-  parent.men -= men;
-  parent.rifles -= rif;
-  parent.mg = Math.max(0, parent.mg - 1);
-  return {
-    id: parent.id + "/R",
-    name: parent.name + "/R",
-    rgt: parent.rgt,
-    side: parent.side,
-    type: "recon",
-    size: "plt",
-    men,
-    rifles: rif,
-    mg: 1,
-    mortar: 0,
-    at: 0,
-    morale: Math.min(100, parent.morale + 5),
-    suppression: 0,
-    tile: parent.tile,
-    revealed: parent.revealed,
-    routed: false,
-    entrenched: false,
-    sidc: parent.side === "atk" ? SIDC_ATK_RCN : SIDC_ATK_RCN,
-    parent: parent.id,
-  };
-}
-
 // -- Init & Simulate ----------------------------------------------
+
+// Stacking capacity by terrain: forest/ridge can hide 2 companies, others only 1.
+function capacityOf(terrain: string): number {
+  return (terrain === "forest" || terrain === "ridge") ? 2 : 1;
+}
 
 function initBattle(): void {
   _svgCache.clear();
 
-  const pool: string[] = [
-    "field","field","field","field",         // R-row (exit)
-    "field","field","field",                 // A-row (rear)
-    "hill","village","forest","ridge",       // B-row (main line - strong terrain)
-    "field","field","field",                 // C-row (no man's land)
-    "field","hill","field","field",          // D-row (approach)
-    "field","field","field",                 // E-row (forward)
-    "field","field","field","field",         // F-row (attacker start)
-  ];
-  // shuffle B-row terrain (indices 7-10) among themselves
-  for (let i = 10; i > 7; i--) {
-    const j = 7 + rand(i - 7 + 1); [pool[i], pool[j]] = [pool[j], pool[i]];
+  // Generate terrain per row (COLS=4 entries each).
+  // Defender half (rows 0-2): strong cover; attacker half (rows 7-9): open ground.
+  const TERR_DEF = ["forest", "ridge", "village", "hill"];
+  const TERR_MID = ["field", "hill", "forest", "field"];
+  const TERR_ATK = ["field", "field", "hill", "field"];
+  const pool: string[] = [];
+  for (let r = 0; r < ROWS; r++) {
+    const tab = r <= 2 ? TERR_DEF : r >= 7 ? TERR_ATK : TERR_MID;
+    const shuf = tab.slice();
+    for (let i = shuf.length - 1; i > 0; i--) {
+      const j = rand(i + 1);[shuf[i], shuf[j]] = [shuf[j], shuf[i]];
+    }
+    for (let c = 0; c < COLS; c++) pool.push(shuf[c % shuf.length]);
   }
-  // light randomization on other rows
-  if (d6() >= 4) pool[4 + rand(3)] = ["hill","village"][rand(2)];
-  if (d6() >= 5) pool[11 + rand(3)] = "hill";
+
   tiles = pool.map((t, i) => {
     const info = TERRAIN_DATA.find(x => x.name === t)!;
-    return { index: i, terrain: t, mul: info.mul };
+    const owner: "atk"|"def"|"neutral" =
+      ROW[i] >= 7 ? "atk" : ROW[i] <= 2 ? "def" : "neutral";
+    return { index: i, terrain: t, mul: info.mul, owner };
   });
 
-  // place defenders on best adjacent B-row tiles
-  const bRow = [7, 8, 9, 10];
-  bRow.sort((a, b) => tiles[b].mul - tiles[a].mul);
-  const defTiles: number[] = [bRow[0]];
-  for (const t of bRow) {
-    if (defTiles.length >= 3) break;
-    if (!defTiles.includes(t) && defTiles.some(dt => ADJ[dt].includes(t))) defTiles.push(t);
-  }
-  for (const t of bRow) { if (defTiles.length >= 3) break; if (!defTiles.includes(t)) defTiles.push(t); }
+  units = [];
 
-  units = [
-    // 2 maneuver bns on flanks
-    mkBn("I",   "394th",  "atk", 820, 700, 12, 6,  85, 21),
-    mkBn("II",  "394th",  "atk", 790, 670, 12, 6,  80, 24),
-    // reserve bn (center, held back)
-    mkBn("III", "394th",  "atk", 850, 740, 14, 8,  90, 22),
-    // support company (follows main effort)
-    mkSpt("Spt", "394th", 22),
-    // defenders
-    mkBn("I",   "1028th", "def", 680, 580, 8,  4,  70, defTiles[0]),
-    mkBn("II",  "1028th", "def", 720, 620, 10, 6,  75, defTiles[1]),
-    mkBn("III", "1028th", "def", 650, 560, 8,  4,  65, defTiles[2]),
+  // --- Deploy defenders ---
+  // RULE: Every tile in row B (index 1) = the MAIN DEFENSE LINE must have exactly 1 co.
+  // With COLS=4 that's 4 tiles × 1 co = 4 cos. No tile can be left empty or attackers walk through.
+  // The remaining 2 forward cos go to the 2 best-cover tiles in row C (forward screen).
+  // Reserve: 1 co per bn on row A (deep rear / defence in depth).
+
+  const rowBTiles = [...Array(N_TILES).keys()]
+    .filter(i => ROW[i] === 1);   // always exactly COLS=4 tiles → full blocking line
+  const rowCTiles = [...Array(N_TILES).keys()]
+    .filter(i => ROW[i] === 2)
+    .sort((a, b) => tiles[b].mul - tiles[a].mul);  // best cover first for forward screen
+  const rowATiles = [...Array(N_TILES).keys()]
+    .filter(i => ROW[i] === 0);
+
+  // 6 forward cos: 4 on row B (one per tile, guaranteed full line) + 2 on row C
+  const defFront: number[] = [
+    ...rowBTiles,                   // 4 cos — one per tile — full blocking line
+    rowCTiles[0],                   // 5th co on best-cover row C tile
+    rowCTiles[Math.min(1, rowCTiles.length - 1)],  // 6th co
   ];
-  // mark reserve
-  units[2].entrenched = false;
+
+  const defRear: number[] = rowATiles.slice(0, 3);
+  while (defRear.length < 3) defRear.push(rowATiles[0]);
+
+  const defBnNames = ["I", "II", "III"];
+  let di = 0;
+  for (let bi = 0; bi < defBnNames.length; bi++) {
+    const bn = defBnNames[bi];
+    // cos 1+2 = front line (row B + C), co 3 = reserve on row A
+    for (let n = 1; n <= 3; n++) {
+      const tile = n <= 2 ? defFront[di++] : defRear[bi];
+      units.push(mkCo(bn, n, "1028th", "def",
+        220, 180, 3, 2, 1, 75, tile));
+    }
+  }
+
+  // --- Deploy attackers ---
+  // 2 assault cos per bn on rows 6-7 (G-H, close to enemy).
+  // 1 reserve co per bn on row 8 (I, support/follow-on).
+  // Support platoon (arty/mortars) placed with the LEADING assault co of I Bn.
+  const atkAssaultRows = [6, 7];
+  const atkAssaultCands = [...Array(N_TILES).keys()]
+    .filter(i => atkAssaultRows.includes(ROW[i]))
+    .sort((a, b) => tiles[b].mul - tiles[a].mul);
+  const atkAssault: number[] = [];  // 6 assault cos
+  for (const t of atkAssaultCands) {
+    if (atkAssault.length >= 6) break;
+    const cap = capacityOf(tiles[t].terrain);
+    for (let k = 0; k < cap && atkAssault.length < 6; k++) atkAssault.push(t);
+  }
+  while (atkAssault.length < 6) atkAssault.push(atkAssaultCands[0]);
+
+  const atkRearCands = [...Array(N_TILES).keys()]
+    .filter(i => ROW[i] === 8)
+    .sort((a, b) => tiles[a].mul - tiles[b].mul); // open ground for reserve
+  const atkRear: number[] = [];
+  for (const t of atkRearCands) { if (atkRear.length >= 3) break; atkRear.push(t); }
+  while (atkRear.length < 3) atkRear.push(atkRearCands[0]);
+
+  const atkBnNames = ["I", "II", "III"];
+  let ai = 0;
+  for (let bi = 0; bi < atkBnNames.length; bi++) {
+    const bn = atkBnNames[bi];
+    for (let n = 1; n <= 3; n++) {
+      const tile = n <= 2 ? atkAssault[ai++] : atkRear[bi];
+      units.push(mkCo(bn, n, "394th", "atk",
+        220, 180, 3, 2, 0, 80, tile));
+    }
+  }
+
+  // Support platoon: arty/mortar element co-located with leading I Bn co.
+  // Represented as a separate unit with higher mortar/at but fewer rifles.
+  const leadTile = atkAssault[0];
+  units.push({
+    id: "SPT/394", name: "SPT", rgt: "394th", side: "atk", type: "support", size: "plt",
+    men: 60, rifles: 30, mg: 1, mortar: 4, at: 2, morale: 85,
+    suppression: 0, tile: leadTile, revealed: true, routed: false, entrenched: false,
+    sidc: SIDC_ATK_SPT, parent: "I/394",
+  });
+
   reserveCommitted = false;
-  // one defender forward as outpost
-  const defIdx = rand(3);
-  units[4 + defIdx].tile = [11, 12, 13][rand(3)];
-  units[4 + defIdx].entrenched = false;
+  knownToAtk = tiles.map(() => false);
+  updateOwnership();
+  updateFog();
 
   atkGuns = 12; defGuns = 8;
   turn = 1; over = false;
-  scoutCount.clear();
   fullLog = [];
   simulateAll();
   stepIdx = 0;
   renderFrame();
 }
 
-function mkBn(name: string, rgt: string, side: "atk"|"def",
-  men: number, rifles: number, mg: number, mortar: number,
+function mkCo(bn: string, num: number, rgt: string, side: "atk"|"def",
+  men: number, rifles: number, mg: number, mortar: number, at: number,
   morale: number, tile: number): Unit {
+  const name = num + "/" + bn;                       // e.g. "1/I"
+  const rgtShort = rgt.replace("th", "");
+  // Co 3 of each bn is the reserve for that bn.
+  const isReserve = num === 3;
   return {
-    id: name + "/" + rgt.replace("th",""),
-    name, rgt, side, type: "inf", size: "bn",
-    men, rifles, mg, mortar, at: 0, morale,
+    id: name + "/" + rgtShort,                       // e.g. "1/I/394"
+    name, rgt, side, type: "inf", size: "co",
+    men, rifles, mg, mortar, at, morale,
     suppression: 0, tile, revealed: side === "atk",
     routed: false, entrenched: side === "def",
     sidc: side === "atk" ? SIDC_ATK_INF : SIDC_DEF_INF,
-  };
-}
-
-function mkSpt(name: string, rgt: string, tile: number): Unit {
-  return {
-    id: name + "/" + rgt.replace("th",""),
-    name, rgt, side: "atk", type: "support", size: "co",
-    men: 120, rifles: 40, mg: 8, mortar: 4, at: 4,
-    morale: 80, suppression: 0, tile,
-    revealed: true, routed: false, entrenched: false,
-    sidc: SIDC_ATK_SPT,
+    parent: (isReserve ? "RSV/" : "") + bn + "/" + rgtShort,  // RSV/I/394 = reserve
   };
 }
 
 function simulateAll(): void {
   steps = [];
-  const atk = units.filter(u => u.side === "atk" && u.type === "inf");
-  const spt = units.find(u => u.type === "support");
+  const atk = units.filter(u => u.side === "atk");
   const def = units.filter(u => u.side === "def");
   addLog("== 394th Infantry Rgt  vs  1028th Rifle Rgt ==", "hdr");
-  addLog(`394th: ${atk.reduce((s,u)=>s+u.men,0)} men  CV:${atk.reduce((s,u)=>s+cv(u),0)}  |  Off-map: ${atkGuns}x 105mm`, "info");
-  if (spt) addLog(`394th Spt Co: ${spt.mg} HMG, ${spt.mortar}x 120mm, ${spt.at} AT (CV:${cv(spt)})`, "info");
-  addLog(`1028th: ${def.reduce((s,u)=>s+u.men,0)} men  CV:${def.reduce((s,u)=>s+cv(u),0)}  |  Off-map: ${defGuns}x 76mm  |  ENTRENCHED`, "info");
-  addLog("Objective: breach the main line and reach the A-row.", "info");
+  addLog(`394th: 9 cos (2 assault + 1 reserve per bn) + SPT plt  CV:${atk.reduce((s,u)=>s+cv(u),0)}`, "info");
+  addLog(`1028th: 9 cos (2 front + 1 reserve per bn)  CV:${def.reduce((s,u)=>s+cv(u),0)}  ENTRENCHED`, "info");
+  addLog("Maneuver: full contact from turn 1. Reserves commit when bn is under pressure.", "info");
   steps.push(snap());
 
   while (!over) {
     turn++;
     for (const u of units) if (!u.routed) u.suppression = Math.max(0, u.suppression - 1);
-    addLog(`\n==== ${hourStr(turn)} HRS ====`, "hdr");
+    addLog(`\n==== ${tStr(turn)} ====`, "hdr");
 
-    // Turn 1: detach recon platoons (maneuver bns only, not reserve)
-    if (turn === 1) {
-      for (const bn of units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed && u.id !== "III/394")) {
-        const r = detachRecon(bn);
-        units.push(r);
-        addLog(`${r.id} detaches from ${bn.id} (${r.men} men, ${r.mg} MG)`, "recon");
-      }
-    }
-
-    decideTurnActions();
     checkReserveCommit();
 
-    // Scouting bns: advance recon forward
-    doReconAdvance();
-    steps.push(snap(true));
-
-    // Recon spots and returns
-    doReconSpotAndReturn();
-
-    // Artillery -- both sides fire when they have targets
+    // 1. Off-map artillery on revealed targets
     fireAtkArt();
     counterBattery();
 
-    // Each bn: assault adjacent enemies or advance
-    doCombatAndMovement();
+    // 2. Movement (with auto-recon + ZOC)
+    doMovement();
 
-    // Support company follows main effort
-    moveSupportCompany();
+    // 3. Assaults on adjacent enemies
+    doAssaults();
 
-    // Defender artillery interdiction
+    // 4. Defender interdiction
     fireDefArt();
+
+    // 5. Update tile ownership / fog
+    updateOwnership();
+    updateFog();
 
     checkEnd();
     steps.push(snap());
   }
 }
 
-// -- Turn decisions -----------------------------------------------
-
-function decideTurnActions(): void {
-  scoutingBns.clear();
-  const anyRevealed = units.some(u => u.side === "def" && !u.routed && u.revealed);
-  for (const bn of units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed)) {
-    // Reserve stays put until committed
-    if (bn.id === "III/394" && !reserveCommitted) {
-      addLog(`${bn.id}: in reserve`, "info");
-      scoutingBns.add(bn.id); // prevent advancing
-      continue;
-    }
-    const sameEnemy = units.some(u => u.side === "def" && u.tile === bn.tile && !u.routed);
-    const prev = scoutCount.get(bn.id) || 0;
-    // Move if: in contact, OR any defender is revealed, OR scouted 2+ turns already
-    if (sameEnemy || anyRevealed || prev >= 2) {
-      addLog(`${bn.id}: advancing`, "info");
-      scoutCount.set(bn.id, 0);
-      continue;
-    }
-    // Otherwise send recon patrol
-    scoutingBns.add(bn.id);
-    scoutCount.set(bn.id, prev + 1);
-    addLog(`${bn.id}: orders recon patrol ahead`, "recon");
-  }
-}
-
-// -- Reserve & Support --------------------------------------------
+// -- Reserve ------------------------------------------------------
 
 function checkReserveCommit(): void {
   if (reserveCommitted) return;
-  const reserve = units.find(u => u.id === "III/394" && u.type === "inf" && !u.routed);
-  if (!reserve) { reserveCommitted = true; return; }
+  // Attacker reserves: cos 3 of each bn (parent starts with "RSV/")
+  const reserve = units.filter(u => u.side === "atk" && u.parent?.startsWith("RSV/") && !u.routed);
+  if (!reserve.length) { reserveCommitted = true; return; }
 
-  const maneuverBns = units.filter(u => u.side === "atk" && u.type === "inf" && u.id !== "III/394");
-  const anyRouted = maneuverBns.some(u => u.routed);
-  const bothEngaged = maneuverBns.filter(u => !u.routed).every(u =>
+  const fwdCos = units.filter(u => u.side === "atk" && !u.parent?.startsWith("RSV/") && u.type === "inf");
+  const routedCount = fwdCos.filter(u => u.routed).length;
+  const allEngaged = fwdCos.filter(u => !u.routed).every(u =>
     units.some(d => d.side === "def" && !d.routed && (d.tile === u.tile || ADJ[u.tile].includes(d.tile))));
-  const lateGame = turn >= 6;
+  const lateGame = turn >= 12;  // 12 × 15 min = 3 h elapsed
 
-  if (anyRouted || (bothEngaged && turn >= 3) || lateGame) {
+  if (routedCount >= 2 || (allEngaged && turn >= 6) || lateGame) {
     reserveCommitted = true;
-    addLog(`III/394 committed from reserve!`, "info");
+    // Un-tag reserves so they behave like normal cos and follow the main force
+    for (const r of reserve) r.parent = r.parent!.replace("RSV/", "");
+    addLog(`Reserves committed! 3rd cos of I/II/III bn advancing.`, "info");
+  }
+
+  // Defender reserve: co 3 of each bn commits when adjacent friendly is in contact
+  const defReserves = units.filter(u => u.side === "def" && u.parent?.startsWith("RSV/") && !u.routed);
+  for (const dr of defReserves) {
+    const bn = dr.parent!.replace("RSV/", "");
+    const fwdBnCos = units.filter(u => u.side === "def" && !u.parent?.startsWith("RSV/") &&
+      u.parent === bn && !u.routed);
+    const bnUnderPressure = fwdBnCos.some(u =>
+      units.some(a => a.side === "atk" && !a.routed && (a.tile === u.tile || ADJ[u.tile].includes(a.tile))));
+    if (bnUnderPressure) {
+      dr.parent = bn;  // commit: strip RSV prefix
+      addLog(`${dr.id} (def reserve) committed to reinforce ${bn}`, "info");
+    }
   }
 }
 
-function moveSupportCompany(): void {
-  const spt = units.find(u => u.type === "support" && !u.routed);
-  if (!spt) return;
+// -- Tile ownership & fog -----------------------------------------
 
-  // Follow the most forward engaged bn (main effort)
-  const candidates = units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed && !scoutingBns.has(u.id));
-  if (!candidates.length) return;
-
-  let best: Unit | null = null;
-  let bestScore = -1;
-  for (const bn of candidates) {
-    const adjEnemy = ADJ[bn.tile].filter(t => units.some(u => u.side === "def" && u.tile === t && !u.routed && u.revealed)).length;
-    const score = adjEnemy * 10 + (6 - ROW[bn.tile]);
-    if (score > bestScore) { bestScore = score; best = bn; }
-  }
-  if (!best) return;
-
-  // Move support toward the main effort bn (one step, stay behind or on same tile)
-  if (spt.tile === best.tile) return;
-  const target = best.tile;
-  // find adjacent tile closest to target, prefer staying one row behind
-  const path = ADJ[spt.tile].filter(t => ROW[t] <= ROW[spt.tile] || t === target);
-  if (path.includes(target)) {
-    spt.tile = target;
-  } else {
-    // move toward target: pick tile that minimizes row distance
-    const toward = ADJ[spt.tile]
-      .filter(t => ROW[t] < ROW[spt.tile] || ROW[t] === ROW[spt.tile])
-      .sort((a, b) => Math.abs(ROW[a] - ROW[target]) - Math.abs(ROW[b] - ROW[target]));
-    if (toward.length) spt.tile = toward[0];
+function updateOwnership(): void {
+  for (let i = 0; i < N_TILES; i++) {
+    const atkHere = units.some(u => u.side === "atk" && u.tile === i && !u.routed);
+    const defHere = units.some(u => u.side === "def" && u.tile === i && !u.routed);
+    if (atkHere && !defHere) tiles[i].owner = "atk";
+    else if (defHere && !atkHere) tiles[i].owner = "def";
+    // contested or empty: keep last owner (front line stays where it was)
   }
 }
 
-// -- Recon --------------------------------------------------------
+function updateFog(): void {
+  // Attacker knows: any tile they own, or any tile adjacent to a friendly unit.
+  for (let i = 0; i < N_TILES; i++) {
+    if (tiles[i].owner === "atk") { knownToAtk[i] = true; continue; }
+    if (units.some(u => u.side === "atk" && !u.routed && (u.tile === i || ADJ[u.tile].includes(i)))) {
+      knownToAtk[i] = true;
+    }
+    // tiles once seen stay known (no re-fog)
+  }
+  // reveal enemy units on known tiles
+  for (const d of units.filter(u => u.side === "def" && !u.routed && !u.revealed)) {
+    if (knownToAtk[d.tile]) {
+      d.revealed = true;
+      const ent = d.entrenched ? " [ENTRENCHED]" : "";
+      addLog(`Recon: ${d.id} spotted at ${LABELS[d.tile]} (~${Math.round(d.men/50)*50} men, ${d.mg}MG)${ent}`, "recon");
+    }
+  }
+}
 
-function doReconAdvance(): void {
-  // Advance recon platoons forward (only for scouting battalions)
-  const recons = units.filter(u => u.type === "recon" && u.side === "atk" && !u.routed
-    && u.parent && scoutingBns.has(u.parent));
-  for (const r of recons) {
-    // withdraw if on tile with enemy
-    if (units.some(u => u.side === "def" && u.tile === r.tile && !u.routed)) {
-      const back = ADJ[r.tile].filter(t => ROW[t] > ROW[r.tile]);
-      if (back.length) {
-        const from = r.tile; r.tile = back[rand(back.length)];
-        addLog(`${r.id} withdraws from contact: ${LABELS[from]} -> ${LABELS[r.tile]}`, "recon");
+// -- Movement: 2 tiles, 1 if entering enemy ZOC -------------------
+
+function inEnemyZOC(tile: number, side: "atk"|"def"): boolean {
+  // ZOC projected by revealed enemy units only (hidden defenders don't project ZOC for attacker)
+  return ADJ[tile].some(t => units.some(u =>
+    u.side !== side && !u.routed && u.tile === t &&
+    (side === "def" ? true : u.revealed)
+  ));
+}
+
+function doMovement(): void {
+  for (const a of units.filter(u => u.side === "atk" && !u.routed)) {
+    // Support plt follows its parent bn's lead co
+    if (a.type === "support") {
+      const parentCos = units.filter(u => u.side === "atk" && u.parent === a.parent && u.type === "inf" && !u.routed);
+      if (parentCos.length) {
+        const lead = parentCos.reduce((best, u) => ROW[u.tile] < ROW[best.tile] ? u : best, parentCos[0]);
+        if (a.tile !== lead.tile) {
+          const from = a.tile; a.tile = lead.tile;
+          addLog(`${a.id} follows ${lead.id} to ${LABELS[a.tile]}`, "move");
+        }
       }
       continue;
     }
-    // advance: prefer forward + empty
-    const fw = ADJ[r.tile]
-      .filter(t => ROW[t] < ROW[r.tile])
-      .sort((a, b) => {
-        const oa = units.filter(u => u.tile === a && !u.routed).length;
-        const ob = units.filter(u => u.tile === b && !u.routed).length;
-        return oa - ob;
+    // Reserve cos wait until committed
+    if (a.parent?.startsWith("RSV/") && !reserveCommitted) {
+      addLog(`${a.id} holds in reserve at ${LABELS[a.tile]}`, "info");
+      continue;
+    }
+    // Respect stacking limit: do not enter a tile already at capacity with friendlies.
+    // (We treat enemy occupation as the blocker for ZOC; friendly stacking handled in opts sort.)
+    // Movement allowance: 2 normally, 1 if starting in enemy ZOC.
+    let mp = inEnemyZOC(a.tile, a.side) ? 1 : 2;
+    const startedInZOC = mp === 1;
+    if (startedInZOC) addLog(`${a.id} in enemy ZOC at ${LABELS[a.tile]} -- move reduced to 1`, "move");
+
+    while (mp > 0) {
+      // Tile is a valid destination if: no enemy units there AND friendly count < terrain capacity.
+      const friendlyCount = (t: number) =>
+        units.filter(u => u.side === a.side && u.tile === t && !u.routed && u.id !== a.id).length;
+      const enemyOn = (t: number) =>
+        units.some(u => u.side !== a.side && u.tile === t && !u.routed);
+      const passable = (t: number) =>
+        !enemyOn(t) && friendlyCount(t) < capacityOf(tiles[t].terrain);
+
+      // Prefer forward (toward defender), fall back to lateral, then backward.
+      let opts = ADJ[a.tile].filter(t => ROW[t] < ROW[a.tile]).filter(passable);
+      if (!opts.length) opts = ADJ[a.tile].filter(t => ROW[t] === ROW[a.tile]).filter(passable);
+      if (!opts.length) break;
+      // prefer tiles not stacked with friendlies, then better terrain (cover for the assault)
+      opts.sort((x, y) => {
+        const fx = friendlyCount(x), fy = friendlyCount(y);
+        if (fx !== fy) return fx - fy;
+        return tiles[y].mul - tiles[x].mul;
       });
-    if (fw.length) {
-      const from = r.tile; r.tile = fw[0];
-      addLog(`${r.id} scouts ${LABELS[from]} -> ${LABELS[r.tile]}`, "recon");
+      const dest = opts[0];
+      const enteringZOC = inEnemyZOC(dest, a.side);
+      const from = a.tile;
+      a.tile = dest;
+      mp--;
+      addLog(`${a.id} marches ${LABELS[from]} -> ${LABELS[dest]}${enteringZOC ? " (enters ZOC)" : ""}`, "move");
+      // Auto-recon as we march: spot adjacent + own tile
+      autoSpot(a);
+      // Standard wargame rule: entering enemy ZOC ends movement
+      if (enteringZOC) break;
     }
   }
 }
 
-function doReconSpotAndReturn(): void {
-  // Recon platoons auto-spot their current tile
-  for (const r of units.filter(u => u.type === "recon" && u.side === "atk" && !u.routed)) {
-    for (const d of units.filter(u => u.side === "def" && u.tile === r.tile && !u.routed && !u.revealed)) {
-      d.revealed = true;
-      addLog(`${r.id} discovers ${d.id} at ${LABELS[r.tile]}!`, "recon");
-      if (d6() <= 3) {
-        const cas = rand(3, 8); applyCas(r, cas);
-        addLog(`  ${r.id} takes fire: -${cas} men`, "combat");
-        if (r.men <= 5) { r.routed = true; addLog(`  ${r.id} destroyed`, "result"); }
+function autoSpot(u: Unit): void {
+  for (const ti of [u.tile, ...ADJ[u.tile]]) {
+    knownToAtk[ti] = knownToAtk[ti] || u.side === "atk";
+    for (const e of units.filter(x => x.side !== u.side && x.tile === ti && !x.routed && !x.revealed)) {
+      const pen = tiles[ti].terrain === "forest" ? 2 : tiles[ti].terrain === "village" ? 1 : 0;
+      const roll = d6() + (ti === u.tile ? 3 : 0);
+      if (roll - pen >= 3) {
+        e.revealed = true;
+        const ent = e.entrenched ? " [ENT]" : "";
+        addLog(`${u.id} spots ${e.id} at ${LABELS[ti]}${ent}`, "recon");
+      } else if (roll === 1 && ti !== u.tile) {
+        const cas = rand(2, 6); applyCas(u, cas);
+        addLog(`${u.id} takes fire from concealed position near ${LABELS[ti]}: -${cas} men`, "combat");
       }
     }
   }
+}
 
-  // All units spot adjacent tiles
-  for (const a of units.filter(u => u.side === "atk" && !u.routed)) {
-    const bonus = a.type === "recon" ? 2 : 0;
-    for (const ti of ADJ[a.tile]) {
-      const hidden = units.filter(u => u.side === "def" && u.tile === ti && !u.routed && !u.revealed);
-      for (const d of hidden) {
-        const roll = d6() + bonus;
-        const pen = tiles[ti].terrain === "forest" ? 2 : tiles[ti].terrain === "village" ? 1 : 0;
-        if (roll - pen >= 4) {
-          d.revealed = true;
-          const ent = d.entrenched ? " [ENTRENCHED]" : "";
-          addLog(`${a.id} -> ${LABELS[ti]}: spotted ${d.id} (~${Math.round(d.men/50)*50} men, ${d.mg}MG)${ent}`, "recon");
-        } else if (roll === 1) {
-          const cas = rand(3, 12); applyCas(a, cas);
-          addLog(`${a.id} ambushed near ${LABELS[ti]}: -${cas} men`, "combat");
-          if (a.type === "recon" && a.men <= 5) { a.routed = true; addLog(`  ${a.id} destroyed`, "result"); }
-        }
-      }
+// -- Assaults -----------------------------------------------------
+
+function doAssaults(): void {
+  // Concentrate attacks on as many frontline defenders as possible so that
+  // every defending bn is engaged simultaneously -- this neutralises the
+  // mutual flanking-fire support each defender otherwise provides.
+  const plan = new Map<number, Unit[]>();
+  const attackers = units.filter(u => u.side === "atk" && !u.routed && u.type === "inf"
+    && !(u.parent?.startsWith("RSV/") && !reserveCommitted));
+  const defenderTiles = new Set<number>();
+  for (const d of units.filter(u => u.side === "def" && !u.routed && u.revealed)) defenderTiles.add(d.tile);
+
+  // Phase 1: pin -- each revealed defender tile that is adjacent to at least one
+  // attacker gets exactly one attacker assigned (pinning it so it can't flank-fire
+  // the main effort).
+  const unassigned = new Set(attackers.map(a => a.id));
+  for (const ti of defenderTiles) {
+    const cands = attackers.filter(a => unassigned.has(a.id) && ADJ[a.tile].includes(ti));
+    if (!cands.length) continue;
+    // Pick the attacker closest in CV to the defender (avoid wasting the strongest bn on the smallest target)
+    const dCV = units.filter(u => u.side === "def" && u.tile === ti && !u.routed).reduce((s, u) => s + cv(u), 0);
+    cands.sort((a, b) => Math.abs(cv(a) - dCV) - Math.abs(cv(b) - dCV));
+    const pick = cands[0];
+    plan.set(ti, [pick]);
+    unassigned.delete(pick.id);
+  }
+
+  // Phase 2: main effort -- any remaining attackers pile onto the weakest
+  // already-engaged defender for a decisive break-through.
+  if (plan.size > 0) {
+    const weakest = [...plan.keys()].reduce((x, y) => {
+      const s = (ti: number) => units.filter(u => u.side === "def" && u.tile === ti && !u.routed).reduce((acc, u) => acc + cv(u), 0);
+      return s(y) < s(x) ? y : x;
+    });
+    for (const a of attackers) {
+      if (!unassigned.has(a.id)) continue;
+      if (!ADJ[a.tile].includes(weakest)) continue;
+      plan.get(weakest)!.push(a);
+      unassigned.delete(a.id);
     }
   }
 
-  // Recon returns to parent after scouting
-  for (const r of units.filter(u => u.type === "recon" && u.side === "atk" && !u.routed)) {
-    const par = units.find(u => u.id === r.parent);
-    if (par && !par.routed && r.tile !== par.tile) {
-      const from = r.tile;
-      r.tile = par.tile;
-      addLog(`${r.id} returns to ${par.id} at ${LABELS[r.tile]}`, "recon");
+  const capturedTiles = new Set<number>();
+  if (plan.size > 0) {
+    const posBefore = new Map<string, number>();
+    for (const u of units.filter(u => u.side === "atk" && !u.routed)) posBefore.set(u.id, u.tile);
+    const attackedTiles = new Set(plan.keys());
+    for (const [ti, atks] of plan) {
+      const ds = units.filter(u => u.side === "def" && u.tile === ti && !u.routed);
+      if (ds.length > 0) resolveCombat(atks, ds, ti, attackedTiles);
     }
+    for (const u of units.filter(u => u.side === "atk" && !u.routed)) {
+      const prev = posBefore.get(u.id);
+      if (prev !== undefined && prev !== u.tile) capturedTiles.add(u.tile);
+    }
+  }
+
+  // Defender counterattacks -- proactive, not just reactive.
+  // A defender will sortie from its tile to strike any adjacent attacker
+  // whenever it has at least parity (CV >= 0.9 * enemy CV) and decent morale.
+  // Priority targets: (1) attackers on captured friendly tiles, (2) attackers
+  // adjacent to multiple defenders (concentrated counter-blow).
+  const counterCandidates = units.filter(u => u.side === "def" && !u.routed && u.morale >= 50);
+  for (const d of counterCandidates) {
+    if (units.some(u => u.side === "atk" && u.tile === d.tile && !u.routed)) continue;
+    const adjAtkTiles = ADJ[d.tile].filter(t =>
+      units.some(u => u.side === "atk" && u.tile === t && !u.routed));
+    if (!adjAtkTiles.length) continue;
+
+    // Score each adjacent attacker-occupied tile and pick the best target.
+    adjAtkTiles.sort((x, y) => {
+      const score = (t: number) => {
+        const onTile = units.filter(u => u.side === "atk" && u.tile === t && !u.routed);
+        const eCV = onTile.reduce((s, u) => s + cv(u), 0);
+        const friendsAdj = ADJ[t].filter(a => a !== d.tile &&
+          units.some(u => u.side === "def" && u.tile === a && !u.routed)).length;
+        const captured = capturedTiles.has(t) ? 5 : 0;
+        // Prefer weaker stacks, captured tiles, and concentrated counter-blows.
+        return -eCV + friendsAdj * 2 + captured;
+      };
+      return score(y) - score(x);
+    });
+
+    const target = adjAtkTiles[0];
+    const enemy = units.filter(u => u.side === "atk" && u.tile === target && !u.routed);
+    const eCV = enemy.reduce((s, u) => s + cv(u), 0);
+    if (cv(d) / Math.max(1, eCV) < 0.9) continue;
+    addLog(`${d.id} counterattacks ${enemy.map(e => e.id).join("+")} at ${LABELS[target]}!`, "combat");
+    resolveCounterattack(d, enemy, target);
+    capturedTiles.delete(target);
+  }
+
+  // Defender low-morale retreat (if not in contact)
+  for (const d of units.filter(u => u.side === "def" && !u.routed && u.morale < 35)) {
+    if (units.some(u => u.side === "atk" && ADJ[d.tile].includes(u.tile) && !u.routed)) continue;
+    const bk = ADJ[d.tile].filter(t => ROW[t] < ROW[d.tile]);
+    if (!bk.length) continue;
+    const from = d.tile; d.tile = bk[rand(bk.length)];
+    d.entrenched = false;
+    addLog(`${d.id} retreats ${LABELS[from]} -> ${LABELS[d.tile]} (M:${d.morale}, lost entrenchment)`, "move");
   }
 }
 
@@ -570,150 +704,12 @@ function counterBattery(): void {
   }
 }
 
-// -- COMBAT & MOVEMENT (per-unit decisions, no phases) -----------
-
-function doCombatAndMovement(): void {
-  // Recon platoons withdraw from contested tiles
-  for (const r of units.filter(u => u.type === "recon" && !u.routed)) {
-    if (units.some(u => u.side !== r.side && u.tile === r.tile && !u.routed)) {
-      const back = ADJ[r.tile].filter(t => r.side === "atk" ? ROW[t] > ROW[r.tile] : ROW[t] < ROW[r.tile]);
-      if (back.length) {
-        const from = r.tile; r.tile = back[rand(back.length)];
-        addLog(`${r.id} withdraws: ${LABELS[from]} -> ${LABELS[r.tile]}`, "move");
-      }
-    }
-  }
-
-  // Each non-scouting bn either assaults or advances
-  const plan = new Map<number, Unit[]>();
-  const advancers: Unit[] = [];
-
-  for (const a of units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed
-    && !scoutingBns.has(u.id))) {
-    // Forward targets first, then lateral flanking
-    let targets = ADJ[a.tile]
-      .filter(t => ROW[t] < ROW[a.tile])
-      .filter(t => units.some(u => u.side === "def" && u.tile === t && !u.routed && u.revealed));
-    if (units.some(u => u.side === "def" && u.tile === a.tile && !u.routed)) targets.push(a.tile);
-    if (targets.length === 0) {
-      targets = ADJ[a.tile]
-        .filter(t => ROW[t] === ROW[a.tile])
-        .filter(t => units.some(u => u.side === "def" && u.tile === t && !u.routed && u.revealed));
-      if (targets.length > 0) addLog(`${a.id} flanks from ${LABELS[a.tile]}`, "combat");
-    }
-
-    if (targets.length) {
-      const best = targets.reduce((a2, b2) => {
-        const s = (ti: number) => units.filter(u => u.side === "def" && u.tile === ti && !u.routed).reduce((x, u) => x + cv(u), 0);
-        return s(b2) < s(a2) ? b2 : a2;
-      });
-      if (!plan.has(best)) plan.set(best, []);
-      plan.get(best)!.push(a);
-    } else {
-      advancers.push(a);
-    }
-  }
-
-  // Execute assaults
-  const capturedTiles = new Set<number>();
-  if (plan.size > 0) {
-    // record attacker positions before assault
-    const posBefore = new Map<string, number>();
-    for (const u of units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed))
-      posBefore.set(u.id, u.tile);
-
-    const attackedTiles = new Set(plan.keys());
-    for (const [ti, atks] of plan) {
-      const ds = units.filter(u => u.side === "def" && u.tile === ti && !u.routed);
-      if (ds.length > 0) resolveCombat(atks, ds, ti, attackedTiles);
-    }
-
-    // detect tiles just captured
-    for (const u of units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed)) {
-      const prev = posBefore.get(u.id);
-      if (prev !== undefined && prev !== u.tile) capturedTiles.add(u.tile);
-    }
-  }
-
-  // -- Defender counterattack: only against isolated enemy on captured tiles --
-  if (capturedTiles.size > 0) {
-    for (const d of units.filter(u => u.side === "def" && !u.routed && u.morale > 60)) {
-      if (units.some(u => u.side === "atk" && u.tile === d.tile && !u.routed)) continue;
-      // only counterattack adjacent captured tiles
-      const targets = ADJ[d.tile].filter(t => capturedTiles.has(t) && ROW[t] >= ROW[d.tile]);
-      if (!targets.length) continue;
-      // only counterattack if the enemy there is isolated (single bn, no adjacent friendly atk support)
-      const target = targets.find(t => {
-        const eOnTile = units.filter(u => u.side === "atk" && u.type === "inf" && u.tile === t && !u.routed);
-        if (eOnTile.length !== 1) return false; // don't attack multiple bns
-        const adjAtkSupport = ADJ[t].filter(a => a !== d.tile &&
-          units.some(u => u.side === "atk" && u.type === "inf" && u.tile === a && !u.routed));
-        return adjAtkSupport.length === 0; // only if enemy is alone
-      });
-      if (!target) continue;
-      const enemy = units.filter(u => u.side === "atk" && u.type === "inf" && u.tile === target && !u.routed);
-      if (!enemy.length) continue;
-      // only if we have a decent chance (CV ratio > 0.6)
-      if (cv(d) / enemy.reduce((s, u) => s + cv(u), 0) < 0.6) continue;
-      addLog(`${d.id} counterattacks isolated ${enemy[0].id} at ${LABELS[target]}!`, "combat");
-      resolveCounterattack(d, enemy, target);
-      capturedTiles.delete(target);
-    }
-  }
-
-  // Advance non-assaulting bns
-  for (const a of advancers) {
-    if (units.some(u => u.side === "def" && u.tile === a.tile && !u.routed)) continue;
-    const latEnemy = ADJ[a.tile]
-      .filter(t => ROW[t] === ROW[a.tile])
-      .some(t => units.some(u => u.side === "def" && u.tile === t && !u.routed));
-    if (latEnemy) {
-      addLog(`${a.id} holds ${LABELS[a.tile]} -- flanking adjacent defenders`, "move");
-      continue;
-    }
-    const fw = ADJ[a.tile].filter(t => ROW[t] < ROW[a.tile]);
-    if (!fw.length) continue;
-    fw.sort((x, y) => {
-      const dx = units.filter(u => u.side === "def" && u.tile === x && !u.routed).length;
-      const dy = units.filter(u => u.side === "def" && u.tile === y && !u.routed).length;
-      if (dx !== dy) return dx - dy;
-      const fx = units.filter(u => u.side === "atk" && u.type === "inf" && u.tile === x && !u.routed).length;
-      const fy = units.filter(u => u.side === "atk" && u.type === "inf" && u.tile === y && !u.routed).length;
-      return fx - fy;
-    });
-    const from = a.tile; a.tile = fw[0];
-    for (const r of units.filter(u => u.type === "recon" && u.parent === a.id && !u.routed)) {
-      r.tile = a.tile;
-    }
-    addLog(`${a.id} advances ${LABELS[from]} -> ${LABELS[a.tile]}`, "move");
-  }
-
-  // Defender retreat
-  for (const d of units.filter(u => u.side === "def" && !u.routed && u.morale < 35)) {
-    const bk = ADJ[d.tile].filter(t => ROW[t] < ROW[d.tile]);
-    if (!bk.length) continue;
-    const from = d.tile; d.tile = bk[rand(bk.length)];
-    d.entrenched = false;
-    addLog(`${d.id} retreats ${LABELS[from]} -> ${LABELS[d.tile]} (M:${d.morale}, lost entrenchment)`, "move");
-  }
-}
 
 function resolveCombat(atks: Unit[], defs: Unit[], ti: number, attackedTiles: Set<number>): void {
   const tile = tiles[ti];
   let atkCV = atks.reduce((s, a) => s + cv(a), 0);
   const defCV = defs.reduce((s, d) => s + cv(d), 0);
   if (atkCV <= 0 || defCV <= 0) return;
-
-  // Support company fire: adds CV if on same tile or adjacent to assaulting units
-  let sptCV = 0;
-  for (const spt of units.filter(u => u.type === "support" && u.side === "atk" && !u.routed)) {
-    const sptTiles = [spt.tile, ...ADJ[spt.tile]];
-    if (atks.some(a => sptTiles.includes(a.tile)) || sptTiles.includes(ti)) {
-      sptCV = cv(spt);
-      addLog(`  Spt Co fire support: +CV:${sptCV}`, "combat");
-    }
-  }
-  atkCV += sptCV;
 
   const isFlankAssault = atks.some(a => ROW[a.tile] === ROW[ti] && a.tile !== ti);
   const flankMul = isFlankAssault ? 1.2 : 1.0;
@@ -774,12 +770,24 @@ function resolveCombat(atks: Unit[], defs: Unit[], ti: number, attackedTiles: Se
   }
 
   const alive = atks.filter(a => !a.routed);
-  const dLeft = defs.filter(d => !d.routed);
+  // Defenders that remain ON the contested tile (retreated/routed ones have already left).
+  const dHold = defs.filter(d => !d.routed && d.tile === ti);
   let out: string;
-  if      (!dLeft.length && alive.length)            { for (const a of alive) a.tile = ti; out = "TAKES " + LABELS[ti]; }
-  else if (eff >= 2.0 && alive.length)               { for (const a of alive) a.tile = ti; out = "pushes into " + LABELS[ti]; }
-  else if (eff >= 1.4 && d6() >= 4 && alive.length)  { for (const a of alive) a.tile = ti; out = "fights into " + LABELS[ti]; }
-  else                                                { out = "repelled from " + LABELS[ti]; }
+  if (!dHold.length && alive.length) {
+    // Tile is clear -- attackers move in and occupy.
+    for (const a of alive) {
+      a.tile = ti;
+      for (const r of units.filter(u => u.type === "recon" && u.parent === a.id && !u.routed)) r.tile = ti;
+    }
+    out = "TAKES " + LABELS[ti];
+  } else if (alive.length) {
+    // Defenders still hold -- attackers stay on their own tile, exchange fire.
+    if      (eff >= 2.0) out = "hammers " + LABELS[ti];
+    else if (eff >= 1.4) out = "presses " + LABELS[ti];
+    else                 out = "repelled from " + LABELS[ti];
+  } else {
+    out = "repelled from " + LABELS[ti];
+  }
 
   addLog(`${atks.map(a => a.id).join("+")} -> ${LABELS[ti]}: ${out}  [CV ${rawRatio.toFixed(1)}:1 ter x${(tile.mul * entMul).toFixed(1)} -> ${eff.toFixed(1)} eff]  A-${aLoss} D-${dLoss}`, "combat");
 }
@@ -820,12 +828,24 @@ function resolveCounterattack(ctr: Unit, enemy: Unit[], ti: number): void {
     ctr.tile = ti; ctr.entrenched = false;
     result = `RETAKES ${LABELS[ti]}`;
   } else if (eff >= 1.3 && d6() >= 4) {
+    // Try to push every surviving attacker off the tile. Only move the counter-attacker
+    // onto the tile if every attacker actually had somewhere to retreat to -- otherwise
+    // we'd end up with friendly + enemy units co-located on the same hex.
+    const pushed: Unit[] = [];
     for (const e of eAlive) {
-      const back = ADJ[e.tile].filter(t => ROW[t] > ROW[e.tile]);
-      if (back.length) e.tile = back[rand(back.length)];
+      const back = ADJ[e.tile].filter(t => ROW[t] > ROW[e.tile] &&
+        !units.some(u2 => u2.side === "def" && u2.tile === t && !u2.routed));
+      if (back.length) {
+        e.tile = back[rand(back.length)];
+        pushed.push(e);
+      }
     }
-    ctr.tile = ti; ctr.entrenched = false;
-    result = `drives enemy from ${LABELS[ti]}`;
+    if (pushed.length === eAlive.length) {
+      ctr.tile = ti; ctr.entrenched = false;
+      result = `drives enemy from ${LABELS[ti]}`;
+    } else {
+      result = `pushes ${LABELS[ti]} but enemy holds`;
+    }
   } else {
     result = `counterattack repelled`;
   }
@@ -840,13 +860,14 @@ function resolveCounterattack(ctr: Unit, enemy: Unit[], ti: number): void {
 // -- Victory ------------------------------------------------------
 
 function checkEnd(): void {
-  const breach = units.filter(u => u.side === "atk" && !u.routed && u.type === "inf" && ROW[u.tile] <= 1);
+  // Win = reaching row A (index 0), the deep defender rear. Row B (1) is the main line -- fighting there is expected.
+  const breach = units.filter(u => u.side === "atk" && !u.routed && u.type === "inf" && ROW[u.tile] === 0);
   const defAlive = units.filter(u => u.side === "def" && !u.routed);
   const atkAlive = units.filter(u => u.side === "atk" && !u.routed && u.type === "inf");
-  if (breach.length)      { over = true; addLog(`\n* ATTACKER VICTORY -- ${breach[0].id} reached ${LABELS[breach[0].tile]}`, "result"); }
+  if (breach.length)      { over = true; addLog(`\n* ATTACKER VICTORY -- ${breach[0].id} broke through to ${LABELS[breach[0].tile]}`, "result"); }
   else if (!defAlive.length) { over = true; addLog("\n* ATTACKER VICTORY -- all defenders routed", "result"); }
   else if (!atkAlive.length) { over = true; addLog("\n* DEFENDER VICTORY -- all attackers routed", "result"); }
-  else if (turn >= 12)       { over = true; addLog(`\n* STALEMATE -- nightfall (1800)`, "result"); }
+  else if (turn >= 24)       { over = true; addLog(`\n* STALEMATE -- nightfall (${tStr(turn)})`, "result"); }
 }
 
 // =================================================================
@@ -877,11 +898,12 @@ function renderGrid(f: Frame): void {
     + `<div class="offmap-info"><div class="offmap-nm">1028th Art Btry</div>`
     + `<div class="offmap-det">${f.defGuns}x 76mm | ${f.defGuns > 0 ? "READY" : "DESTROYED"}</div></div></div>`;
 
-  // zone labels
-  for (let r = 0; r < 7; r++) {
+  // row-letter zone labels positioned on the LEFT of the grid, one per row
+  for (let r = 0; r < ROWS; r++) {
     const y = MAP_PAD_TOP + r * RS + Math.floor(HH / 2) - 6;
-    const cls = r <= 2 ? "zone zone-def" : r >= 4 ? "zone zone-atk" : "zone zone-nml";
-    html += `<div class="${cls}" style="top:${y}px">${ZONES[r]}</div>`;
+    // defender side = rows 0-2, attacker side = rows 6-9, mid = rows 3-5
+    const cls = r <= 2 ? "zone zone-def" : r >= 6 ? "zone zone-atk" : "zone zone-nml";
+    html += `<div class="${cls} zone-row" style="left:6px;top:${y}px;width:${MAP_PAD_LEFT - 14}px">${ROW_NAMES[r]} — ${ZONES[r]}</div>`;
   }
 
   // hexes
@@ -889,27 +911,23 @@ function renderGrid(f: Frame): void {
     const p = HP[i], t = tiles[i];
     const onTile = f.units.filter(u => u.tile === i && !u.routed);
     const hasAtk = onTile.some(u => u.side === "atk");
-    const hasDef = onTile.some(u => u.side === "def");
+    const hasDef = onTile.some(u => u.side === "def" && u.revealed);
     const contested = hasAtk && hasDef;
+    const owner = f.owners[i];
+    const known = f.known[i];
+    const ownerCls = owner === "atk" ? " own-atk" : owner === "def" ? " own-def" : " own-neu";
+    const fogCls = !known ? " hex-fog" : "";
 
-    const edge = ROW[i] === 0 || ROW[i] === 6;
-    html += `<div class="hex-wrap${edge ? " hex-edge" : ""}" style="left:${p.x}px;top:${p.y}px;width:${HW}px;height:${HH}px">`
-      + `<div class="hex-bdr${contested ? " contested" : ""}" style="clip-path:${CLIP}"></div>`
-      + `<div class="hex-fill ter-${t.terrain}" style="clip-path:${CLIP}"></div>`
+    html += `<div class="hex-wrap" data-tile="${i}" style="left:${p.x}px;top:${p.y}px;width:${HW}px;height:${HH}px;cursor:pointer">`
+      + `<div class="hex-bdr${contested ? " contested" : ""}${ownerCls}" style="clip-path:${CLIP}"></div>`
+      + `<div class="hex-fill ter-${t.terrain}${fogCls}" style="clip-path:${CLIP}"></div>`
       + `<div class="hex-info" style="clip-path:${CLIP}">`
       +   `<span class="hex-id">${LABELS[i]}</span>`
-      +   `<span class="hex-ter">${esc(t.terrain)} x${t.mul}</span>`
+      +   `<span class="hex-ter">${known ? esc(t.terrain) + " x" + t.mul : "???"}</span>`
       + `</div>`
-      + `<div class="hex-units">${mkUnits(onTile, f.reconOut)}</div>`
+      + `<div class="hex-units">${mkUnits(onTile, f.reconOut, known)}</div>`
       + `</div>`;
   }
-
-  // off-map attacker art (bottom)
-  const botY = MAP_PAD_TOP + 6 * RS + HH + 8;
-  html += `<div class="offmap offmap-atk" style="top:${botY}px">`
-    + `<div class="offmap-sym">${symSvg(SIDC_ATK_ART, 24)}</div>`
-    + `<div class="offmap-info"><div class="offmap-nm">394th Art Bn</div>`
-    + `<div class="offmap-det">${f.atkGuns}x 105mm | ${f.atkGuns > 0 ? "READY" : "DESTROYED"}</div></div></div>`;
 
   // recon arrows (parent -> recon tile) during recon phase
   if (f.reconOut) {
@@ -929,30 +947,108 @@ function renderGrid(f: Frame): void {
   }
 
   // scale indicator
-  const scaleY = MAP_PAD_TOP + 6 * RS + HH + 46;
-  html += `<div class="map-scale" style="top:${scaleY}px">1 hex ~ 500m across</div>`;
+  const mapBottom = MAP_PAD_TOP + HO + (ROWS - 1) * RS + HH;
+  html += `<div class="map-scale" style="top:${mapBottom + 10}px">1 hex ~ 1 km across</div>`;
+
+  // off-map attacker art (below the grid)
+  const botY = mapBottom + 14;
+  html += `<div class="offmap offmap-atk" style="top:${botY}px">`
+    + `<div class="offmap-sym">${symSvg(SIDC_ATK_ART, 24)}</div>`
+    + `<div class="offmap-info"><div class="offmap-nm">394th Art Bn</div>`
+    + `<div class="offmap-det">${f.atkGuns}x 105mm | ${f.atkGuns > 0 ? "READY" : "DESTROYED"}</div></div></div>`;
 
   g.innerHTML = html;
+
+  // Click-to-inspect: delegate from grid container
+  g.querySelectorAll<HTMLElement>(".hex-wrap").forEach((hw: HTMLElement) => {
+    hw.addEventListener("click", () => renderTileInfo(Number(hw.dataset.tile), steps[stepIdx]));
+  });
 }
 
-function mkUnits(on: Unit[], reconOut: boolean): string {
-  // recon only visible when deployed (reconOut snapshot)
-  const visible = on.filter(u => !u.routed);
+function renderTileInfo(ti: number, f: Frame): void {
+  const panel = $("tile-panel");
+  const t = tiles[ti];
+  const known = f.known[ti];
+  const owner = f.owners[ti];
+  const ownerLabel = owner === "atk" ? "Attacker" : owner === "def" ? "Defender" : "Neutral";
+  const onTile = f.units.filter(u => u.tile === ti);
+  const visibleUnits = onTile.filter(u => !u.routed && (u.side === "atk" || known));
+  const routedUnits  = onTile.filter(u =>  u.routed && (u.side === "atk" || known));
+
+  $("tp-title").textContent = `Hex ${LABELS[ti]}`;
+
+  let body = `<span class="tp-owner ${owner === "atk" ? "own-atk" : owner === "def" ? "own-def" : "own-neu"}">${ownerLabel}</span>`;
+  body += `<div class="tp-terrain">`
+    + (known
+      ? `<b>${t.terrain.charAt(0).toUpperCase() + t.terrain.slice(1)}</b> &nbsp;·&nbsp; Defence ×${t.mul}`
+      : `<span class="tp-fog">Terrain unknown (fog of war)</span>`)
+    + `</div>`;
+
+  const renderUnitBlock = (u: Unit, dim = false) => {
+    const nameCls = u.routed ? " routed" : "";
+    const sup = ["—", "Disrupted", "Suppressed", "Pinned"][u.suppression] ?? "—";
+    const status = u.routed ? "ROUTED"
+      : u.entrenched ? "Entrenched"
+      : u.suppression > 0 ? sup
+      : "Ready";
+    const sidcSvg = symSvg(u.sidc, 28);
+    return `<div class="tp-unit" style="${dim ? "opacity:.45" : ""}">`
+      + `<div class="tp-unit-sym">${sidcSvg}</div>`
+      + `<div class="tp-unit-body">`
+      +   `<div class="tp-unit-name${nameCls}">${esc(u.id)}</div>`
+      +   `<div class="tp-unit-stats">Men: <b>${u.men}</b> &nbsp;MG: <b>${u.mg}</b> &nbsp;Mor: <b>${u.mortar}</b> &nbsp;AT: <b>${u.at}</b> &nbsp;CV: <b>${cv(u).toFixed(1)}</b></div>`
+      +   `<div class="tp-unit-stats">Morale: <b>${u.morale}</b></div>`
+      +   `<div class="tp-unit-status">${status}</div>`
+      + `</div></div>`;
+  };
+
+  if (!visibleUnits.length && !routedUnits.length) {
+    body += `<div class="tp-fog">No units</div>`;
+  } else {
+    if (visibleUnits.length) {
+      body += `<div class="tp-section">Units present</div>`;
+      body += visibleUnits.map(u => renderUnitBlock(u)).join("");
+    }
+    if (routedUnits.length) {
+      body += `<div class="tp-section">Routed (withdrawing)</div>`;
+      body += routedUnits.map(u => renderUnitBlock(u, true)).join("");
+    }
+  }
+
+  const adjUnits: Unit[] = [];
+  for (const adj of ADJ[ti]) {
+    for (const u of f.units.filter(u => u.tile === adj && !u.routed && (u.side === "atk" || f.known[adj]))) {
+      adjUnits.push(u);
+    }
+  }
+  if (adjUnits.length) {
+    body += `<div class="tp-section">Adjacent (${adjUnits.length})</div>`;
+    body += adjUnits.map(u => `<div style="font-size:9px;color:#555;padding:1px 0">${esc(u.id)} @ ${LABELS[u.tile]}</div>`).join("");
+  }
+
+  $("tp-body").innerHTML = body;
+  panel.classList.add("open");
+}
+
+function mkUnits(on: Unit[], reconOut: boolean, tileKnown: boolean): string {
+  // Hide all enemy units on unknown tiles entirely. Friendly units always shown.
+  const visible = on.filter(u => !u.routed && (u.side === "atk" || tileKnown));
   const sorted = [...visible].sort((a, b) => {
     if (a.side !== b.side) return a.side === "def" ? -1 : 1;
     return 0;
   });
-  return sorted.map((u, i) => mkUnit(u, 10 + i)).join("");
+  // counter-game stacking: each successive unit cascades down-right on top of the previous one
+  return sorted.map((u, i) => mkUnit(u, 10 + i, i)).join("");
 }
 
-function mkUnit(u: Unit, z: number): string {
+function mkUnit(u: Unit, z: number, stack: number = 0): string {
   const fog = !u.revealed && u.side === "def";
   const sup = u.suppression > 0 ? ` u-s${u.suppression}` : "";
   const cls = u.side === "atk" ? "u-atk" : "u-def";
   const szPx = u.size === "bn" ? 18 : u.size === "co" ? 16 : 14;
 
   if (fog) {
-    return `<div class="unit ${cls} u-fog" style="z-index:${z}" title="Unidentified enemy unit">`
+    return `<div class="unit ${cls} u-fog" style="z-index:${z};--sx:${stack}" title="Unidentified enemy unit">`
       + `<div class="u-sym">${symSvg(SIDC_UNK, 16)}</div>`
       + `<div class="u-label">???</div></div>`;
   }
@@ -962,7 +1058,7 @@ function mkUnit(u: Unit, z: number): string {
   const tip = `${u.id}  ${u.men} men  CV:${cv(u)}  ${u.mg}MG ${u.mortar}Mor ${u.at}AT  M:${u.morale}  ${SUPP[u.suppression]}${u.entrenched ? "  ENTRENCHED" : ""}`;
   const rcn = u.type === "recon";
 
-  return `<div class="unit ${cls}${sup}${rcn ? " u-rcn" : ""}" style="z-index:${z}" title="${esc(tip)}">`
+  return `<div class="unit ${cls}${sup}${rcn ? " u-rcn" : ""}" style="z-index:${z};--sx:${stack}" title="${esc(tip)}">`
     + `<div class="u-sym">${symSvg(u.sidc, szPx)}</div>`
     + `<div class="u-label"><div class="u-name">${u.id}</div>${u.men} CV:${cv(u)}${ent}${st}</div>`
     + `</div>`;
@@ -971,16 +1067,9 @@ function mkUnit(u: Unit, z: number): string {
 // -- OOB tables ---------------------------------------------------
 
 function renderOOB(fu: Unit[]): void {
-  // Attacker: interleave parent bn with its recon sub-unit, then support co
+  // Attacker bns
   let aHtml = "";
-  for (const bn of fu.filter(u => u.side === "atk" && u.type === "inf")) {
-    aHtml += oobRow(bn, true);
-    const rcn = fu.find(u => u.parent === bn.id);
-    if (rcn) aHtml += oobRow(rcn, true);
-  }
-  for (const spt of fu.filter(u => u.side === "atk" && u.type === "support")) {
-    aHtml += oobRow(spt, true);
-  }
+  for (const bn of fu.filter(u => u.side === "atk")) aHtml += oobRow(bn, true);
   $("oob-a").innerHTML = aHtml;
 
   // Defender
@@ -988,23 +1077,15 @@ function renderOOB(fu: Unit[]): void {
 }
 
 function oobRow(u: Unit, known: boolean): string {
-  const indent = u.parent ? "oob-sub" : "";
   if (!known)
-    return `<tr class="oob-tr fog"><td class="oob-bn ${indent}">${esc(u.id)}</td><td colspan="10" class="oob-unk">???</td></tr>`;
+    return `<tr class="oob-tr fog"><td class="oob-bn">${esc(u.id)}</td><td colspan="4" class="oob-unk">???</td></tr>`;
   const cls = u.routed ? "oob-tr rt" : "oob-tr";
   const sup = u.suppression > 0 && !u.routed ? ` s${u.suppression}` : "";
-  const typeStr = u.type === "recon" ? "RCN" : u.type === "support" ? "SPT" : "INF";
   return `<tr class="${cls}${sup}">`
-    + `<td class="oob-bn ${indent}">${esc(u.id)}</td>`
-    + `<td class="oob-ty">${typeStr}</td>`
+    + `<td class="oob-bn">${esc(u.id)}${u.entrenched ? " E" : ""}</td>`
     + `<td class="oob-n">${u.routed ? "--" : u.men}</td>`
-    + `<td class="oob-n">${u.mg}</td>`
-    + `<td class="oob-n">${u.mortar}</td>`
-    + `<td class="oob-n">${u.at}</td>`
     + `<td class="oob-n oob-cv">${cv(u)}</td>`
     + `<td class="oob-n">${u.morale}</td>`
-    + `<td class="oob-s">${u.routed ? "ROUT" : SUPP[u.suppression]}</td>`
-    + `<td class="oob-n">${u.entrenched ? "ENT" : ""}</td>`
     + `<td class="oob-h">${LABELS[u.tile]}</td>`
     + `</tr>`;
 }
@@ -1027,7 +1108,7 @@ function renderLog(logEnd: number): void {
 // -- Status / controls --------------------------------------------
 
 function renderPhaseBar(f: Frame): void {
-  const label = f.over ? "RESULT" : hourStr(f.turn);
+  const label = f.over ? "RESULT" : tStr(f.turn);
   $("phase").textContent = label;
   $("step").textContent = `${stepIdx + 1} / ${steps.length}`;
   ($("progress") as HTMLElement).style.width = `${(stepIdx / Math.max(1, steps.length - 1)) * 100}%`;
@@ -1052,7 +1133,9 @@ function renderResults(): void {
 
   const fs = steps[steps.length-1];
   let h = `<div class="res-v">${esc(verdict)}</div>`;
-  h += `<div class="res-sub">${hourStr(1)}–${hourStr(fs.turn)} (${fs.turn} hrs)  |  Atk Art: ${fs.atkGuns}/${steps[0].atkGuns} guns  |  Def Art: ${fs.defGuns}/${steps[0].defGuns} guns</div>`;
+  const minutes = (fs.turn - 1) * 15;
+  const dur = `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+  h += `<div class="res-sub">${tStr(1)}–${tStr(fs.turn)} (${dur})  |  Atk Art: ${fs.atkGuns}/${steps[0].atkGuns} guns  |  Def Art: ${fs.defGuns}/${steps[0].defGuns} guns</div>`;
 
   for (const side of ["atk", "def"] as const) {
     const label = side === "atk" ? "394th Infantry Regiment" : "1028th Rifle Regiment";
@@ -1088,6 +1171,7 @@ function renderResults(): void {
 $("prev").addEventListener("click", () => { if (stepIdx > 0) { stepIdx--; renderFrame(); } });
 $("next").addEventListener("click", () => { if (stepIdx < steps.length - 1) { stepIdx++; renderFrame(); } });
 $("skip").addEventListener("click", () => { stepIdx = steps.length - 1; renderFrame(); });
+$("tp-close").addEventListener("click", () => $("tile-panel").classList.remove("open"));
 $("reset").addEventListener("click", initBattle);
 
 // Keyboard hotkeys

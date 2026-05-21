@@ -96,41 +96,156 @@ function computeCV(d: Division): number {
 // ═════════════════════════════════════════════════════════
 //  BATTLE LOGIC — edit this, save, rebuild, refresh
 // ═════════════════════════════════════════════════════════
+
+// ── Scenario constants ───────────────────────────────────
+// Tile size    : 10 km × 10 km  (one regiment-width sector)
+// Tactical level: regiment  — each Division contains ~3 regiments;
+//                each battle here represents one regiment attacking
+//                one defending regiment on a single tile.
+// Manpower needed to hold a tile: see garrisonThresholds below.
+const TILE_KM        = 10;         // km per hex edge
+const TACTICAL_LEVEL = "regiment"; // regiment-vs-regiment engagement
+const RETREAT_THRESHOLD = 0.25;    // defender retreats if ≥25 % of pre-assault rifles lost
+const REPEL_THRESHOLD   = 0.20;    // attacker breaks off if ≥20 % of pre-assault rifles lost
+
+// ── Time helper ─────────────────────────────────────────
+// Convert elapsed minutes (since 0500) to a HHMM string
+function fmtTime(elapsed: number): string {
+  const total = 5 * 60 + elapsed;
+  return String(Math.floor(total / 60)).padStart(2, '0') + String(total % 60).padStart(2, '0');
+}
+
+// Named ground objectives the battalion CO references in orders
+const OBJECTIVES = ["Village Nord", "Hill 312", "Treeline Alpha", "Crossroads W4"];
+
 function simulate(attacker: Division, defender: Division): { attacker: Division; defender: Division; rounds: RoundEntry[] } {
   const rounds: RoundEntry[] = [];
+  const TURNS_RECON   = 4;   // 0500–0600  (1 h, 4 × 15 min)
+  const TURNS_ARTY    = 4;   // 0600–0700  (1 h, 4 × 15 min)
+  const TURNS_ASSAULT = 8;   // 0700–0900  (2 h, 8 × 15 min)
+  let elapsed = 0;           // minutes elapsed since 0500
 
-  // ── Recon ──
-  let atkLoss = 0, defLoss = 0;
-  const reconSquads = Math.floor(attacker.rifles / 10 / 4);
-  for (let i = 0; i < reconSquads; i++) {
-    const roll = rand(6);
-    if (roll === 0) {
-      const k = rand(4, 8);
-      attacker.rifles -= k; atkLoss += k;
-    } else if (roll === 1) {
-      const a = rand(3, 6), d = rand(1, 3);
-      attacker.rifles -= a; defender.rifles -= d;
-      atkLoss += a; defLoss += d;
+  // ── Phase 1: Recon  0500–0600 ─────────────────────────
+  // Platoon-scale probes forward to identify enemy positions and strongpoints
+  const reconPlt = Math.max(1, Math.floor(attacker.rifles / 10 / 4 / TURNS_RECON));
+  const reconOrders = [
+    (f: string) => `I/394 Cmd to Recon Plt: Advance to ${f} — identify MG positions and trench lines`,
+    (f: string) => `I/394 Cmd to Recon Plt: Recon in force toward ${f}; mark wire, minefields, sector boundary`,
+    (f: string) => `I/394 Cmd to Recon Plt: Probe ${f} perimeter — report battalion strength and left-flank gap`,
+    (f: string) => `I/394 Cmd to all platoons: Withdraw recon elements; compile intel — assault orders to follow`,
+  ];
+  const reconDefActions = [
+    "Outpost fires warning shots at 600 m; pulls back to main line",
+    "MG opens up at 400 m — patrol pins forward squad",
+    "Mortar barrage on approach route; scouts fall back to report",
+    "Reports to CO: enemy probing in strength — all positions manned",
+  ];
+  for (let t = 0; t < TURNS_RECON; t++) {
+    const obj = OBJECTIVES[t % OBJECTIVES.length];
+    let atkL = 0, defL = 0;
+    for (let i = 0; i < reconPlt; i++) {
+      const roll = rand(6);
+      if (roll === 0) { const k = rand(2, 5); attacker.rifles -= k; atkL += k; }
+      else if (roll === 1) { const a = rand(1, 3), d = rand(1, 2); attacker.rifles -= a; defender.rifles -= d; atkL += a; defL += d; }
     }
+    rounds.push({ phase: fmtTime(elapsed),
+      attacker_action: reconOrders[t](obj),
+      defender_action: reconDefActions[t],
+      attacker_losses: atkL, defender_losses: defL });
+    elapsed += 15;
   }
 
-  // ── Artillery ──
-  let artLoss = 0;
+  // ── Phase 2: Artillery prep  0600–0700 ─────────────────
+  // Batteries fire in rotation: registration → fire for effect → shift → lift
   const batteries = Math.floor(attacker.artillery / 6);
-  for (let i = 0; i < batteries; i++) {
-    const hit = rand(6);
-    defender.rifles -= hit;
-    artLoss += hit;
+  const salvosPerTurn = Math.max(1, Math.ceil(batteries / 2));
+  const artyOrders = [
+    (f: string) => `394th Art Bn Cmd: Battery 1+2 — registration fire on ${f}; observe and correct`,
+    (f: string) => `394th Art Bn Cmd: Fire for effect — suppress ${f} strongpoint; battery 3 on left treeline`,
+    (f: string) => `394th Art Bn Cmd: Shift fires to ${f}; battery 1 neutralise MG nest at grid 443`,
+    (f: string) => `394th Art Bn Cmd: Final protective fires — all batteries on assault axis; lift on green signal`,
+  ];
+  const artyDefActions = [
+    "Platoons seek cover in trenches; MGs displaced to alternate positions",
+    "1028th loses comms — runners out; squads hunker in foxholes",
+    "Forward platoon abandons exposed position; pulls back 200 m",
+    "Platoons reform in defilade; await assault — positions holding",
+  ];
+  for (let t = 0; t < TURNS_ARTY; t++) {
+    const obj = OBJECTIVES[(TURNS_RECON + t) % OBJECTIVES.length];
+    let artL = 0;
+    for (let i = 0; i < salvosPerTurn; i++) { const hit = rand(5); defender.rifles -= hit; artL += hit; }
+    rounds.push({ phase: fmtTime(elapsed),
+      attacker_action: artyOrders[t](obj),
+      defender_action: artyDefActions[t],
+      attacker_losses: 0, defender_losses: artL });
+    elapsed += 15;
   }
-  // ── Assault ──
+
+  // ── Phase 3: Assault  0700–0900 ────────────────────────
+  // Battalions advance in 15-min slices; retreat/repel checked each turn
+  const preAssaultDefRifles = defender.rifles;
+  const preAssaultAtkRifles = attacker.rifles;
   let assaultAtk = 0, assaultDef = 0;
-  const defSquads = Math.floor(defender.rifles / 10);
-  const atkSquads = Math.floor(attacker.rifles / 10);
-  for (let i = 0; i < defSquads; i++) {
-    const h = rand(6); attacker.rifles -= h; assaultAtk += h;
-  }
-  for (let i = 0; i < atkSquads; i++) {
-    const h = rand(4); defender.rifles -= h; assaultDef += h;
+  const assaultOrders = [
+    (f: string) => `I/394 Cmd: 1st Coy — fix defenders at ${f}; 2nd Coy provide base of fire on right flank`,
+    (f: string) => `I/394 Cmd: 2nd Coy — flank through treeline; seize ${f} from the north`,
+    (f: string) => `I/394 Cmd: Commit 3rd Coy through gap at ${f} — do not allow defenders to reform`,
+    (f: string) => `I/394 Cmd: Weapons Plt — suppress MG nest at ${f}; assault team follows on green smoke`,
+    (f: string) => `I/394 Cmd: All companies push to ${f}; 394th Art shifts to phase line BAKER`,
+    (f: string) => `I/394 Cmd: 1st Coy break into ${f} — grenades first, then clear house to house`,
+    (f: string) => `I/394 Cmd: Consolidate ${f} — 3rd Coy dig in; prepare for immediate counterattack`,
+    (f: string) => `I/394 Cmd: 2nd Coy advance to next phase line; 1st Coy mop up ${f}`,
+  ];
+  const assaultDefActions = [
+    "Platoons hold fire until 200 m — disciplined volley, then MGs open up",
+    "MGs concentrate on gap — flanking fire catches assault element in the open",
+    "Forward platoon falls back to reserve trench; MGs cover withdrawal",
+    "Counterattack group forms behind ridge — CO: hold at all costs",
+    "All squads — no withdrawal without order; hold and fire",
+    "Reserve platoon plugs left flank — gap closed under fire",
+    "Defenders call 1028th batteries — fires on own wire to break assault",
+    "Line bending but holding — CO: every man fights in place",
+  ];
+  for (let t = 0; t < TURNS_ASSAULT; t++) {
+    const obj = OBJECTIVES[(TURNS_RECON + TURNS_ARTY + t) % OBJECTIVES.length];
+    const defSq = Math.max(1, Math.floor(defender.rifles / 10 / TURNS_ASSAULT));
+    const atkSq = Math.max(1, Math.floor(attacker.rifles / 10 / TURNS_ASSAULT));
+    let tAtk = 0, tDef = 0;
+    for (let i = 0; i < defSq; i++) { const h = rand(6); attacker.rifles -= h; tAtk += h; }
+    for (let i = 0; i < atkSq; i++) { const h = rand(4); defender.rifles -= h; tDef += h; }
+    assaultAtk += tAtk; assaultDef += tDef;
+
+    const defCasRate = preAssaultDefRifles > 0 ? assaultDef / preAssaultDefRifles : 0;
+    const atkCasRate = preAssaultAtkRifles > 0 ? assaultAtk / preAssaultAtkRifles : 0;
+
+    if (defCasRate >= RETREAT_THRESHOLD) {
+      const penalty = Math.floor(defender.manpower * 0.05);
+      defender.manpower = Math.max(0, defender.manpower - penalty);
+      defender.rifles   = Math.max(0, defender.rifles - Math.floor(defender.rifles * 0.05));
+      rounds.push({ phase: fmtTime(elapsed),
+        attacker_action: `I/394 Cmd: '${obj} is ours — all companies advance and consolidate the position!'`,
+        defender_action: `1028th line collapses — retreats under fire (−${penalty} men rout penalty)`,
+        attacker_losses: tAtk, defender_losses: tDef + penalty });
+      elapsed += 15;
+      break;
+    }
+    if (atkCasRate >= REPEL_THRESHOLD) {
+      const penalty = Math.floor(attacker.manpower * 0.03);
+      attacker.manpower = Math.max(0, attacker.manpower - penalty);
+      attacker.rifles   = Math.max(0, attacker.rifles - Math.floor(attacker.rifles * 0.03));
+      rounds.push({ phase: fmtTime(elapsed),
+        attacker_action: `I/394 Cmd: 'Break off — assault too costly; consolidate on start line' (−${penalty} men)`,
+        defender_action: "1028th holds — fires into withdrawing attackers",
+        attacker_losses: tAtk + penalty, defender_losses: tDef });
+      elapsed += 15;
+      break;
+    }
+    rounds.push({ phase: fmtTime(elapsed),
+      attacker_action: assaultOrders[t % assaultOrders.length](obj),
+      defender_action: assaultDefActions[t % assaultDefActions.length],
+      attacker_losses: tAtk, defender_losses: tDef });
+    elapsed += 15;
   }
 
 
