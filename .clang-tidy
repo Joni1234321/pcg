@@ -20,6 +20,7 @@ Checks: >
   -readability-implicit-bool-conversion,
   -readability-redundant-member-init,
   -readability-identifier-length,
+  -readability-math-missing-parentheses,
   -bugprone-easily-swappable-parameters
 
 WarningsAsErrors: ""
