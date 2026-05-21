@@ -1,17 +1,17 @@
 "use strict";
 // =================================================================
-//  BATTLES -- Regiment Combat on a 5-deep Hex Grid
+//  BATTLES -- Regiment Combat on a 4x8 Hex Grid
 // =================================================================
 //  milsymbol NATO counters, recon detachments, off-map artillery,
 //  flanking fire, entrenchment.  No emojis -- text only.
 // =================================================================
 // -- Grid constants -----------------------------------------------
-// 4 columns × 10 rows = 40 tiles, flat-top hexes ("odd-q" offset: odd cols shifted down)
-// Row A = top (deep defender rear), Row J = bottom (deep attacker rear)
-// Maneuver warfare: full contact from turn 1 — defenders on rows B-C, attackers G-H.
-const COLS = 4, ROWS = 10;
+// 4 columns × 8 rows = 32 tiles, flat-top hexes ("odd-q" offset: odd cols shifted down)
+// Row A = top (defender rear), Row H = bottom (attacker rear)
+// Defenders on rows C-D (main line + forward screen), attackers on rows E-F.
+const COLS = 4, ROWS = 8;
 const N_TILES = COLS * ROWS;
-const ROW_NAMES = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+const ROW_NAMES = ["A", "B", "C", "D", "E", "F", "G", "H"];
 const LABELS = [];
 for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++)
@@ -35,16 +35,14 @@ for (let i = 0; i < N_TILES; i++) {
 }
 // Zone labels — maneuver warfare (everything under attack from turn 1)
 const ZONES = [
-    "DEFENSE IN DEPTH", // A — deep defender rear
-    "MAIN DEFENSE LINE", // B — defender front
-    "FORWARD LINE", // C — defender forward screen
-    "BREACH", // D — attacker already pushing
-    "EXPLOITATION", // E
-    "EXPLOITATION", // F
-    "ATTACK ASSEMBLY", // G — attacker front
-    "ASSAULT LINE", // H — attacker main body
-    "SUPPORT", // I — attacker support
-    "ATTACKER REAR", // J
+    "DEFENDER REAR", // A — deep rear
+    "DEFENSE IN DEPTH", // B — fallback line
+    "MAIN DEFENSE LINE", // C — main defense
+    "FORWARD SCREEN", // D — delay positions
+    "NO MANS LAND", // E — contested approach
+    "ATTACK ASSEMBLY", // F — attacker front
+    "SUPPORT", // G — attacker support
+    "ATTACKER REAR", // H
 ];
 const TERRAIN_DATA = [
     { name: "field", mul: 1.0 },
@@ -64,13 +62,13 @@ const SIDC_DEF_ART = "SHGPUCF----E---"; // hostile arty battery
 const SIDC_UNK = "SHGPUCI----E---"; // unknown hostile (shown foggy)
 // hex layout — flat-top orientation (flat edges at top/bottom, vertices left/right)
 // HW = vertex-to-vertex width = 2s, HH = flat-to-flat height = s√3
-const HW = 120, HH = 104;
-const CS = Math.floor(HW * 0.75) + 4; // column-to-column spacing (3s/2 + gap)
-const RS = HH + 4; // row-to-row spacing within a column
-const HO = Math.floor(RS / 2); // vertical offset for 3-tile (odd) columns
+const HW = 84, HH = 72;
+const CS = Math.floor(HW * 0.75) + 4;
+const RS = HH + 4;
+const HO = Math.floor(RS / 2);
 const CLIP = "polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)";
-const MAP_PAD_TOP = 40;
-const MAP_PAD_LEFT = 130; // wide left margin so row-letter zone labels fit
+const MAP_PAD_TOP = 30;
+const MAP_PAD_LEFT = 10;
 const HP = [];
 {
     // Flat-top rectangular grid: every column has ROWS tiles.
@@ -91,7 +89,14 @@ let atkGuns = 12, defGuns = 8;
 let steps = [];
 let stepIdx = 0;
 let knownToAtk = []; // per-tile fog state for attacker side
+let knownToDef = []; // per-tile fog state for defender side
+let viewSide = "atk"; // which side's fog of war to show
 let reserveCommitted = false;
+let orderSet = 1; // current attacker order set (1 = first obj row, 2 = second, 3 = third)
+let orderHoldTurns = 0; // turns remaining before new orders can be issued (delay after cancel)
+let stallTurns = 0; // consecutive turns with no forward progress
+let defOrderSet = 1; // defender order set (1 = hold forward, 2 = fallback to C, 3 = last stand B/A)
+let defOrderHoldTurns = 0; // delay before new defender orders
 // -- Helpers ------------------------------------------------------
 function rand(a, b) {
     if (b === undefined)
@@ -100,9 +105,9 @@ function rand(a, b) {
 }
 function d6() { return rand(1, 6); }
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-// 15-minute turns. Turn 1 = 14:00, turn 2 = 14:15, ...
+// 30-minute turns. Turn 1 = 06:00, turn 2 = 06:30, ...
 function tStr(t) {
-    const totalMin = 14 * 60 + (t - 1) * 15;
+    const totalMin = 6 * 60 + (t - 1) * 30;
     const hh = Math.floor(totalMin / 60), mm = totalMin % 60;
     return String(hh).padStart(2, '0') + String(mm).padStart(2, '0');
 }
@@ -129,6 +134,9 @@ function snap(reconOut = false) {
         units: units.map(u => ({ ...u })),
         owners: tiles.map(t => t.owner),
         known: knownToAtk.slice(),
+        knownDef: knownToDef.slice(),
+        objectives: units.map(u => u.objective ?? -1),
+        orderSet, defOrderSet,
         atkGuns, defGuns, logEnd: fullLog.length, over,
     };
 }
@@ -156,13 +164,13 @@ function capacityOf(terrain) {
 function initBattle() {
     _svgCache.clear();
     // Generate terrain per row (COLS=4 entries each).
-    // Defender half (rows 0-2): strong cover; attacker half (rows 7-9): open ground.
+    // Defender half (rows 0-2): strong cover; attacker half (rows 5-7): open ground.
     const TERR_DEF = ["forest", "ridge", "village", "hill"];
     const TERR_MID = ["field", "hill", "forest", "field"];
     const TERR_ATK = ["field", "field", "hill", "field"];
     const pool = [];
     for (let r = 0; r < ROWS; r++) {
-        const tab = r <= 2 ? TERR_DEF : r >= 7 ? TERR_ATK : TERR_MID;
+        const tab = r <= 2 ? TERR_DEF : r >= 5 ? TERR_ATK : TERR_MID;
         const shuf = tab.slice();
         for (let i = shuf.length - 1; i > 0; i--) {
             const j = rand(i + 1);
@@ -173,50 +181,55 @@ function initBattle() {
     }
     tiles = pool.map((t, i) => {
         const info = TERRAIN_DATA.find(x => x.name === t);
-        const owner = ROW[i] >= 7 ? "atk" : ROW[i] <= 2 ? "def" : "neutral";
+        const owner = ROW[i] >= 5 ? "atk" : ROW[i] <= 3 ? "def" : "neutral";
         return { index: i, terrain: t, mul: info.mul, owner };
     });
     units = [];
     // --- Deploy defenders ---
-    // RULE: Every tile in row B (index 1) = the MAIN DEFENSE LINE must have exactly 1 co.
-    // With COLS=4 that's 4 tiles × 1 co = 4 cos. No tile can be left empty or attackers walk through.
-    // The remaining 2 forward cos go to the 2 best-cover tiles in row C (forward screen).
-    // Reserve: 1 co per bn on row A (deep rear / defence in depth).
-    const rowBTiles = [...Array(N_TILES).keys()]
-        .filter(i => ROW[i] === 1); // always exactly COLS=4 tiles → full blocking line
+    // Main defense line: row C (2) = 4 cos, one per tile, HOLD stance.
+    // Forward screen: row D (3) = 2 cos on best-cover tiles, DELAY stance.
+    // Reserve: row B (1) = 3 cos (1 per bn).
     const rowCTiles = [...Array(N_TILES).keys()]
-        .filter(i => ROW[i] === 2)
-        .sort((a, b) => tiles[b].mul - tiles[a].mul); // best cover first for forward screen
-    const rowATiles = [...Array(N_TILES).keys()]
-        .filter(i => ROW[i] === 0);
-    // 6 forward cos: 4 on row B (one per tile, guaranteed full line) + 2 on row C
+        .filter(i => ROW[i] === 2); // main defense line — full blocking
+    const rowDTiles = [...Array(N_TILES).keys()]
+        .filter(i => ROW[i] === 3)
+        .sort((a, b) => tiles[b].mul - tiles[a].mul); // best cover first
+    const rowBTiles = [...Array(N_TILES).keys()]
+        .filter(i => ROW[i] === 1);
+    // 6 forward cos: 4 on row C (full blocking) + 2 on row D (delay positions)
     const defFront = [
-        ...rowBTiles, // 4 cos — one per tile — full blocking line
-        rowCTiles[0], // 5th co on best-cover row C tile
-        rowCTiles[Math.min(1, rowCTiles.length - 1)], // 6th co
+        ...rowCTiles, // 4 cos on main line
+        rowDTiles[0], // 5th co on best-cover row D tile
+        rowDTiles[Math.min(1, rowDTiles.length - 1)], // 6th co
     ];
-    const defRear = rowATiles.slice(0, 3);
+    const defRear = rowBTiles.slice(0, 3);
     while (defRear.length < 3)
-        defRear.push(rowATiles[0]);
+        defRear.push(rowBTiles[0]);
     const defBnNames = ["I", "II", "III"];
     let di = 0;
     for (let bi = 0; bi < defBnNames.length; bi++) {
         const bn = defBnNames[bi];
-        // cos 1+2 = front line (row B + C), co 3 = reserve on row A
         for (let n = 1; n <= 3; n++) {
             const tile = n <= 2 ? defFront[di++] : defRear[bi];
-            units.push(mkCo(bn, n, "1028th", "def", 220, 180, 3, 2, 1, 75, tile));
+            const co = mkCo(bn, n, "1028th", "def", 220, 180, 3, 2, 1, 75, tile);
+            // Forward screen (row D) gets DELAY stance, main line (row C) gets HOLD
+            if (n <= 2) {
+                co.stance = ROW[tile] === 3 ? "delay" : "hold";
+                co.objective = tile; // defend this position
+                co.objectiveComplete = false;
+                co.delayTurns = 0;
+            }
+            units.push(co);
         }
     }
     // --- Deploy attackers ---
-    // 2 assault cos per bn on rows 6-7 (G-H, close to enemy).
-    // 1 reserve co per bn on row 8 (I, support/follow-on).
-    // Support platoon (arty/mortars) placed with the LEADING assault co of I Bn.
-    const atkAssaultRows = [6, 7];
+    // 2 assault cos per bn on rows E-F (4-5, close to enemy).
+    // 1 reserve co per bn on row G (6, support/follow-on).
+    const atkAssaultRows = [4, 5];
     const atkAssaultCands = [...Array(N_TILES).keys()]
         .filter(i => atkAssaultRows.includes(ROW[i]))
         .sort((a, b) => tiles[b].mul - tiles[a].mul);
-    const atkAssault = []; // 6 assault cos
+    const atkAssault = [];
     for (const t of atkAssaultCands) {
         if (atkAssault.length >= 6)
             break;
@@ -227,8 +240,8 @@ function initBattle() {
     while (atkAssault.length < 6)
         atkAssault.push(atkAssaultCands[0]);
     const atkRearCands = [...Array(N_TILES).keys()]
-        .filter(i => ROW[i] === 8)
-        .sort((a, b) => tiles[a].mul - tiles[b].mul); // open ground for reserve
+        .filter(i => ROW[i] === 6)
+        .sort((a, b) => tiles[a].mul - tiles[b].mul);
     const atkRear = [];
     for (const t of atkRearCands) {
         if (atkRear.length >= 3)
@@ -246,17 +259,26 @@ function initBattle() {
             units.push(mkCo(bn, n, "394th", "atk", 220, 180, 3, 2, 0, 80, tile));
         }
     }
-    // Support platoon: arty/mortar element co-located with leading I Bn co.
-    // Represented as a separate unit with higher mortar/at but fewer rifles.
+    // Support platoon
     const leadTile = atkAssault[0];
     units.push({
         id: "SPT/394", name: "SPT", rgt: "394th", side: "atk", type: "support", size: "plt",
         men: 60, rifles: 30, mg: 1, mortar: 4, at: 2, morale: 85,
         suppression: 0, tile: leadTile, revealed: true, routed: false, entrenched: false,
         sidc: SIDC_ATK_SPT, parent: "I/394",
+        activity: "Supporting", reorgTurns: 0,
     });
+    // --- Issue initial orders ---
+    orderSet = 1;
+    orderHoldTurns = 0;
+    issueOrders();
+    // --- Issue initial defender orders ---
+    defOrderSet = 1;
+    defOrderHoldTurns = 0;
+    issueDefOrders();
     reserveCommitted = false;
     knownToAtk = tiles.map(() => false);
+    knownToDef = tiles.map((_, i) => ROW[i] <= 4); // defenders know their own territory
     updateOwnership();
     updateFog();
     atkGuns = 12;
@@ -267,6 +289,233 @@ function initBattle() {
     simulateAll();
     stepIdx = 0;
     renderFrame();
+}
+// -- Attacker orders ----------------------------------------------
+function issueOrders() {
+    const atkCos = units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed
+        && !u.parent?.startsWith("RSV/"));
+    // Order set 1: row D tiles (row index 3) — forward screen
+    // Order set 2: row C tiles (row index 2) — main defense line
+    // Order set 3: row B tiles (row index 1) — breakthrough
+    const targetRow = orderSet === 1 ? 3 : orderSet === 2 ? 2 : 1;
+    const objTiles = [...Array(N_TILES).keys()].filter(i => ROW[i] === targetRow);
+    const rowName = ROW_NAMES[targetRow];
+    addLog(`ATK BN CMD: Orders issued — seize row ${rowName}`, "hdr");
+    const assigned = new Set();
+    for (const co of atkCos) {
+        const col = colOf(co.tile);
+        let best = -1, bestDist = 999;
+        for (const t of objTiles) {
+            if (assigned.has(t))
+                continue;
+            const dist = Math.abs(colOf(t) - col) + Math.abs(ROW[t] - ROW[co.tile]);
+            if (dist < bestDist) {
+                bestDist = dist;
+                best = t;
+            }
+        }
+        if (best === -1) {
+            for (const t of objTiles) {
+                const dist = Math.abs(colOf(t) - col) + Math.abs(ROW[t] - ROW[co.tile]);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = t;
+                }
+            }
+        }
+        co.objective = best;
+        co.objectiveComplete = false;
+        assigned.add(best);
+        addLog(`${co.id} -> OBJ: ${LABELS[best]}`, "info");
+    }
+    for (const co of units.filter(u => u.side === "atk" && u.parent?.startsWith("RSV/"))) {
+        co.objective = undefined;
+        co.objectiveComplete = false;
+    }
+}
+// -- Defender orders ----------------------------------------------
+function issueDefOrders() {
+    const defCos = units.filter(u => u.side === "def" && u.type === "inf" && !u.routed
+        && !u.parent?.startsWith("RSV/"));
+    if (defOrderSet === 1) {
+        // Initial: forward units (row D) DELAY, main line (row C) HOLD
+        addLog(`DEF BN CMD: Hold main line (row C), delay on forward screen (row D)`, "hdr");
+        for (const co of defCos) {
+            co.stance = ROW[co.tile] >= 3 ? "delay" : "hold";
+            co.objective = co.tile;
+            co.objectiveComplete = false;
+            co.delayTurns = 0;
+            addLog(`${co.id} -> ${co.stance.toUpperCase()} at ${LABELS[co.tile]}`, "info");
+        }
+    }
+    else if (defOrderSet === 2) {
+        // Fallback: all units to row C (main line), HOLD
+        addLog(`DEF BN CMD: Fall back to row C — establish new defense line`, "hdr");
+        const rowCTiles = [...Array(N_TILES).keys()].filter(i => ROW[i] === 2);
+        const assigned = new Set();
+        for (const co of defCos) {
+            const col = colOf(co.tile);
+            let best = -1, bestDist = 999;
+            for (const t of rowCTiles) {
+                if (assigned.has(t))
+                    continue;
+                const dist = Math.abs(colOf(t) - col);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = t;
+                }
+            }
+            if (best === -1) {
+                for (const t of rowCTiles) {
+                    const dist = Math.abs(colOf(t) - col);
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        best = t;
+                    }
+                }
+            }
+            co.stance = "hold";
+            co.objective = best;
+            co.objectiveComplete = false;
+            co.delayTurns = 0;
+            assigned.add(best);
+            addLog(`${co.id} -> HOLD at ${LABELS[best]}`, "info");
+        }
+    }
+    else {
+        // Last stand: fall back to row B
+        addLog(`DEF BN CMD: Fall back to row B — last stand`, "hdr");
+        const rowBTiles = [...Array(N_TILES).keys()].filter(i => ROW[i] === 1);
+        const assigned = new Set();
+        for (const co of defCos) {
+            const col = colOf(co.tile);
+            let best = -1, bestDist = 999;
+            for (const t of rowBTiles) {
+                if (assigned.has(t))
+                    continue;
+                const dist = Math.abs(colOf(t) - col);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = t;
+                }
+            }
+            if (best === -1) {
+                for (const t of rowBTiles) {
+                    const dist = Math.abs(colOf(t) - col);
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        best = t;
+                    }
+                }
+            }
+            co.stance = "hold";
+            co.objective = best;
+            co.objectiveComplete = false;
+            co.delayTurns = 0;
+            assigned.add(best);
+            addLog(`${co.id} -> HOLD at ${LABELS[best]}`, "info");
+        }
+    }
+}
+function checkDefenderOrders() {
+    // If orders are on hold, count down
+    if (defOrderHoldTurns > 0) {
+        defOrderHoldTurns--;
+        if (defOrderHoldTurns === 0) {
+            addLog(`DEF BN CMD: New orders ready`, "hdr");
+            issueDefOrders();
+        }
+        else {
+            addLog(`DEF BN CMD: Issuing new orders... (${defOrderHoldTurns} turns)`, "info");
+        }
+        return;
+    }
+    const defCos = units.filter(u => u.side === "def" && u.type === "inf" && !u.routed
+        && !u.parent?.startsWith("RSV/"));
+    if (!defCos.length)
+        return;
+    if (defOrderSet === 1) {
+        // Check if forward screen (row D) is lost — all delay units retreated or routed
+        const fwdUnits = defCos.filter(u => u.stance === "delay");
+        const fwdLost = fwdUnits.length === 0 || fwdUnits.every(u => ROW[u.tile] < 3);
+        if (fwdLost) {
+            defOrderSet = 2;
+            defOrderHoldTurns = 2; // takes 2 turns to reorganize
+            addLog(`DEF BN CMD: Forward screen lost. Reorganizing... (2 turns)`, "hdr");
+        }
+    }
+    else if (defOrderSet === 2) {
+        // Check if main line (row C) is under heavy pressure
+        const mainLine = defCos.filter(u => ROW[u.tile] === 2);
+        const mainLost = mainLine.length === 0 ||
+            mainLine.filter(u => u.morale < 40 || u.men < 120).length >= Math.ceil(mainLine.length / 2);
+        const atkOnC = units.some(u => u.side === "atk" && !u.routed && ROW[u.tile] <= 2);
+        if (mainLost || atkOnC) {
+            defOrderSet = 3;
+            defOrderHoldTurns = 2;
+            addLog(`DEF BN CMD: Main line breaking. Falling back to row B... (2 turns)`, "hdr");
+        }
+    }
+}
+function checkOrderCompletion() {
+    // If orders are on hold (bn cmd cancelled, issuing new orders), count down
+    if (orderHoldTurns > 0) {
+        orderHoldTurns--;
+        if (orderHoldTurns === 0) {
+            addLog(`BN CMD: New orders ready`, "hdr");
+            issueOrders();
+        }
+        else {
+            addLog(`BN CMD: Issuing new orders... (${orderHoldTurns} turns)`, "info");
+        }
+        return;
+    }
+    const atkCos = units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed
+        && u.objective !== undefined && !u.parent?.startsWith("RSV/"));
+    if (!atkCos.length)
+        return;
+    // Mark objective complete if co is on or past its objective tile
+    for (const co of atkCos) {
+        if (co.objective !== undefined && !co.objectiveComplete) {
+            const onObj = co.tile === co.objective;
+            const pastObj = ROW[co.tile] < ROW[co.objective];
+            const objClear = !units.some(u => u.side === "def" && u.tile === co.objective && !u.routed);
+            if ((onObj || pastObj) && objClear) {
+                co.objectiveComplete = true;
+                addLog(`${co.id} CONSOLIDATES on ${LABELS[co.tile]} (OBJ ${LABELS[co.objective]} secured)`, "result");
+            }
+        }
+    }
+    // Bn cmd can cancel orders if no progress for 4 turns — reissue with 2-turn delay
+    const stuckCos = atkCos.filter(u => !u.objectiveComplete);
+    if (stuckCos.length > 0 && turn > 4) {
+        // Check if any stuck co made progress (moved closer to objective) in the last step
+        const prevStep = stepIdx > 0 ? steps[steps.length - 1] : undefined;
+        if (prevStep) {
+            const noProgress = stuckCos.every(u => {
+                const prev = prevStep.units.find(p => p.id === u.id);
+                return prev && prev.tile === u.tile;
+            });
+            // Track consecutive stall turns
+            stallTurns = noProgress ? stallTurns + 1 : 0;
+            if (stallTurns >= 4) {
+                addLog(`BN CMD: Orders cancelled — no progress. Reissuing orders (2 turns)`, "hdr");
+                orderHoldTurns = 2;
+                stallTurns = 0;
+                return;
+            }
+        }
+    }
+    // All objectives must be complete (or co routed) to issue new orders
+    const allDone = atkCos.every(u => u.objectiveComplete);
+    if (!allDone)
+        return;
+    // Issue next set of orders
+    if (orderSet >= 3)
+        return; // final orders already active
+    orderSet++;
+    addLog(`\n** NEW ORDERS — advancing to next objective **`, "hdr");
+    issueOrders();
 }
 function mkCo(bn, num, rgt, side, men, rifles, mg, mortar, at, morale, tile) {
     const name = num + "/" + bn; // e.g. "1/I"
@@ -280,7 +529,9 @@ function mkCo(bn, num, rgt, side, men, rifles, mg, mortar, at, morale, tile) {
         suppression: 0, tile, revealed: side === "atk",
         routed: false, entrenched: side === "def",
         sidc: side === "atk" ? SIDC_ATK_INF : SIDC_DEF_INF,
-        parent: (isReserve ? "RSV/" : "") + bn + "/" + rgtShort, // RSV/I/394 = reserve
+        parent: (isReserve ? "RSV/" : "") + bn + "/" + rgtShort,
+        activity: isReserve ? "In Reserve" : (side === "def" ? "Holding" : "Waiting"),
+        reorgTurns: 0,
     };
 }
 function simulateAll() {
@@ -297,6 +548,24 @@ function simulateAll() {
         for (const u of units)
             if (!u.routed)
                 u.suppression = Math.max(0, u.suppression - 1);
+        // Reset activity labels at start of turn
+        for (const u of units) {
+            if (u.routed) {
+                u.activity = "Routed";
+                continue;
+            }
+            if (u.side === "def") {
+                u.activity = u.entrenched ? (u.stance === "delay" ? "Delaying" : "Holding") : "Moving";
+            }
+            else {
+                if (u.parent?.startsWith("RSV/") && !reserveCommitted)
+                    u.activity = "In Reserve";
+                else if (u.reorgTurns > 0)
+                    u.activity = "Reorganizing";
+                else
+                    u.activity = "Waiting";
+            }
+        }
         addLog(`\n==== ${tStr(turn)} ====`, "hdr");
         checkReserveCommit();
         // 1. Off-map artillery on revealed targets
@@ -311,6 +580,10 @@ function simulateAll() {
         // 5. Update tile ownership / fog
         updateOwnership();
         updateFog();
+        // 6. Check order completion — consolidate & issue new orders
+        checkOrderCompletion();
+        // 7. Check defender orders — fallback when lines break
+        checkDefenderOrders();
         checkEnd();
         steps.push(snap());
     }
@@ -328,12 +601,29 @@ function checkReserveCommit() {
     const fwdCos = units.filter(u => u.side === "atk" && !u.parent?.startsWith("RSV/") && u.type === "inf");
     const routedCount = fwdCos.filter(u => u.routed).length;
     const allEngaged = fwdCos.filter(u => !u.routed).every(u => units.some(d => d.side === "def" && !d.routed && (d.tile === u.tile || ADJ[u.tile].includes(d.tile))));
-    const lateGame = turn >= 12; // 12 × 15 min = 3 h elapsed
-    if (routedCount >= 2 || (allEngaged && turn >= 6) || lateGame) {
+    const lateGame = turn >= 6; // 6 × 30 min = 3 h elapsed
+    if (routedCount >= 2 || (allEngaged && turn >= 3) || lateGame) {
         reserveCommitted = true;
         // Un-tag reserves so they behave like normal cos and follow the main force
-        for (const r of reserve)
+        for (const r of reserve) {
             r.parent = r.parent.replace("RSV/", "");
+            // Assign current order objective to newly committed reserve
+            const targetRow = orderSet === 1 ? 3 : orderSet === 2 ? 2 : 1;
+            const objTiles = [...Array(N_TILES).keys()].filter(i => ROW[i] === targetRow);
+            const col = colOf(r.tile);
+            let best = objTiles[0];
+            let bestDist = 999;
+            for (const t of objTiles) {
+                const dist = Math.abs(colOf(t) - col);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = t;
+                }
+            }
+            r.objective = best;
+            r.objectiveComplete = false;
+            addLog(`${r.id} -> OBJ: ${LABELS[best]}`, "info");
+        }
         addLog(`Reserves committed! 3rd cos of I/II/III bn advancing.`, "info");
     }
     // Defender reserve: co 3 of each bn commits when adjacent friendly is in contact
@@ -362,7 +652,7 @@ function updateOwnership() {
     }
 }
 function updateFog() {
-    // Attacker knows: any tile they own, or any tile adjacent to a friendly unit.
+    // Attacker fog
     for (let i = 0; i < N_TILES; i++) {
         if (tiles[i].owner === "atk") {
             knownToAtk[i] = true;
@@ -371,9 +661,18 @@ function updateFog() {
         if (units.some(u => u.side === "atk" && !u.routed && (u.tile === i || ADJ[u.tile].includes(i)))) {
             knownToAtk[i] = true;
         }
-        // tiles once seen stay known (no re-fog)
     }
-    // reveal enemy units on known tiles
+    // Defender fog
+    for (let i = 0; i < N_TILES; i++) {
+        if (tiles[i].owner === "def") {
+            knownToDef[i] = true;
+            continue;
+        }
+        if (units.some(u => u.side === "def" && !u.routed && (u.tile === i || ADJ[u.tile].includes(i)))) {
+            knownToDef[i] = true;
+        }
+    }
+    // reveal enemy units on known tiles (attacker spotting)
     for (const d of units.filter(u => u.side === "def" && !u.routed && !u.revealed)) {
         if (knownToAtk[d.tile]) {
             d.revealed = true;
@@ -382,51 +681,86 @@ function updateFog() {
         }
     }
 }
-// -- Movement: 2 tiles, 1 if entering enemy ZOC -------------------
+// -- Movement: 2 MP per unit. Friendly = 1 MP, ZOC/unknown = 2 MP --
 function inEnemyZOC(tile, side) {
-    // ZOC projected by revealed enemy units only (hidden defenders don't project ZOC for attacker)
     return ADJ[tile].some(t => units.some(u => u.side !== side && !u.routed && u.tile === t &&
         (side === "def" ? true : u.revealed)));
 }
+function moveCost(tile, side) {
+    const known = side === "atk" ? knownToAtk[tile] : knownToDef[tile];
+    const friendly = tiles[tile].owner === side;
+    if (friendly && known)
+        return 1;
+    return 2; // ZOC, neutral, unknown, or enemy territory
+}
 function doMovement() {
+    // --- Defender movement (fallback to assigned objective) ---
+    for (const d of units.filter(u => u.side === "def" && !u.routed && u.type === "inf"
+        && !u.parent?.startsWith("RSV/"))) {
+        if (d.objective !== undefined && d.tile !== d.objective && !d.objectiveComplete) {
+            const targetRow = ROW[d.objective];
+            if (ROW[d.tile] > targetRow)
+                continue;
+            // Fallback retreat: ignore stacking so delay units can retreat through main line
+            const rearOpts = ADJ[d.tile].filter(t => ROW[t] < ROW[d.tile] &&
+                !units.some(u => u.side === "atk" && u.tile === t && !u.routed));
+            if (rearOpts.length) {
+                const objCol = colOf(d.objective);
+                rearOpts.sort((a, b) => Math.abs(colOf(a) - objCol) - Math.abs(colOf(b) - objCol));
+                const from = d.tile;
+                d.tile = rearOpts[0];
+                d.entrenched = false;
+                d.activity = "Falling Back";
+                addLog(`${d.id} falls back ${LABELS[from]} -> ${LABELS[d.tile]} (ordered)`, "move");
+                if (d.tile === d.objective) {
+                    d.entrenched = true;
+                    d.objectiveComplete = true;
+                    d.activity = "Digging In";
+                    addLog(`${d.id} digs in at ${LABELS[d.tile]}`, "info");
+                }
+            }
+        }
+    }
+    // --- Attacker movement ---
     for (const a of units.filter(u => u.side === "atk" && !u.routed)) {
-        // Support plt follows its parent bn's lead co
         if (a.type === "support") {
             const parentCos = units.filter(u => u.side === "atk" && u.parent === a.parent && u.type === "inf" && !u.routed);
             if (parentCos.length) {
                 const lead = parentCos.reduce((best, u) => ROW[u.tile] < ROW[best.tile] ? u : best, parentCos[0]);
                 if (a.tile !== lead.tile) {
-                    const from = a.tile;
                     a.tile = lead.tile;
+                    a.activity = "Supporting";
                     addLog(`${a.id} follows ${lead.id} to ${LABELS[a.tile]}`, "move");
                 }
             }
             continue;
         }
-        // Reserve cos wait until committed
         if (a.parent?.startsWith("RSV/") && !reserveCommitted) {
-            addLog(`${a.id} holds in reserve at ${LABELS[a.tile]}`, "info");
+            a.activity = "In Reserve";
             continue;
         }
-        // Respect stacking limit: do not enter a tile already at capacity with friendlies.
-        // (We treat enemy occupation as the blocker for ZOC; friendly stacking handled in opts sort.)
-        // Movement allowance: 2 normally, 1 if starting in enemy ZOC.
-        let mp = inEnemyZOC(a.tile, a.side) ? 1 : 2;
-        const startedInZOC = mp === 1;
-        if (startedInZOC)
-            addLog(`${a.id} in enemy ZOC at ${LABELS[a.tile]} -- move reduced to 1`, "move");
+        // Reorganizing: can't move or attack
+        if (a.reorgTurns > 0) {
+            a.reorgTurns--;
+            a.activity = "Reorganizing";
+            addLog(`${a.id} reorganizing at ${LABELS[a.tile]} (${a.reorgTurns} turns left)`, "info");
+            continue;
+        }
+        if (a.objectiveComplete && a.objective !== undefined) {
+            a.activity = "Holding OBJ";
+            continue;
+        }
+        let mp = 2;
+        a.activity = "Advancing";
         while (mp > 0) {
-            // Tile is a valid destination if: no enemy units there AND friendly count < terrain capacity.
             const friendlyCount = (t) => units.filter(u => u.side === a.side && u.tile === t && !u.routed && u.id !== a.id).length;
             const enemyOn = (t) => units.some(u => u.side !== a.side && u.tile === t && !u.routed);
             const passable = (t) => !enemyOn(t) && friendlyCount(t) < capacityOf(tiles[t].terrain);
-            // Prefer forward (toward defender), fall back to lateral, then backward.
             let opts = ADJ[a.tile].filter(t => ROW[t] < ROW[a.tile]).filter(passable);
             if (!opts.length)
                 opts = ADJ[a.tile].filter(t => ROW[t] === ROW[a.tile]).filter(passable);
             if (!opts.length)
                 break;
-            // prefer tiles not stacked with friendlies, then better terrain (cover for the assault)
             opts.sort((x, y) => {
                 const fx = friendlyCount(x), fy = friendlyCount(y);
                 if (fx !== fy)
@@ -434,22 +768,36 @@ function doMovement() {
                 return tiles[y].mul - tiles[x].mul;
             });
             const dest = opts[0];
+            const cost = moveCost(dest, a.side);
+            if (cost > mp)
+                break;
             const enteringZOC = inEnemyZOC(dest, a.side);
+            // ZOC entry always costs full 2 MP
+            const actualCost = enteringZOC ? 2 : cost;
+            if (actualCost > mp)
+                break;
+            mp -= actualCost;
             const from = a.tile;
             a.tile = dest;
-            mp--;
-            addLog(`${a.id} marches ${LABELS[from]} -> ${LABELS[dest]}${enteringZOC ? " (enters ZOC)" : ""}`, "move");
-            // Auto-recon as we march: spot adjacent + own tile
+            addLog(`${a.id} marches ${LABELS[from]} -> ${LABELS[dest]} (-${actualCost}MP)${enteringZOC ? " (enters ZOC)" : ""}`, "move");
             autoSpot(a);
-            // Standard wargame rule: entering enemy ZOC ends movement
-            if (enteringZOC)
+            if (enteringZOC) {
+                a.activity = "Deploying";
                 break;
+            }
+        }
+        if (inEnemyZOC(a.tile, a.side)) {
+            if (a.activity !== "Deploying")
+                a.activity = "In Contact";
         }
     }
 }
 function autoSpot(u) {
     for (const ti of [u.tile, ...ADJ[u.tile]]) {
-        knownToAtk[ti] = knownToAtk[ti] || u.side === "atk";
+        if (u.side === "atk")
+            knownToAtk[ti] = true;
+        else
+            knownToDef[ti] = true;
         for (const e of units.filter(x => x.side !== u.side && x.tile === ti && !x.routed && !x.revealed)) {
             const pen = tiles[ti].terrain === "forest" ? 2 : tiles[ti].terrain === "village" ? 1 : 0;
             const roll = d6() + (ti === u.tile ? 3 : 0);
@@ -591,7 +939,7 @@ function fireAtkArt() {
         for (const d of units.filter(u => u.side === "def" && u.tile === ti && !u.routed)) {
             let cas = 0;
             for (let g = 0; g < guns; g++)
-                cas += Math.floor(rand(3, 8) / tiles[ti].mul);
+                cas += Math.floor(rand(1, 4) / tiles[ti].mul);
             applyCas(d, cas);
             const sl = guns >= 7 ? 3 : guns >= 4 ? 2 : guns >= 2 ? 1 : 0;
             d.suppression = Math.max(d.suppression, sl);
@@ -612,7 +960,7 @@ function fireDefArt() {
     const ti = atkTiles[rand(atkTiles.length)];
     const tgts = units.filter(u => u.side === "atk" && u.tile === ti && !u.routed);
     for (const a of tgts) {
-        const cas = Math.max(1, Math.floor(rand(2, 5) * defGuns / Math.max(1, tgts.length) / tiles[ti].mul));
+        const cas = Math.max(1, Math.floor(rand(1, 3) * defGuns / Math.max(1, tgts.length) / tiles[ti].mul));
         applyCas(a, cas);
         addLog(`1028th Art (${defGuns}x 76mm) -> ${LABELS[ti]}: ${a.id} -${cas} men`, "arty");
     }
@@ -633,6 +981,11 @@ function resolveCombat(atks, defs, ti, attackedTiles) {
     const defCV = defs.reduce((s, d) => s + cv(d), 0);
     if (atkCV <= 0 || defCV <= 0)
         return;
+    // Forest: effective attacker CV is halved (dense terrain limits combat power)
+    if (tile.terrain === "forest") {
+        atkCV = Math.floor(atkCV / 2);
+        addLog(`  forest reduces attacker effective CV to ${atkCV}`, "combat");
+    }
     const isFlankAssault = atks.some(a => ROW[a.tile] === ROW[ti] && a.tile !== ti);
     const flankMul = isFlankAssault ? 1.2 : 1.0;
     if (isFlankAssault)
@@ -661,27 +1014,32 @@ function resolveCombat(atks, defs, ti, attackedTiles) {
     const avgS = defs.reduce((s, d) => s + d.suppression, 0) / defs.length;
     const eff = rawRatio / (tile.mul * entMul) + avgS * 0.15;
     let ar, dr;
-    if (eff >= 3.0) {
-        ar = 0.015;
-        dr = 0.10;
-    }
-    else if (eff >= 2.0) {
-        ar = 0.03;
-        dr = 0.07;
-    }
-    else if (eff >= 1.5) {
-        ar = 0.05;
-        dr = 0.05;
-    }
-    else if (eff >= 1.0) {
-        ar = 0.07;
-        dr = 0.03;
+    // Linear scaling: defender casualties scale with force ratio
+    // Base rates at 1:1, then dr scales linearly with eff
+    const baseAr = 0.03;
+    const baseDr = 0.012;
+    if (eff >= 1.0) {
+        ar = Math.max(0.005, baseAr / eff); // attacker losses decrease with advantage
+        dr = Math.min(0.06, baseDr * eff); // defender losses increase linearly
     }
     else {
-        ar = 0.09;
-        dr = 0.015;
+        ar = Math.min(0.06, baseAr / eff); // attacker takes more at disadvantage
+        dr = Math.max(0.004, baseDr * eff); // defender takes less
     }
-    const aLoss = Math.max(1, Math.floor(tAmen * ar * (0.7 + Math.random() * 0.6)));
+    // Delay stance: defenders trading space for time — both sides take fewer casualties
+    const isDelay = defs.some(d => d.stance === "delay");
+    if (isDelay) {
+        ar *= 0.5; // attacker takes half casualties (defenders pulling back, not fully committed)
+        dr *= 0.4; // defender takes even less (fighting withdrawal, not holding to the last)
+        addLog(`  delay action: reduced casualties for both sides`, "combat");
+        // Track engagement turns for delay units
+        for (const d of defs.filter(d => d.stance === "delay")) {
+            d.delayTurns = (d.delayTurns ?? 0) + 1;
+        }
+    }
+    // Forest: overall casualties reduced (units spread out, harder to hit)
+    const casualtyMod = tile.terrain === "forest" ? 0.6 : 1.0;
+    const aLoss = Math.max(1, Math.floor(tAmen * ar * (0.7 + Math.random() * 0.6) * casualtyMod));
     for (const a of atks) {
         const l = Math.max(1, Math.round(aLoss * (a.men / Math.max(1, tAmen))));
         applyCas(a, l);
@@ -693,10 +1051,23 @@ function resolveCombat(atks, defs, ti, attackedTiles) {
     }
     let dLoss = 0;
     for (const d of defs) {
-        const l = Math.max(1, Math.floor(d.men * dr * (0.7 + Math.random() * 0.6)));
+        const l = Math.max(1, Math.floor(d.men * dr * (0.7 + Math.random() * 0.6) * casualtyMod));
         applyCas(d, l);
         d.morale = clamp(d.morale - Math.ceil(l / 8), 0, 100);
         dLoss += l;
+        // Delay stance: orderly retreat after 2 turns of engagement
+        if (d.stance === "delay" && (d.delayTurns ?? 0) >= 2) {
+            const rear = ADJ[d.tile].filter(t => ROW[t] < ROW[d.tile] &&
+                !units.some(u2 => u2.side === "atk" && u2.tile === t && !u2.routed));
+            if (rear.length) {
+                const from = d.tile;
+                d.tile = rear[rand(rear.length)];
+                d.entrenched = false;
+                d.delayTurns = 0;
+                addLog(`  ${d.id} completes delay — withdraws ${LABELS[from]} -> ${LABELS[d.tile]} (good order)`, "move");
+                continue;
+            }
+        }
         if (d.morale <= 25 || d.men < 100) {
             const rear = ADJ[d.tile].filter(t => ROW[t] < ROW[d.tile] &&
                 !units.some(u2 => u2.side === "atk" && u2.tile === t && !u2.routed));
@@ -713,20 +1084,24 @@ function resolveCombat(atks, defs, ti, attackedTiles) {
         }
     }
     const alive = atks.filter(a => !a.routed);
-    // Defenders that remain ON the contested tile (retreated/routed ones have already left).
     const dHold = defs.filter(d => !d.routed && d.tile === ti);
     let out;
     if (!dHold.length && alive.length) {
-        // Tile is clear -- attackers move in and occupy.
         for (const a of alive) {
             a.tile = ti;
+            a.reorgTurns = 1; // must reorganize after assault
+            a.activity = "Reorganizing";
             for (const r of units.filter(u => u.type === "recon" && u.parent === a.id && !u.routed))
                 r.tile = ti;
         }
         out = "TAKES " + LABELS[ti];
     }
     else if (alive.length) {
-        // Defenders still hold -- attackers stay on their own tile, exchange fire.
+        // Set activity based on assault intensity
+        for (const a of alive)
+            a.activity = "Engaging";
+        for (const d of dHold)
+            d.activity = d.stance === "delay" ? "Delaying" : "Defending";
         if (eff >= 2.0)
             out = "hammers " + LABELS[ti];
         else if (eff >= 1.4)
@@ -750,20 +1125,20 @@ function resolveCounterattack(ctr, enemy, ti) {
     const eff = ratio / tile.mul;
     let cr, er;
     if (eff >= 2.0) {
-        cr = 0.02;
-        er = 0.07;
+        cr = 0.008;
+        er = 0.03;
     }
     else if (eff >= 1.2) {
-        cr = 0.04;
-        er = 0.04;
+        cr = 0.015;
+        er = 0.015;
     }
     else if (eff >= 0.8) {
-        cr = 0.06;
-        er = 0.025;
+        cr = 0.025;
+        er = 0.01;
     }
     else {
-        cr = 0.08;
-        er = 0.015;
+        cr = 0.035;
+        er = 0.006;
     }
     const cLoss = Math.max(1, Math.floor(ctr.men * cr * (0.8 + Math.random() * 0.4)));
     applyCas(ctr, cLoss);
@@ -820,13 +1195,14 @@ function resolveCounterattack(ctr, enemy, ti) {
 }
 // -- Victory ------------------------------------------------------
 function checkEnd() {
-    // Win = reaching row A (index 0), the deep defender rear. Row B (1) is the main line -- fighting there is expected.
-    const breach = units.filter(u => u.side === "atk" && !u.routed && u.type === "inf" && ROW[u.tile] === 0);
+    // Victory requires ALL attacker order sets completed (all 3 rows seized)
+    const allOrdersDone = orderSet >= 3 && units.filter(u => u.side === "atk" && u.type === "inf" && !u.routed
+        && u.objective !== undefined).every(u => u.objectiveComplete);
     const defAlive = units.filter(u => u.side === "def" && !u.routed);
     const atkAlive = units.filter(u => u.side === "atk" && !u.routed && u.type === "inf");
-    if (breach.length) {
+    if (allOrdersDone) {
         over = true;
-        addLog(`\n* ATTACKER VICTORY -- ${breach[0].id} broke through to ${LABELS[breach[0].tile]}`, "result");
+        addLog(`\n* ATTACKER VICTORY -- all orders completed, defence broken`, "result");
     }
     else if (!defAlive.length) {
         over = true;
@@ -836,7 +1212,7 @@ function checkEnd() {
         over = true;
         addLog("\n* DEFENDER VICTORY -- all attackers routed", "result");
     }
-    else if (turn >= 24) {
+    else if (turn >= 25) {
         over = true;
         addLog(`\n* STALEMATE -- nightfall (${tStr(turn)})`, "result");
     }
@@ -849,6 +1225,7 @@ function renderFrame() {
     renderGrid(f);
     renderOOB(f.units);
     renderLog(f.logEnd);
+    renderTurnLog(f);
     renderPhaseBar(f);
     renderControls();
     const res = $("results");
@@ -868,13 +1245,6 @@ function renderGrid(f) {
         + `<div class="offmap-sym">${symSvg(SIDC_DEF_ART, 24)}</div>`
         + `<div class="offmap-info"><div class="offmap-nm">1028th Art Btry</div>`
         + `<div class="offmap-det">${f.defGuns}x 76mm | ${f.defGuns > 0 ? "READY" : "DESTROYED"}</div></div></div>`;
-    // row-letter zone labels positioned on the LEFT of the grid, one per row
-    for (let r = 0; r < ROWS; r++) {
-        const y = MAP_PAD_TOP + r * RS + Math.floor(HH / 2) - 6;
-        // defender side = rows 0-2, attacker side = rows 6-9, mid = rows 3-5
-        const cls = r <= 2 ? "zone zone-def" : r >= 6 ? "zone zone-atk" : "zone zone-nml";
-        html += `<div class="${cls} zone-row" style="left:6px;top:${y}px;width:${MAP_PAD_LEFT - 14}px">${ROW_NAMES[r]} — ${ZONES[r]}</div>`;
-    }
     // hexes
     for (let i = 0; i < N_TILES; i++) {
         const p = HP[i], t = tiles[i];
@@ -883,16 +1253,22 @@ function renderGrid(f) {
         const hasDef = onTile.some(u => u.side === "def" && u.revealed);
         const contested = hasAtk && hasDef;
         const owner = f.owners[i];
-        const known = f.known[i];
+        const known = viewSide === "atk" ? f.known[i] : f.knownDef[i];
         const ownerCls = owner === "atk" ? " own-atk" : owner === "def" ? " own-def" : " own-neu";
-        const fogCls = !known ? " hex-fog" : "";
+        // Objective markers: show only for the viewed side
+        const objCos = f.units.filter(u => u.objective === i && !u.routed && u.side === viewSide);
+        const objDone = objCos.length > 0 && objCos.every(u => u.objectiveComplete);
+        const objMark = objCos.length > 0
+            ? `<div class="hex-obj${objDone ? " obj-done" : ""}">${objCos.map(u => u.id.split("/")[0] + "/" + u.id.split("/")[1]).join(" ")}</div>`
+            : "";
         html += `<div class="hex-wrap" data-tile="${i}" style="left:${p.x}px;top:${p.y}px;width:${HW}px;height:${HH}px;cursor:pointer">`
             + `<div class="hex-bdr${contested ? " contested" : ""}${ownerCls}" style="clip-path:${CLIP}"></div>`
-            + `<div class="hex-fill ter-${t.terrain}${fogCls}" style="clip-path:${CLIP}"></div>`
+            + `<div class="hex-fill ter-${t.terrain}" style="clip-path:${CLIP}"></div>`
             + `<div class="hex-info" style="clip-path:${CLIP}">`
             + `<span class="hex-id">${LABELS[i]}</span>`
-            + `<span class="hex-ter">${known ? esc(t.terrain) + " x" + t.mul : "???"}</span>`
+            + `<span class="hex-ter">${esc(t.terrain)} x${t.mul}</span>`
             + `</div>`
+            + objMark
             + `<div class="hex-units">${mkUnits(onTile, f.reconOut, known)}</div>`
             + `</div>`;
     }
@@ -931,26 +1307,27 @@ function renderGrid(f) {
 function renderTileInfo(ti, f) {
     const panel = $("tile-panel");
     const t = tiles[ti];
-    const known = f.known[ti];
+    const known = viewSide === "atk" ? f.known[ti] : f.knownDef[ti];
     const owner = f.owners[ti];
     const ownerLabel = owner === "atk" ? "Attacker" : owner === "def" ? "Defender" : "Neutral";
     const onTile = f.units.filter(u => u.tile === ti);
-    const visibleUnits = onTile.filter(u => !u.routed && (u.side === "atk" || known));
-    const routedUnits = onTile.filter(u => u.routed && (u.side === "atk" || known));
+    const mySide = viewSide;
+    const visibleUnits = onTile.filter(u => !u.routed && (u.side === mySide || known));
+    const routedUnits = onTile.filter(u => u.routed && (u.side === mySide || known));
     $("tp-title").textContent = `Hex ${LABELS[ti]}`;
     let body = `<span class="tp-owner ${owner === "atk" ? "own-atk" : owner === "def" ? "own-def" : "own-neu"}">${ownerLabel}</span>`;
     body += `<div class="tp-terrain">`
-        + (known
-            ? `<b>${t.terrain.charAt(0).toUpperCase() + t.terrain.slice(1)}</b> &nbsp;·&nbsp; Defence ×${t.mul}`
-            : `<span class="tp-fog">Terrain unknown (fog of war)</span>`)
+        + `<b>${t.terrain.charAt(0).toUpperCase() + t.terrain.slice(1)}</b> &nbsp;·&nbsp; Defence ×${t.mul}`
         + `</div>`;
     const renderUnitBlock = (u, dim = false) => {
         const nameCls = u.routed ? " routed" : "";
         const sup = ["—", "Disrupted", "Suppressed", "Pinned"][u.suppression] ?? "—";
+        const stanceStr = u.stance ? ` [${u.stance.toUpperCase()}]` : "";
         const status = u.routed ? "ROUTED"
-            : u.entrenched ? "Entrenched"
-                : u.suppression > 0 ? sup
-                    : "Ready";
+            : u.entrenched ? `Entrenched${stanceStr}`
+                : u.suppression > 0 ? `${sup}${stanceStr}`
+                    : `Ready${stanceStr}`;
+        const actLabel = u.activity ? `<div class="tp-unit-act">${u.activity}</div>` : "";
         const sidcSvg = symSvg(u.sidc, 28);
         return `<div class="tp-unit" style="${dim ? "opacity:.45" : ""}">`
             + `<div class="tp-unit-sym">${sidcSvg}</div>`
@@ -959,6 +1336,7 @@ function renderTileInfo(ti, f) {
             + `<div class="tp-unit-stats">Men: <b>${u.men}</b> &nbsp;MG: <b>${u.mg}</b> &nbsp;Mor: <b>${u.mortar}</b> &nbsp;AT: <b>${u.at}</b> &nbsp;CV: <b>${cv(u).toFixed(1)}</b></div>`
             + `<div class="tp-unit-stats">Morale: <b>${u.morale}</b></div>`
             + `<div class="tp-unit-status">${status}</div>`
+            + actLabel
             + `</div></div>`;
     };
     if (!visibleUnits.length && !routedUnits.length) {
@@ -976,7 +1354,8 @@ function renderTileInfo(ti, f) {
     }
     const adjUnits = [];
     for (const adj of ADJ[ti]) {
-        for (const u of f.units.filter(u => u.tile === adj && !u.routed && (u.side === "atk" || f.known[adj]))) {
+        const adjKnown = viewSide === "atk" ? f.known[adj] : f.knownDef[adj];
+        for (const u of f.units.filter(u => u.tile === adj && !u.routed && (u.side === viewSide || adjKnown))) {
             adjUnits.push(u);
         }
     }
@@ -988,8 +1367,8 @@ function renderTileInfo(ti, f) {
     panel.classList.add("open");
 }
 function mkUnits(on, reconOut, tileKnown) {
-    // Hide all enemy units on unknown tiles entirely. Friendly units always shown.
-    const visible = on.filter(u => !u.routed && (u.side === "atk" || tileKnown));
+    // Show own units always, show enemy only on known tiles
+    const visible = on.filter(u => !u.routed && (u.side === viewSide || tileKnown));
     const sorted = [...visible].sort((a, b) => {
         if (a.side !== b.side)
             return a.side === "def" ? -1 : 1;
@@ -999,10 +1378,10 @@ function mkUnits(on, reconOut, tileKnown) {
     return sorted.map((u, i) => mkUnit(u, 10 + i, i)).join("");
 }
 function mkUnit(u, z, stack = 0) {
-    const fog = !u.revealed && u.side === "def";
+    const fog = !u.revealed && u.side !== viewSide;
     const sup = u.suppression > 0 ? ` u-s${u.suppression}` : "";
     const cls = u.side === "atk" ? "u-atk" : "u-def";
-    const szPx = u.size === "bn" ? 18 : u.size === "co" ? 16 : 14;
+    const szPx = u.size === "bn" ? 16 : u.size === "co" ? 14 : 12;
     if (fog) {
         return `<div class="unit ${cls} u-fog" style="z-index:${z};--sx:${stack}" title="Unidentified enemy unit">`
             + `<div class="u-sym">${symSvg(SIDC_UNK, 16)}</div>`
@@ -1010,42 +1389,49 @@ function mkUnit(u, z, stack = 0) {
     }
     const ent = u.entrenched ? " ENT" : "";
     const st = u.suppression > 0 ? " " + SUPP[u.suppression].substring(0, 4) : "";
-    const tip = `${u.id}  ${u.men} men  CV:${cv(u)}  ${u.mg}MG ${u.mortar}Mor ${u.at}AT  M:${u.morale}  ${SUPP[u.suppression]}${u.entrenched ? "  ENTRENCHED" : ""}`;
+    const act = u.activity ? ` [${u.activity}]` : "";
+    const tip = `${u.id}  ${u.men} men  CV:${cv(u)}  ${u.mg}MG ${u.mortar}Mor ${u.at}AT  M:${u.morale}  ${SUPP[u.suppression]}${u.entrenched ? "  ENTRENCHED" : ""}  ${u.activity}`;
     const rcn = u.type === "recon";
     return `<div class="unit ${cls}${sup}${rcn ? " u-rcn" : ""}" style="z-index:${z};--sx:${stack}" title="${esc(tip)}">`
         + `<div class="u-sym">${symSvg(u.sidc, szPx)}</div>`
-        + `<div class="u-label"><div class="u-name">${u.id}</div>${u.men} CV:${cv(u)}${ent}${st}</div>`
+        + `<div class="u-label"><div class="u-name">${u.id}</div>${u.men} CV:${cv(u)}${ent}${st}<div class="u-act">${u.activity || ""}</div></div>`
         + `</div>`;
 }
 // -- OOB tables ---------------------------------------------------
 function renderOOB(fu) {
-    // Attacker bns
+    // Attacker bns: show details only if viewSide is atk
     let aHtml = "";
     for (const bn of fu.filter(u => u.side === "atk"))
-        aHtml += oobRow(bn, true);
+        aHtml += oobRow(bn, viewSide === "atk" || bn.revealed || bn.routed);
     $("oob-a").innerHTML = aHtml;
-    // Defender
-    $("oob-d").innerHTML = fu.filter(u => u.side === "def").map(u => oobRow(u, u.revealed || u.routed)).join("");
+    // Defender: show details only if viewSide is def
+    $("oob-d").innerHTML = fu.filter(u => u.side === "def")
+        .map(u => oobRow(u, viewSide === "def" || u.revealed || u.routed)).join("");
 }
 function oobRow(u, known) {
     if (!known)
-        return `<tr class="oob-tr fog"><td class="oob-bn">${esc(u.id)}</td><td colspan="4" class="oob-unk">???</td></tr>`;
+        return `<tr class="oob-tr fog"><td class="oob-bn">${esc(u.id)}</td><td colspan="6" class="oob-unk">???</td></tr>`;
     const cls = u.routed ? "oob-tr rt" : "oob-tr";
     const sup = u.suppression > 0 && !u.routed ? ` s${u.suppression}` : "";
+    const actShort = u.activity ? u.activity.substring(0, 8) : "";
     return `<tr class="${cls}${sup}">`
-        + `<td class="oob-bn">${esc(u.id)}${u.entrenched ? " E" : ""}</td>`
+        + `<td class="oob-bn">${esc(u.id)}${u.entrenched ? " E" : ""}${u.stance === "delay" ? " D" : ""}</td>`
         + `<td class="oob-n">${u.routed ? "--" : u.men}</td>`
         + `<td class="oob-n oob-cv">${cv(u)}</td>`
         + `<td class="oob-n">${u.morale}</td>`
         + `<td class="oob-h">${LABELS[u.tile]}</td>`
+        + `<td class="oob-act">${actShort}</td>`
+        + `<td class="oob-h">${u.objective !== undefined ? (u.objectiveComplete ? "\u2713" : LABELS[u.objective]) : ""}</td>`
         + `</tr>`;
 }
 // -- Log ----------------------------------------------------------
 function renderLog(logEnd) {
     const el = $("log");
     el.innerHTML = "";
-    const entries = fullLog.slice(0, logEnd);
-    for (const e of entries.slice(-50)) {
+    // Show only entries for the current turn (between previous and current step)
+    const prevEnd = stepIdx > 0 ? steps[stepIdx - 1].logEnd : 0;
+    const entries = fullLog.slice(prevEnd, logEnd);
+    for (const e of entries) {
         const d = document.createElement("div");
         d.className = "l-" + e.type;
         d.textContent = e.text;
@@ -1053,9 +1439,25 @@ function renderLog(logEnd) {
     }
     el.scrollTop = el.scrollHeight;
 }
+function renderTurnLog(f) {
+    const el = $("turn-log");
+    const prevEnd = stepIdx > 0 ? steps[stepIdx - 1].logEnd : 0;
+    const entries = fullLog.slice(prevEnd, f.logEnd)
+        .filter(e => e.type === "combat" || e.type === "result" || e.type === "arty");
+    if (!entries.length) {
+        el.innerHTML = '<div class="tl-empty">No combat this turn</div>';
+        return;
+    }
+    let html = '';
+    for (const e of entries)
+        html += `<div class="l-${e.type}">${esc(e.text)}</div>`;
+    el.innerHTML = html;
+}
 // -- Status / controls --------------------------------------------
 function renderPhaseBar(f) {
-    const label = f.over ? "RESULT" : tStr(f.turn);
+    const orderLabel = f.orderSet === 1 ? "Seize Row D" : f.orderSet === 2 ? "Seize Row C" : "Seize Row B";
+    const defLabel = f.defOrderSet === 1 ? "Hold C+D" : f.defOrderSet === 2 ? "Hold Row C" : "Hold Row B";
+    const label = f.over ? "RESULT" : `${tStr(f.turn)}  |  ATK: ${orderLabel}  |  DEF: ${defLabel}`;
     $("phase").textContent = label;
     $("step").textContent = `${stepIdx + 1} / ${steps.length}`;
     $("progress").style.width = `${(stepIdx / Math.max(1, steps.length - 1)) * 100}%`;
@@ -1078,7 +1480,7 @@ function renderResults() {
     }
     const fs = steps[steps.length - 1];
     let h = `<div class="res-v">${esc(verdict)}</div>`;
-    const minutes = (fs.turn - 1) * 15;
+    const minutes = (fs.turn - 1) * 30;
     const dur = `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
     h += `<div class="res-sub">${tStr(1)}–${tStr(fs.turn)} (${dur})  |  Atk Art: ${fs.atkGuns}/${steps[0].atkGuns} guns  |  Def Art: ${fs.defGuns}/${steps[0].defGuns} guns</div>`;
     for (const side of ["atk", "def"]) {
@@ -1120,6 +1522,13 @@ $("next").addEventListener("click", () => { if (stepIdx < steps.length - 1) {
 $("skip").addEventListener("click", () => { stepIdx = steps.length - 1; renderFrame(); });
 $("tp-close").addEventListener("click", () => $("tile-panel").classList.remove("open"));
 $("reset").addEventListener("click", initBattle);
+$("view-toggle").addEventListener("click", () => {
+    viewSide = viewSide === "atk" ? "def" : "atk";
+    const btn = $("view-toggle");
+    btn.textContent = viewSide === "atk" ? "VIEW: BLUE" : "VIEW: RED";
+    btn.className = viewSide === "atk" ? "view-btn view-atk" : "view-btn view-def";
+    renderFrame();
+});
 // Keyboard hotkeys
 document.addEventListener("keydown", (e) => {
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)
@@ -1157,6 +1566,10 @@ document.addEventListener("keydown", (e) => {
             break;
         case "r":
             initBattle();
+            e.preventDefault();
+            break;
+        case "v":
+            $("view-toggle").click();
             e.preventDefault();
             break;
     }
