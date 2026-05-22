@@ -134,7 +134,7 @@ struct GameFrame : Frame, LogLifetimeWithCount<GameFrame> {
                                                                                       static constexpr u32 PLANET_PADDING_START = 10U;
                                                                                       const u32 padding_value = PLANET_PADDING_START + static_cast<u32>((1 - t) * PLANET_BORDER_SIZE);
                                                                                       globalData[tree].styles[planet].padding = uint4 { padding_value, padding_value, padding_value, padding_value };
-                                                                                      globalData[tree].styles[planet].background_color = colors::LightenColor(colors::cyan, t);
+                                                                                      globalData[tree].styles[planet].background_color = colors::ColorLighten(colors::cyan, t);
                                                                                       Singleton::Get<UIFlags>() & UIFlags::planet;
                                                                                   },
                                                                                    .duration = miliseconds32 { 400U },

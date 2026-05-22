@@ -22,6 +22,7 @@ void arcade::RunHex() {
 
     HexMapState& hex_map = Singleton::Get<HexMapState>();
     hex_map.AddMap({ 100, 100 });
+    hex_map.GenerateTerrain(42);
 
     // Systems
     Orchestra orchestra { };

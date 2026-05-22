@@ -24,8 +24,8 @@ struct CameraSystem {
     static constexpr f32 ZOOM_LERP = 0.15F; // smoothing per frame
 
     void operator()() const {
-        pce::CameraState& camera_state = Singleton::Get<CameraState>();
-        pce::InputState& input_state = Singleton::Get<InputState>();
+        CameraState& camera_state = Singleton::Get<CameraState>();
+        InputState& input_state = Singleton::Get<InputState>();
 
         if (input_state.keys[SDLK_LEFT]) { camera_state.world_position.x += PAN_SPEED; }
         if (input_state.keys[SDLK_RIGHT]) { camera_state.world_position.x -= PAN_SPEED; }

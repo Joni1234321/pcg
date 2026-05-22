@@ -96,6 +96,26 @@ struct HexMapState {
         height = map_size.y;
         for (u32 i = 0; i < map_size.x * map_size.y; i++) { hexes.push_back(Hex { HexAxialToWorld(IndexToAxial(i)), colors::indigo }); }
     }
+
+    void GenerateTerrain(u32 seed = 0) {
+        constexpr f32 SCALE = 0.04F;
+        const     f32 seed_f = static_cast<f32>(seed);
+        for (u32 i = 0; i < hexes.size(); i++) {
+            const float2 pos = hexes[i].position;
+            const f32    h   = (pce::noise::Fbm(pos.x * SCALE + seed_f, pos.y * SCALE + seed_f) + 1.0F) * 0.5F;
+            // clang-format off
+            SDL_Color color;
+            if      (h < 0.25F) color = SDL_Color {  20U,  60U, 120U, 255U }; // deep ocean
+            else if (h < 0.38F) color = SDL_Color {  50U, 100U, 180U, 255U }; // ocean
+            else if (h < 0.43F) color = colors::khaki;                         // beach
+            else if (h < 0.60F) color = SDL_Color { 100U, 190U,  80U, 255U }; // grass
+            else if (h < 0.72F) color = colors::forest_green;                  // forest
+            else if (h < 0.85F) color = colors::gray;                          // mountain
+            else                color = colors::white;                          // snow
+            // clang-format on
+            hexes[i].color = color;
+        }
+    }
 };
 
 inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int2 hex_screen, const SDL_FColor hex_color) {
@@ -106,7 +126,9 @@ inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int
         points[i] = SDL_FPoint { .x = vertex.x, .y = vertex.y };
     }
     for (u32 i = 0; i < HEX_CORNERS; i++) {
-        vertecies.EmplaceBack(center, colors::LightenColor(hex_color, 0.2F), SDL_FPoint{ } );
+        SDL_FColor sdl_f_color = colors::ColorMul(hex_color, 0.8F);
+        // SDL_FColor sdl_f_color = colors::ToSDL_FColor(colors::white_smoke);
+        vertecies.EmplaceBack(center, sdl_f_color, SDL_FPoint{ } );
         vertecies.EmplaceBack(points[i],  hex_color, SDL_FPoint { });
         vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color, SDL_FPoint { } );
     }
