@@ -8,33 +8,29 @@ option(SET_CLANG_TIDY "Enable clang tidy" FALSE)
 set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
+
 # ccache
-find_program(CCACHE_PROGRAM ccache)
-message(STATUS "ccache found: ${CCACHE_PROGRAM}")
+find_program(CCACHE_PROGRAM ccache REQUIRED)
 set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
 set(CMAKE_C_COMPILER_LAUNCHER   ${CCACHE_PROGRAM})
 
-# libs
-if (EXISTS ${CMAKE_SOURCE_DIR}/3rdparty/SDL3/CMakeLists.txt)
-	add_subdirectory(3rdparty/SDL3 EXCLUDE_FROM_ALL)
-	add_subdirectory(3rdparty/SDL3_ttf EXCLUDE_FROM_ALL)
-	add_subdirectory(3rdparty/SDL3_image EXCLUDE_FROM_ALL)
-else ()
-	message(STATUS "3rdparty/ not found, fetching SDL3 via FetchContent...")
-	include(FetchContent)
-	fetchcontent_declare(SDL3
-	                     GIT_REPOSITORY "https://github.com/libsdl-org/SDL.git"
-	                     GIT_TAG "release-3.4.8" EXCLUDE_FROM_ALL)
-	fetchcontent_makeavailable(SDL3)
-	fetchcontent_declare(SDL3_ttf
-	                     GIT_REPOSITORY "https://github.com/libsdl-org/SDL_ttf.git"
-	                     GIT_TAG "release-3.2.2" EXCLUDE_FROM_ALL)
-	fetchcontent_makeavailable(SDL3_ttf)
-	fetchcontent_declare(SDL3_image
-	                     GIT_REPOSITORY "https://github.com/libsdl-org/SDL_image.git"
-	                     GIT_TAG "release-3.4.4" EXCLUDE_FROM_ALL)
-	fetchcontent_makeavailable(SDL3_image)
-endif ()
+# libs — downloaded once into 3rdparty/, reused across all build dirs
+set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/3rdparty" CACHE PATH "" FORCE)
+include(FetchContent)
+fetchcontent_declare(SDL3
+                     GIT_REPOSITORY "https://github.com/libsdl-org/SDL.git"
+                     GIT_TAG "release-3.4.8" EXCLUDE_FROM_ALL)
+set(SDL3TTF_FREETYPE_VENDORED ON  CACHE BOOL "" FORCE)
+set(SDL3TTF_HARFBUZZ          OFF CACHE BOOL "" FORCE)
+fetchcontent_declare(SDL3_ttf
+                     GIT_REPOSITORY "https://github.com/libsdl-org/SDL_ttf.git"
+                     GIT_TAG "release-3.2.2" EXCLUDE_FROM_ALL)
+fetchcontent_declare(SDL3_image
+                     GIT_REPOSITORY "https://github.com/libsdl-org/SDL_image.git"
+                     GIT_TAG "release-3.4.4" EXCLUDE_FROM_ALL)
+fetchcontent_makeavailable(SDL3 SDL3_ttf SDL3_image)
 
 add_executable(pcg
                src/pcg.cpp

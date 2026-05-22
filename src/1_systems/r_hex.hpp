@@ -58,21 +58,29 @@ constexpr u32 HexCubeDistance(const int3 a, const int3 b) {
     int3 const diff = a - b;
     return math::Abs(diff.x + diff.y + diff.z) / 2; // or max(diff.x, diff.y, diff.z)
 }
-constexpr uint2 center{400U, 400U};
-constexpr uint2 HexAxialToPixel(const int2 axial, const f32 hex_size) {
-    float2 pixel = HEX_SPACING * float2{axial.x + axial.y / 2.0F, static_cast<f32>(axial.y)} * hex_size;
-    return uint2{static_cast<u32>(pixel.x), static_cast<u32>(pixel.y)} + center;
+
+// world space: 1 unit = 1 hex size
+constexpr float2 HexAxialToWorld(const int2 axial) {
+    return HEX_SPACING * float2{axial.x + axial.y / 2.0F, static_cast<f32>(axial.y)};
 }
-constexpr int2 HexPixelToAxial(uint2 pixel, const f32 hex_size) {
-    pixel -= center;
-    float2 const coord = (float2{1.0F / 3.0F, 2.0F / 3.0F} * float2{HEX_SPACING.x * pixel.x - pixel.y, static_cast<f32>(pixel.y)}) / hex_size;
+constexpr int2 HexWorldToAxial(const float2 world) {
+    float2 const coord = float2{1.0F / 3.0F, 2.0F / 3.0F} * float2{HEX_SPACING.x * world.x - world.y, world.y};
     return HexAxialRound(coord);
 }
 
+// pixel <-> world conversion
+constexpr float2 HEX_CENTER { 400.0F, 400.0F };
+constexpr float2 PixelToWorld(const uint2 pixel, const f32 hex_size) {
+    return (float2{static_cast<f32>(pixel.x), static_cast<f32>(pixel.y)} - HEX_CENTER) / hex_size;
+}
+constexpr float2 WorldToPixel(const float2 world, const f32 hex_size) {
+    return world * hex_size + HEX_CENTER;
+}
+
 struct Hex {
-    uint2 position;
+    float2 position;
     SDL_Color color;
-    Hex(uint2 position, SDL_Color color) : position(position), color(color) { }
+    Hex(float2 position, SDL_Color color) : position(position), color(color) { }
 };
 
 struct HexMap {
@@ -98,7 +106,7 @@ struct HexMap {
         width = map_size.x;
         height = map_size.y;
         for (u32 i = 0; i < map_size.x * map_size.y; i++) {
-            hexes.push_back(Hex { HexAxialToPixel(IndexToAxial(i), hex_size), colors::radiant_orange });
+            hexes.push_back(Hex { HexAxialToWorld(IndexToAxial(i)), colors::radiant_orange });
         }
     }
 };
@@ -125,15 +133,15 @@ struct HexRenderSystem {
         List<SDL_Vertex> vertecies;
 
         for (const Hex& hex : hex_map.hexes) {
-            // AppendHex(vertecies, hex_map.hex_size, hex.position, colors::ToSDL_FColor(colors::black));
-            HexAppend(vertecies, hex_map.hex_size * 0.96F, float2{static_cast<f32>(hex.position.x), static_cast<f32>(hex.position.y)}, colors::ToSDL_FColor(hex.color));
-            // AppendHex(vertecies, hex_map.hex_size * 0.6F, hex.position,  colors::ToSDL_FColor(colors::teal));
+            float2 pixel = WorldToPixel(hex.position, hex_map.hex_size);
+            HexAppend(vertecies, hex_map.hex_size * 0.96F, pixel, colors::ToSDL_FColor(hex.color));
         }
 
-        const int2 axial = HexPixelToAxial(input_state.mouse_position, hex_map.hex_size);
+        const float2 mouse_world = PixelToWorld(input_state.mouse_position, hex_map.hex_size);
+        const int2 axial = HexWorldToAxial(mouse_world);
         if (hex_map.Contains(axial)) {
-            uint2 pixel = HexAxialToPixel(axial, hex_map.hex_size);
-            HexAppend(vertecies, hex_map.hex_size * 0.36F, float2{static_cast<f32>(pixel.x), static_cast<f32>(pixel.y)}, colors::ToSDL_FColor(colors::teal));
+            float2 pixel = WorldToPixel(HexAxialToWorld(axial), hex_map.hex_size);
+            HexAppend(vertecies, hex_map.hex_size * 0.36F, pixel, colors::ToSDL_FColor(colors::teal));
             Logger().Log("[{:3},{:3}] pixel [{:4},{:4}]", axial.x, axial.y, input_state.mouse_position.x, input_state.mouse_position.y);
         }
 

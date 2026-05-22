@@ -18,6 +18,9 @@ clang-format --version
 
 ## Donwload laptop something about keys
 ```bash
+sudo apt install libc++-22-dev libc++abi-22-dev
+```
+```bash
 # 1. Clean up duplicate LLVM repo files
 sudo rm -f /etc/apt/sources.list.d/archive_uri-http_apt_llvm_org_noble_-noble.list \
            /etc/apt/sources.list.d/archive_uri-https_apt_llvm_org_noble_-noble.list \
@@ -44,6 +47,7 @@ sudo apt-get install libasound2-dev libpulse-dev libx11-dev libxext-dev \
   libxkbcommon-dev libdrm-dev libgbm-dev libgl1-mesa-dev libgles2-mesa-dev \
   libegl1-mesa-dev libdbus-1-dev libibus-1.0-dev libudev-dev \
   libpipewire-0.3-dev libwayland-dev libdecor-0-dev
+sudo apt install libharfbuzz-dev
 ```
 
 # Installing msys2
