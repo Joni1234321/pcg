@@ -115,10 +115,10 @@ struct GameFrame : Frame, LogLifetimeWithCount<GameFrame> {
                 constexpr Money money_per_click { 5U };
                 Singleton::Get<GameState>().money += money_per_click;
                 Singleton::Get<UIFlags>() & UIFlags::money;
-                const uint2 mouse_position = Singleton::Get<InputState>().mouse_position;
+                const int2 mouse_position = Singleton::Get<InputState>().mouse_position;
                 const String text = std::to_string(money_per_click.value);
                 globalData[emitter].particles.items.push_back(Particle {
-                    .position = { static_cast<f32>(mouse_position.x), static_cast<f32>(mouse_position.y) },
+                    .position = static_cast<float2>(mouse_position),
                     .text = std::unique_ptr<TTF_Text, DestroyText> { TTF_CreateText(
                         Singleton::Get<WindowState>().text_engine, Singleton::Get<FontCollection>().GetFont(static_cast<FontSizes>(Rand(static_cast<u32>(FontSizes::body), static_cast<u32>(FontSizes::title)))).ToSDL(), text.c_str(), text.size()) },
                     .duration = miliseconds32 { Rand(1000U, 3001U) },

@@ -165,7 +165,7 @@ Handle<Node> NodeBuilder::Build() const {
     return node_reference.node;
 }
 
-OptionalHandle<Node> NodeAt(const NodeTree& tree, const uint2 screen_position) {
+OptionalHandle<Node> NodeAt(const NodeTree& tree, const int2 screen_position) {
     const auto position_inside_node = [screen_position, &tree](const Handle<Node> child) -> b8 { return tree.styles[child].IsInside(screen_position); };
     if (tree.Empty() || !tree.display || !tree.styles[tree.Root()].IsInside(screen_position)) { return OptionalHandle<Node> { }; }
     Handle<Node> node = tree.Root();
@@ -181,7 +181,7 @@ OptionalHandle<Node> NodeAt(const NodeTree& tree, const uint2 screen_position) {
     }
     return OptionalHandle<Node> { node.id };
 }
-HoveredType NodeAt(const uint2 mouse_position) {
+HoveredType NodeAt(const int2 mouse_position) {
     for (const auto [i, tree] : std::views::zip(std::views::iota(0u), globalData.Get<NodeTree>())) {
         const OptionalHandle<Node> node = NodeAt(tree, mouse_position);
         if (node.IsValid()) { return NodeReference { .tree = Handle { globalData.Get<NodeTree>().IndexToHandle(static_cast<u32>(i)) }, .node = node.GetHandle() }; }

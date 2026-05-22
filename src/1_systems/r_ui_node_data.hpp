@@ -92,10 +92,10 @@ struct NodeStyle : LogDestroyWithCount<NodeStyle> {
     [[nodiscard]] constexpr uint2 InnerBoxPosition() const { return OuterBoxPosition() + uint2 { NonContentSize4().x, NonContentSize4().y }; }
     [[nodiscard]] constexpr uint2 InnerBoxSize() const { return OuterBoxSize() - NonContentSize2(); }
     [[nodiscard]] constexpr SDL_FRect OuterRect() const { return { .x = static_cast<f32>(OuterBoxPosition().x), .y = static_cast<f32>(OuterBoxPosition().y), .w = static_cast<f32>(OuterBoxSize().x), .h = static_cast<f32>(OuterBoxSize().y) }; }
-    [[nodiscard]] constexpr b8 IsInside(const uint2 screen_position) const {
-        const uint2 start { static_cast<u32>(bounding_box.x), static_cast<u32>(bounding_box.y) };
-        const uint2 relative = screen_position - start;
-        return relative.x < static_cast<u32>(bounding_box.w) && relative.y < static_cast<u32>(bounding_box.h);
+    [[nodiscard]] constexpr b8 IsInside(const int2 screen_position) const {
+        const int2 start { static_cast<i32>(bounding_box.x), static_cast<i32>(bounding_box.y) };
+        const int2 relative = screen_position - start;
+        return relative.x < static_cast<i32>(bounding_box.w) && relative.y < static_cast<i32>(bounding_box.h);
     }
 };
 struct NodeProperties {
