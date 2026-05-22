@@ -1,15 +1,11 @@
 ﻿#pragma once
 #include <SDL3/SDL_render.h>
-#include <SDL3_ttf/SDL_ttf.h>
-#include <memory>
 #include <string>
 
 #include "0_engine/g_globals.hpp"
 #include "0_engine/r_window_state.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
-#include "0_engine/u_fonts.hpp"
-#include "0_engine/u_texture.hpp"
 #include "0_engine/u_util.hpp"
 #include "SDL3/SDL_pixels.h"
 #include "SDL3/SDL_rect.h"
@@ -22,7 +18,6 @@ struct Counter {
     int2 axial;
     SDL_Color color;
     String text;
-    UniquePointer<TTF_Text, DestroyText> label { nullptr };
 };
 
 struct CounterState {
@@ -33,14 +28,9 @@ struct RenderCounterSystem {
     static constexpr f32 TEXT_MIN_SCALE = 18.0F; // hide label text when zoomed out
 
     void operator()() {
-        ui::FontCollection& font_collection = Singleton::Get<ui::FontCollection>();
-        const CameraState& camera = Singleton::Get<CameraState>();
+        const CameraState& camera       = Singleton::Get<CameraState>();
         const WindowState& window_state = Singleton::Get<WindowState>();
-        CounterState& counter_state = Singleton::Get<CounterState>();
-
-        constexpr f32 FONT_SCALE = 1 / 100.0F;
-        const ui::FontSize font_size = static_cast<ui::FontSize>(FONT_SCALE * camera.scale * static_cast<f32>(ui::FontSizes::body));
-        const ui::Font& font = font_collection.GetFont(static_cast<ui::FontSizes>(font_size));
+        CounterState&      counter_state = Singleton::Get<CounterState>();
         for (Counter& counter : counter_state.counters) {
             const float2 world = HexAxialToWorld(counter.axial);
             const int2 screen = camera.WorldToScreen(world);
@@ -79,19 +69,13 @@ struct RenderCounterSystem {
 
             // label
             if (camera.scale >= TEXT_MIN_SCALE && !counter.text.empty()) {
-                if (!counter.label) {
-                    counter.label.Reset(TTF_CreateText(window_state.text_engine, font.ToSDL(), counter.text.c_str(), counter.text.size()));
-                    (void)TTF_SetTextColor(counter.label.Get(), 255, 255, 255, 255);
-                }
-
-                TTF_SetTextFont(counter.label.Get(), font.ToSDL());
-                TTF_SetTextString(counter.label.Get(), counter.text.c_str(), counter.text.size());
-                i32 tw = 0;
-                i32 th = 0;
-                (void)TTF_GetTextSize(counter.label.Get(), &tw, &th);
-                const f32 tx = square.x + (square.w - static_cast<f32>(tw)) * 0.5F;
-                const f32 ty = square.y + (square.h - static_cast<f32>(th));
-                (void)TTF_DrawRendererText(counter.label.Get(), tx, ty);
+                constexpr f32 CHAR_W = SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE;
+                constexpr f32 CHAR_H = SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE;
+                const f32 tw = static_cast<f32>(counter.text.size()) * CHAR_W;
+                const f32 tx = square.x + (square.w - tw) * 0.5F;
+                const f32 ty = square.y + square.h - CHAR_H - 2.0F;
+                (void)SDL_SetRenderDrawColor(window_state.renderer, 255, 255, 255, 255);
+                (void)SDL_RenderDebugText(window_state.renderer, tx, ty, counter.text.c_str());
             }
         }
     }
