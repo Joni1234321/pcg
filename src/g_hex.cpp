@@ -3,7 +3,8 @@
 #include "0_engine/u_colors.hpp"
 #include "1_systems/i_input_system.hpp"
 #include "1_systems/r_camera_system.hpp"
-#include "1_systems/r_hex.hpp"
+#include "1_systems/r_counter_system.hpp"
+#include "1_systems/r_hex_system.hpp"
 #include "1_systems/r_render.hpp"
 #include "1_systems/r_ui_node.hpp"
 #include "1_systems/t_debug_system.hpp"
@@ -21,12 +22,19 @@ void arcade::RunHex() {
     Singleton::Get<WindowState>().clear_color = colors::light_sky_blue;
 
     HexMapState& hex_map = Singleton::Get<HexMapState>();
-    hex_map.AddMap({ 100, 100 });
-    hex_map.GenerateTerrain(42);
+    hex_map.AddMap({ 32, 16 });
+    hex_map.GenerateTerrain(90);
 
     CameraState& camera = Singleton::Get<CameraState>();
     camera.map_world_min = { 0.0F, 0.0F };
     camera.map_world_max = HexAxialToWorld(int2 { static_cast<i32>(hex_map.width) - 1, static_cast<i32>(hex_map.height) - 1 });
+
+    CounterState& counters = Singleton::Get<CounterState>();
+    Counter
+    counters.Add({ 2, 3 }, colors::olive,  "3-2", UnitType::Infantry);
+    counters.Add({ 4, 3 }, colors::maroon, "1-4", UnitType::Armor);
+    counters.Add({ 6, 3 }, colors::navy,   "ART", UnitType::Artillery);
+    counters.Add({ 8, 3 }, colors::olive,  "5-1", UnitType::Infantry);
 
     // Systems
     Orchestra orchestra { };
@@ -41,6 +49,7 @@ void arcade::RunHex() {
 
     orchestra.Add<CameraSystem>();
     orchestra.Add<RenderHexSystem>();
+    orchestra.Add<RenderCounterSystem>();
     orchestra.Add<RenderNodeSystem>();
     orchestra.Add<RenderWindowSystem>();
 
