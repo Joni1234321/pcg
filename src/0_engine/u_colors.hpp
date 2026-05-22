@@ -8,8 +8,12 @@
 namespace pce::colors {
 // NOLINTBEGIN(*-use-designated-initializers)
 constexpr SDL_Color LightenColor(const SDL_Color color, const f32 factor) {
-    auto lerp = [factor](const u8 channel, const u8 target) -> u8 { return static_cast<u8>(channel + (target - channel) * factor); };
-    return SDL_Color { lerp(color.r, 255), lerp(color.g, 255), lerp(color.b, 255), color.a };
+    auto lerp = [factor](const u8 k) -> u8 { return static_cast<u8>(k + (255 - k) * factor); };
+    return SDL_Color { lerp(color.r), lerp(color.g), lerp(color.b), color.a };
+}
+constexpr SDL_FColor LightenColor(const SDL_FColor color, const f32 factor) {
+    auto lerp = [factor](const f32 k) -> f32 { return static_cast<u8>(k + (1.0F - k) * factor); };
+    return SDL_FColor { lerp(color.r), lerp(color.g), lerp(color.b), color.a };
 }
 constexpr SDL_FColor ToSDL_FColor(const SDL_Color color) {
     constexpr f32 TO_FCOLOR = 1.0F / 255.0F;

@@ -99,26 +99,30 @@ struct HexMapState {
 };
 
 inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int2 hex_screen, const SDL_FColor hex_color) {
+    SDL_FPoint center { .x = static_cast<f32>(hex_screen.x), .y = static_cast<f32>(hex_screen.y) };
     Array<SDL_FPoint, HEX_CORNERS> points { };
     for (u32 i = 0; i < HEX_CORNERS; i++) {
         const float2 vertex = float2 { hex_screen } + HEX_ANGLE[i] * hex_size;
         points[i] = SDL_FPoint { .x = vertex.x, .y = vertex.y };
     }
     for (u32 i = 0; i < HEX_CORNERS; i++) {
-        vertecies.push_back(SDL_Vertex { .position = { .x = static_cast<f32>(hex_screen.x), .y = static_cast<f32>(hex_screen.y) }, .color = hex_color, .tex_coord = { } });
-        vertecies.push_back(SDL_Vertex { .position = points[i], .color = hex_color, .tex_coord = { } });
-        vertecies.push_back(SDL_Vertex { .position = points[(i + 1) % HEX_CORNERS], .color = hex_color, .tex_coord = { } });
+        vertecies.EmplaceBack(center, colors::LightenColor(hex_color, 0.2F), SDL_FPoint{ } );
+        vertecies.EmplaceBack(points[i],  hex_color, SDL_FPoint { });
+        vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color, SDL_FPoint { } );
     }
 }
 
 struct RenderHexSystem {
-    void operator()() const {
+    List<SDL_Vertex> vertecies;
+    void operator()() {
         SDL_Renderer* sdl_renderer = Singleton::Get<WindowState>().renderer;
         const HexMapState& hex_map = Singleton::Get<HexMapState>();
         const CameraState& camera = Singleton::Get<CameraState>();
         const InputState& input_state = Singleton::Get<InputState>();
 
-        List<SDL_Vertex> vertecies;
+        vertecies.clear();
+        vertecies.reserve(HEX_CORNERS * hex_map.hexes.size());
+
         const float2 mouse_world = camera.ScreenToWorld(input_state.mouse_position);
         const int2 mouse_axial = HexWorldToAxial(mouse_world);
         if (hex_map.Contains(mouse_axial)) {
