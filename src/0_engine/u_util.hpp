@@ -59,7 +59,6 @@ template <typename T> constexpr u32 FloorToU32(const T value) { return static_ca
 inline f32 Ceil(const f32 value) { return std::ceilf(value); }
 inline f32 Floor(const f32 value) { return std::floorf(value); }
 constexpr i32 Round(f32 a) { return static_cast<i32>(std::roundf(a)); }
-constexpr u32 RoundU32(f32 a) { return static_cast<u32>(std::roundf(a)); }
 template <typename T> constexpr T Abs(const T value) { return value < 0 ? -value : value; }
 template <typename T> constexpr T Lerp(const T min, const T max, const f32 value) { return value * (max - min) + min; }
 

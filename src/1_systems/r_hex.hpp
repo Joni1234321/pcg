@@ -22,20 +22,20 @@ const Array<float2, HEX_CORNERS> HEX_ANGLE = { { float2 { math::Cos(-30.0F * mat
                                                  float2 { math::Cos(90.0F * math::DEG_2_RAD), math::Sin(90.0F * math::DEG_2_RAD) }, float2 { math::Cos(150.0F * math::DEG_2_RAD), math::Sin(150.0F * math::DEG_2_RAD) },
                                                  float2 { math::Cos(210.0F * math::DEG_2_RAD), math::Sin(210.0F * math::DEG_2_RAD) }, float2 { math::Cos(270.0F * math::DEG_2_RAD), math::Sin(270.0F * math::DEG_2_RAD) } } };
 
-constexpr Array<float3, HEX_CORNERS> HEX_CUBE_NEIGHBOURS {
-    float3 { +1, 0, -1 }, float3 { +1, -1, 0 }, float3 { 0, -1, +1 }, float3 { -1, 0, +1 }, float3 { -1, +1, 0 }, float3 { 0, +1, -1 },
+constexpr Array<int3, HEX_CORNERS> HEX_CUBE_NEIGHBOURS {
+    int3 { +1, 0, -1 }, int3 { +1, -1, 0 }, int3 { 0, -1, +1 }, int3 { -1, 0, +1 }, int3 { -1, +1, 0 }, int3 { 0, +1, -1 },
 };
-constexpr Array<float3, HEX_CORNERS> HEX_CUBE_DIAGONALS {
-    float3 { +2, -1, -1 }, float3 { +1, -2, +1 }, float3 { -1, -1, +2 }, float3 { -2, +1, +1 }, float3 { -1, +2, -1 }, float3 { +1, +1, -2 },
+constexpr Array<int3, HEX_CORNERS> HEX_CUBE_DIAGONALS {
+    int3 { +2, -1, -1 }, int3 { +1, -2, +1 }, int3 { -1, -1, +2 }, int3 { -2, +1, +1 }, int3 { -1, +2, -1 }, int3 { +1, +1, -2 },
 };
-constexpr Array<float2, HEX_CORNERS> HEX_AXIAL_NEIGHBOURS {
-    float2 { +1, 0 }, float2 { +1, -1 }, float2 { 0, -1 }, float2 { -1, 0 }, float2 { -1, +1 }, float2 { 0, +1 },
+constexpr Array<int2, HEX_CORNERS> HEX_AXIAL_NEIGHBOURS {
+    int2 { +1, 0 }, int2 { +1, -1 }, int2 { 0, -1 }, int2 { -1, 0 }, int2 { -1, +1 }, int2 { 0, +1 },
 };
 
-constexpr uint2 HexCubeToAxial(const uint3 cube) { return uint2 { cube.x, cube.y }; }
-constexpr uint3 HexAxialToCube(const uint2 axial) { return uint3 { axial.x, axial.y, -axial.x - axial.y }; }
-constexpr uint3 HexCubeRound(const float3 cube_frac) {
-    uint3 cube { math::RoundU32(cube_frac.x), math::RoundU32(cube_frac.y), math::RoundU32(cube_frac.z) };
+constexpr int2 HexCubeToAxial(const int3 cube) { return int2 { cube.x, cube.y }; }
+constexpr int3 HexAxialToCube(const int2 axial) { return int3 { axial.x, axial.y, -axial.x - axial.y }; }
+constexpr int3 HexCubeRound(const float3 cube_frac) {
+    int3 cube { math::Round(cube_frac.x), math::Round(cube_frac.y), math::Round(cube_frac.z) };
 
     float3 const diff = float3{static_cast<f32>(cube.x), static_cast<f32>(cube.y), static_cast<f32>(cube.z)} - cube_frac;
 
@@ -49,16 +49,16 @@ constexpr uint3 HexCubeRound(const float3 cube_frac) {
 
     return cube;
 }
-constexpr uint2 HexAxialRound(const float2 axial_frac) {
+constexpr int2 HexAxialRound(const float2 axial_frac) {
     const float3 cube_frac = float3{axial_frac.x, axial_frac.y, -axial_frac.x - axial_frac.y};
     return HexCubeToAxial(HexCubeRound(cube_frac));
 }
-constexpr u32 HexCubeDistance(const uint3 a, const uint3 b) {
-    uint3 const diff = a - b;
+constexpr u32 HexCubeDistance(const int3 a, const int3 b) {
+    int3 const diff = a - b;
     return math::Abs(diff.x + diff.y + diff.z) / 2; // or max(diff.x, diff.y, diff.z)
 }
-constexpr float2 HexAxialToPixel(const uint2 axial, const f32 hex_size) { return HEX_SPACING * float2{axial.x + axial.y / 2.0F, static_cast<f32>(axial.y)} * hex_size; }
-constexpr uint2 HexPixelToAxial(const uint2 pixel, const f32 hex_size) {
+constexpr float2 HexAxialToPixel(const int2 axial, const f32 hex_size) { return HEX_SPACING * float2{axial.x + axial.y / 2.0F, static_cast<f32>(axial.y)} * hex_size; }
+constexpr int2 HexPixelToAxial(const uint2 pixel, const f32 hex_size) {
     float2 const coord = float2{1.0F / 3.0F, 2.0F / 3.0F} * float2{HEX_SPACING.x * pixel.x - pixel.y, static_cast<f32>(pixel.y)} / hex_size;
     return HexAxialRound(coord);
 }
@@ -74,17 +74,19 @@ struct HexMap {
     List<Hex> hexes { };
     f32 hex_size { };
 
-    [[nodiscard]] constexpr u32 AxialToIndex(const uint2 axial) const {
+    [[nodiscard]] constexpr u32 AxialToIndex(const int2 axial) const {
         return axial.x + axial.y / 2 + axial.y * width;
     }
-    [[nodiscard]] constexpr uint2 IndexToAxial(const u32 index) const {
-        const u32 y = index / width;
-        return { index % width - y / 2, y };
+    [[nodiscard]] constexpr int2 IndexToAxial(const u32 index) const {
+        const i32 y = index / width;
+        return { static_cast<i32>(index % width) - y / 2, y };
     }
-    [[nodiscard]] constexpr b8 Contains(const uint2 axial) const {
-        return AxialToIndex(axial) < hexes.size();
+    [[nodiscard]] constexpr b8 Contains(const int2 axial) const {
+        u32 y = axial.y;
+        u32 x = axial.x + axial.y / 2;
+        return x < width && y < height;
     }
-    constexpr Hex& operator[] (uint2 axial) { return hexes[AxialToIndex(axial)]; }
+    constexpr Hex& operator[] (int2 axial) { return hexes[AxialToIndex(axial)]; }
 
     void AddMap(uint2 map_size) {
         width = map_size.x;
@@ -122,7 +124,7 @@ struct HexRenderSystem {
             // AppendHex(vertecies, hex_map.hex_size * 0.6F, hex.position,  colors::ToSDL_FColor(colors::teal));
         }
 
-        const uint2 axial = HexPixelToAxial(input_state.mouse_position, hex_map.hex_size);
+        const int2 axial = HexPixelToAxial(input_state.mouse_position, hex_map.hex_size);
         if (hex_map.Contains(axial)) {
             HexAppend(vertecies, hex_map.hex_size * 0.36F, HexAxialToPixel(axial, hex_map.hex_size), colors::ToSDL_FColor(colors::teal));
         }

@@ -170,6 +170,81 @@ struct uint4 {
     constexpr b8 operator!=(const uint4 other) const { return !(*this == other); }
     // constexpr u32& operator[](u32 pos) { return *Array { &x, &y, &z, &w }[pos]; }
 };
+struct int2 {
+    i32 x;
+    i32 y;
+    constexpr int2() = default;
+    constexpr int2(i32 x, i32 y) : x(x), y(y) { }
+    constexpr int2 operator+(const int2 other) const { return { x + other.x, y + other.y }; }
+    constexpr int2 operator-(const int2 other) const { return { x - other.x, y - other.y }; }
+    constexpr int2 operator*(const int2 other) const { return { x * other.x, y * other.y }; }
+    constexpr int2 operator/(const int2 other) const { return { x / other.x, y / other.y }; }
+    constexpr int2 operator*(const i32 k) const { return { x * k, y * k }; }
+    constexpr int2 operator/(const i32 k) const { return { x / k, y / k }; }
+    constexpr int2& operator+=(const int2 other) {
+        x += other.x;
+        y += other.y;
+        return *this;
+    }
+    constexpr int2& operator-=(const int2 other) {
+        x -= other.x;
+        y -= other.y;
+        return *this;
+    }
+    constexpr int2& operator*=(const int2 other) {
+        x *= other.x;
+        y *= other.y;
+        return *this;
+    }
+    constexpr int2& operator/=(const int2 other) {
+        x /= other.x;
+        y /= other.y;
+        return *this;
+    }
+    constexpr b8 operator==(const int2 other) const { return x == other.x && y == other.y; }
+    constexpr b8 operator!=(const int2 other) const { return !(*this == other); }
+};
+struct int3 {
+    i32 x;
+    i32 y;
+    i32 z;
+    constexpr int3() = default;
+    constexpr int3(i32 x, i32 y, i32 z) : x(x), y(y), z(z) { }
+    constexpr int3 operator+(const int3 other) const { return { x + other.x, y + other.y, z + other.z }; }
+    constexpr int3 operator-(const int3 other) const { return { x - other.x, y - other.y, z - other.z }; }
+    constexpr int3 operator*(const int3 other) const { return { x * other.x, y * other.y, z * other.z }; }
+    constexpr int3 operator/(const int3 other) const { return { x / other.x, y / other.y, z / other.z }; }
+    constexpr int3 operator*(const i32 k) const { return { x * k, y * k, z * k }; }
+    constexpr int3 operator/(const i32 k) const { return { x / k, y / k, z / k }; }
+    constexpr int3& operator+=(const int3 other) {
+        x += other.x;
+        y += other.y;
+        z += other.z;
+        return *this;
+    }
+    constexpr int3& operator-=(const int3 other) {
+        x -= other.x;
+        y -= other.y;
+        z -= other.z;
+        return *this;
+    }
+    constexpr int3& operator*=(const int3 other) {
+        x *= other.x;
+        y *= other.y;
+        z *= other.z;
+        return *this;
+    }
+    constexpr int3& operator/=(const int3 other) {
+        x /= other.x;
+        y /= other.y;
+        z /= other.z;
+        return *this;
+    }
+
+    constexpr b8 operator==(const int3 other) const { return x == other.x && y == other.y && z == other.z; }
+    constexpr b8 operator!=(const int3 other) const { return !(*this == other); }
+};
+
 struct float2 {
     f32 x;
     f32 y;
