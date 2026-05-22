@@ -2,21 +2,21 @@
 
 #include <SDL3/SDL_render.h>
 
+#include "0_engine/g_globals.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_texture.hpp"
 #include "0_engine/u_types.hpp"
 
 #include "1_systems/r_ui_node_data.hpp"
-#include "1_systems/u_orchestra.hpp"
 
 namespace pce::ui {
-struct NodeInputSystem {
+struct InputNodeSystem {
     void operator()() const;
-    ~NodeInputSystem() { Singleton::Get<HoveredType>() = { }; }
+    ~InputNodeSystem() { Singleton::Get<HoveredType>() = { }; }
 };
-struct NodeRenderSystem {
+struct RenderNodeSystem {
     void operator()() const;
-    ~NodeRenderSystem() { globalData.Get<NodeTree>().clear(); }
+    ~RenderNodeSystem() { globalData.Get<NodeTree>().clear(); }
 };
 
 class NodeBuilder {

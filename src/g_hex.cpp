@@ -2,6 +2,7 @@
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
 #include "1_systems/i_input_system.hpp"
+#include "1_systems/r_camera_system.hpp"
 #include "1_systems/r_hex.hpp"
 #include "1_systems/r_render.hpp"
 #include "1_systems/r_ui_node.hpp"
@@ -28,14 +29,15 @@ void arcade::RunHex() {
 
     orchestra.Add<TickSystem>();
     orchestra.Add<InputSystem>();
-    orchestra.Add<NodeInputSystem>();
+    orchestra.Add<InputNodeSystem>();
 
     orchestra.Add<AnimationSystem>();
     orchestra.Add<ParticleSystem>();
 
-    orchestra.Add<HexRenderSystem>();
-    orchestra.Add<NodeRenderSystem>();
-    orchestra.Add<WindowRenderSystem>();
+    orchestra.Add<CameraSystem>();
+    orchestra.Add<RenderHexSystem>();
+    orchestra.Add<RenderNodeSystem>();
+    orchestra.Add<RenderWindowSystem>();
 
     while (!Singleton::Get<InputState>().quit && !Singleton::Get<InputState>().keys_down[SDLK_ESCAPE]) { orchestra.RunSystems(); }
 }

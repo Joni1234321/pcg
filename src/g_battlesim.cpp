@@ -409,11 +409,11 @@ class BattleSim {
     DebugSystem debug_system { };
     TickSystem tick_system { };
     InputSystem input_system { };
-    NodeInputSystem node_input_system { };
+    InputNodeSystem node_input_system { };
     AnimationSystem animation_system { };
-    NodeRenderSystem node_render_system { };
+    RenderNodeSystem node_render_system { };
     ParticleSystem particle_system { };
-    WindowRenderSystem window_render_system { };
+    RenderWindowSystem window_render_system { };
 
     b8 details_visible { false };
     b8 banner_measured { false };

@@ -5,7 +5,7 @@
 #include <SDL3/SDL_render.h>
 
 namespace pce {
-struct WindowRenderSystem {
+struct RenderWindowSystem {
     void operator()() const {
         WindowState& window_state = Singleton::Get<WindowState>();
         (void)SDL_GetWindowSize(window_state.window, reinterpret_cast<i32*>(&window_state.screen_size.x), reinterpret_cast<i32*>(&window_state.screen_size.y));

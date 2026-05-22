@@ -1,6 +1,8 @@
 #pragma once
 
+#include <algorithm>
 #include <any>
+#include <functional>
 #include <numeric>
 #include <variant>
 

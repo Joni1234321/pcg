@@ -1,8 +1,6 @@
 #pragma once
 #include <SDL3/SDL_render.h>
 #include <array>
-#include <cmath>
-#include <numbers>
 
 #include "0_engine/g_globals.hpp"
 #include "0_engine/r_window_state.hpp"
@@ -10,20 +8,15 @@
 #include "0_engine/u_colors.hpp"
 #include "0_engine/u_logger.hpp"
 #include "0_engine/u_util.hpp"
+#include "1_systems/i_input_system.hpp"
 #include "SDL3/SDL_pixels.h"
 #include "SDL3/SDL_rect.h"
+#include "r_camera_system.hpp"
 
 namespace pce {
-
-struct CameraState {
-    float2 world_position { 1000.0F, 300.0F };
-    f32 scale { 40.0F };
-    [[nodiscard]] constexpr float2 ScreenToWorld(const int2 screen) const { return (float2 { screen } - world_position) / scale; }
-    [[nodiscard]] constexpr int2 WorldToScreen(const float2 world) const { return int2 {world * scale + world_position}; }
-};
 // https://www.redblobgames.com/grids/hexagons/
 constexpr u32 HEX_CORNERS = 6;
-constexpr float2 HEX_SPACING { math::Sqrt3, 1.5F };
+constexpr float2 HEX_SPACING { math::SQRT_3, 1.5F };
 // NOLINTNEXTLINE(*-throwing-static-initialization)
 const Array<float2, HEX_CORNERS> HEX_ANGLE = { { float2 { math::Cos(-30.0F * math::DEG_2_RAD), math::Sin(-30.0F * math::DEG_2_RAD) }, float2 { math::Cos(30.0F * math::DEG_2_RAD), math::Sin(30.0F * math::DEG_2_RAD) },
                                                  float2 { math::Cos(90.0F * math::DEG_2_RAD), math::Sin(90.0F * math::DEG_2_RAD) }, float2 { math::Cos(150.0F * math::DEG_2_RAD), math::Sin(150.0F * math::DEG_2_RAD) },
@@ -118,7 +111,7 @@ inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int
     }
 }
 
-struct HexRenderSystem {
+struct RenderHexSystem {
     void operator()() const {
         SDL_Renderer* sdl_renderer = Singleton::Get<WindowState>().renderer;
         const HexMapState& hex_map = Singleton::Get<HexMapState>();
@@ -142,4 +135,5 @@ struct HexRenderSystem {
         SDL_RenderGeometry(sdl_renderer, nullptr, vertecies.data.data(), static_cast<int>(vertecies.size()), nullptr, 0);
     }
 };
+
 }

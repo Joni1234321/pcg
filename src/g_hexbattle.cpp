@@ -1376,11 +1376,11 @@ class HexBattle {
     Sim sim { };
     HexBattleFrame ui { };
 
-    WindowRenderSystem present_system { };
+    RenderWindowSystem present_system { };
     TickSystem tick_system { };
     InputSystem input_system { };
-    NodeInputSystem node_input_system { };
-    NodeRenderSystem node_render_system { };
+    InputNodeSystem node_input_system { };
+    RenderNodeSystem node_render_system { };
     DebugSystem debug_system { };
 
     u32 step_idx { 0U };

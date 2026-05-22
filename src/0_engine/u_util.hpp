@@ -38,10 +38,10 @@ template <typename Collection> const Collection::value_type& RandomValue(const C
 
 namespace pce::math {
 static constexpr f32 PI = std::numbers::pi_v<f32>;
-static constexpr f32 Sqrt3 = std::numbers::sqrt3_v<float>;
+static constexpr f32 SQRT_3 = std::numbers::sqrt3_v<float>;
 static constexpr f32 DEG_2_RAD = PI / 180.0F;
-inline f32 Sin(const f32 t) { return std::sinf(t); }
-inline f32 Cos(const f32 t) { return std::cosf(t); }
+[[nodiscard]] inline f32 Sin(const f32 t) { return std::sinf(t); }
+[[nodiscard]] inline f32 Cos(const f32 t) { return std::cosf(t); }
 constexpr std::pair<u32, u32> Div(const u32 value, const u32 divisor) { return { value / divisor, value % divisor }; }
 template <typename T = void> T Sub(const T& left, const T& right) { return left - right; }
 template <typename T = void> struct Minus {
@@ -53,14 +53,15 @@ template <typename T = void> struct Plus {
 template <typename T = void> struct Size {
     u32 operator()(const T& container) const { return container.size(); } // NOLINT(*-overloaded-operator)
 };
-template <typename T> constexpr T Max(T left, T right) { return left > right ? left : right; }
-template <typename T> constexpr T Min(T left, T right) { return left < right ? left : right; }
-template <typename T> constexpr u32 FloorToU32(const T value) { return static_cast<u32>(value); }
-inline f32 Ceil(const f32 value) { return std::ceilf(value); }
-inline f32 Floor(const f32 value) { return std::floorf(value); }
-constexpr i32 Round(f32 a) { return static_cast<i32>(std::roundf(a)); }
-template <typename T> constexpr T Abs(const T value) { return value < 0 ? -value : value; }
-template <typename T> constexpr T Lerp(const T min, const T max, const f32 value) { return value * (max - min) + min; }
+template <typename T> [[nodiscard]] constexpr T Max(T left, T right) { return left > right ? left : right; }
+template <typename T> [[nodiscard]] constexpr T Min(T left, T right) { return left < right ? left : right; }
+template <typename T> [[nodiscard]] constexpr u32 FloorToU32(const T value) { return static_cast<u32>(value); }
+[[nodiscard]] inline f32 Ceil(const f32 value) { return std::ceilf(value); }
+[[nodiscard]] inline f32 Floor(const f32 value) { return std::floorf(value); }
+[[nodiscard]] constexpr f32 Clamp(const f32 value, const f32 min, const f32 max) { return std::clamp(value, min, max); }
+[[nodiscard]] constexpr i32 Round(f32 a) { return static_cast<i32>(std::roundf(a)); }
+template <typename T> [[nodiscard]] constexpr T Abs(const T value) { return value < 0 ? -value : value; }
+template <typename T> [[nodiscard]] constexpr T Lerp(const T min, const T max, const f32 value) { return value * (max - min) + min; }
 
 template <class _Ty> [[nodiscard]] constexpr const _Ty& max2(const _Ty& _Left, const _Ty& _Right) noexcept(noexcept(_Left < _Right)) { return _Left < _Right ? _Right : _Left; }
 template <class T> struct max {

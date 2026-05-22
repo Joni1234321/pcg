@@ -24,16 +24,16 @@ void arcade::RunMinimal() {
 
     orchestra.Add<TickSystem>();
     orchestra.Add<InputSystem>();
-    orchestra.Add<NodeInputSystem>();
+    orchestra.Add<InputNodeSystem>();
 
     // your systems
     // orchestra.Add<CosmoClickSystem>();
     // orchestra.Add<CosmoClickUISystem>();
 
     orchestra.Add<AnimationSystem>();
-    orchestra.Add<NodeRenderSystem>();
+    orchestra.Add<RenderNodeSystem>();
     orchestra.Add<ParticleSystem>();
-    orchestra.Add<WindowRenderSystem>();
+    orchestra.Add<RenderWindowSystem>();
 
     while (!Singleton::Get<InputState>().quit && !Singleton::Get<InputState>().keys_down[SDLK_ESCAPE]) { orchestra.RunSystems(); }
 }

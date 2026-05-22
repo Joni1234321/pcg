@@ -433,7 +433,7 @@ void Propagate(NodeReference node_reference, const NodeReaction& reaction) {
         node_reference.node = tree.parents[node_reference.node];
     }
 }
-void NodeInputSystem::operator()() const {
+void InputNodeSystem::operator()() const {
     HoveredType& hovered = Singleton::Get<HoveredType>();
     HandleList<NodeTree>& trees = globalData.Get<NodeTree>();
     if (Singleton::Get<InputState>().left_mouse_down && hovered.has_value()) { Propagate(hovered.value(), Click); }
@@ -453,7 +453,7 @@ void NodeInputSystem::operator()() const {
         trees[hovered->tree].MarkDirty();
     }
 }
-void NodeRenderSystem::operator()() const {
+void RenderNodeSystem::operator()() const {
     for (NodeTree& tree : globalData.Get<NodeTree>() | std::views::reverse | std::views::filter(&NodeTree::GetDisplay)) {
         const FrameElements& frame_elements = GetFrameElements(tree);
         std::span rectangles { frame_elements.rectangles };
