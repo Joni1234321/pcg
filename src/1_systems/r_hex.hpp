@@ -57,9 +57,9 @@ constexpr u32 HexCubeDistance(const uint3 a, const uint3 b) {
     uint3 const diff = a - b;
     return math::Abs(diff.x + diff.y + diff.z) / 2; // or max(diff.x, diff.y, diff.z)
 }
-constexpr float2 HexAxialToPixel(const uint2 axial, const float2 hex_size) { return HEX_SPACING * float2{axial.x + axial.y / 2.0F, static_cast<f32>(axial.y)} * hex_size; }
-constexpr uint2 HexPixelToAxial(const float2 pixel, const float2 hex_size) {
-    float2 const coord = float2{1.0F / 3.0F, 2.0F / 3.0F} * float2{HEX_SPACING.x * pixel.x - pixel.y, pixel.y} / hex_size;
+constexpr float2 HexAxialToPixel(const uint2 axial, const f32 hex_size) { return HEX_SPACING * float2{axial.x + axial.y / 2.0F, static_cast<f32>(axial.y)} * hex_size; }
+constexpr uint2 HexPixelToAxial(const uint2 pixel, const f32 hex_size) {
+    float2 const coord = float2{1.0F / 3.0F, 2.0F / 3.0F} * float2{HEX_SPACING.x * pixel.x - pixel.y, static_cast<f32>(pixel.y)} / hex_size;
     return HexAxialRound(coord);
 }
 
@@ -70,23 +70,35 @@ struct Hex {
 };
 
 struct HexMap {
+    u32 width, height;
     List<Hex> hexes { };
-    f32 size { };
-    void AddMap(float2 start_position, uint2 map_size) {
-        for (u32 y = 0; y < map_size.y; y++) {
-            for (u32 x = 0; x < map_size.x; x++) {
-                const float2 index { static_cast<f32>(x) + (y & 1 ? 0.5F : 0.0F), static_cast<f32>(y) };
-                constexpr u32 SPACING = 1;
-                hexes.push_back(Hex { start_position + index * (size + SPACING) * HEX_SPACING, colors::radiant_orange });
-            }
+    f32 hex_size { };
+
+    [[nodiscard]] constexpr u32 AxialToIndex(const uint2 axial) const {
+        return axial.x + axial.y / 2 + axial.y * width;
+    }
+    [[nodiscard]] constexpr uint2 IndexToAxial(const u32 index) const {
+        const u32 y = index / width;
+        return { index % width - y / 2, y };
+    }
+    [[nodiscard]] constexpr b8 Contains(const uint2 axial) const {
+        return AxialToIndex(axial) < hexes.size();
+    }
+    constexpr Hex& operator[] (uint2 axial) { return hexes[AxialToIndex(axial)]; }
+
+    void AddMap(uint2 map_size) {
+        width = map_size.x;
+        height = map_size.y;
+        for (u32 i = 0; i < map_size.x * map_size.y; i++) {
+            hexes.push_back(Hex { HexAxialToPixel(IndexToAxial(i), hex_size), colors::radiant_orange });
         }
     }
 };
 
-inline void HexAppend(List<SDL_Vertex>& vertecies, const float2 hex_size, const float2& position, const SDL_FColor color) {
+inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const float2& position, const SDL_FColor color) {
     Array<SDL_FPoint, HEX_CORNERS> points { };
     for (u32 i = 0; i < HEX_CORNERS; i++) {
-        const float2 vertex = position + hex_size * HEX_ANGLE[i];
+        const float2 vertex = position + HEX_ANGLE[i] * hex_size;
         points[i] = SDL_FPoint { .x = vertex.x, .y = vertex.y };
     }
     for (u32 i = 0; i < HEX_CORNERS; i++) {
@@ -100,14 +112,22 @@ struct HexRenderSystem {
     void operator()() const {
         SDL_Renderer* sdl_renderer = Singleton::Get<WindowState>().renderer;
         const HexMap& hex_map = Singleton::Get<HexMap>();
-        const float2 hex_size { hex_map.size, hex_map.size };
 
+        const InputState& input_state = Singleton::Get<InputState>();
         List<SDL_Vertex> vertecies;
+
         for (const Hex& hex : hex_map.hexes) {
-            // AppendHex(vertecies, hex_size, hex.position, colors::ToSDL_FColor(colors::black));
-            HexAppend(vertecies, hex_size * 0.96F, hex.position, colors::ToSDL_FColor(hex.color));
-            // AppendHex(vertecies, hex_size * 0.6F, hex.position,  colors::ToSDL_FColor(colors::teal));
+            // AppendHex(vertecies, hex_map.hex_size, hex.position, colors::ToSDL_FColor(colors::black));
+            HexAppend(vertecies, hex_map.hex_size * 0.96F, hex.position, colors::ToSDL_FColor(hex.color));
+            // AppendHex(vertecies, hex_map.hex_size * 0.6F, hex.position,  colors::ToSDL_FColor(colors::teal));
         }
+
+        const uint2 axial = HexPixelToAxial(input_state.mouse_position, hex_map.hex_size);
+        if (hex_map.Contains(axial)) {
+            HexAppend(vertecies, hex_map.hex_size * 0.36F, HexAxialToPixel(axial, hex_map.hex_size), colors::ToSDL_FColor(colors::teal));
+        }
+
+
         SDL_RenderGeometry(sdl_renderer, nullptr, vertecies.data.data(), static_cast<int>(vertecies.size()), nullptr, 0);
     }
 };
