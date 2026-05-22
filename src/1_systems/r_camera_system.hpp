@@ -2,6 +2,7 @@
 #include <SDL3/SDL_keycode.h>
 
 #include "0_engine/g_globals.hpp"
+#include "0_engine/r_window_state.hpp"
 #include "0_engine/u_types.hpp"
 #include "0_engine/u_util.hpp"
 #include "i_input_system.hpp"
@@ -12,25 +13,33 @@ struct CameraState {
     f32 scale { 40.0F };
     f32 target_scale { 40.0F };
     float2 zoom_anchor_world { 0.0F, 0.0F };
+    int2 drag_last_pos { 0, 0 };
+    float2 map_world_min { 0.0F, 0.0F };
+    float2 map_world_max { 0.0F, 0.0F };
     [[nodiscard]] constexpr float2 ScreenToWorld(const int2 screen) const { return (float2 { screen } + world_position) / scale; }
     [[nodiscard]] constexpr int2 WorldToScreen(const float2 world) const { return int2 { world * scale - world_position }; }
 };
 
 struct CameraSystem {
-    static constexpr f32 PAN_SPEED = 8.0F; // pixels per frame
+    static constexpr f32 PAN_SPEED = 8.0F;
     static constexpr f32 ZOOM_FACTOR = 1.1F;
     static constexpr f32 ZOOM_MIN = 5.0F;
     static constexpr f32 ZOOM_MAX = 200.0F;
-    static constexpr f32 ZOOM_LERP = 0.15F; // smoothing per frame
+    static constexpr f32 ZOOM_LERP = 0.15F;
 
     void operator()() const {
         CameraState& camera_state = Singleton::Get<CameraState>();
         InputState& input_state = Singleton::Get<InputState>();
 
-        if (input_state.keys[SDLK_LEFT]) { camera_state.world_position.x += PAN_SPEED; }
-        if (input_state.keys[SDLK_RIGHT]) { camera_state.world_position.x -= PAN_SPEED; }
-        if (input_state.keys[SDLK_UP]) { camera_state.world_position.y += PAN_SPEED; }
-        if (input_state.keys[SDLK_DOWN]) { camera_state.world_position.y -= PAN_SPEED; }
+        if (input_state.keys[SDLK_LEFT]) { camera_state.world_position.x -= PAN_SPEED; }
+        if (input_state.keys[SDLK_RIGHT]) { camera_state.world_position.x += PAN_SPEED; }
+        if (input_state.keys[SDLK_UP]) { camera_state.world_position.y -= PAN_SPEED; }
+        if (input_state.keys[SDLK_DOWN]) { camera_state.world_position.y += PAN_SPEED; }
+
+        // Mouse drag
+        const int2 mouse_delta = input_state.mouse_position - camera_state.drag_last_pos;
+        camera_state.drag_last_pos = input_state.mouse_position;
+        if (input_state.left_mouse) { camera_state.world_position -= float2 { mouse_delta }; }
 
         if (input_state.mouse_wheel_y != 0.0F) {
             camera_state.zoom_anchor_world = camera_state.ScreenToWorld(input_state.mouse_position);
@@ -45,6 +54,13 @@ struct CameraSystem {
         } else {
             camera_state.scale = camera_state.target_scale;
         }
+
+        // Hard clamp: each map edge can only reach the screen center
+        const float2 screen_center = float2 { Singleton::Get<WindowState>().screen_size } / 2.0F;
+        const float2 pos_min = camera_state.map_world_min * camera_state.scale - screen_center;
+        const float2 pos_max = camera_state.map_world_max * camera_state.scale - screen_center;
+        camera_state.world_position.x = math::Clamp(camera_state.world_position.x, pos_min.x, pos_max.x);
+        camera_state.world_position.y = math::Clamp(camera_state.world_position.y, pos_min.y, pos_max.y);
     }
 };
 }

@@ -24,11 +24,15 @@ void arcade::RunHex() {
     hex_map.AddMap({ 100, 100 });
     hex_map.GenerateTerrain(42);
 
+    CameraState& camera = Singleton::Get<CameraState>();
+    camera.map_world_min = { 0.0F, 0.0F };
+    camera.map_world_max = HexAxialToWorld(int2 { static_cast<i32>(hex_map.width) - 1, static_cast<i32>(hex_map.height) - 1 });
+
     // Systems
     Orchestra orchestra { };
     orchestra.Add<DebugSystem>();
-
     orchestra.Add<TickSystem>();
+
     orchestra.Add<InputSystem>();
     orchestra.Add<InputNodeSystem>();
 

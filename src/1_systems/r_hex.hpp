@@ -99,10 +99,10 @@ struct HexMapState {
 
     void GenerateTerrain(u32 seed = 0) {
         constexpr f32 SCALE = 0.04F;
-        const     f32 seed_f = static_cast<f32>(seed);
+        const f32 seed_f = static_cast<f32>(seed);
         for (u32 i = 0; i < hexes.size(); i++) {
             const float2 pos = hexes[i].position;
-            const f32    h   = (pce::noise::Fbm(pos.x * SCALE + seed_f, pos.y * SCALE + seed_f) + 1.0F) * 0.5F;
+            const f32 h = (pce::noise::Fbm(pos.x * SCALE + seed_f, pos.y * SCALE + seed_f) + 1.0F) * 0.5F;
             // clang-format off
             SDL_Color color;
             if      (h < 0.25F) color = SDL_Color {  20U,  60U, 120U, 255U }; // deep ocean
@@ -128,9 +128,9 @@ inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int
     for (u32 i = 0; i < HEX_CORNERS; i++) {
         SDL_FColor sdl_f_color = colors::ColorMul(hex_color, 0.8F);
         // SDL_FColor sdl_f_color = colors::ToSDL_FColor(colors::white_smoke);
-        vertecies.EmplaceBack(center, sdl_f_color, SDL_FPoint{ } );
-        vertecies.EmplaceBack(points[i],  hex_color, SDL_FPoint { });
-        vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color, SDL_FPoint { } );
+        vertecies.EmplaceBack(center, sdl_f_color, SDL_FPoint { });
+        vertecies.EmplaceBack(points[i], hex_color, SDL_FPoint { });
+        vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color, SDL_FPoint { });
     }
 }
 

@@ -15,9 +15,7 @@ constexpr SDL_FColor ColorLighten(const SDL_FColor color, const f32 factor) {
     auto lerp = [factor](const f32 k) -> f32 { return k + (1.0F - k) * factor; };
     return SDL_FColor { lerp(color.r), lerp(color.g), lerp(color.b), color.a };
 }
-constexpr SDL_FColor ColorMul(const SDL_FColor color, const f32 factor) {
-    return SDL_FColor { color.r * factor, color.g * factor, color.b * factor, color.a };
-}
+constexpr SDL_FColor ColorMul(const SDL_FColor color, const f32 factor) { return SDL_FColor { color.r * factor, color.g * factor, color.b * factor, color.a }; }
 constexpr SDL_FColor ToSDL_FColor(const SDL_Color color) {
     constexpr f32 TO_FCOLOR = 1.0F / 255.0F;
     return SDL_FColor { color.r * TO_FCOLOR, color.g * TO_FCOLOR, color.b * TO_FCOLOR, color.a * TO_FCOLOR };

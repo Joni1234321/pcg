@@ -54,14 +54,13 @@ template <typename T> struct Vec2 {
     T x;
     T y;
     constexpr Vec2() = default;
+    constexpr Vec2(T k) : x(k), y(k) { } // NOLINT(*-explicit-constructor)
     constexpr Vec2(T x, T y) : x(x), y(y) { }
     template <typename U> explicit constexpr Vec2(const Vec2<U> v) : x(static_cast<T>(v.x)), y(static_cast<T>(v.y)) { }
     constexpr Vec2 operator+(const Vec2 other) const { return { x + other.x, y + other.y }; }
     constexpr Vec2 operator-(const Vec2 other) const { return { x - other.x, y - other.y }; }
     constexpr Vec2 operator*(const Vec2 other) const { return { x * other.x, y * other.y }; }
     constexpr Vec2 operator/(const Vec2 other) const { return { x / other.x, y / other.y }; }
-    constexpr Vec2 operator*(const T k) const { return { x * k, y * k }; }
-    constexpr Vec2 operator/(const T k) const { return { x / k, y / k }; }
     // clang-format off
     constexpr Vec2& operator+=(const Vec2 other) { x += other.x; y += other.y; return *this; }
     constexpr Vec2& operator-=(const Vec2 other) { x -= other.x; y -= other.y; return *this; }
@@ -77,14 +76,13 @@ template <typename T> struct Vec3 {
     T y;
     T z;
     constexpr Vec3() = default;
+    constexpr Vec3(T k) : x(k), y(k), z(k) { } // NOLINT(*-explicit-constructor)
     constexpr Vec3(T x, T y, T z) : x(x), y(y), z(z) { }
     template <typename U> explicit constexpr Vec3(const Vec3<U> v) : x(static_cast<T>(v.x)), y(static_cast<T>(v.y)), z(static_cast<T>(v.z)) { }
     constexpr Vec3 operator+(const Vec3 other) const { return { x + other.x, y + other.y, z + other.z }; }
     constexpr Vec3 operator-(const Vec3 other) const { return { x - other.x, y - other.y, z - other.z }; }
     constexpr Vec3 operator*(const Vec3 other) const { return { x * other.x, y * other.y, z * other.z }; }
     constexpr Vec3 operator/(const Vec3 other) const { return { x / other.x, y / other.y, z / other.z }; }
-    constexpr Vec3 operator*(const T k) const { return { x * k, y * k, z * k }; }
-    constexpr Vec3 operator/(const T k) const { return { x / k, y / k, z / k }; }
     // clang-format off
     constexpr Vec3& operator+=(const Vec3 other) { x += other.x; y += other.y; z += other.z; return *this; }
     constexpr Vec3& operator-=(const Vec3 other) { x -= other.x; y -= other.y; z -= other.z; return *this; }
@@ -101,14 +99,13 @@ template <typename T> struct Vec4 {
     T z;
     T w;
     constexpr Vec4() = default;
+    constexpr Vec4(T k) : x(k), y(k), z(k), w(k) { } // NOLINT(*-explicit-constructor)
     constexpr Vec4(T x, T y, T z, T w) : x(x), y(y), z(z), w(w) { }
     template <typename U> explicit constexpr Vec4(const Vec4<U> v) : x(static_cast<T>(v.x)), y(static_cast<T>(v.y)), z(static_cast<T>(v.z)), w(static_cast<T>(v.w)) { }
     constexpr Vec4 operator+(const Vec4 other) const { return { x + other.x, y + other.y, z + other.z, w + other.w }; }
     constexpr Vec4 operator-(const Vec4 other) const { return { x - other.x, y - other.y, z - other.z, w - other.w }; }
     constexpr Vec4 operator*(const Vec4 other) const { return { x * other.x, y * other.y, z * other.z, w * other.w }; }
     constexpr Vec4 operator/(const Vec4 other) const { return { x / other.x, y / other.y, z / other.z, w / other.w }; }
-    constexpr Vec4 operator*(const T k) const { return { x * k, y * k, z * k, w * k }; }
-    constexpr Vec4 operator/(const T k) const { return { x / k, y / k, z / k, w / k }; }
     // clang-format off
     constexpr Vec4& operator+=(const Vec4 other) { x += other.x; y += other.y; z += other.z; w += other.w; return *this; }
     constexpr Vec4& operator-=(const Vec4 other) { x -= other.x; y -= other.y; z -= other.z; w -= other.w; return *this; }

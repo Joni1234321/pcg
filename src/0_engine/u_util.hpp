@@ -54,8 +54,8 @@ namespace pce::noise {
     const i32 iy = static_cast<i32>(std::floor(y));
     const f32 fx = x - static_cast<f32>(ix);
     const f32 fy = y - static_cast<f32>(iy);
-    const f32 u  = Fade(fx);
-    const f32 v  = Fade(fy);
+    const f32 u = Fade(fx);
+    const f32 v = Fade(fy);
     // clang-format off
     const f32 n00 = Grad(ix,     iy,     fx,        fy       );
     const f32 n10 = Grad(ix + 1, iy,     fx - 1.0F, fy       );
@@ -67,7 +67,7 @@ namespace pce::noise {
 [[nodiscard]] inline f32 Fbm(f32 x, f32 y, i32 octaves = 6) {
     f32 value = 0.0F, amplitude = 0.5F, frequency = 1.0F;
     for (i32 i = 0; i < octaves; ++i) {
-        value     += amplitude * Perlin(x * frequency, y * frequency);
+        value += amplitude * Perlin(x * frequency, y * frequency);
         amplitude *= 0.5F;
         frequency *= 2.0F;
     }

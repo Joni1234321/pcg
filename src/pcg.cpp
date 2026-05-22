@@ -17,8 +17,8 @@ using pcg::player_archetype;
 
 b8 Start() {
     SDL_Log("Loading window");
-    constexpr uint2 window_size { 2500U, 1500U };
-    Window window { window_size };
+    constexpr uint2 WINDOW_SIZE { 2500U, 1500U };
+    Window window { WINDOW_SIZE };
 
     Logger().Log("Starting Game");
     pcg::arcade::RunHex();
