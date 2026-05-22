@@ -15,6 +15,16 @@
 
 namespace pce {
 
+struct Camera {
+    float2 world_position;
+    f32 zoom;
+    [[nodiscard]] constexpr float2 ScreenToWorld(const float2 screen) const {
+        return (float2{static_cast<f32>(screen.x), static_cast<f32>(screen.y)} - world_position) / zoom;
+    }
+    [[nodiscard]] constexpr float2 WorldToScreen(const float2 world) const {
+        return world * zoom + world_position;
+    }
+};
 // https://www.redblobgames.com/grids/hexagons/
 constexpr u32 HEX_CORNERS = 6;
 constexpr float2 HEX_SPACING { math::Sqrt3, 1.5F };
@@ -68,14 +78,9 @@ constexpr int2 HexWorldToAxial(const float2 world) {
     return HexAxialRound(coord);
 }
 
-// pixel <-> world conversion
+// pixel to world
 constexpr float2 HEX_CENTER { 400.0F, 400.0F };
-constexpr float2 PixelToWorld(const uint2 pixel, const f32 hex_size) {
-    return (float2{static_cast<f32>(pixel.x), static_cast<f32>(pixel.y)} - HEX_CENTER) / hex_size;
-}
-constexpr float2 WorldToPixel(const float2 world, const f32 hex_size) {
-    return world * hex_size + HEX_CENTER;
-}
+
 
 struct Hex {
     float2 position;
@@ -84,9 +89,9 @@ struct Hex {
 };
 
 struct HexMap {
-    u32 width, height;
+    u32 width{};
+    u32 height{};
     List<Hex> hexes { };
-    f32 hex_size { };
 
     [[nodiscard]] constexpr u32 AxialToIndex(const int2 axial) const {
         return axial.x + axial.y / 2 + axial.y * width;
@@ -96,8 +101,8 @@ struct HexMap {
         return { static_cast<i32>(index % width) - y / 2, y };
     }
     [[nodiscard]] constexpr b8 Contains(const int2 axial) const {
-        u32 y = axial.y;
-        u32 x = axial.x + axial.y / 2;
+        u32 const y = axial.y;
+        u32 const x = axial.x + axial.y / 2;
         return x < width && y < height;
     }
     constexpr Hex& operator[] (int2 axial) { return hexes[AxialToIndex(axial)]; }
@@ -128,22 +133,25 @@ struct HexRenderSystem {
     void operator()() const {
         SDL_Renderer* sdl_renderer = Singleton::Get<WindowState>().renderer;
         const HexMap& hex_map = Singleton::Get<HexMap>();
+        const Camera& camera = Singleton::Get<Camera>();
 
         const InputState& input_state = Singleton::Get<InputState>();
         List<SDL_Vertex> vertecies;
 
-        for (const Hex& hex : hex_map.hexes) {
-            float2 pixel = WorldToPixel(hex.position, hex_map.hex_size);
-            HexAppend(vertecies, hex_map.hex_size * 0.96F, pixel, colors::ToSDL_FColor(hex.color));
-        }
+        // const float2 mouse_world = camera.ScreenToWorld(input_state.mouse_position);
+        // const int2 axial = HexWorldToAxial(mouse_world);
+        // if (hex_map.Contains(axial)) {
+        //     float2 pixel = camera.WorldToScreen(HexAxialToWorld(axial));
+        //     HexAppend(vertecies, hex_map.hex_size, pixel, colors::ToSDL_FColor(colors::teal));
+        //     Logger().Log("[{:3},{:3}] pixel [{:4},{:4}]", axial.x, axial.y, input_state.mouse_position.x, input_state.mouse_position.y);
+        // }
+        //
+        // for (const Hex& hex : hex_map.hexes) {
+        //     float2 pixel = WorldToScreen(hex.position, hex_map.hex_size);
+        //     HexAppend(vertecies, hex_map.hex_size * 0.90F, pixel, colors::ToSDL_FColor(hex.color));
+        // }
 
-        const float2 mouse_world = PixelToWorld(input_state.mouse_position, hex_map.hex_size);
-        const int2 axial = HexWorldToAxial(mouse_world);
-        if (hex_map.Contains(axial)) {
-            float2 pixel = WorldToPixel(HexAxialToWorld(axial), hex_map.hex_size);
-            HexAppend(vertecies, hex_map.hex_size * 0.36F, pixel, colors::ToSDL_FColor(colors::teal));
-            Logger().Log("[{:3},{:3}] pixel [{:4},{:4}]", axial.x, axial.y, input_state.mouse_position.x, input_state.mouse_position.y);
-        }
+
 
 
         SDL_RenderGeometry(sdl_renderer, nullptr, vertecies.data.data(), static_cast<int>(vertecies.size()), nullptr, 0);

@@ -5,6 +5,7 @@
 
 #include "0_engine/g_globals.hpp"
 #include "0_engine/u_collections.hpp"
+#include "0_engine/u_logger.hpp"
 #include "SDL3/SDL_mouse.h"
 
 namespace pce {
@@ -47,6 +48,7 @@ struct InputSystem {
 
         float2 mouse_position_f { };
         const SDL_MouseButtonFlags state = SDL_GetMouseState(&mouse_position_f.x, &mouse_position_f.y);
+        Logger().Log("Mouse [{:4}{:4}]", mouse_position_f.x, mouse_position_f.y);
         input_state.mouse_position = uint2 { static_cast<u32>(mouse_position_f.x), static_cast<u32>(mouse_position_f.y) };
         input_state.left_mouse_down = state && SDL_BUTTON_LMASK && !input_state.left_mouse;
         input_state.left_mouse_up = input_state.left_mouse && !(state && SDL_BUTTON_LMASK);

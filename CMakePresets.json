@@ -13,7 +13,7 @@
     {
       "name": "xd",
       "inherits": "base",
-      "binaryDir": "${sourceDir}/out/xd",
+      "binaryDir": "${sourceDir}/build/xd",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
@@ -21,7 +21,7 @@
     {
       "name": "xdc",
       "inherits": "xd",
-      "binaryDir": "${sourceDir}/out/xdc",
+      "binaryDir": "${sourceDir}/build/xdc",
       "cacheVariables": {
         "SET_CLANG_TIDY": "ON",
         "SET_WARNINGS_ENABLED": "ON"
