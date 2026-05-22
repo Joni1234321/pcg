@@ -20,7 +20,7 @@ void arcade::RunHex() {
     Singleton::Get<WindowState>().clear_color = colors::light_sky_blue;
 
     HexMap& hex_map = Singleton::Get<HexMap>();
-    hex_map.hex_size = 80.0F;
+    hex_map.hex_size = 40.0F;
     hex_map.AddMap({ 4, 4 });
 
     // Systems

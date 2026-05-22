@@ -8,6 +8,7 @@
 #include "0_engine/r_window_state.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
+#include "0_engine/u_logger.hpp"
 #include "0_engine/u_util.hpp"
 #include "SDL3/SDL_pixels.h"
 #include "SDL3/SDL_rect.h"
@@ -57,16 +58,21 @@ constexpr u32 HexCubeDistance(const int3 a, const int3 b) {
     int3 const diff = a - b;
     return math::Abs(diff.x + diff.y + diff.z) / 2; // or max(diff.x, diff.y, diff.z)
 }
-constexpr float2 HexAxialToPixel(const int2 axial, const f32 hex_size) { return HEX_SPACING * float2{axial.x + axial.y / 2.0F, static_cast<f32>(axial.y)} * hex_size; }
-constexpr int2 HexPixelToAxial(const uint2 pixel, const f32 hex_size) {
-    float2 const coord = float2{1.0F / 3.0F, 2.0F / 3.0F} * float2{HEX_SPACING.x * pixel.x - pixel.y, static_cast<f32>(pixel.y)} / hex_size;
+constexpr uint2 center{400U, 400U};
+constexpr uint2 HexAxialToPixel(const int2 axial, const f32 hex_size) {
+    float2 pixel = HEX_SPACING * float2{axial.x + axial.y / 2.0F, static_cast<f32>(axial.y)} * hex_size;
+    return uint2{static_cast<u32>(pixel.x), static_cast<u32>(pixel.y)} + center;
+}
+constexpr int2 HexPixelToAxial(uint2 pixel, const f32 hex_size) {
+    pixel -= center;
+    float2 const coord = (float2{1.0F / 3.0F, 2.0F / 3.0F} * float2{HEX_SPACING.x * pixel.x - pixel.y, static_cast<f32>(pixel.y)}) / hex_size;
     return HexAxialRound(coord);
 }
 
 struct Hex {
-    float2 position;
+    uint2 position;
     SDL_Color color;
-    Hex(float2 position, SDL_Color color) : position(position), color(color) { }
+    Hex(uint2 position, SDL_Color color) : position(position), color(color) { }
 };
 
 struct HexMap {
@@ -120,13 +126,15 @@ struct HexRenderSystem {
 
         for (const Hex& hex : hex_map.hexes) {
             // AppendHex(vertecies, hex_map.hex_size, hex.position, colors::ToSDL_FColor(colors::black));
-            HexAppend(vertecies, hex_map.hex_size * 0.96F, hex.position, colors::ToSDL_FColor(hex.color));
+            HexAppend(vertecies, hex_map.hex_size * 0.96F, float2{static_cast<f32>(hex.position.x), static_cast<f32>(hex.position.y)}, colors::ToSDL_FColor(hex.color));
             // AppendHex(vertecies, hex_map.hex_size * 0.6F, hex.position,  colors::ToSDL_FColor(colors::teal));
         }
 
         const int2 axial = HexPixelToAxial(input_state.mouse_position, hex_map.hex_size);
         if (hex_map.Contains(axial)) {
-            HexAppend(vertecies, hex_map.hex_size * 0.36F, HexAxialToPixel(axial, hex_map.hex_size), colors::ToSDL_FColor(colors::teal));
+            uint2 pixel = HexAxialToPixel(axial, hex_map.hex_size);
+            HexAppend(vertecies, hex_map.hex_size * 0.36F, float2{static_cast<f32>(pixel.x), static_cast<f32>(pixel.y)}, colors::ToSDL_FColor(colors::teal));
+            Logger().Log("[{:3},{:3}] pixel [{:4},{:4}]", axial.x, axial.y, input_state.mouse_position.x, input_state.mouse_position.y);
         }
 
 
