@@ -19,7 +19,7 @@ using namespace pce::ui;
 void arcade::RunHex() {
     Singleton::Get<WindowState>().clear_color = colors::light_sky_blue;
 
-    HexMap& hex_map = Singleton::Get<HexMap>();
+    HexMapState& hex_map = Singleton::Get<HexMapState>();
     hex_map.AddMap({ 100, 100 });
 
     // Systems

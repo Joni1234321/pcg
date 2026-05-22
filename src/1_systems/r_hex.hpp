@@ -15,11 +15,11 @@
 
 namespace pce {
 
-struct Camera {
-    float2 world_position { 1000.0f, 1000.0f };
-    f32 zoom { 1 };
-    [[nodiscard]] constexpr float2 ScreenToWorld(const float2 screen) const { return (float2 { static_cast<f32>(screen.x), static_cast<f32>(screen.y) } - world_position) / zoom; }
-    [[nodiscard]] constexpr float2 WorldToScreen(const float2 world) const { return world * zoom + world_position; }
+struct CameraState {
+    float2 world_position { 1000.0F, 300.0F };
+    f32 scale { 40.0F };
+    [[nodiscard]] constexpr float2 ScreenToWorld(const int2 screen) const { return (float2 { screen } - world_position) / scale; }
+    [[nodiscard]] constexpr int2 WorldToScreen(const float2 world) const { return int2 {world * scale + world_position}; }
 };
 // https://www.redblobgames.com/grids/hexagons/
 constexpr u32 HEX_CORNERS = 6;
@@ -44,7 +44,7 @@ constexpr int3 HexAxialToCube(const int2 axial) { return int3 { axial.x, axial.y
 constexpr int3 HexCubeRound(const float3 cube_frac) {
     int3 cube { math::Round(cube_frac.x), math::Round(cube_frac.y), math::Round(cube_frac.z) };
 
-    const float3 diff = float3 { static_cast<f32>(cube.x), static_cast<f32>(cube.y), static_cast<f32>(cube.z) } - cube_frac;
+    const float3 diff = float3 { cube } - cube_frac;
 
     if (diff.x > diff.y and diff.x > diff.z) {
         cube.x = -cube.y - cube.z;
@@ -81,7 +81,7 @@ struct Hex {
     Hex(float2 position, SDL_Color color) : position(position), color(color) { }
 };
 
-struct HexMap {
+struct HexMapState {
     u32 width { };
     u32 height { };
     List<Hex> hexes { };
@@ -105,40 +105,39 @@ struct HexMap {
     }
 };
 
-inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const float2& position, const SDL_FColor color) {
+inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int2 hex_screen, const SDL_FColor hex_color) {
     Array<SDL_FPoint, HEX_CORNERS> points { };
     for (u32 i = 0; i < HEX_CORNERS; i++) {
-        const float2 vertex = position + HEX_ANGLE[i] * hex_size;
+        const float2 vertex = float2 { hex_screen } + HEX_ANGLE[i] * hex_size;
         points[i] = SDL_FPoint { .x = vertex.x, .y = vertex.y };
     }
     for (u32 i = 0; i < HEX_CORNERS; i++) {
-        vertecies.push_back(SDL_Vertex { .position = { .x = position.x, .y = position.y }, .color = color, .tex_coord = { } });
-        vertecies.push_back(SDL_Vertex { .position = points[i], .color = color, .tex_coord = { } });
-        vertecies.push_back(SDL_Vertex { .position = points[(i + 1) % 6], .color = color, .tex_coord = { } });
+        vertecies.push_back(SDL_Vertex { .position = { .x = static_cast<f32>(hex_screen.x), .y = static_cast<f32>(hex_screen.y) }, .color = hex_color, .tex_coord = { } });
+        vertecies.push_back(SDL_Vertex { .position = points[i], .color = hex_color, .tex_coord = { } });
+        vertecies.push_back(SDL_Vertex { .position = points[(i + 1) % HEX_CORNERS], .color = hex_color, .tex_coord = { } });
     }
 }
 
 struct HexRenderSystem {
     void operator()() const {
         SDL_Renderer* sdl_renderer = Singleton::Get<WindowState>().renderer;
-        const HexMap& hex_map = Singleton::Get<HexMap>();
-        const Camera& camera = Singleton::Get<Camera>();
-
+        const HexMapState& hex_map = Singleton::Get<HexMapState>();
+        const CameraState& camera = Singleton::Get<CameraState>();
         const InputState& input_state = Singleton::Get<InputState>();
-        List<SDL_Vertex> vertecies;
 
-        // const float2 mouse_world = camera.ScreenToWorld(input_state.mouse_position);
-        // const int2 axial = HexWorldToAxial(mouse_world);
-        // if (hex_map.Contains(axial)) {
-        //     float2 pixel = camera.WorldToScreen(HexAxialToWorld(axial));
-        //     HexAppend(vertecies, hex_map.hex_size, pixel, colors::ToSDL_FColor(colors::teal));
-        //     Logger().Log("[{:3},{:3}] pixel [{:4},{:4}]", axial.x, axial.y, input_state.mouse_position.x, input_state.mouse_position.y);
-        // }
-        //
-        // for (const Hex& hex : hex_map.hexes) {
-        //     float2 pixel = WorldToScreen(hex.position, hex_map.hex_size);
-        //     HexAppend(vertecies, hex_map.hex_size * 0.90F, pixel, colors::ToSDL_FColor(hex.color));
-        // }
+        List<SDL_Vertex> vertecies;
+        float2 mouse_world = camera.ScreenToWorld(input_state.mouse_position);
+        const int2 axial = HexWorldToAxial(mouse_world);
+        if (hex_map.Contains(axial)) {
+            const int2 pixel = camera.WorldToScreen(HexAxialToWorld(axial));
+            HexAppend(vertecies, camera.scale, pixel, colors::ToSDL_FColor(colors::teal));
+            Logger().Log("[{:3},{:3}] pixel [{:4},{:4}]", axial.x, axial.y, input_state.mouse_position.x, input_state.mouse_position.y);
+        }
+
+        for (const Hex& hex : hex_map.hexes) {
+            const int2 pixel = camera.WorldToScreen(hex.position);
+            HexAppend(vertecies, camera.scale * 0.90F, pixel, colors::ToSDL_FColor(hex.color));
+        }
 
         SDL_RenderGeometry(sdl_renderer, nullptr, vertecies.data.data(), static_cast<int>(vertecies.size()), nullptr, 0);
     }
