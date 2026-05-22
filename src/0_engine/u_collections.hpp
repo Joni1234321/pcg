@@ -31,7 +31,7 @@ template <typename T, typename D> class UniquePointer {
 
 public:
     constexpr void Reset(T* new_pointer) noexcept {
-        if (pointer != nullptr) { destructor(pointer); }
+        if (pointer) { destructor(pointer); }
         pointer = new_pointer;
     }
     constexpr void Reset() noexcept { Reset(nullptr); }
@@ -54,8 +54,9 @@ public:
         return *this;
     }
     constexpr ~UniquePointer() noexcept {
-        if (pointer != nullptr) { destructor(pointer); }
+        if (pointer) { destructor(pointer); }
     }
+    constexpr explicit operator bool() const noexcept { return pointer; }
 };
 struct String {
     constexpr String() = default;

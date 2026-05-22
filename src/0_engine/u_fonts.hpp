@@ -27,7 +27,7 @@ public:
 };
 class FontCollection {
     AbsolutePath font_path { };
-    FlatMap<FontSizes, Font> fonts { 16U };
+    mutable FlatMap<FontSizes, Font> fonts { 16U };
 
 public:
     explicit FontCollection() { }
@@ -35,7 +35,7 @@ public:
         font_path = path;
         Clear();
     }
-    [[nodiscard]] const Font& GetFont(FontSizes size);
+    [[nodiscard]] const Font& GetFont(FontSizes size) const;
     void Clear() { fonts.Clear(); }
     ~FontCollection() { Clear(); }
 };

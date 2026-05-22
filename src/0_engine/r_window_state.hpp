@@ -2,6 +2,7 @@
 
 #include <SDL3_ttf/SDL_ttf.h>
 
+#include "u_fonts.hpp"
 #include "0_engine/u_types.hpp"
 
 namespace pce {

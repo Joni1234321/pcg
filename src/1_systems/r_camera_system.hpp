@@ -9,9 +9,9 @@
 
 namespace pce {
 struct CameraState {
-    float2 world_position { 400.0F, 300.0F };
-    f32 scale { 40.0F };
-    f32 target_scale { 40.0F };
+    float2 world_position { -100.0F, -100.0F };
+    f32 scale { 140.0F };
+    f32 target_scale { 140.0F };
     float2 zoom_anchor_world { 0.0F, 0.0F };
     int2 drag_last_pos { 0, 0 };
     float2 map_world_min { 0.0F, 0.0F };

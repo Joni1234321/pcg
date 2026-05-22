@@ -1,5 +1,6 @@
 #include "r_ui_node.hpp"
 
+#include <optional>
 #include <ranges>
 #include <span>
 
@@ -11,7 +12,7 @@
 #include "1_systems/t_tick_system.hpp"
 
 namespace pce::ui {
-const Font& FontCollection::GetFont(const FontSizes size) {
+const Font& FontCollection::GetFont(const FontSizes size) const {
     if (!fonts.HasKey(size) && font_path != "") {
         fonts.EmplaceBack(size, font_path, static_cast<FontSize>(size));
         if (fonts[size].FailedLoading()) {
@@ -222,7 +223,7 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
         }
 
         const Font& font = Singleton::Get<FontCollection>().GetFont(node_properties.font_size);
-        if (ttf_text.Get() == nullptr) {
+        if (!ttf_text) {
             ttf_text.Reset(TTF_CreateText(Singleton::Get<WindowState>().text_engine, font.ToSDL(), node_properties.text.c_str(), node_properties.text.size()));
         } else {
             TTF_SetTextString(ttf_text.Get(), node_properties.text.c_str(), node_properties.text.size());

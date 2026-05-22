@@ -30,11 +30,11 @@ void arcade::RunHex() {
     camera.map_world_max = HexAxialToWorld(int2 { static_cast<i32>(hex_map.width) - 1, static_cast<i32>(hex_map.height) - 1 });
 
     CounterState& counters = Singleton::Get<CounterState>();
-    Counter
-    counters.Add({ 2, 3 }, colors::olive,  "3-2", UnitType::Infantry);
-    counters.Add({ 4, 3 }, colors::maroon, "1-4", UnitType::Armor);
-    counters.Add({ 6, 3 }, colors::navy,   "ART", UnitType::Artillery);
-    counters.Add({ 8, 3 }, colors::olive,  "5-1", UnitType::Infantry);
+
+    counters.counters.EmplaceBack(Counter { .axial = {2, 3}, .color = colors::olive, .text = "" });
+    counters.counters.EmplaceBack(Counter { .axial = { 4, 3 }, .color = colors::maroon, .text = "1-4" });
+    counters.counters.EmplaceBack(Counter { .axial = { 6, 3 }, .color = colors::navy, .text =   "ART" });
+    counters.counters.EmplaceBack(Counter { .axial = { 8, 3 }, .color = colors::olive, .text =  "5-1" });
 
     // Systems
     Orchestra orchestra { };
