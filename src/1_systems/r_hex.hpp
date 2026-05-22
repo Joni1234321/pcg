@@ -94,7 +94,7 @@ struct HexMapState {
     void AddMap(uint2 map_size) {
         width = map_size.x;
         height = map_size.y;
-        for (u32 i = 0; i < map_size.x * map_size.y; i++) { hexes.push_back(Hex { HexAxialToWorld(IndexToAxial(i)), colors::radiant_orange }); }
+        for (u32 i = 0; i < map_size.x * map_size.y; i++) { hexes.push_back(Hex { HexAxialToWorld(IndexToAxial(i)), colors::indigo }); }
     }
 };
 
@@ -124,7 +124,6 @@ struct RenderHexSystem {
         if (hex_map.Contains(mouse_axial)) {
             const int2 mouse_hex_center = camera.WorldToScreen(HexAxialToWorld(mouse_axial));
             HexAppend(vertecies, camera.scale, mouse_hex_center, colors::ToSDL_FColor(colors::teal));
-            Logger().Log("[{:3},{:3}] pixel [{:4},{:4}]", mouse_axial.x, mouse_axial.y, input_state.mouse_position.x, input_state.mouse_position.y);
         }
 
         for (const Hex& hex : hex_map.hexes) {

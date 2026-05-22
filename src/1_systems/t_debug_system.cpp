@@ -36,7 +36,11 @@ List<nanoseconds64> max_ns;
 void TickFrame::Update() {
     std::ranges::transform(max_ns, Singleton::Get<OrchestraState>().ns, max_ns.begin(), math::max<nanoseconds64> { });
 
-    if (Singleton::Get<TickState>().tick.value % 500U == 0U) {
+    static f32 elapsed = 0.0F;
+    elapsed += Singleton::Get<TickState>().delta_time;
+    constexpr f32 FPS_UPDATE_INTERVAL_S = 100 * MS_TO_SECONDS;
+    if (elapsed >= FPS_UPDATE_INTERVAL_S) {
+        elapsed = 0.0F;
         u32 tick = Singleton::Get<TickState>().tick.value;
         u32 fps = static_cast<u32>(1.0F / Singleton::Get<TickState>().delta_time);
         globalData[tree].MarkDirty();
