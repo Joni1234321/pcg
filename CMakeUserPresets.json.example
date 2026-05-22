@@ -25,6 +25,17 @@
     {
       "name": "xdc-msys",
       "inherits": ["xdc", "msys-base"]
+    },
+
+    {
+      "name": "xd-msys-vscode",
+      "inherits": ["xd-msys"],
+      "binaryDir": "${sourceDir}/build/code-xd-msys"
+    },
+    {
+      "name": "xdc-msys-vscode",
+      "inherits": ["xdc-msys"],
+      "binaryDir": "${sourceDir}/build/code-xdc-msys"
     }
   ]
 }
