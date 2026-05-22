@@ -1,4 +1,4 @@
-// ReSharper disable CppInconsistentNaming
+﻿// ReSharper disable CppInconsistentNaming
 #pragma once
 #include <cstdint>
 #include <optional>
@@ -32,291 +32,100 @@
     #endif
 #endif // !DEBUG
 
-using i8 = int8_t;
-using u8 = uint8_t;
-using i16 = int16_t;
-using u16 = uint16_t;
-using i32 = int32_t;
-using u32 = uint32_t;
-using i64 = int64_t;
-using u64 = uint64_t;
-using usize = size_t;
+using i8 = int8_t;    // NOLINT(*-identifier-naming)
+using u8 = uint8_t;   // NOLINT(*-identifier-naming)
+using i16 = int16_t;  // NOLINT(*-identifier-naming)
+using u16 = uint16_t; // NOLINT(*-identifier-naming)
+using i32 = int32_t;  // NOLINT(*-identifier-naming)
+using u32 = uint32_t; // NOLINT(*-identifier-naming)
+using i64 = int64_t;  // NOLINT(*-identifier-naming)
+using u64 = uint64_t; // NOLINT(*-identifier-naming)
+using usize = size_t; // NOLINT(*-identifier-naming)
 
-using f32 = float;
-using f64 = double;
+using f32 = float;  // NOLINT(*-identifier-naming)
+using f64 = double; // NOLINT(*-identifier-naming)
 
-using c8 = char8_t;
-using c16 = char16_t;
-using c32 = char32_t;
-using b8 = bool;
+using c8 = char8_t;   // NOLINT(*-identifier-naming)
+using c16 = char16_t; // NOLINT(*-identifier-naming)
+using c32 = char32_t; // NOLINT(*-identifier-naming)
+using b8 = bool;      // NOLINT(*-identifier-naming)
 
-struct uint2 {
-    u32 x;
-    u32 y;
-    constexpr uint2() = default;
-    constexpr uint2(u32 x, u32 y) : x(x), y(y) { }
-    constexpr uint2 operator+(const uint2 other) const { return { x + other.x, y + other.y }; }
-    constexpr uint2 operator-(const uint2 other) const { return { x - other.x, y - other.y }; }
-    constexpr uint2 operator*(const uint2 other) const { return { x * other.x, y * other.y }; }
-    constexpr uint2 operator/(const uint2 other) const { return { x / other.x, y / other.y }; }
-    constexpr uint2 operator*(const u32 k) const { return { x * k, y * k }; }
-    constexpr uint2 operator/(const u32 k) const { return { x / k, y / k }; }
-    constexpr uint2& operator+=(const uint2 other) {
-        x += other.x;
-        y += other.y;
-        return *this;
-    }
-    constexpr uint2& operator-=(const uint2 other) {
-        x -= other.x;
-        y -= other.y;
-        return *this;
-    }
-    constexpr uint2& operator*=(const uint2 other) {
-        x *= other.x;
-        y *= other.y;
-        return *this;
-    }
-    constexpr uint2& operator/=(const uint2 other) {
-        x /= other.x;
-        y /= other.y;
-        return *this;
-    }
-    constexpr b8 operator==(const uint2 other) const { return x == other.x && y == other.y; }
-    constexpr b8 operator!=(const uint2 other) const { return !(*this == other); }
-};
-struct uint3 {
-    u32 x;
-    u32 y;
-    u32 z;
-    constexpr uint3() = default;
-    constexpr uint3(u32 x, u32 y, u32 z) : x(x), y(y), z(z) { }
-    constexpr uint3 operator+(const uint3 other) const { return { x + other.x, y + other.y, z + other.z }; }
-    constexpr uint3 operator-(const uint3 other) const { return { x - other.x, y - other.y, z - other.z }; }
-    constexpr uint3 operator*(const uint3 other) const { return { x * other.x, y * other.y, z * other.z }; }
-    constexpr uint3 operator/(const uint3 other) const { return { x / other.x, y / other.y, z / other.z }; }
-    constexpr uint3 operator*(const u32 k) const { return { x * k, y * k, z * k }; }
-    constexpr uint3 operator/(const u32 k) const { return { x / k, y / k, z / k }; }
-    constexpr uint3& operator+=(const uint3 other) {
-        x += other.x;
-        y += other.y;
-        z += other.z;
-        return *this;
-    }
-    constexpr uint3& operator-=(const uint3 other) {
-        x -= other.x;
-        y -= other.y;
-        z -= other.z;
-        return *this;
-    }
-    constexpr uint3& operator*=(const uint3 other) {
-        x *= other.x;
-        y *= other.y;
-        z *= other.z;
-        return *this;
-    }
-    constexpr uint3& operator/=(const uint3 other) {
-        x /= other.x;
-        y /= other.y;
-        z /= other.z;
-        return *this;
-    }
-
-    constexpr b8 operator==(const uint3 other) const { return x == other.x && y == other.y && z == other.z; }
-    constexpr b8 operator!=(const uint3 other) const { return !(*this == other); }
-};
-struct uint4 {
-    u32 x;
-    u32 y;
-    u32 z;
-    u32 w;
-    constexpr uint4() = default;
-    constexpr uint4(u32 x, u32 y, u32 z, u32 w) : x(x), y(y), z(z), w(w) { }
-    constexpr uint4 operator+(const uint4 other) const { return { x + other.x, y + other.y, z + other.z, w + other.w }; }
-    constexpr uint4 operator-(const uint4 other) const { return { x - other.x, y - other.y, z - other.z, w - other.w }; }
-    constexpr uint4 operator*(const uint4 other) const { return { x * other.x, y * other.y, z * other.z, w * other.w }; }
-    constexpr uint4 operator/(const uint4 other) const { return { x / other.x, y / other.y, z / other.z, w / other.w }; }
-    constexpr uint4 operator*(const u32 k) const { return { x * k, y * k, z * k, w * k }; }
-    constexpr uint4 operator/(const u32 k) const { return { x / k, y / k, z / k, w / k }; }
-    constexpr uint4& operator+=(const uint4 other) {
-        x += other.x;
-        y += other.y;
-        z += other.z;
-        w += other.w;
-        return *this;
-    }
-    constexpr uint4& operator-=(const uint4 other) {
-        x -= other.x;
-        y -= other.y;
-        z -= other.z;
-        w -= other.w;
-        return *this;
-    }
-    constexpr uint4& operator*=(const uint4 other) {
-        x *= other.x;
-        y *= other.y;
-        z *= other.z;
-        w *= other.w;
-        return *this;
-    }
-    constexpr uint4& operator/=(const uint4 other) {
-        x /= other.x;
-        y /= other.y;
-        z /= other.z;
-        w /= other.w;
-        return *this;
-    }
-
-    constexpr b8 operator==(const uint4 other) const { return x == other.x && y == other.y && z == other.z && w == other.w; }
-    constexpr b8 operator!=(const uint4 other) const { return !(*this == other); }
-    // constexpr u32& operator[](u32 pos) { return *Array { &x, &y, &z, &w }[pos]; }
-};
-struct int2 {
-    i32 x;
-    i32 y;
-    constexpr int2() = default;
-    constexpr int2(i32 x, i32 y) : x(x), y(y) { }
-    constexpr int2 operator+(const int2 other) const { return { x + other.x, y + other.y }; }
-    constexpr int2 operator-(const int2 other) const { return { x - other.x, y - other.y }; }
-    constexpr int2 operator*(const int2 other) const { return { x * other.x, y * other.y }; }
-    constexpr int2 operator/(const int2 other) const { return { x / other.x, y / other.y }; }
-    constexpr int2 operator*(const i32 k) const { return { x * k, y * k }; }
-    constexpr int2 operator/(const i32 k) const { return { x / k, y / k }; }
-    constexpr int2& operator+=(const int2 other) {
-        x += other.x;
-        y += other.y;
-        return *this;
-    }
-    constexpr int2& operator-=(const int2 other) {
-        x -= other.x;
-        y -= other.y;
-        return *this;
-    }
-    constexpr int2& operator*=(const int2 other) {
-        x *= other.x;
-        y *= other.y;
-        return *this;
-    }
-    constexpr int2& operator/=(const int2 other) {
-        x /= other.x;
-        y /= other.y;
-        return *this;
-    }
-    constexpr b8 operator==(const int2 other) const { return x == other.x && y == other.y; }
-    constexpr b8 operator!=(const int2 other) const { return !(*this == other); }
-};
-struct int3 {
-    i32 x;
-    i32 y;
-    i32 z;
-    constexpr int3() = default;
-    constexpr int3(i32 x, i32 y, i32 z) : x(x), y(y), z(z) { }
-    constexpr int3 operator+(const int3 other) const { return { x + other.x, y + other.y, z + other.z }; }
-    constexpr int3 operator-(const int3 other) const { return { x - other.x, y - other.y, z - other.z }; }
-    constexpr int3 operator*(const int3 other) const { return { x * other.x, y * other.y, z * other.z }; }
-    constexpr int3 operator/(const int3 other) const { return { x / other.x, y / other.y, z / other.z }; }
-    constexpr int3 operator*(const i32 k) const { return { x * k, y * k, z * k }; }
-    constexpr int3 operator/(const i32 k) const { return { x / k, y / k, z / k }; }
-    constexpr int3& operator+=(const int3 other) {
-        x += other.x;
-        y += other.y;
-        z += other.z;
-        return *this;
-    }
-    constexpr int3& operator-=(const int3 other) {
-        x -= other.x;
-        y -= other.y;
-        z -= other.z;
-        return *this;
-    }
-    constexpr int3& operator*=(const int3 other) {
-        x *= other.x;
-        y *= other.y;
-        z *= other.z;
-        return *this;
-    }
-    constexpr int3& operator/=(const int3 other) {
-        x /= other.x;
-        y /= other.y;
-        z /= other.z;
-        return *this;
-    }
-
-    constexpr b8 operator==(const int3 other) const { return x == other.x && y == other.y && z == other.z; }
-    constexpr b8 operator!=(const int3 other) const { return !(*this == other); }
+template <typename T> struct Vec2 {
+    T x;
+    T y;
+    constexpr Vec2() = default;
+    constexpr Vec2(T x, T y) : x(x), y(y) { }
+    template <typename U> explicit constexpr Vec2(const Vec2<U> v) : x(static_cast<T>(v.x)), y(static_cast<T>(v.y)) { }
+    constexpr Vec2 operator+(const Vec2 other) const { return { x + other.x, y + other.y }; }
+    constexpr Vec2 operator-(const Vec2 other) const { return { x - other.x, y - other.y }; }
+    constexpr Vec2 operator*(const Vec2 other) const { return { x * other.x, y * other.y }; }
+    constexpr Vec2 operator/(const Vec2 other) const { return { x / other.x, y / other.y }; }
+    constexpr Vec2 operator*(const T k) const { return { x * k, y * k }; }
+    constexpr Vec2 operator/(const T k) const { return { x / k, y / k }; }
+    // clang-format off
+    constexpr Vec2& operator+=(const Vec2 other) { x += other.x; y += other.y; return *this; }
+    constexpr Vec2& operator-=(const Vec2 other) { x -= other.x; y -= other.y; return *this; }
+    constexpr Vec2& operator*=(const Vec2 other) { x *= other.x; y *= other.y; return *this; }
+    constexpr Vec2& operator/=(const Vec2 other) { x /= other.x; y /= other.y; return *this; }
+    // clang-format on
+    constexpr b8 operator==(const Vec2 other) const { return x == other.x && y == other.y; }
+    constexpr b8 operator!=(const Vec2 other) const { return !(*this == other); }
 };
 
-struct float2 {
-    f32 x;
-    f32 y;
-    constexpr float2() = default;
-    constexpr float2(f32 x, f32 y) : x(x), y(y) { }
-    constexpr float2 operator+(const float2 other) const { return float2 { x + other.x, y + other.y }; }
-    constexpr float2 operator-(const float2 other) const { return float2 { x - other.x, y - other.y }; }
-    constexpr float2 operator*(const float2 other) const { return float2 { x * other.x, y * other.y }; }
-    constexpr float2 operator/(const float2 other) const { return float2 { x / other.x, y / other.y }; }
-    constexpr float2 operator*(const f32 k) const { return float2 { x * k, y * k }; }
-    constexpr float2 operator/(const f32 k) const { return float2 { x / k, y / k }; }
-    constexpr float2& operator+=(const float2 other) {
-        x += other.x;
-        y += other.y;
-        return *this;
-    }
-    constexpr float2& operator-=(const float2 other) {
-        x -= other.x;
-        y -= other.y;
-        return *this;
-    }
-    constexpr float2& operator*=(const float2 other) {
-        x *= other.x;
-        y *= other.y;
-        return *this;
-    }
-    constexpr float2& operator/=(const float2 other) {
-        x /= other.x;
-        y /= other.y;
-        return *this;
-    }
-    constexpr b8 operator==(const float2 other) const { return x == other.x && y == other.y; }
-    constexpr b8 operator!=(const float2 other) const { return !(*this == other); }
+template <typename T> struct Vec3 {
+    T x;
+    T y;
+    T z;
+    constexpr Vec3() = default;
+    constexpr Vec3(T x, T y, T z) : x(x), y(y), z(z) { }
+    template <typename U> explicit constexpr Vec3(const Vec3<U> v) : x(static_cast<T>(v.x)), y(static_cast<T>(v.y)), z(static_cast<T>(v.z)) { }
+    constexpr Vec3 operator+(const Vec3 other) const { return { x + other.x, y + other.y, z + other.z }; }
+    constexpr Vec3 operator-(const Vec3 other) const { return { x - other.x, y - other.y, z - other.z }; }
+    constexpr Vec3 operator*(const Vec3 other) const { return { x * other.x, y * other.y, z * other.z }; }
+    constexpr Vec3 operator/(const Vec3 other) const { return { x / other.x, y / other.y, z / other.z }; }
+    constexpr Vec3 operator*(const T k) const { return { x * k, y * k, z * k }; }
+    constexpr Vec3 operator/(const T k) const { return { x / k, y / k, z / k }; }
+    // clang-format off
+    constexpr Vec3& operator+=(const Vec3 other) { x += other.x; y += other.y; z += other.z; return *this; }
+    constexpr Vec3& operator-=(const Vec3 other) { x -= other.x; y -= other.y; z -= other.z; return *this; }
+    constexpr Vec3& operator*=(const Vec3 other) { x *= other.x; y *= other.y; z *= other.z; return *this; }
+    constexpr Vec3& operator/=(const Vec3 other) { x /= other.x; y /= other.y; z /= other.z; return *this; }
+    // clang-format on
+    constexpr b8 operator==(const Vec3 other) const { return x == other.x && y == other.y && z == other.z; }
+    constexpr b8 operator!=(const Vec3 other) const { return !(*this == other); }
 };
-struct float3 {
-    f32 x;
-    f32 y;
-    f32 z;
-    constexpr float3() = default;
-    constexpr float3(f32 x, f32 y, f32 z) : x(x), y(y), z(z) { }
-    constexpr float3 operator+(const float3 other) const { return float3 { x + other.x, y + other.y, z + other.z }; }
-    constexpr float3 operator-(const float3 other) const { return float3 { x - other.x, y - other.y, z - other.z }; }
-    constexpr float3 operator*(const float3 other) const { return float3 { x * other.x, y * other.y, z * other.z }; }
-    constexpr float3 operator/(const float3 other) const { return float3 { x / other.x, y / other.y, z / other.z }; }
-    constexpr float3 operator*(const f32 k) const { return float3 { x * k, y * k, z * k }; }
-    constexpr float3 operator/(const f32 k) const { return float3 { x / k, y / k, z / k }; }
-    constexpr float3& operator+=(const float3 other) {
-        x += other.x;
-        y += other.y;
-        z += other.z;
-        return *this;
-    }
-    constexpr float3& operator-=(const float3 other) {
-        x -= other.x;
-        y -= other.y;
-        z -= other.z;
-        return *this;
-    }
-    constexpr float3& operator*=(const float3 other) {
-        x *= other.x;
-        y *= other.y;
-        z *= other.z;
-        return *this;
-    }
-    constexpr float3& operator/=(const float3 other) {
-        x /= other.x;
-        y /= other.y;
-        z /= other.z;
-        return *this;
-    }
-    constexpr b8 operator==(const float3& other) const = default;
+
+template <typename T> struct Vec4 {
+    T x;
+    T y;
+    T z;
+    T w;
+    constexpr Vec4() = default;
+    constexpr Vec4(T x, T y, T z, T w) : x(x), y(y), z(z), w(w) { }
+    template <typename U> explicit constexpr Vec4(const Vec4<U> v) : x(static_cast<T>(v.x)), y(static_cast<T>(v.y)), z(static_cast<T>(v.z)), w(static_cast<T>(v.w)) { }
+    constexpr Vec4 operator+(const Vec4 other) const { return { x + other.x, y + other.y, z + other.z, w + other.w }; }
+    constexpr Vec4 operator-(const Vec4 other) const { return { x - other.x, y - other.y, z - other.z, w - other.w }; }
+    constexpr Vec4 operator*(const Vec4 other) const { return { x * other.x, y * other.y, z * other.z, w * other.w }; }
+    constexpr Vec4 operator/(const Vec4 other) const { return { x / other.x, y / other.y, z / other.z, w / other.w }; }
+    constexpr Vec4 operator*(const T k) const { return { x * k, y * k, z * k, w * k }; }
+    constexpr Vec4 operator/(const T k) const { return { x / k, y / k, z / k, w / k }; }
+    // clang-format off
+    constexpr Vec4& operator+=(const Vec4 other) { x += other.x; y += other.y; z += other.z; w += other.w; return *this; }
+    constexpr Vec4& operator-=(const Vec4 other) { x -= other.x; y -= other.y; z -= other.z; w -= other.w; return *this; }
+    constexpr Vec4& operator*=(const Vec4 other) { x *= other.x; y *= other.y; z *= other.z; w *= other.w; return *this; }
+    constexpr Vec4& operator/=(const Vec4 other) { x /= other.x; y /= other.y; z /= other.z; w /= other.w; return *this; }
+    // clang-format on
+    constexpr b8 operator==(const Vec4 other) const { return x == other.x && y == other.y && z == other.z && w == other.w; }
+    constexpr b8 operator!=(const Vec4 other) const { return !(*this == other); }
 };
+
+using uint2 = Vec2<u32>;  // NOLINT(*-identifier-naming)
+using uint3 = Vec3<u32>;  // NOLINT(*-identifier-naming)
+using uint4 = Vec4<u32>;  // NOLINT(*-identifier-naming)
+using int2 = Vec2<i32>;   // NOLINT(*-identifier-naming)
+using int3 = Vec3<i32>;   // NOLINT(*-identifier-naming)
+using float2 = Vec2<f32>; // NOLINT(*-identifier-naming)
+using float3 = Vec3<f32>; // NOLINT(*-identifier-naming)
 
 constexpr u8 U8_MAX = UINT8_MAX;
 constexpr u32 U32_MAX = UINT32_MAX;
