@@ -1,8 +1,9 @@
 #pragma once
-#include "SDL3/SDL_keycode.h"
+#include <SDL3/SDL_keycode.h>
 
 #include "0_engine/g_globals.hpp"
 #include "0_engine/u_types.hpp"
+#include "0_engine/u_util.hpp"
 #include "i_input_system.hpp"
 
 namespace pce {
@@ -32,8 +33,9 @@ struct CameraSystem {
         if (input_state.keys[SDLK_DOWN]) { camera_state.world_position.y -= PAN_SPEED; }
 
         if (input_state.mouse_wheel_y != 0.0F) {
-            camera_state.zoom_anchor_world = camera_state.ScreenToWorld(input_state.mouse_position);
-            const f32 factor = input_state.mouse_wheel_y > 0.0F ? ZOOM_FACTOR : 1.0F / ZOOM_FACTOR;
+            const b8 zooming_in = input_state.mouse_wheel_y > 0.0F;
+            if (zooming_in) { camera_state.zoom_anchor_world = camera_state.ScreenToWorld(input_state.mouse_position); }
+            const f32 factor = zooming_in ? ZOOM_FACTOR : 1.0F / ZOOM_FACTOR;
             camera_state.target_scale = math::Clamp(camera_state.target_scale * factor, ZOOM_MIN, ZOOM_MAX);
         }
 

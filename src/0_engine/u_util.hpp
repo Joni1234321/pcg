@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <concepts>
 #include <numbers>
@@ -67,4 +68,7 @@ template <class _Ty> [[nodiscard]] constexpr const _Ty& max2(const _Ty& _Left, c
 template <class T> struct max {
     [[nodiscard]] constexpr const T& operator()(const T& left, const T& right) const noexcept(noexcept(left < right)) { return left < right ? right : left; }
 };
+template <typename T> [[nodiscard]] constexpr Vec2<T> Abs(Vec2<T> v) { return { Abs(v.x), Abs(v.y) }; }
+template <typename T> [[nodiscard]] constexpr Vec3<T> Abs(Vec3<T> v) { return { Abs(v.x), Abs(v.y), Abs(v.z) }; }
+template <typename T> [[nodiscard]] constexpr Vec4<T> Abs(Vec4<T> v) { return { Abs(v.x), Abs(v.y), Abs(v.z), Abs(v.w) }; }
 } // namespace pce::math
