@@ -7,6 +7,7 @@
 #include "1_systems/r_hex_system.hpp"
 #include "1_systems/r_render.hpp"
 #include "1_systems/r_ui_node.hpp"
+#include "1_systems/r_ui_node_data.hpp"
 #include "1_systems/t_debug_system.hpp"
 #include "1_systems/t_tick_system.hpp"
 #include "1_systems/u_animation_system.hpp"
@@ -30,10 +31,10 @@ void arcade::RunHex() {
     camera.map_world_max = HexAxialToWorld(int2 { static_cast<i32>(hex_map.width) - 1, static_cast<i32>(hex_map.height) - 1 });
 
     CounterState& counters = Singleton::Get<CounterState>();
-    counters.counters.EmplaceBack(Counter { .axial = { 2, 3 }, .color = colors::olive, .text_bottom = "30=20" , .text_top = "II"});
-    counters.counters.EmplaceBack(Counter { .axial = { 4, 3 }, .color = colors::maroon, .text_bottom = "1-4" , .text_top = "II"});
-    counters.counters.EmplaceBack(Counter { .axial = { 6, 3 }, .color = colors::navy, .text_bottom = "ART" , .text_top = "II"});
-    counters.counters.EmplaceBack(Counter { .axial = { 8, 3 }, .color = colors::olive, .text_bottom = "5-1" , .text_top = "II"});
+    counters.counters.EmplaceBack(Counter { .axial = { 2, 3 }, .colors = {colors::olive}, .text_bottom = "30=20" , .text_top = "II"});
+    counters.counters.EmplaceBack(Counter { .axial = { 4, 3 }, .colors = {colors::maroon}, .text_bottom = "1-4" , .text_top = "xx"});
+    counters.counters.EmplaceBack(Counter { .axial = { 6, 3 }, .colors = {colors::navy}, .text_bottom = "ART" , .text_top = "x"});
+    counters.counters.EmplaceBack(Counter { .axial = { 8, 3 }, .colors = {colors::olive, colors::cerulean, colors::deep_gold}, .text_bottom = "5-1" , .text_top = "III"});
 
     // Systems
     Orchestra orchestra { };
