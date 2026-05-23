@@ -100,7 +100,7 @@ template <typename T> [[nodiscard]] constexpr u32 FloorToU32(const T value) { re
 [[nodiscard]] constexpr f32 Clamp(const f32 value, const f32 min, const f32 max) { return std::clamp(value, min, max); }
 [[nodiscard]] constexpr i32 Round(f32 a) { return static_cast<i32>(std::roundf(a)); }
 template <typename T> [[nodiscard]] constexpr T Abs(const T value) { return value < 0 ? -value : value; }
-template <typename T> [[nodiscard]] constexpr T Lerp(const T min, const T max, const f32 value) { return value * (max - min) + min; }
+template <typename T> [[nodiscard]] constexpr T Lerp(const T a, const T b, const f32 t) { return t * (b - a) + a; }
 
 template <class _Ty> [[nodiscard]] constexpr const _Ty& max2(const _Ty& _Left, const _Ty& _Right) noexcept(noexcept(_Left < _Right)) { return _Left < _Right ? _Right : _Left; }
 template <class T> struct max {
@@ -109,4 +109,7 @@ template <class T> struct max {
 template <typename T> [[nodiscard]] constexpr Vec2<T> Abs(Vec2<T> v) { return { Abs(v.x), Abs(v.y) }; }
 template <typename T> [[nodiscard]] constexpr Vec3<T> Abs(Vec3<T> v) { return { Abs(v.x), Abs(v.y), Abs(v.z) }; }
 template <typename T> [[nodiscard]] constexpr Vec4<T> Abs(Vec4<T> v) { return { Abs(v.x), Abs(v.y), Abs(v.z), Abs(v.w) }; }
+template <typename T> [[nodiscard]] constexpr Vec2<T> Lerp(Vec2<T> a, Vec2<T> b, f32 t) { return { Lerp(a.x, b.x, t), Lerp(a.y, b.y, t) }; }
+template <typename T> [[nodiscard]] constexpr Vec3<T> Lerp(Vec3<T> a, Vec3<T> b, f32 t) { return { Lerp(a.x, b.x, t), Lerp(a.y, b.y, t), Lerp(a.z, b.z, t) }; }
+template <typename T> [[nodiscard]] constexpr Vec4<T> Lerp(Vec4<T> a, Vec4<T> b, f32 t) { return { Lerp(a.x, b.x, t), Lerp(a.y, b.y, t), Lerp(a.z, b.z, t), Lerp(a.w, b.w, t) }; }
 } // namespace pce::math

@@ -110,6 +110,10 @@ constexpr SDL_Color charcoal_gray { 63U, 63U, 63U, 255U };  // #3F3F3F - Dark ch
 constexpr SDL_Color steel_gray { 120U, 120U, 120U, 255U };  // #787878 - Mid-tone gray
 constexpr SDL_Color ash_gray { 124U, 124U, 124U, 255U };    // #7C7C7C - Muted ash gray
 
+// Hex Battle
+constexpr SDL_Color hex_hover { 190U, 205U, 175U, 255U }; // muted sage-green hover ring
+constexpr SDL_Color hex_select { 210U, 165U, 30U, 255U }; // warm amber-gold selection ring
+
 inline SDL_Color AnimateFast(const f32 t) {
     const u8 red = static_cast<u8>((std::sin(t * 0.5F + 0.0F) * 0.5F + 0.5F) * 255U);
     const u8 green = static_cast<u8>((std::sin(t * 0.7F + 2.0F) * 0.5F + 0.5F) * 255U);

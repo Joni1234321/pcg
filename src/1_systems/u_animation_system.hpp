@@ -38,7 +38,7 @@ struct ParticleEmitter {
     static constexpr u32 DEFAULT_COUNT = 128U;
 
     float2 velocity;
-    Pool<Particle> particles { DEFAULT_COUNT };
+    ParticlePool<Particle> particles { DEFAULT_COUNT };
 };
 
 struct ParticleSystem {

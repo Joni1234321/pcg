@@ -27,7 +27,7 @@ template <class K, class V> using UnorderedMap = std::unordered_map<K, V>;
 template <class T, class C = std::less<T>> using Set = std::set<T, C>;
 template <class T, class C = std::less<T>> using Multiset = std::multiset<T, C>;
 template <class T> using Optional = std::optional<T>;
-template <typename T, typename D> class UniquePointer {
+template <typename T, typename D = std::default_delete<T>> class UniquePointer {
     T* pointer;
     [[no_unique_address]] D destructor { };
 
@@ -317,10 +317,10 @@ struct Parent : List<Entity> {
     Parent& operator=(Parent&&) = delete;
 };
 
-template <class T> struct Pool {
+template <class T> struct ParticlePool {
     List<T> items;
     u32 deleted { 0U };
-    constexpr Pool(u32 default_size) : items { default_size } { }
+    constexpr ParticlePool(u32 default_size) : items { default_size } { }
     void ApplyErase() {
         if (deleted == 0U) { return; }
         items.resize(items.size() - deleted);
@@ -329,6 +329,23 @@ template <class T> struct Pool {
     void SwapBackErase(T& item) {
         T& back = *(items.end() - ++deleted);
         if (std::addressof(item) != std::addressof(back)) { std::swap(item, back); }
+    }
+};
+
+template <class T, u32 BLOCK_SIZE = 128U> struct Pool {
+    List<UniquePointer<Array<T, BLOCK_SIZE>>> blocks { };
+
+    u32 active { 0 };
+    void Clear() { active = 0U; }
+    T& Get() {
+        active++;
+        const u32 block = active / BLOCK_SIZE;
+        const u32 cell = active % BLOCK_SIZE;
+        if (block == blocks.size()) { blocks.EmplaceBack(UniquePointer<Array<T, BLOCK_SIZE>>(new Array<T, BLOCK_SIZE>())); }
+
+        UniquePointer<Array<T, BLOCK_SIZE>>& array = blocks[block];
+        T& item = array->operator[](cell);
+        return item;
     }
 };
 } // namespace pce

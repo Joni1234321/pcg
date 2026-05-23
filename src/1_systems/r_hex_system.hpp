@@ -49,15 +49,15 @@ constexpr int3 HexCubeRound(const float3 cube_frac) {
 
     return cube;
 }
-constexpr int2 HexAxialRound(const float2 axial_frac) {
+[[nodiscard]] constexpr int2 HexAxialRound(const float2 axial_frac) {
     const float3 cube_frac = float3 { axial_frac.x, axial_frac.y, -axial_frac.x - axial_frac.y };
     return HexCubeToAxial(HexCubeRound(cube_frac));
 }
-constexpr u32 HexCubeDistance(const int3 a, const int3 b) {
-    const int3 diff = a - b;
+[[nodiscard]] constexpr u32 HexCubeDistance(const int3 cube_a, const int3 cube_b) {
+    const int3 diff = math::Abs(cube_a - cube_b);
     return math::Abs(diff.x + diff.y + diff.z) / 2; // or max(diff.x, diff.y, diff.z)
 }
-
+[[nodiscard]] constexpr float3 HexCubeLerp(const int3 cube_a, const int3 cube_b, float t) { return math::Lerp(static_cast<float3>(cube_a), static_cast<float3>(cube_b), t); }
 // world space: 1 unit = 1 hex size
 constexpr float2 HexAxialToWorld(const int2 axial) { return HEX_SPACING * float2 { axial.x + axial.y * 0.5F, static_cast<f32>(axial.y) }; }
 constexpr int2 HexWorldToAxial(const float2 world) {

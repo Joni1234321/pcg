@@ -22,7 +22,7 @@ public:
     Font(const AbsolutePath& path, const FontSize size) : font(TTF_OpenFont(path.string().c_str(), size)) { Logger().Created("Font {} {}", size, path.string()); }
 
     [[nodiscard]] b8 FailedLoading() const { return font.Get() == nullptr; }
-    [[nodiscard]] constexpr TTF_Font* ToSDL() const { return font.Get(); }
+    [[nodiscard]] constexpr operator TTF_Font*() const { return font.Get(); }
     [[nodiscard]] FontSize GetSize() const { return static_cast<FontSize>(TTF_GetFontSize(font.Get())); }
 };
 class FontCollection {

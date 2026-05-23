@@ -233,10 +233,10 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
 
         const Font& font = Singleton::Get<FontCollection>().GetFontNormal(node_properties.font_size);
         if (!ttf_text) {
-            ttf_text.Reset(TTF_CreateText(Singleton::Get<WindowState>().text_engine, font.ToSDL(), node_properties.text.c_str(), node_properties.text.size()));
+            ttf_text.Reset(TTF_CreateText(Singleton::Get<WindowState>().text_engine, font, node_properties.text.c_str(), node_properties.text.size()));
         } else {
             TTF_SetTextString(ttf_text.Get(), node_properties.text.c_str(), node_properties.text.size());
-            TTF_SetTextFont(ttf_text.Get(), font.ToSDL());
+            TTF_SetTextFont(ttf_text.Get(), font);
         }
         const SDL_Color color = node_style.background_color;
         (void)TTF_SetTextColor(ttf_text.Get(), color.r, color.g, color.b, color.a);
