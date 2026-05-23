@@ -1,3 +1,5 @@
+#include <optional>
+#include "0_engine/r_window_state.hpp"
 #include "0_engine/u_algorithm.hpp"
 #include "g_arcade.hpp"
 #include "0_engine/g_globals.hpp"
@@ -15,6 +17,8 @@
 #include "1_systems/t_tick_system.hpp"
 #include "1_systems/u_animation_system.hpp"
 #include "1_systems/u_orchestra.hpp"
+
+#include "SDL3/SDL_render.h"
 #include "SDL3/SDL_keycode.h"
 #include "SDL3/SDL_pixels.h"
 
@@ -29,8 +33,21 @@ struct HexDrawInfo {
 struct Hex {
     f32 terrain;
 };
+
+struct PseudoStates
+{
+    std::optional<int2> axial_hover_now;
+    std::optional<int2> axial_hover_enter;
+    std::optional<int2> axial_hover_exit;
+
+    std::optional<int2> axial_select_now;
+    std::optional<int2> axial_select_enter;
+    std::optional<int2> axial_select_exit;
+
+    std::optional<int2> axial_unselected;
+};
 struct HexState {
-    Optional<int2> axial_selected;
+    PseudoStates pseudo_states;
     HexList<HexDrawInfo> hex_draw;
     HexList<Hex> hex_map;
     List<Counter> counters;
@@ -49,35 +66,38 @@ HexList<Hex> GenerateTerrain(const uint2 map_size, const u32 seed) {
     }
     return hexes;
 }
+SDL_Color TerrainToColor (float terrain) {
+    if (terrain < 0.25F) {
+        return SDL_Color { 20U, 60U, 120U, 255U }; // deep ocean
+    }
+    if (terrain < 0.38F) {
+        return SDL_Color { 50U, 100U, 180U, 255U }; // ocean
+    }
+    if (terrain < 0.43F) {
+        return colors::khaki; // beach
+    }
+    if (terrain < 0.60F) {
+        return SDL_Color { 100U, 190U, 80U, 255U }; // grass
+    }
+    if (terrain < 0.72F) {
+        return colors::forest_green; // forest
+    }
+    if (terrain < 0.85F) {
+        return colors::gray; // mountain
+    }
+    return colors::white; // snow
+}
 HexList<HexDrawInfo> HexToHexDraw(const HexList<Hex>& hexes) {
     HexList<HexDrawInfo> result { };
     result.Resize(hexes.map_size);
     for (u32 i = 0; i < hexes.Size(); i++) {
         const Hex& hex_data = hexes.data[i];
         const int2 axial = hexes.IndexToAxial(i);
-
-        SDL_Color color;
-        if (hex_data.terrain < 0.25F) {
-            color = SDL_Color { 20U, 60U, 120U, 255U }; // deep ocean
-        } else if (hex_data.terrain < 0.38F) {
-            color = SDL_Color { 50U, 100U, 180U, 255U }; // ocean
-        } else if (hex_data.terrain < 0.43F) {
-            color = colors::khaki; // beach
-        } else if (hex_data.terrain < 0.60F) {
-            color = SDL_Color { 100U, 190U, 80U, 255U }; // grass
-        } else if (hex_data.terrain < 0.72F) {
-            color = colors::forest_green; // forest
-        } else if (hex_data.terrain < 0.85F) {
-            color = colors::gray; // mountain
-        } else {
-            color = colors::white; // snow
-        }
-
-        const float2 world = HexAxialToWorld(axial);
-        result[axial] = HexDrawInfo { .world=world, .color=color };
+        result[axial] = HexDrawInfo { .world=HexAxialToWorld(axial), .color=TerrainToColor(hex_data.terrain) };
     }
     return result;
 }
+
 
 struct HexSystem {
     void operator()() const {
@@ -86,22 +106,36 @@ struct HexSystem {
         const InputState& input_state = Singleton::Get<InputState>();
         HexState& hex_state = Singleton::Get<HexState>();
 
-        // hover
-        const int2 mouse_axial = HexWorldToAxial(camera.ScreenToWorld(input_state.mouse_position));
-        if (hex_state.hex_draw.Contains(mouse_axial)) {
-            HexAppend(hex_state.vertecies, camera.scale, camera.WorldToScreen(HexAxialToWorld(mouse_axial)), colors::ToSDL_FColor(colors::teal));
-            if (input_state.left_mouse_down) {
-                if (hex_state.axial_selected.has_value()) {
-                    Optional<u32> selected_counter_prev = find_index_of(hex_state.counters, hex_state.axial_selected.value(), &Counter::axial);
-                    if (selected_counter_prev.has_value()) { hex_state.counters[selected_counter_prev.value()].selected = false; }
-                }
-                hex_state.axial_selected = mouse_axial;
-                Optional<u32> selected_counter = find_index_of(hex_state.counters, hex_state.axial_selected.value(), &Counter::axial);
-                if (selected_counter.has_value()) { hex_state.counters[selected_counter.value()].selected = true; }
-            }
+        // hover / select logic
+        const float2 mouse_world = camera.ScreenToWorld(input_state.mouse_position);
+        const Optional<int2> mouse_axial = hex_state.hex_draw.Contains(HexWorldToAxial(mouse_world)) ? Optional { HexWorldToAxial(mouse_world) } : std::nullopt;
+
+        const b8 hover_new = hex_state.pseudo_states.axial_hover_now != mouse_axial;
+        hex_state.pseudo_states.axial_hover_enter = hover_new ? mouse_axial : std::nullopt;
+        hex_state.pseudo_states.axial_hover_exit = hover_new ? hex_state.pseudo_states.axial_hover_now : std::nullopt;
+        hex_state.pseudo_states.axial_hover_now = mouse_axial;
+
+        if (input_state.left_mouse_down) {
+            const b8 select_new = hex_state.pseudo_states.axial_select_now != mouse_axial;
+            hex_state.pseudo_states.axial_select_enter = select_new ? mouse_axial : std::nullopt;
+            hex_state.pseudo_states.axial_select_exit = select_new ? hex_state.pseudo_states.axial_select_now : std::nullopt;
+            hex_state.pseudo_states.axial_select_now = mouse_axial;
         }
-        if (hex_state.axial_selected) {
-            HexAppend(hex_state.vertecies, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.axial_selected.value())), colors::ToSDL_FColor(colors::violet));
+
+        if (hex_state.pseudo_states.axial_select_enter) {
+            Optional<u32> i = find_index_of(hex_state.counters, hex_state.pseudo_states.axial_select_enter.value(), &Counter::axial);
+            if (i.has_value()) { hex_state.counters[i.value()].selected = true; }
+        }
+        if (hex_state.pseudo_states.axial_select_exit) {
+            Optional<u32> i = find_index_of(hex_state.counters, hex_state.pseudo_states.axial_select_exit.value(), &Counter::axial);
+            if (i.has_value()) { hex_state.counters[i.value()].selected = false; }
+        }
+
+        if (hex_state.pseudo_states.axial_hover_now) {
+            HexAppend(hex_state.vertecies, camera.scale, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover_now.value())), colors::ToSDL_FColor(colors::teal));
+        }
+        if (hex_state.pseudo_states.axial_select_now) {
+            HexAppend(hex_state.vertecies, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select_now.value())), colors::ToSDL_FColor(colors::violet));
         }
 
         // render map
