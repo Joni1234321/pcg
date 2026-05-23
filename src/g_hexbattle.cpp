@@ -1294,16 +1294,16 @@ struct Sim {
 constexpr u32 TILE_W = 130U;
 constexpr u32 TILE_H = 100U;
 
-[[nodiscard]] static SDL_Color TerrainColor(const std::string_view name) {
-    if (name == "field") { return SDL_Color { 196U, 188U, 130U, 255U }; }
-    if (name == "hill") { return SDL_Color { 180U, 140U, 90U, 255U }; }
-    if (name == "village") { return SDL_Color { 175U, 175U, 175U, 255U }; }
-    if (name == "forest") { return SDL_Color { 60U, 110U, 60U, 255U }; }
-    if (name == "ridge") { return SDL_Color { 130U, 100U, 70U, 255U }; }
+[[nodiscard]] static Color TerrainColor(const std::string_view name) {
+    if (name == "field") { return Color { 196U, 188U, 130U, 255U }; }
+    if (name == "hill") { return Color { 180U, 140U, 90U, 255U }; }
+    if (name == "village") { return Color { 175U, 175U, 175U, 255U }; }
+    if (name == "forest") { return Color { 60U, 110U, 60U, 255U }; }
+    if (name == "ridge") { return Color { 130U, 100U, 70U, 255U }; }
     return colors::gray;
 }
 
-[[nodiscard]] static SDL_Color OwnerBorderColor(const Side s) {
+[[nodiscard]] static Color OwnerBorderColor(const Side s) {
     if (s == Side::atk) { return colors::royal_blue; }
     if (s == Side::def) { return colors::ruby_red; }
     return colors::dark_slate;

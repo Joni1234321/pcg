@@ -69,7 +69,7 @@ template <class T> struct ValueUnit : NodeComponentBase {
         const T& value;
         Unit unit;
         FontSizes font_size;
-        SDL_Color color;
+        Color color;
     };
     explicit ValueUnit(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(hug).Alignment(top_right).Build() } { }
     Handle<Node> value { B(root).Node(hug).Fill(colors::white).Build() };

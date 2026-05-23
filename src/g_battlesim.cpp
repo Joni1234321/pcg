@@ -211,13 +211,13 @@ private:
         (void)B(bar).Node(hug, hug).Text("⚔", FontSizes::h3, colors::white).Right().Build();
         return bar;
     }
-    Handle<Node> BuildSide(const Handle<Node> parent, const SideData& side, const SDL_Color accent) {
+    Handle<Node> BuildSide(const Handle<Node> parent, const SideData& side, const Color accent) {
         // 2px border via accent-color padding wrapper
         const Handle<Node> border = B(parent).Node(fill, hug).Fill(accent).Padding(2U).Direction(vertical).Gap(2U).Build();
         const Handle<Node> panel = B(border).Node(fill, hug).Direction(vertical).Gap(0U).Fill(colors::dark_gray).Build();
 
         // CV at top
-        const SDL_Color cv_color = side.cv_after < side.cv_before ? colors::salmon : colors::lime;
+        const Color cv_color = side.cv_after < side.cv_before ? colors::salmon : colors::lime;
         const Handle<Node> cv = B(panel).Node(fill, hug).Fill(colors::dark_slate).Padding2({ 8U, 6U }).Direction(vertical).Gap(0U).Build();
         (void)B(cv).Node(fill, hug).Text("CV", FontSizes::tiny, colors::silver).Build();
         (void)B(cv).Node(fill, hug).Text(std::format("{}  →  {}", side.cv_before, side.cv_after), FontSizes::h2, cv_color).Build();
@@ -255,7 +255,7 @@ struct DetailsFrame : Frame {
     Handle<Node> body_right { BuildUnitTable(body, info.defender, colors::maroon) };
 
 private:
-    Handle<Node> BuildUnitTable(const Handle<Node> parent, const SideData& side, const SDL_Color accent) {
+    Handle<Node> BuildUnitTable(const Handle<Node> parent, const SideData& side, const Color accent) {
         // 2px accent border
         const Handle<Node> border = B(parent).Node(fill, hug).Fill(accent).Padding(2U).Direction(vertical).Gap(0U).Build();
         const Handle<Node> panel = B(border).Node(fill, hug).Direction(vertical).Gap(0U).Fill(colors::white_smoke).Build();
@@ -273,7 +273,7 @@ private:
 
         for (u32 i = 0U; i < side.units.size(); ++i) {
             const UnitRow& unit = side.units[i];
-            const SDL_Color row_bg = (i % 2U == 0U) ? colors::white : colors::white_smoke;
+            const Color row_bg = (i % 2U == 0U) ? colors::white : colors::white_smoke;
             const Handle<Node> row = B(grid).Node(fill, hug).Fill(row_bg).Padding2({ 6U, 3U }).Build();
             (void)B(row).Node(fill, hug).Text(unit.name, FontSizes::body, colors::black).Build();
             (void)B(row).Node(COL_NUM, hug).Text(std::format("{}", unit.before), FontSizes::body, colors::dark_gray).Right().Build();
@@ -302,7 +302,7 @@ private:
 
         for (u32 i = 0U; i < info.rounds.size(); ++i) {
             const RoundEntry& r = info.rounds[i];
-            const SDL_Color row_bg = (i % 2U == 0U) ? colors::ivory : colors::white;
+            const Color row_bg = (i % 2U == 0U) ? colors::ivory : colors::white;
             const Handle<Node> row = B(grid).Node(fill, hug).Fill(row_bg).Padding2({ 6U, 3U }).Gap(6U).Build();
             round_rows.push_back(row);
             (void)B(row).Node(90U, hug).Text(std::format("#{} {}", i + 1U, r.phase), FontSizes::small, colors::deep_purple).Build();
@@ -385,7 +385,7 @@ private:
     Array<StatusEntry, NUM_ENTRIES> BuildEntries() {
         Array<StatusEntry, NUM_ENTRIES> result { };
         for (u32 i = 0U; i < NUM_ENTRIES; ++i) {
-            const SDL_Color row_bg = (i % 2U == 0U) ? colors::dark_dark_brown : colors::dark_gray;
+            const Color row_bg = (i % 2U == 0U) ? colors::dark_dark_brown : colors::dark_gray;
             const Handle<Node> row = B(panel).Node(fill, hug).Direction(horizontal).Gap(6U).Fill(row_bg).Padding2({ 6U, 4U }).Build();
             const Handle<Node> bar_bg = B(row).Node(BAR_WIDTH, BAR_HEIGHT).Fill(colors::dark_slate).Build();
             const Handle<Node> bar_fill = B(bar_bg).Node(0U, BAR_HEIGHT).Fill(colors::forest_green).Build();

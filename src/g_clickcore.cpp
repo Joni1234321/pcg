@@ -204,8 +204,8 @@ Scene ClickCore::GameOverScene() {
 void HighScoreComponent::SetProperty(const Property& property) const {
     const auto& [i, high_score] = property;
     const b8 alternate = i % 2 == 0;
-    const SDL_Color primary = alternate ? colors::deep_purple : colors::radiant_orange;
-    const SDL_Color secondary = !alternate ? colors::deep_purple : colors::radiant_orange;
+    const Color primary = alternate ? colors::deep_purple : colors::radiant_orange;
+    const Color secondary = !alternate ? colors::deep_purple : colors::radiant_orange;
     globalData[root.tree].styles[root.node].background_color = primary;
     globalData[root.tree].styles[score].background_color = secondary;
     globalData[root.tree].node_properties[score].text = std::format("{:05}", high_score.score);

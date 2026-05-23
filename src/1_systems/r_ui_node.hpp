@@ -29,7 +29,7 @@ public:
     NodeBuilder(Handle<NodeTree> tree, Handle<Node> parent, Layout new_layout);
     NodeBuilder(NodeReference parent, Layout new_layout);
     [[nodiscard]] NodeBuilder& Name(const String& name);
-    [[nodiscard]] NodeBuilder& Fill(SDL_Color color);
+    [[nodiscard]] NodeBuilder& Fill(Color color);
     [[nodiscard]] NodeBuilder& Texture(Handle<Texture> texture);
     [[nodiscard]] NodeBuilder& Padding(u32 padding);
     [[nodiscard]] NodeBuilder& Padding2(uint2 padding);
@@ -37,11 +37,11 @@ public:
     [[nodiscard]] NodeBuilder& Gap(u32 gap);
     [[nodiscard]] NodeBuilder& GapAuto();
     [[nodiscard]] NodeBuilder& Direction(FlexDirection direction);
-    [[nodiscard]] NodeBuilder& Text(const String& string, SDL_Color color);
-    [[nodiscard]] NodeBuilder& Text(String&& string, SDL_Color color);
-    [[nodiscard]] NodeBuilder& Text(const String& string, FontSizes font_size, SDL_Color color);
-    [[nodiscard]] NodeBuilder& Text(String&& string, FontSizes font_size, SDL_Color color);
-    [[nodiscard]] NodeBuilder& Text(FontSizes font_size, SDL_Color color);
+    [[nodiscard]] NodeBuilder& Text(const String& string, Color color);
+    [[nodiscard]] NodeBuilder& Text(String&& string, Color color);
+    [[nodiscard]] NodeBuilder& Text(const String& string, FontSizes font_size, Color color);
+    [[nodiscard]] NodeBuilder& Text(String&& string, FontSizes font_size, Color color);
+    [[nodiscard]] NodeBuilder& Text(FontSizes font_size, Color color);
     [[nodiscard]] NodeBuilder& Alignment(Alignment alignment);
     [[nodiscard]] NodeBuilder& Right();
     [[nodiscard]] NodeBuilder& Center();

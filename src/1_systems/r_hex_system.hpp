@@ -2,16 +2,11 @@
 #include <SDL3/SDL_render.h>
 #include <array>
 
-#include "0_engine/g_globals.hpp"
-#include "0_engine/r_window_state.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
-#include "0_engine/u_logger.hpp"
+#include "0_engine/u_texture.hpp"
 #include "0_engine/u_util.hpp"
-#include "1_systems/i_input_system.hpp"
-#include "SDL3/SDL_pixels.h"
 #include "SDL3/SDL_rect.h"
-#include "r_camera_system.hpp"
 
 namespace pce {
 // https://www.redblobgames.com/grids/hexagons/
@@ -90,7 +85,7 @@ template <class T> struct HexList {
     }
 };
 
-inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int2 hex_screen, const SDL_FColor hex_color) {
+inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int2 hex_screen, const ColorF hex_color) {
     SDL_FPoint center { .x = static_cast<f32>(hex_screen.x), .y = static_cast<f32>(hex_screen.y) };
     Array<SDL_FPoint, HEX_CORNERS> points { };
     for (u32 i = 0; i < HEX_CORNERS; i++) {
@@ -98,7 +93,7 @@ inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int
         points[i] = SDL_FPoint { .x = vertex.x, .y = vertex.y };
     }
     for (u32 i = 0; i < HEX_CORNERS; i++) {
-        SDL_FColor sdl_f_color = colors::ColorMul(hex_color, 0.8F);
+        ColorF sdl_f_color = colors::ColorMul(hex_color, 0.8F);
         // SDL_FColor sdl_f_color = colors::ToSDL_FColor(colors::white_smoke);
         vertecies.EmplaceBack(center, sdl_f_color, SDL_FPoint { });
         vertecies.EmplaceBack(points[i], hex_color, SDL_FPoint { });

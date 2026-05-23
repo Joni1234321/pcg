@@ -97,7 +97,7 @@ NodeBuilder& NodeBuilder::Name(const String& name) {
     properties.name = name;
     return *this;
 }
-NodeBuilder& NodeBuilder::Fill(const SDL_Color color) {
+NodeBuilder& NodeBuilder::Fill(const Color color) {
     style.background_color = color;
     return *this;
 }
@@ -131,30 +131,30 @@ NodeBuilder& NodeBuilder::Direction(const FlexDirection direction) {
     style.direction = direction;
     return *this;
 }
-constexpr SDL_Color DEFAULT_TEXT_COLOR = colors::black;
-NodeBuilder& NodeBuilder::Text(const String& string, const SDL_Color color) {
+constexpr Color DEFAULT_TEXT_COLOR = colors::black;
+NodeBuilder& NodeBuilder::Text(const String& string, const Color color) {
     properties.text = string;
     style.background_color = color;
     return *this;
 }
-NodeBuilder& NodeBuilder::Text(String&& string, const SDL_Color color) {
+NodeBuilder& NodeBuilder::Text(String&& string, const Color color) {
     properties.text = string;
     style.background_color = color;
     return *this;
 }
-NodeBuilder& NodeBuilder::Text(const String& string, const FontSizes font_size, const SDL_Color color) {
-    properties.text = string;
-    properties.font_size = font_size;
-    style.background_color = color;
-    return *this;
-}
-NodeBuilder& NodeBuilder::Text(String&& string, const FontSizes font_size, const SDL_Color color) {
+NodeBuilder& NodeBuilder::Text(const String& string, const FontSizes font_size, const Color color) {
     properties.text = string;
     properties.font_size = font_size;
     style.background_color = color;
     return *this;
 }
-NodeBuilder& NodeBuilder::Text(const FontSizes font_size, const SDL_Color color) {
+NodeBuilder& NodeBuilder::Text(String&& string, const FontSizes font_size, const Color color) {
+    properties.text = string;
+    properties.font_size = font_size;
+    style.background_color = color;
+    return *this;
+}
+NodeBuilder& NodeBuilder::Text(const FontSizes font_size, const Color color) {
     properties.font_size = font_size;
     style.background_color = color;
     return *this;
@@ -238,7 +238,7 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
             TTF_SetTextString(ttf_text.Get(), node_properties.text.c_str(), node_properties.text.size());
             TTF_SetTextFont(ttf_text.Get(), font);
         }
-        const SDL_Color color = node_style.background_color;
+        const Color color = node_style.background_color;
         (void)TTF_SetTextColor(ttf_text.Get(), color.r, color.g, color.b, color.a);
     }
 

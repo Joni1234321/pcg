@@ -74,7 +74,7 @@ inline void RenderCounters(const List<Counter>& counters) {
 
         // area
         const AABBF area_icon = AABBF::FromPoint(counter_point + counter_size * float2 { 0.20F, 0.25F }, counter_size * float2 { 0.6F, 0.4F });
-        constexpr SDL_Color COLOR_ICON { colors::gray_tint };
+        constexpr Color COLOR_ICON { colors::gray_tint };
         (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_ICON.r, COLOR_ICON.g, COLOR_ICON.b, COLOR_ICON.a);
         (void)SDL_RenderFillRect(window_state.renderer, area_icon);
 

@@ -32,7 +32,7 @@ using namespace pce::ui;
 namespace {
 struct HexDrawInfo {
     float2 world { };
-    SDL_Color color { };
+    Color color { };
 };
 struct Hex {
     f32 terrain;
@@ -68,18 +68,18 @@ HexList<Hex> GenerateTerrain(const uint2 map_size, const u32 seed) {
     }
     return hexes;
 }
-SDL_Color TerrainToColor(float terrain) {
+Color TerrainToColor(float terrain) {
     if (terrain < 0.25F) {
-        return SDL_Color { 20U, 60U, 120U, 255U }; // deep ocean
+        return Color { 20U, 60U, 120U, 255U }; // deep ocean
     }
     if (terrain < 0.38F) {
-        return SDL_Color { 50U, 100U, 180U, 255U }; // ocean
+        return Color { 50U, 100U, 180U, 255U }; // ocean
     }
     if (terrain < 0.43F) {
         return colors::khaki; // beach
     }
     if (terrain < 0.60F) {
-        return SDL_Color { 100U, 190U, 80U, 255U }; // grass
+        return Color { 100U, 190U, 80U, 255U }; // grass
     }
     if (terrain < 0.72F) {
         return colors::forest_green; // forest
@@ -134,11 +134,11 @@ struct HexSystem {
             if (i.has_value()) { hex_state.counters[i.value()].selected = false; }
         }
 
-        if (hex_state.pseudo_states.axial_hover_now) { HexAppend(hex_state.vertecies, camera.scale, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover_now.value())), colors::ToSDL_FColor(colors::hex_hover)); }
-        if (hex_state.pseudo_states.axial_select_now) { HexAppend(hex_state.vertecies, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select_now.value())), colors::ToSDL_FColor(colors::hex_select)); }
+        if (hex_state.pseudo_states.axial_hover_now) { HexAppend(hex_state.vertecies, camera.scale, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover_now.value())), colors::hex_hover); }
+        if (hex_state.pseudo_states.axial_select_now) { HexAppend(hex_state.vertecies, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select_now.value())), colors::hex_select); }
 
         // render map
-        for (const HexDrawInfo& hex : hex_state.hex_draw.data) { HexAppend(hex_state.vertecies, camera.scale * 0.90F, camera.WorldToScreen(hex.world), colors::ToSDL_FColor(hex.color)); }
+        for (const HexDrawInfo& hex : hex_state.hex_draw.data) { HexAppend(hex_state.vertecies, camera.scale * 0.90F, camera.WorldToScreen(hex.world), hex.color); }
 
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.vertecies.data.data(), static_cast<i32>(hex_state.vertecies.size()), nullptr, 0);
         hex_state.vertecies.clear();
@@ -147,12 +147,12 @@ struct HexSystem {
         RenderCounters(hex_state.counters);
 
         // movement https://www.redblobgames.com/grids/hexagons/#distances
-        f32 pt = camera.scale * 0.3F;
+        const f32 pt = camera.scale * 0.3F;
         const Font& font_movement = font_collection.GetFontBold(static_cast<FontSizes>(pt));
         TTF_SetFontWrapAlignment(font_movement, TTF_HORIZONTAL_ALIGN_CENTER);
 
         if (hex_state.pseudo_states.axial_hover_now && hex_state.pseudo_states.axial_select_now && hex_state.pseudo_states.axial_hover_now != hex_state.pseudo_states.axial_select_now) {
-            constexpr SDL_Color color{ colors::ruby_red };
+            constexpr Color color{ colors::ruby_red };
             (void)SDL_SetRenderDrawColor(window_state.renderer, color.r, color.g, color.b, color.a);
 
             const int2 axial_start = hex_state.pseudo_states.axial_hover_now.value();
@@ -161,14 +161,17 @@ struct HexSystem {
             const int3 cube_end = HexAxialToCube(axial_end);
             const u32 distance = HexCubeDistance(cube_start, cube_end);
             const f32 distance_inv = 1.0F / static_cast<f32>(distance);
+            List<int2> axials;
             for (u32 i = 0; i < distance; ++i) {
-                const float3 cube_frac = HexCubeLerp(cube_start, cube_end, i * distance_inv);
-                const int2 axial = HexCubeToAxial(HexCubeRound(cube_frac));
+                axials.EmplaceBack(HexCubeToAxial(HexCubeRound(HexCubeLerp(cube_start, cube_end, i * distance_inv))));
+            }
+            for (u32 i = 0; i < distance; ++i) {
+                const int2& axial = axials[i];
                 const float2 world = HexAxialToWorld(axial);
                 const int2 screen = camera.WorldToScreen(world);
                 const float2 screen_f = static_cast<float2>(screen);
 
-                HexAppend(hex_state.vertecies, camera.scale * 0.25F, screen, colors::ToSDL_FColor(colors::ruby_red));
+                HexAppend(hex_state.vertecies, camera.scale * 0.25F, screen, colors::ruby_red);
                 (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.vertecies.data.data(), static_cast<i32>(hex_state.vertecies.size()), nullptr, 0);
                 hex_state.vertecies.clear();
 
@@ -179,6 +182,9 @@ struct HexSystem {
                 (void)TTF_SetTextString(label, string_distance.c_str(), string_distance.size());
                 (void)TTF_DrawRendererText(label, screen_f.x - camera.scale * 0.5F, screen_f.y - pt * 0.5F);
             }
+            // for (const int2& axial : axials) {
+            //
+            // }
         }
 
         hex_state.label_pool.Clear();
