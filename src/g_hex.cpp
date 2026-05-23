@@ -155,13 +155,15 @@ struct HexSystem {
             constexpr Color color{ colors::ruby_red };
             (void)SDL_SetRenderDrawColor(window_state.renderer, color.r, color.g, color.b, color.a);
 
-            const int2 axial_start = hex_state.pseudo_states.axial_hover_now.value();
-            const int2 axial_end = hex_state.pseudo_states.axial_select_now.value();
+            const int2 axial_start = hex_state.pseudo_states.axial_select_now.value();
+            const int2 axial_end = hex_state.pseudo_states.axial_hover_now.value();
             const int3 cube_start = HexAxialToCube(axial_start);
             const int3 cube_end = HexAxialToCube(axial_end);
             const u32 distance = HexCubeDistance(cube_start, cube_end);
             const f32 distance_inv = 1.0F / static_cast<f32>(distance);
             List<int2> axials;
+            Optional<u32> counter_index = find_index_of(hex_state.counters, axial_start, &Counter::axial);
+
             for (u32 i = 0; i < distance; ++i) {
                 axials.EmplaceBack(HexCubeToAxial(HexCubeRound(HexCubeLerp(cube_start, cube_end, i * distance_inv))));
             }
@@ -182,9 +184,11 @@ struct HexSystem {
                 (void)TTF_SetTextString(label, string_distance.c_str(), string_distance.size());
                 (void)TTF_DrawRendererText(label, screen_f.x - camera.scale * 0.5F, screen_f.y - pt * 0.5F);
             }
-            // for (const int2& axial : axials) {
-            //
-            // }
+            if (counter_index.has_value() && input_state.right_mouse_down) {
+                Counter& counter = hex_state.counters[counter_index.value()];
+                counter.axial = axial_end;
+            }
+
         }
 
         hex_state.label_pool.Clear();
