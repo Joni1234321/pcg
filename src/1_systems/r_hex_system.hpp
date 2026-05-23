@@ -59,25 +59,16 @@ constexpr u32 HexCubeDistance(const int3 a, const int3 b) {
 }
 
 // world space: 1 unit = 1 hex size
-constexpr float2 HexAxialToWorld(const int2 axial) { return HEX_SPACING * float2 { axial.x + axial.y / 2.0F, static_cast<f32>(axial.y) }; }
+constexpr float2 HexAxialToWorld(const int2 axial) { return HEX_SPACING * float2 { axial.x + axial.y * 0.5F, static_cast<f32>(axial.y) }; }
 constexpr int2 HexWorldToAxial(const float2 world) {
     const float2 coord = float2 { 1.0F / 3.0F, 2.0F / 3.0F } * float2 { HEX_SPACING.x * world.x - world.y, world.y };
     return HexAxialRound(coord);
 }
 
-// pixel to world
-constexpr float2 HEX_CENTER { 400.0F, 400.0F };
-
-struct Hex {
-    float2 position;
-    SDL_Color color;
-    Hex(float2 position, SDL_Color color) : position(position), color(color) { }
-};
-
 // indexable with axial coordiantes
-template<class T> struct HexList {
-    uint2 map_size;
-    List<T> data { };
+template <class T> struct HexList {
+    uint2 map_size { 0, 0 };
+    List<T> data { 0 };
 
     [[nodiscard]] constexpr u32 AxialToIndex(const int2 axial) const { return axial.x + axial.y / 2 + axial.y * map_size.x; }
     [[nodiscard]] constexpr int2 IndexToAxial(const u32 index) const {
@@ -92,37 +83,15 @@ template<class T> struct HexList {
     [[nodiscard]] constexpr T& operator[](int2 axial) { return data[AxialToIndex(axial)]; }
     [[nodiscard]] constexpr u32 Size() const { return map_size.x * map_size.y; }
 
-    void SetSize(const uint2 new_size) {
+    void Resize(const uint2 new_size) {
         data.clear();
         map_size = new_size;
-        data.reserve(Size());
-        for (u32 i = 0; i < Size(); i++) { data.push_back(Hex { HexAxialToWorld(IndexToAxial(i)), colors::indigo }); }
+        data.resize(Size());
     }
 };
 
-struct HexMapState {
-    HexList<Hex> hexes { };
+struct GeometryRenderingState {
     List<SDL_Vertex> vertecies { };
-
-    void GenerateTerrain(u32 seed = 0) {
-        constexpr f32 SCALE = 0.04F;
-        const f32 seed_f = static_cast<f32>(seed);
-        for (u32 i = 0; i < hexes.Size(); i++) {
-            const float2 pos = hexes.data[i].position;
-            const f32 h = (pce::noise::Fbm(pos.x * SCALE + seed_f, pos.y * SCALE + seed_f) + 1.0F) * 0.5F;
-            // clang-format off
-            SDL_Color color;
-            if      (h < 0.25F) color = SDL_Color {  20U,  60U, 120U, 255U }; // deep ocean
-            else if (h < 0.38F) color = SDL_Color {  50U, 100U, 180U, 255U }; // ocean
-            else if (h < 0.43F) color = colors::khaki;                         // beach
-            else if (h < 0.60F) color = SDL_Color { 100U, 190U,  80U, 255U }; // grass
-            else if (h < 0.72F) color = colors::forest_green;                  // forest
-            else if (h < 0.85F) color = colors::gray;                          // mountain
-            else                color = colors::white;                          // snow
-            // clang-format on
-            hexes.data[i].color = color;
-        }
-    }
 };
 
 inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int2 hex_screen, const SDL_FColor hex_color) {
@@ -141,20 +110,13 @@ inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int
     }
 }
 
-struct RenderHexSystem {
-    void operator()() {
-        SDL_Renderer* sdl_renderer = Singleton::Get<WindowState>().renderer;
-        HexMapState& hex_map = Singleton::Get<HexMapState>();
-        const CameraState& camera = Singleton::Get<CameraState>();
+struct RenderGeometrySystem {
+    void operator()() const{
+        const WindowState& window_state = Singleton::Get<WindowState>();
+        GeometryRenderingState& geometry_rendering_state = Singleton::Get<GeometryRenderingState>();
 
-        for (const Hex& hex : hex_map.hexes.data) {
-            const int2 pixel = camera.WorldToScreen(hex.position);
-            HexAppend(hex_map.vertecies, camera.scale * 0.90F, pixel, colors::ToSDL_FColor(hex.color));
-        }
-
-        SDL_RenderGeometry(sdl_renderer, nullptr, hex_map.vertecies.data.data(), static_cast<int>(hex_map.vertecies.size()), nullptr, 0);
-        hex_map.vertecies.clear();
-        hex_map.vertecies.reserve(HEX_CORNERS * hex_map.hexes.Size());
+        SDL_RenderGeometry(window_state.renderer, nullptr, geometry_rendering_state.vertecies.data.data(), static_cast<int>(geometry_rendering_state.vertecies.size()), nullptr, 0);
+        geometry_rendering_state.vertecies.clear();
     }
 };
 

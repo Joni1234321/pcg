@@ -1,6 +1,7 @@
 #include "0_engine/g_globals.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
+#include "0_engine/u_util.hpp"
 #include "1_systems/i_input_system.hpp"
 #include "1_systems/r_camera_system.hpp"
 #include "1_systems/r_counter_system.hpp"
@@ -19,45 +20,94 @@ namespace pcg {
 using namespace pce;
 using namespace pce::ui;
 
-struct Units {
-
+struct HexDraw {
+    float2 position { };
+    SDL_Color color { };
+    HexDraw() = default;
+    HexDraw(float2 position, SDL_Color color) : position(position), color(color) { }
 };
-
-struct HexData {
+struct Hex {
     f32 terrain;
 };
-struct GHexState {
+struct HexState {
     Optional<int2> axial_selected;
-    HexList<HexData> hexes;
+    HexList<HexDraw> hex_draw;
+    HexList<Hex> hex_map;
 };
+
+HexList<Hex> GenerateTerrain(const uint2 map_size, u32 seed) {
+    HexList<Hex> hexes;
+    hexes.Resize(map_size);
+    constexpr f32 SCALE = 0.04F;
+    const f32 seed_f = static_cast<f32>(seed);
+    for (u32 i = 0; i < hexes.Size(); i++) {
+        const int2 axial = hexes.IndexToAxial(i);
+        const float2 world = HexAxialToWorld(axial);
+        hexes[axial].terrain = (noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f) + 1.0F) * 0.5F;
+    }
+    return hexes;
+}
+HexList<HexDraw> HexToHexDraw(const HexList<Hex>& hexes) {
+    HexList<HexDraw> result { };
+    result.Resize(hexes.map_size);
+    for (u32 i = 0; i < hexes.Size(); i++) {
+        const Hex& hex_data = hexes.data[i];
+        const int2 axial = hexes.IndexToAxial(i);
+
+        SDL_Color color;
+        if (hex_data.terrain < 0.25F) {
+            color = SDL_Color { 20U, 60U, 120U, 255U }; // deep ocean
+        } else if (hex_data.terrain < 0.38F) {
+            color = SDL_Color { 50U, 100U, 180U, 255U }; // ocean
+        } else if (hex_data.terrain < 0.43F) {
+            color = colors::khaki; // beach
+        } else if (hex_data.terrain < 0.60F) {
+            color = SDL_Color { 100U, 190U, 80U, 255U }; // grass
+        } else if (hex_data.terrain < 0.72F) {
+            color = colors::forest_green; // forest
+        } else if (hex_data.terrain < 0.85F) {
+            color = colors::gray; // mountain
+        } else {
+            color = colors::white; // snow
+        }
+
+        float2 world = HexAxialToWorld(axial);
+        result[axial] = HexDraw { world, color };
+    }
+    return result;
+}
 
 struct GHexSystem {
     void operator()() const {
         const CameraState& camera = Singleton::Get<CameraState>();
         const InputState& input_state = Singleton::Get<InputState>();
-        HexMapState& hex_map = Singleton::Get<HexMapState>();
-        GHexState& hex_state = Singleton::Get<GHexState>();
+        GeometryRenderingState& hex_rendering_state = Singleton::Get<GeometryRenderingState>();
+        HexState& hex_state = Singleton::Get<HexState>();
 
+        // hover
         const int2 mouse_axial = HexWorldToAxial(camera.ScreenToWorld(input_state.mouse_position));
-        if (hex_map.hexes.Contains(mouse_axial)) {
-            // draw mouse
-            HexAppend(hex_map.vertecies, camera.scale, camera.WorldToScreen(HexAxialToWorld(mouse_axial)), colors::ToSDL_FColor(colors::teal));
+        if (hex_state.hex_draw.Contains(mouse_axial)) {
+            HexAppend(hex_rendering_state.vertecies, camera.scale, camera.WorldToScreen(HexAxialToWorld(mouse_axial)), colors::ToSDL_FColor(colors::teal));
             if (input_state.left_mouse_down) { hex_state.axial_selected = mouse_axial; }
-            if (hex_state.axial_selected) { HexAppend(hex_map.vertecies, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.axial_selected.value())), colors::ToSDL_FColor(colors::violet)); }
         }
+        if (hex_state.axial_selected) { HexAppend(hex_rendering_state.vertecies, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.axial_selected.value())), colors::ToSDL_FColor(colors::violet)); }
+
+        // render map
+        for (const HexDraw& hex : hex_state.hex_draw.data) { HexAppend(hex_rendering_state.vertecies, camera.scale * 0.90F, camera.WorldToScreen(hex.position), colors::ToSDL_FColor(hex.color)); }
     }
 };
 
 void arcade::RunHex() {
     Singleton::Get<WindowState>().clear_color = colors::light_sky_blue;
 
-    HexMapState& hex_map = Singleton::Get<HexMapState>();
-    hex_map.hexes.SetSize({ 20, 6 });
-    hex_map.GenerateTerrain(3489);
+    GeometryRenderingState& hex_rendering_state = Singleton::Get<GeometryRenderingState>();
+    HexState& hex_state = Singleton::Get<HexState>();
+    hex_state.hex_map = GenerateTerrain({ 20, 6 }, 3489);
+    hex_state.hex_draw = HexToHexDraw(hex_state.hex_map);
 
     CameraState& camera = Singleton::Get<CameraState>();
     camera.map_world_min = { 0.0F, 0.0F };
-    camera.map_world_max = HexAxialToWorld(static_cast<int2>(hex_map.hexes.map_size - uint2 {1, 1}));
+    camera.map_world_max = HexAxialToWorld(static_cast<int2>(hex_state.hex_map.map_size - uint2 { 1, 1 }));
 
     CounterState& counters = Singleton::Get<CounterState>();
 
@@ -93,7 +143,7 @@ void arcade::RunHex() {
     orchestra.Add<ParticleSystem>();
 
     orchestra.Add<CameraSystem>();
-    orchestra.Add<RenderHexSystem>();
+    orchestra.Add<RenderGeometrySystem>();
     orchestra.Add<RenderCounterSystem>();
     orchestra.Add<RenderNodeSystem>();
     orchestra.Add<RenderWindowSystem>();

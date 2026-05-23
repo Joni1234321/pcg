@@ -16,8 +16,8 @@ struct CameraState {
     int2 drag_last_pos { 0, 0 };
     float2 map_world_min { 0.0F, 0.0F };
     float2 map_world_max { 0.0F, 0.0F };
-    [[nodiscard]] constexpr float2 ScreenToWorld(const int2 screen) const { return (float2 { screen } + world_position) / float2{scale}; }
-    [[nodiscard]] constexpr int2 WorldToScreen(const float2 world) const { return int2 { world * float2{scale} - world_position }; }
+    [[nodiscard]] constexpr float2 ScreenToWorld(const int2 screen) const { return (float2 { screen } + world_position) / float2 { scale }; }
+    [[nodiscard]] constexpr int2 WorldToScreen(const float2 world) const { return int2 { world * float2 { scale } - world_position }; }
 };
 
 struct CameraSystem {
@@ -50,7 +50,7 @@ struct CameraSystem {
         if (const f32 diff = camera_state.target_scale - camera_state.scale; math::Abs(diff) > 0.01F) {
             const f32 old_scale = camera_state.scale;
             camera_state.scale += diff * ZOOM_LERP;
-            camera_state.world_position += camera_state.zoom_anchor_world * float2{ camera_state.scale - old_scale };
+            camera_state.world_position += camera_state.zoom_anchor_world * float2 { camera_state.scale - old_scale };
         } else {
             camera_state.scale = camera_state.target_scale;
         }
