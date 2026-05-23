@@ -90,10 +90,6 @@ template <class T> struct HexList {
     }
 };
 
-struct GeometryRenderingState {
-    List<SDL_Vertex> vertecies { };
-};
-
 inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int2 hex_screen, const SDL_FColor hex_color) {
     SDL_FPoint center { .x = static_cast<f32>(hex_screen.x), .y = static_cast<f32>(hex_screen.y) };
     Array<SDL_FPoint, HEX_CORNERS> points { };
@@ -109,15 +105,4 @@ inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int
         vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color, SDL_FPoint { });
     }
 }
-
-struct RenderGeometrySystem {
-    void operator()() const{
-        const WindowState& window_state = Singleton::Get<WindowState>();
-        GeometryRenderingState& geometry_rendering_state = Singleton::Get<GeometryRenderingState>();
-
-        SDL_RenderGeometry(window_state.renderer, nullptr, geometry_rendering_state.vertecies.data.data(), static_cast<int>(geometry_rendering_state.vertecies.size()), nullptr, 0);
-        geometry_rendering_state.vertecies.clear();
-    }
-};
-
 }
