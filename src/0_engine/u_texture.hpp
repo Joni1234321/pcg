@@ -36,4 +36,8 @@ struct DestroyText {
         TTF_DestroyText(text);
     }
 };
+struct Label {
+    UniquePointer<TTF_Text, DestroyText> ttf_text { TTF_CreateText(Singleton::Get<WindowState>().text_engine, nullptr, "", 0) };
+    operator TTF_Text*() const { return ttf_text.Get(); }
+};
 } // namespace pce

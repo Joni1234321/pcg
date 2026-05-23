@@ -30,10 +30,10 @@ void arcade::RunHex() {
     camera.map_world_max = HexAxialToWorld(int2 { static_cast<i32>(hex_map.width) - 1, static_cast<i32>(hex_map.height) - 1 });
 
     CounterState& counters = Singleton::Get<CounterState>();
-    counters.counters.EmplaceBack(Counter { .axial = { 2, 3 }, .color = colors::olive, .text = "30=20" });
-    counters.counters.EmplaceBack(Counter { .axial = { 4, 3 }, .color = colors::maroon, .text = "1-4" });
-    counters.counters.EmplaceBack(Counter { .axial = { 6, 3 }, .color = colors::navy, .text = "ART" });
-    counters.counters.EmplaceBack(Counter { .axial = { 8, 3 }, .color = colors::olive, .text = "5-1" });
+    counters.counters.EmplaceBack(Counter { .axial = { 2, 3 }, .color = colors::olive, .text_bottom = "30=20" , .text_top = "II"});
+    counters.counters.EmplaceBack(Counter { .axial = { 4, 3 }, .color = colors::maroon, .text_bottom = "1-4" , .text_top = "II"});
+    counters.counters.EmplaceBack(Counter { .axial = { 6, 3 }, .color = colors::navy, .text_bottom = "ART" , .text_top = "II"});
+    counters.counters.EmplaceBack(Counter { .axial = { 8, 3 }, .color = colors::olive, .text_bottom = "5-1" , .text_top = "II"});
 
     // Systems
     Orchestra orchestra { };
