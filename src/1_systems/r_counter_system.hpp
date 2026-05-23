@@ -41,7 +41,7 @@ struct RenderCounterSystem {
         constexpr f32 COUNTER_SIZE = 1.2F;
         const f32 width = camera.scale * COUNTER_SIZE;
         const f32 height = camera.scale * COUNTER_SIZE * 0.8F;
-        const i32 pt = static_cast<i32>(height * 0.3F);
+        const i32 pt = static_cast<i32>(height * 0.25F);
         const ui::Font& font = font_collection.GetFontBold(static_cast<ui::FontSizes>(pt));
 
         for (const Counter& counter : counter_state.counters) {
@@ -55,10 +55,13 @@ struct RenderCounterSystem {
                 .h = height,
             };
 
-
+            // draw static counters
             for (i32 i = static_cast<i32>(counter.colors.size()) - 1; i >= 0; i--) {
                 SDL_Color color_background = counter.colors[static_cast<u32>(i)];
-                if (color_background.a == 0) {continue;}
+
+                if (color_background.a == 0) {
+                    continue;
+                }
 
                 constexpr f32 STACK_OFFSET = 1.0F / 10.0F;
                 SDL_FRect area = area_counter;
@@ -77,15 +80,13 @@ struct RenderCounterSystem {
                 (void)SDL_SetRenderDrawColor(window_state.renderer, SHADOW_COLOR.r, SHADOW_COLOR.g, SHADOW_COLOR.b, SHADOW_COLOR.a);
                 (void)SDL_RenderFillRect(window_state.renderer, &area_shadow);
 
-
                 // border
                 constexpr SDL_Color BORDER_COLOR { colors::black };
                 (void)SDL_SetRenderDrawColor(window_state.renderer, BORDER_COLOR.r, BORDER_COLOR.g, BORDER_COLOR.b, BORDER_COLOR.a);
                 (void)SDL_RenderFillRect(window_state.renderer, &area);
 
                 // background
-                constexpr f32 BORDER_WIDTH_PX = 5.0F;
-                f32 border_width = 0.04F * area_counter.w;
+                const f32 border_width = 0.04F * area_counter.w;
                 SDL_FRect area_background = area;
                 area_background.x += border_width;
                 area_background.y += border_width;
@@ -115,7 +116,7 @@ struct RenderCounterSystem {
                     i32 text_height = 0;
                     (void)TTF_GetTextSize(counter.label_bottom, &text_width, &text_height);
                     const f32 text_x = math::Round(area_counter.x + (area_counter.w - static_cast<f32>(text_width)) * 0.5F);
-                    const f32 text_y = math::Round(area_counter.y + area_counter.h - static_cast<f32>(text_height) * 0.8F);
+                    const f32 text_y = math::Round(area_counter.y + area_counter.h - static_cast<f32>(text_height) * 1.0F);
                     (void)TTF_DrawRendererText(counter.label_bottom, text_x, text_y);
                 }
                 if (!counter.text_top.empty()) {
@@ -125,7 +126,7 @@ struct RenderCounterSystem {
                     i32 text_height = 0;
                     (void)TTF_GetTextSize(counter.label_top, &text_width, &text_height);
                     const f32 text_x = math::Round(area_counter.x + (area_counter.w - static_cast<f32>(text_width)) * 0.5F);
-                    const f32 text_y = math::Round(area_counter.y - area_counter.h * 0.12F);
+                    const f32 text_y = math::Round(area_counter.y);
                     (void)TTF_DrawRendererText(counter.label_top, text_x, text_y);
                 }
             }

@@ -11,8 +11,10 @@
 #include "0_engine/u_types.hpp"
 
 namespace pce {
-static const RelativePath PATH_FONT_NORMAL { "font.ttf" };
-static const RelativePath PATH_FONT_BOLD { "TitilliumWeb-Bold.ttf" };
+static const RelativePath PATH_FONT_NORMAL { "Titillium_Web/TitilliumWeb-Regular.ttf" };
+static const RelativePath PATH_FONT_TITILIUM_BOLD { "Titillium_Web/TitilliumWeb-Bold.ttf" };
+static const RelativePath PATH_FONT_COURIER_REGULAR { "Courier_Prime/CourierPrime-Regular.ttf" };
+static const RelativePath PATH_FONT_COURIER_BOLD { "Courier_Prime/CourierPrime-Bold.ttf" };
 struct Window {
     explicit Window(const uint2 size) {
         constexpr u32 window_flags = SDL_WINDOW_RESIZABLE;
@@ -33,7 +35,7 @@ struct Window {
         window_state.text_engine = TTF_CreateRendererTextEngine(window_state.renderer);
         window_state.screen_size = size;
 
-        Singleton::Get<ui::FontCollection>().SetFontFile(Asset(PATH_FONT_NORMAL), Asset(PATH_FONT_BOLD));
+        Singleton::Get<ui::FontCollection>().SetFontFile(Asset(PATH_FONT_NORMAL), Asset(PATH_FONT_COURIER_REGULAR));
     }
     ~Window() {
         Singleton::Get<ui::FontCollection>().Clear();
