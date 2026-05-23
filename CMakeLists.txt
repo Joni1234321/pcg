@@ -18,6 +18,7 @@ set(CMAKE_C_COMPILER_LAUNCHER   ${CCACHE_PROGRAM})
 
 # libs — downloaded once into 3rdparty/, reused across all build dirs
 set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/3rdparty" CACHE PATH "" FORCE)
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL "" FORCE)
 include(FetchContent)
 fetchcontent_declare(SDL3
                      GIT_REPOSITORY "https://github.com/libsdl-org/SDL.git"
