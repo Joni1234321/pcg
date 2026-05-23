@@ -9,18 +9,27 @@
 #include "0_engine/u_types.hpp"
 
 #include "1_systems/i_input_system.hpp"
-#include "1_systems/t_tick_system.hpp"
 
 namespace pce::ui {
-const Font& FontCollection::GetFont(const FontSizes size) const {
-    if (!fonts.HasKey(size) && font_path != "") {
-        fonts.EmplaceBack(size, font_path, static_cast<FontSize>(size));
-        if (fonts[size].FailedLoading()) {
+const Font& FontCollection::GetFontNormal(const FontSizes size) const {
+    if (!fonts_normal.HasKey(size)) {
+        fonts_normal.EmplaceBack(size, font_path_normal, static_cast<FontSize>(size));
+        if (fonts_normal[size].FailedLoading()) {
             SDL_Log("ERROR Failed Font not loaded (%s)", SDL_GetError());
-            fonts.Erase(size);
+            fonts_normal.Erase(size);
         }
     }
-    return fonts[size];
+    return fonts_normal[size];
+}
+const Font& FontCollection::GetFontBold(const FontSizes size) const {
+    if (!fonts_bold.HasKey(size)) {
+        fonts_bold.EmplaceBack(size, font_path_bold, static_cast<FontSize>(size));
+        if (fonts_bold[size].FailedLoading()) {
+            SDL_Log("ERROR Failed Font not loaded (%s)", SDL_GetError());
+            fonts_bold.Erase(size);
+        }
+    }
+    return fonts_bold[size];
 }
 
 // NodeTree
@@ -222,7 +231,7 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
             continue;
         }
 
-        const Font& font = Singleton::Get<FontCollection>().GetFont(node_properties.font_size);
+        const Font& font = Singleton::Get<FontCollection>().GetFontNormal(node_properties.font_size);
         if (!ttf_text) {
             ttf_text.Reset(TTF_CreateText(Singleton::Get<WindowState>().text_engine, font.ToSDL(), node_properties.text.c_str(), node_properties.text.size()));
         } else {

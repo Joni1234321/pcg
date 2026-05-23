@@ -53,5 +53,11 @@ void arcade::RunHex() {
     orchestra.Add<RenderWindowSystem>();
 
     while (!Singleton::Get<InputState>().quit && !Singleton::Get<InputState>().keys_down[SDLK_ESCAPE]) { orchestra.RunSystems(); }
+
+    // Free TTF-owning state BEFORE Window destructor calls TTF_Quit/SDL_Quit,
+    // otherwise Labels (TTF_Text) in CounterState are destroyed during static destruction
+    // after SDL is dead, causing an access violation (0xC0000005).
+    Singleton::Get<CounterState>().counters.clear();
+    globalData.Get<NodeTree>().clear();
 }
 }

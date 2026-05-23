@@ -20,8 +20,8 @@ constexpr SDL_FColor ToSDL_FColor(const SDL_Color color) {
     constexpr f32 TO_FCOLOR = 1.0F / 255.0F;
     return SDL_FColor { color.r * TO_FCOLOR, color.g * TO_FCOLOR, color.b * TO_FCOLOR, color.a * TO_FCOLOR };
 }
-constexpr SDL_Color ColorWithAlpha (SDL_Color color, const u8 a) {
-    color.a = a;
+constexpr SDL_Color ColorWithAlpha (SDL_Color color, const f32 a) {
+    color.a = static_cast<u8>(a * 255U);
     return color;
 }
 

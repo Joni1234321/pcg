@@ -26,17 +26,21 @@ public:
     [[nodiscard]] FontSize GetSize() const { return static_cast<FontSize>(TTF_GetFontSize(font.Get())); }
 };
 class FontCollection {
-    AbsolutePath font_path { };
-    mutable FlatMap<FontSizes, Font> fonts { 16U };
+    AbsolutePath font_path_normal { };
+    AbsolutePath font_path_bold { };
+    mutable FlatMap<FontSizes, Font> fonts_normal { 16U };
+    mutable FlatMap<FontSizes, Font> fonts_bold { 16U };
 
 public:
     explicit FontCollection() { }
-    void SetFontFile(const AbsolutePath& path) {
-        font_path = path;
+    void SetFontFile(const AbsolutePath& normal, const AbsolutePath& bold) {
+        font_path_normal = normal;
+        font_path_bold = bold;
         Clear();
     }
-    [[nodiscard]] const Font& GetFont(FontSizes size) const;
-    void Clear() { fonts.Clear(); }
+    [[nodiscard]] const Font& GetFontNormal(FontSizes size) const;
+    [[nodiscard]] const Font& GetFontBold(FontSizes size) const;
+    void Clear() { fonts_normal.Clear(); fonts_bold.Clear(); }
     ~FontCollection() { Clear(); }
 };
 } //namespace ui

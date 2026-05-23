@@ -11,8 +11,8 @@
 #include "0_engine/u_types.hpp"
 
 namespace pce {
-static const RelativePath FONT_PATH { "font.ttf" };
-static const RelativePath FONT_BOLD_PATH { "TitilliumWeb-SemiBold.ttf" };
+static const RelativePath PATH_FONT_NORMAL { "font.ttf" };
+static const RelativePath PATH_FONT_BOLD { "TitilliumWeb-Bold.ttf" };
 struct Window {
     explicit Window(const uint2 size) {
         constexpr u32 window_flags = SDL_WINDOW_RESIZABLE;
@@ -33,7 +33,7 @@ struct Window {
         window_state.text_engine = TTF_CreateRendererTextEngine(window_state.renderer);
         window_state.screen_size = size;
 
-        Singleton::Get<ui::FontCollection>().SetFontFile(Asset(FONT_PATH));
+        Singleton::Get<ui::FontCollection>().SetFontFile(Asset(PATH_FONT_NORMAL), Asset(PATH_FONT_BOLD));
     }
     ~Window() {
         Singleton::Get<ui::FontCollection>().Clear();

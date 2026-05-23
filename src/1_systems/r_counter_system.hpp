@@ -38,11 +38,11 @@ struct RenderCounterSystem {
         const CounterState& counter_state = Singleton::Get<CounterState>();
         const ui::FontCollection& font_collection = Singleton::Get<ui::FontCollection>();
 
-        constexpr f32 COUNTER_SIZE = 0.8F;
+        constexpr f32 COUNTER_SIZE = 1.2F;
         const f32 width = camera.scale * COUNTER_SIZE;
         const f32 height = camera.scale * COUNTER_SIZE * 0.8F;
-        const int pt = math::Max(6, static_cast<int>(width * 0.17F));
-        const ui::Font& font = font_collection.GetFont(static_cast<ui::FontSizes>(pt));
+        const i32 pt = static_cast<i32>(height * 0.3F);
+        const ui::Font& font = font_collection.GetFontBold(static_cast<ui::FontSizes>(pt));
 
         for (const Counter& counter : counter_state.counters) {
             const float2 world = HexAxialToWorld(counter.axial);
@@ -63,7 +63,7 @@ struct RenderCounterSystem {
                 .w = counter_area.w,
                 .h = counter_area.h,
             };
-            constexpr SDL_Color SHADOW_COLOR = colors::ColorWithAlpha(colors::black, 128);
+            constexpr SDL_Color SHADOW_COLOR = colors::ColorWithAlpha(colors::black, 0.5F);
             (void)SDL_SetRenderDrawColor(window_state.renderer, SHADOW_COLOR.r, SHADOW_COLOR.g, SHADOW_COLOR.b, SHADOW_COLOR.a);
             (void)SDL_RenderFillRect(window_state.renderer, &shadow_area);
 
@@ -96,7 +96,7 @@ struct RenderCounterSystem {
                     i32 text_height = 0;
                     (void)TTF_GetTextSize(counter.label_bottom, &text_width, &text_height);
                     const f32 text_x = math::Round(counter_area.x + (counter_area.w - static_cast<f32>(text_width)) * 0.5F);
-                    const f32 text_y = math::Round(counter_area.y + counter_area.h - static_cast<f32>(text_height) - 2.0F);
+                    const f32 text_y = math::Round(counter_area.y + counter_area.h - static_cast<f32>(text_height) * 0.8F);
                     (void)TTF_DrawRendererText(counter.label_bottom, text_x, text_y);
                 }
                 if (!counter.text_top.empty()) {
@@ -106,7 +106,7 @@ struct RenderCounterSystem {
                     i32 text_height = 0;
                     (void)TTF_GetTextSize(counter.label_top, &text_width, &text_height);
                     const f32 text_x = math::Round(counter_area.x + (counter_area.w - static_cast<f32>(text_width)) * 0.5F);
-                    const f32 text_y = math::Round(counter_area.y - counter_area.h * 0.02F);
+                    const f32 text_y = math::Round(counter_area.y - counter_area.h * 0.12F);
                     (void)TTF_DrawRendererText(counter.label_top, text_x, text_y);
                 }
             }
