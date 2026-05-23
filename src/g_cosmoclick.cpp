@@ -105,27 +105,26 @@ struct GameFrame : Frame, LogLifetimeWithCount<GameFrame> {
     ValueUnit<Money> money { B(info).Component<ValueUnit<Money>>({ Money { 0U }, Unit::cosmos, FontSizes::h1, colors::deep_gold }) };
     ValueUnit<Income> income { B(info).Component<ValueUnit<Income>>({ Income { 0U }, Unit::cosmos_per_second, FontSizes::h4, colors::silver }) };
     Handle<Node> click { B(game).Node(fill).Padding2(uint2 { 0U, 100U }).Alignment(top_center).Build() };
-    Handle<Node> planet {
-        B(click)
-            .Node(PLANET_SIZE + PLANET_BORDER_SIZE)
-            .Padding(PLANET_BORDER_SIZE)
-            .Fill(colors::white)
-            .OnClick([this](const NodeReference) -> void {
-                AnimationSystem::StartAnimation(this->planet_animation);
-                constexpr Money money_per_click { 5U };
-                Singleton::Get<GameState>().money += money_per_click;
-                Singleton::Get<UIFlags>() & UIFlags::money;
-                const int2 mouse_position = Singleton::Get<InputState>().mouse_position;
-                const String text = std::to_string(money_per_click.value);
-                globalData[emitter].particles.items.push_back(Particle {
-                    .position = static_cast<float2>(mouse_position),
-                    .text = std::unique_ptr<TTF_Text, DestroyText> { TTF_CreateText(
-                        Singleton::Get<WindowState>().text_engine, Singleton::Get<FontCollection>().GetFontNormal(static_cast<FontSizes>(Rand(static_cast<u32>(FontSizes::body), static_cast<u32>(FontSizes::title)))).ToSDL(), text.c_str(), text.size()) },
-                    .duration = miliseconds32 { Rand(1000U, 3001U) },
-                });
-            })
-            .Build()
-    };
+    Handle<Node> planet { B(click)
+                              .Node(PLANET_SIZE + PLANET_BORDER_SIZE)
+                              .Padding(PLANET_BORDER_SIZE)
+                              .Fill(colors::white)
+                              .OnClick([this](const NodeReference) -> void {
+                                  AnimationSystem::StartAnimation(this->planet_animation);
+                                  constexpr Money money_per_click { 5U };
+                                  Singleton::Get<GameState>().money += money_per_click;
+                                  Singleton::Get<UIFlags>() & UIFlags::money;
+                                  const int2 mouse_position = Singleton::Get<InputState>().mouse_position;
+                                  const String text = std::to_string(money_per_click.value);
+                                  globalData[emitter].particles.items.push_back(Particle {
+                                      .position = static_cast<float2>(mouse_position),
+                                      .text = std::unique_ptr<TTF_Text, DestroyText> { TTF_CreateText(
+                                          Singleton::Get<WindowState>().text_engine, Singleton::Get<FontCollection>().GetFontNormal(static_cast<FontSizes>(Rand(static_cast<u32>(FontSizes::body), static_cast<u32>(FontSizes::title)))).ToSDL(),
+                                          text.c_str(), text.size()) },
+                                      .duration = miliseconds32 { Rand(1000U, 3001U) },
+                                  });
+                              })
+                              .Build() };
     Handle<Node> planet_intra { B(planet).Node(fill).Fill(colors::dark_navy_blue).Build() };
     Handle<Node> build_menu { B(frame).Node(700U, hug).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::cerulean).Build() };
     NodeComponentPool<BuildingComponent> shop { B(build_menu).Pool<BuildingComponent>() };

@@ -50,7 +50,7 @@ struct ParticleSystem {
         for (ParticleEmitter& emitter : globalData.Get<ParticleEmitter>()) {
             for (Particle& particle : emitter.particles.items | std::views::reverse) {
                 TTF_DrawRendererText(particle.text.get(), particle.position.x, particle.position.y);
-                particle.position += emitter.velocity * delta_time;
+                particle.position += emitter.velocity * float2{delta_time};
                 if (current_ms - particle.start > particle.duration) { emitter.particles.SwapBackErase(particle); }
             }
             emitter.particles.ApplyErase();

@@ -74,34 +74,41 @@ struct Hex {
     Hex(float2 position, SDL_Color color) : position(position), color(color) { }
 };
 
-struct HexMapState {
-    u32 width { };
-    u32 height { };
-    List<Hex> hexes { };
+// indexable with axial coordiantes
+template<class T> struct HexList {
+    uint2 map_size;
+    List<T> data { };
 
-    [[nodiscard]] constexpr u32 AxialToIndex(const int2 axial) const { return axial.x + axial.y / 2 + axial.y * width; }
+    [[nodiscard]] constexpr u32 AxialToIndex(const int2 axial) const { return axial.x + axial.y / 2 + axial.y * map_size.x; }
     [[nodiscard]] constexpr int2 IndexToAxial(const u32 index) const {
-        const i32 y = index / width;
-        return { static_cast<i32>(index % width) - y / 2, y };
+        const i32 y = index / map_size.x;
+        return { static_cast<i32>(index % map_size.x) - y / 2, y };
     }
     [[nodiscard]] constexpr b8 Contains(const int2 axial) const {
         const u32 y = axial.y;
         const u32 x = axial.x + axial.y / 2;
-        return x < width && y < height;
+        return x < map_size.x && y < map_size.y;
     }
-    constexpr Hex& operator[](int2 axial) { return hexes[AxialToIndex(axial)]; }
+    [[nodiscard]] constexpr T& operator[](int2 axial) { return data[AxialToIndex(axial)]; }
+    [[nodiscard]] constexpr u32 Size() const { return map_size.x * map_size.y; }
 
-    void AddMap(uint2 map_size) {
-        width = map_size.x;
-        height = map_size.y;
-        for (u32 i = 0; i < map_size.x * map_size.y; i++) { hexes.push_back(Hex { HexAxialToWorld(IndexToAxial(i)), colors::indigo }); }
+    void SetSize(const uint2 new_size) {
+        data.clear();
+        map_size = new_size;
+        data.reserve(Size());
+        for (u32 i = 0; i < Size(); i++) { data.push_back(Hex { HexAxialToWorld(IndexToAxial(i)), colors::indigo }); }
     }
+};
+
+struct HexMapState {
+    HexList<Hex> hexes { };
+    List<SDL_Vertex> vertecies { };
 
     void GenerateTerrain(u32 seed = 0) {
         constexpr f32 SCALE = 0.04F;
         const f32 seed_f = static_cast<f32>(seed);
-        for (u32 i = 0; i < hexes.size(); i++) {
-            const float2 pos = hexes[i].position;
+        for (u32 i = 0; i < hexes.Size(); i++) {
+            const float2 pos = hexes.data[i].position;
             const f32 h = (pce::noise::Fbm(pos.x * SCALE + seed_f, pos.y * SCALE + seed_f) + 1.0F) * 0.5F;
             // clang-format off
             SDL_Color color;
@@ -113,7 +120,7 @@ struct HexMapState {
             else if (h < 0.85F) color = colors::gray;                          // mountain
             else                color = colors::white;                          // snow
             // clang-format on
-            hexes[i].color = color;
+            hexes.data[i].color = color;
         }
     }
 };
@@ -122,7 +129,7 @@ inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int
     SDL_FPoint center { .x = static_cast<f32>(hex_screen.x), .y = static_cast<f32>(hex_screen.y) };
     Array<SDL_FPoint, HEX_CORNERS> points { };
     for (u32 i = 0; i < HEX_CORNERS; i++) {
-        const float2 vertex = float2 { hex_screen } + HEX_ANGLE[i] * hex_size;
+        const float2 vertex = float2 { hex_screen } + HEX_ANGLE[i] * float2 { hex_size };
         points[i] = SDL_FPoint { .x = vertex.x, .y = vertex.y };
     }
     for (u32 i = 0; i < HEX_CORNERS; i++) {
@@ -135,29 +142,19 @@ inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int
 }
 
 struct RenderHexSystem {
-    List<SDL_Vertex> vertecies;
     void operator()() {
         SDL_Renderer* sdl_renderer = Singleton::Get<WindowState>().renderer;
-        const HexMapState& hex_map = Singleton::Get<HexMapState>();
+        HexMapState& hex_map = Singleton::Get<HexMapState>();
         const CameraState& camera = Singleton::Get<CameraState>();
-        const InputState& input_state = Singleton::Get<InputState>();
 
-        vertecies.clear();
-        vertecies.reserve(HEX_CORNERS * hex_map.hexes.size());
-
-        const float2 mouse_world = camera.ScreenToWorld(input_state.mouse_position);
-        const int2 mouse_axial = HexWorldToAxial(mouse_world);
-        if (hex_map.Contains(mouse_axial)) {
-            const int2 mouse_hex_center = camera.WorldToScreen(HexAxialToWorld(mouse_axial));
-            HexAppend(vertecies, camera.scale, mouse_hex_center, colors::ToSDL_FColor(colors::teal));
-        }
-
-        for (const Hex& hex : hex_map.hexes) {
+        for (const Hex& hex : hex_map.hexes.data) {
             const int2 pixel = camera.WorldToScreen(hex.position);
-            HexAppend(vertecies, camera.scale * 0.90F, pixel, colors::ToSDL_FColor(hex.color));
+            HexAppend(hex_map.vertecies, camera.scale * 0.90F, pixel, colors::ToSDL_FColor(hex.color));
         }
 
-        SDL_RenderGeometry(sdl_renderer, nullptr, vertecies.data.data(), static_cast<int>(vertecies.size()), nullptr, 0);
+        SDL_RenderGeometry(sdl_renderer, nullptr, hex_map.vertecies.data.data(), static_cast<int>(hex_map.vertecies.size()), nullptr, 0);
+        hex_map.vertecies.clear();
+        hex_map.vertecies.reserve(HEX_CORNERS * hex_map.hexes.Size());
     }
 };
 

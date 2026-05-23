@@ -19,37 +19,65 @@ namespace pcg {
 using namespace pce;
 using namespace pce::ui;
 
+struct Units {
+
+};
+
+struct HexData {
+    f32 terrain;
+};
+struct GHexState {
+    Optional<int2> axial_selected;
+    HexList<HexData> hexes;
+};
+
+struct GHexSystem {
+    void operator()() const {
+        const CameraState& camera = Singleton::Get<CameraState>();
+        const InputState& input_state = Singleton::Get<InputState>();
+        HexMapState& hex_map = Singleton::Get<HexMapState>();
+        GHexState& hex_state = Singleton::Get<GHexState>();
+
+        const int2 mouse_axial = HexWorldToAxial(camera.ScreenToWorld(input_state.mouse_position));
+        if (hex_map.hexes.Contains(mouse_axial)) {
+            // draw mouse
+            HexAppend(hex_map.vertecies, camera.scale, camera.WorldToScreen(HexAxialToWorld(mouse_axial)), colors::ToSDL_FColor(colors::teal));
+            if (input_state.left_mouse_down) { hex_state.axial_selected = mouse_axial; }
+            if (hex_state.axial_selected) { HexAppend(hex_map.vertecies, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.axial_selected.value())), colors::ToSDL_FColor(colors::violet)); }
+        }
+    }
+};
+
 void arcade::RunHex() {
     Singleton::Get<WindowState>().clear_color = colors::light_sky_blue;
 
     HexMapState& hex_map = Singleton::Get<HexMapState>();
-    hex_map.AddMap({ 20, 6 });
+    hex_map.hexes.SetSize({ 20, 6 });
     hex_map.GenerateTerrain(3489);
 
     CameraState& camera = Singleton::Get<CameraState>();
     camera.map_world_min = { 0.0F, 0.0F };
-    camera.map_world_max = HexAxialToWorld(int2 { static_cast<i32>(hex_map.width) - 1, static_cast<i32>(hex_map.height) - 1 });
+    camera.map_world_max = HexAxialToWorld(static_cast<int2>(hex_map.hexes.map_size - uint2 {1, 1}));
 
     CounterState& counters = Singleton::Get<CounterState>();
 
     // GERMAN (feldgrau) — advancing right along road r=2
-    counters.counters.EmplaceBack(Counter { .axial = {  1, 2 }, .colors = {colors::dark_gray, colors::deep_gold},                          .text_bottom = "4.PzD", .text_top = "HQ"  });
-    counters.counters.EmplaceBack(Counter { .axial = {  3, 2 }, .colors = {colors::dark_gray, colors::steel_gray, colors::dark_gray},       .text_bottom = "5-5",   .text_top = "xxx" });
-    counters.counters.EmplaceBack(Counter { .axial = {  4, 1 }, .colors = {colors::dark_gray, colors::steel_gray},                         .text_bottom = "4-4",   .text_top = "II"  });
-    counters.counters.EmplaceBack(Counter { .axial = {  4, 3 }, .colors = {colors::dark_gray, colors::steel_gray},                         .text_bottom = "8-3",   .text_top = "x"   });
-    counters.counters.EmplaceBack(Counter { .axial = {  5, 2 }, .colors = {colors::maroon},                                                .text_bottom = "ART",   .text_top = "I"   });
-    counters.counters.EmplaceBack(Counter { .axial = {  6, 1 }, .colors = {colors::dark_gray},                                             .text_bottom = "5-4",   .text_top = "I"   });
-    counters.counters.EmplaceBack(Counter { .axial = {  6, 2 }, .colors = {colors::dark_gray, colors::steel_gray},                         .text_bottom = "6-4",   .text_top = "II"  });
+    counters.counters.EmplaceBack(Counter { .axial = { 1, 2 }, .colors = { colors::dark_gray, colors::deep_gold }, .text_bottom = "4.PzD", .text_top = "HQ" });
+    counters.counters.EmplaceBack(Counter { .axial = { 3, 2 }, .colors = { colors::dark_gray, colors::steel_gray, colors::dark_gray }, .text_bottom = "5-5", .text_top = "xxx" });
+    counters.counters.EmplaceBack(Counter { .axial = { 4, 1 }, .colors = { colors::dark_gray, colors::steel_gray }, .text_bottom = "4-4", .text_top = "II" });
+    counters.counters.EmplaceBack(Counter { .axial = { 4, 3 }, .colors = { colors::dark_gray, colors::steel_gray }, .text_bottom = "8-3", .text_top = "x" });
+    counters.counters.EmplaceBack(Counter { .axial = { 5, 2 }, .colors = { colors::maroon }, .text_bottom = "ART", .text_top = "I" });
+    counters.counters.EmplaceBack(Counter { .axial = { 6, 1 }, .colors = { colors::dark_gray }, .text_bottom = "5-4", .text_top = "I" });
+    counters.counters.EmplaceBack(Counter { .axial = { 6, 2 }, .colors = { colors::dark_gray, colors::steel_gray }, .text_bottom = "6-4", .text_top = "II" });
 
     // ALLIED (olive drab) — pulling back along road r=3
-    counters.counters.EmplaceBack(Counter { .axial = { 11, 3 }, .colors = {colors::olive, colors::dark_dark_brown},                        .text_bottom = "5-6",   .text_top = "II"  });
-    counters.counters.EmplaceBack(Counter { .axial = { 11, 2 }, .colors = {colors::olive},                                                 .text_bottom = "4-5",   .text_top = "I"   });
-    counters.counters.EmplaceBack(Counter { .axial = { 13, 3 }, .colors = {colors::brown},                                                 .text_bottom = "ART",   .text_top = "I"   });
-    counters.counters.EmplaceBack(Counter { .axial = { 14, 4 }, .colors = {colors::olive, colors::dark_gray},                              .text_bottom = "6-4",   .text_top = "x"   });
-    counters.counters.EmplaceBack(Counter { .axial = { 14, 2 }, .colors = {colors::olive, colors::dark_dark_brown},                        .text_bottom = "5-7",   .text_top = "II"  });
-    counters.counters.EmplaceBack(Counter { .axial = { 15, 3 }, .colors = {colors::olive, colors::dark_dark_brown, colors::olive},          .text_bottom = "4-6",   .text_top = "xxx" });
-    counters.counters.EmplaceBack(Counter { .axial = { 17, 3 }, .colors = {colors::olive, colors::deep_gold},                              .text_bottom = "7.Army", .text_top = "HQ xxxx" });
-
+    counters.counters.EmplaceBack(Counter { .axial = { 11, 3 }, .colors = { colors::olive, colors::dark_dark_brown }, .text_bottom = "5-6", .text_top = "II" });
+    counters.counters.EmplaceBack(Counter { .axial = { 11, 2 }, .colors = { colors::olive }, .text_bottom = "4-5", .text_top = "I" });
+    counters.counters.EmplaceBack(Counter { .axial = { 13, 3 }, .colors = { colors::brown }, .text_bottom = "ART", .text_top = "I" });
+    counters.counters.EmplaceBack(Counter { .axial = { 14, 4 }, .colors = { colors::olive, colors::dark_gray }, .text_bottom = "6-4", .text_top = "x" });
+    counters.counters.EmplaceBack(Counter { .axial = { 14, 2 }, .colors = { colors::olive, colors::dark_dark_brown }, .text_bottom = "5-7", .text_top = "II" });
+    counters.counters.EmplaceBack(Counter { .axial = { 15, 3 }, .colors = { colors::olive, colors::dark_dark_brown, colors::olive }, .text_bottom = "4-6", .text_top = "xxx" });
+    counters.counters.EmplaceBack(Counter { .axial = { 17, 3 }, .colors = { colors::olive, colors::deep_gold }, .text_bottom = "7.Army", .text_top = "HQ xxxx" });
 
     // Systems
     Orchestra orchestra { };
@@ -58,6 +86,8 @@ void arcade::RunHex() {
 
     orchestra.Add<InputSystem>();
     orchestra.Add<InputNodeSystem>();
+
+    orchestra.Add<GHexSystem>();
 
     orchestra.Add<AnimationSystem>();
     orchestra.Add<ParticleSystem>();

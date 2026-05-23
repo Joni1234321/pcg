@@ -59,9 +59,7 @@ struct RenderCounterSystem {
             for (i32 i = static_cast<i32>(counter.colors.size()) - 1; i >= 0; i--) {
                 SDL_Color color_background = counter.colors[static_cast<u32>(i)];
 
-                if (color_background.a == 0) {
-                    continue;
-                }
+                if (color_background.a == 0) { continue; }
 
                 constexpr f32 STACK_OFFSET = 1.0F / 10.0F;
                 SDL_FRect area = area_counter;

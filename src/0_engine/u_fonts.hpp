@@ -40,7 +40,10 @@ public:
     }
     [[nodiscard]] const Font& GetFontNormal(FontSizes size) const;
     [[nodiscard]] const Font& GetFontBold(FontSizes size) const;
-    void Clear() { fonts_normal.Clear(); fonts_bold.Clear(); }
+    void Clear() {
+        fonts_normal.Clear();
+        fonts_bold.Clear();
+    }
     ~FontCollection() { Clear(); }
 };
 } //namespace ui

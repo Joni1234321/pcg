@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <bitset>
 #include <format>
 #include <functional>
@@ -25,6 +26,7 @@ template <typename T> using Stack = std::stack<T>;
 template <class K, class V> using UnorderedMap = std::unordered_map<K, V>;
 template <class T, class C = std::less<T>> using Set = std::set<T, C>;
 template <class T, class C = std::less<T>> using Multiset = std::multiset<T, C>;
+template <class T> using Optional = std::optional<T>;
 template <typename T, typename D> class UniquePointer {
     T* pointer;
     [[no_unique_address]] D destructor { };
