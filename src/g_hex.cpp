@@ -1,6 +1,7 @@
 ﻿#include <algorithm>
 #include <cmath>
 #include <format>
+#include <iterator>
 #include <optional>
 #include <queue>
 #include <ranges>
@@ -75,7 +76,7 @@ struct HexState {
     List<SDL_Vertex> verts { };
 };
 
-TerrainType FloatToTerrain(const f32 terrain) {
+[[nodiscard]] constexpr TerrainType FloatToTerrain(const f32 terrain) {
     if (terrain < 0.25F) { return TerrainType::TERRAIN_DEEP_OCEAN; }
     if (terrain < 0.38F) { return TerrainType::TERRAIN_OCEAN; }
     if (terrain < 0.43F) { return TerrainType::TERRAIN_BEACH; }
@@ -84,7 +85,7 @@ TerrainType FloatToTerrain(const f32 terrain) {
     if (terrain < 0.85F) { return TerrainType::TERRAIN_MOUNTAIN; }
     return TerrainType::TERRAIN_SNOW;
 }
-Color TerrainToColor(const TerrainType terrain) {
+[[nodiscard]] constexpr Color TerrainToColor(const TerrainType terrain) {
     switch (terrain) {
         case TerrainType::TERRAIN_DEEP_OCEAN: return Color { 20U, 60U, 120U };
         case TerrainType::TERRAIN_OCEAN: return Color { 50U, 100U, 180U };
@@ -93,6 +94,18 @@ Color TerrainToColor(const TerrainType terrain) {
         case TerrainType::TERRAIN_FOREST: return colors::FOREST_GREEN;
         case TerrainType::TERRAIN_MOUNTAIN: return colors::GRAY;
         case TerrainType::TERRAIN_SNOW: return colors::WHITE;
+    }
+    __builtin_unreachable();
+}
+[[nodiscard]] constexpr u32 TerrainToMovementCost(const TerrainType terrain) {
+    switch (terrain) {
+        case TerrainType::TERRAIN_DEEP_OCEAN: return 255U;
+        case TerrainType::TERRAIN_OCEAN:      return 255U;
+        case TerrainType::TERRAIN_BEACH:      return 2U;
+        case TerrainType::TERRAIN_GRASS:      return 1U;
+        case TerrainType::TERRAIN_FOREST:     return 3U;
+        case TerrainType::TERRAIN_MOUNTAIN:   return 5U;
+        case TerrainType::TERRAIN_SNOW:       return 4U;
     }
     __builtin_unreachable();
 }
@@ -252,7 +265,7 @@ struct HexSystem {
 
             // path finding
             struct CostAndAxial { u32 cost; int2 axial; };
-            List<CostAndAxial> axial_path;
+            List<CostAndAxial> axial_and_cost_with_path;
             auto cmp = [](const CostAndAxial& a, const CostAndAxial& b) -> b8 { return a.cost > b.cost; };
             std::priority_queue<CostAndAxial, std::vector<CostAndAxial>, decltype(cmp)> frontier(cmp);
             std::unordered_map<int2, int2> came_from;
@@ -280,7 +293,7 @@ struct HexSystem {
                     const int2 axial_next = current.axial + axial_neighbour_offset;
                     if (!hex_state.hex_map.Contains(axial_next) || is_enemy(axial_next)) { continue; }
 
-                    u32 cost = 1;
+                    const u32 cost = TerrainToMovementCost(hex_state.hex_map[axial_next].terrain);
                     const u32 new_cost = cost_at_axial[current.axial] + cost;
                     if (!cost_at_axial.contains(axial_next) || new_cost < cost_at_axial[axial_next]) {
                         cost_at_axial[axial_next] = new_cost;
@@ -290,12 +303,13 @@ struct HexSystem {
                 }
             }
             if (came_from.contains(axial_hover)) {
-                for (int2 axial = axial_hover; axial != axial_start; axial = came_from[axial]) { axial_path.EmplaceBack( CostAndAxial { .cost = cost_at_axial[axial], .axial = axial }); }
-                std::ranges::reverse(axial_path);
+                for (int2 axial = axial_hover; axial != axial_start; axial = came_from[axial]) { axial_and_cost_with_path.EmplaceBack( CostAndAxial { .cost = cost_at_axial[axial], .axial = axial }); }
+                std::ranges::reverse(axial_and_cost_with_path);
             }
 
+            // draw move icons
             const u32 distance_reach = std::ranges::min(units_selected | std::views::transform(&Unit::move));
-            for (CostAndAxial cost_and_axial : axial_path) {
+            for (CostAndAxial cost_and_axial : axial_and_cost_with_path) {
                 const float2 world = HexAxialToWorld(cost_and_axial.axial);
                 const int2 screen = camera.WorldToScreen(world);
                 const float2 screen_f = static_cast<float2>(screen);
@@ -315,12 +329,15 @@ struct HexSystem {
 
             // move
             if (input_state.right_mouse_down) {
-                const CostAndAxial cost_and_axial_end = axial_path[distance_reach];
-                for (Unit& unit : units_selected) {
-                    unit.axial = cost_and_axial_end.axial;
-                    unit.move -= cost_and_axial_end.cost;
+                const auto it = std::ranges::upper_bound(axial_and_cost_with_path, distance_reach, std::less{}, &CostAndAxial::cost);
+                if (it != axial_and_cost_with_path.begin()) {
+                    const CostAndAxial& cost_and_axial_end = *std::prev(it);
+                    for (Unit& unit : units_selected) {
+                        unit.axial = cost_and_axial_end.axial;
+                        unit.move -= cost_and_axial_end.cost;
+                    }
+                    hex_state.pseudo_states.axial_select = cost_and_axial_end.axial;
                 }
-                hex_state.pseudo_states.axial_select = cost_and_axial_end.axial;
             }
         }
 
