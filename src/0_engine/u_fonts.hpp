@@ -46,4 +46,4 @@ public:
     }
     ~FontCollection() { Clear(); }
 };
-} //namespace ui
+} // namespace pce::ui

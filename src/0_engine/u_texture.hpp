@@ -47,15 +47,18 @@ struct AABBF {
     float2 size;
 
     [[nodiscard]] static constexpr AABBF FromPoint(const float2 point, const float2 size) { return AABBF { .point = point, .size = size }; }
-    [[nodiscard]] static constexpr AABBF FromCenter(const float2 center, const float2 size) { return AABBF { .point = center - size * float2 { 0.5F } , .size = size }; }
-    [[nodiscard]] constexpr operator const SDL_FRect* () const { return reinterpret_cast<const SDL_FRect*>(this); }
+    [[nodiscard]] static constexpr AABBF FromCenter(const float2 center, const float2 size) { return AABBF { .point = center - size * float2 { 0.5F }, .size = size }; }
+    [[nodiscard]] constexpr operator const SDL_FRect*() const { return reinterpret_cast<const SDL_FRect*>(this); }
 };
 struct ColorF {
     f32 r;
     f32 g;
     f32 b;
     f32 a;
-    [[nodiscard]] constexpr operator  SDL_FColor () const { return *reinterpret_cast<const SDL_FColor*>(this); }
+
+    constexpr ColorF() = default;
+    constexpr ColorF(f32 r, f32 g, f32 b, f32 a = 1.0F) : r(r), g(g), b(b), a(a) { }
+    [[nodiscard]] constexpr operator SDL_FColor() const { return *reinterpret_cast<const SDL_FColor*>(this); }
 };
 
 struct Color {
@@ -64,8 +67,10 @@ struct Color {
     u8 b;
     u8 a;
 
+    constexpr Color() = default;
+    constexpr Color(u8 r, u8 g, u8 b, u8 a = 255U) : r(r), g(g), b(b), a(a) { }
+    [[nodiscard]] constexpr operator SDL_Color() const { return *reinterpret_cast<const SDL_Color*>(this); }
     constexpr static f32 TO_FCOLOR = 1.0F / 255.0F;
-    [[nodiscard]] constexpr operator SDL_Color () const { return *reinterpret_cast<const SDL_Color*>(this); }
-    [[nodiscard]] constexpr operator ColorF () const { return ColorF{ r * TO_FCOLOR, g * TO_FCOLOR, b * TO_FCOLOR, a * TO_FCOLOR }; }
+    [[nodiscard]] constexpr operator ColorF() const { return ColorF { r * TO_FCOLOR, g * TO_FCOLOR, b * TO_FCOLOR, a * TO_FCOLOR }; }
 };
 } // namespace pce

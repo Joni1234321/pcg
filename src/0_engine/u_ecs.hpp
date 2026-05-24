@@ -76,7 +76,7 @@ static constexpr f32 MS_TO_SECONDS = 1.0F / 1'000.0F;
 static constexpr f32 SECONDS_TO_NS = 1'000'000'000.0F;
 static constexpr f32 NS_TO_SECONDS = 1.0F / 1'000'000'000.0F;
 
-} // namespace pcg
+} // namespace pce
 
 #include "format"
 template <typename T, typename Parameter, template <typename> class... Skills> struct std::formatter<pce::StrongType<T, Parameter, Skills...>> : std::formatter<T> {

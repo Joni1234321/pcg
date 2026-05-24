@@ -236,7 +236,6 @@ template <typename T, typename H = T> struct HandleList {
     }
     [[nodiscard]] constexpr b8 ValidHandle(const Handle<H> handle) const noexcept { return handle.id - offset_handle.id < size(); }
     [[nodiscard]] constexpr Handle<H> FirstHandle() const noexcept { return offset_handle; }
-
 };
 template <typename K, typename V> class FlatMap {
     List<K> keys { };

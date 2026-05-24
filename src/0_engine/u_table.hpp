@@ -114,11 +114,11 @@ template <typename T> static void PrintListStats(Logger& logger, const List<T>& 
     const f64 tot = std::accumulate(list.begin(), list.end(), 0.0);
     const f32 avg = tot / static_cast<T>(len);
     LoggerTable table("List", 1U);
-    table.AddColumn("Length", List { { len } });
-    table.AddColumn("Total", List { { tot } });
-    table.AddColumn("Average", List { { avg } });
+    table.AddColumn("Length", List { std::initializer_list{ len } });
+    table.AddColumn("Total", List { std::initializer_list{ tot } });
+    table.AddColumn("Average", List { std::initializer_list{ avg } });
     table.AddColumn("Max", List<T> { { max } });
     table.AddColumn("Min", List<T> { { min } });
     table.Print(logger, LoggerTable::COLOR_DISABLED);
 }
-}
+} // namespace pce

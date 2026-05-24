@@ -57,7 +57,7 @@ AllowShortLambdasOnASingleLine: All
 AllowShortEnumsOnASingleLine: true
 AllowShortCompoundRequirementOnASingleLine: true
 CompactNamespaces: true
-FixNamespaceComments: false
+FixNamespaceComments: true
 
 # --- return type / template breaks ------------------------------------------
 BreakAfterReturnType: Automatic

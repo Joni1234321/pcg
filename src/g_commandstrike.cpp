@@ -1,4 +1,4 @@
-#include "g_arcade.hpp"
+﻿#include "g_arcade.hpp"
 
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
@@ -33,13 +33,13 @@ struct GameFrame : Frame {
     Handle<Node> root { B(frame).Node(fill).Gap(10U).Padding(10U).Build() };
 
     Handle<Node> actions { B(root).Node(349U, fill).Build() };
-    Handle<Node> resources { B(actions).Node(fill, hug).Fill(colors::soft_blue).Build() };
-    Handle<Node> build { B(actions).Node(fill).Fill(colors::soft_blue).Build() };
-    Handle<Node> upgrades { B(actions).Node(349U, fill).Fill(colors::soft_blue).Build() };
+    Handle<Node> resources { B(actions).Node(fill, hug).Fill(colors::SOFT_BLUE).Build() };
+    Handle<Node> build { B(actions).Node(fill).Fill(colors::SOFT_BLUE).Build() };
+    Handle<Node> upgrades { B(actions).Node(349U, fill).Fill(colors::SOFT_BLUE).Build() };
 
     Handle<Node> map { B(root).Node(fill).Build() };
-    Handle<Node> sky { B(map).Node(fill).Fill(colors::sky_cyan).Build() };
-    Handle<Node> ground { B(map).Node(fill, 600U).Fill(colors::forest_green).Build() };
+    Handle<Node> sky { B(map).Node(fill).Fill(colors::SKY_CYAN).Build() };
+    Handle<Node> ground { B(map).Node(fill, 600U).Fill(colors::FOREST_GREEN).Build() };
 };
 } // namespace pcg::commandstrike
 
@@ -48,7 +48,7 @@ void pcg::arcade::RunCommandStrike() {
     using namespace commandstrike;
 
     // data
-    Singleton::Get<WindowState>().clear_color = colors::faded_green;
+    Singleton::Get<WindowState>().clear_color = colors::FADED_GREEN;
 
     // systems
     Orchestra orchestra { };

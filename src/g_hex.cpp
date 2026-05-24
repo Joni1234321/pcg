@@ -1,4 +1,4 @@
-#include <format>
+﻿#include <format>
 #include <optional>
 
 #include "0_engine/g_globals.hpp"
@@ -6,6 +6,7 @@
 #include "0_engine/u_algorithm.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
+#include "0_engine/u_fonts.hpp"
 #include "0_engine/u_texture.hpp"
 #include "0_engine/u_util.hpp"
 #include "1_systems/i_input_system.hpp"
@@ -34,8 +35,9 @@ struct HexDrawInfo {
     float2 world { };
     Color color { };
 };
+enum class TerrainType : u8 { TERRAIN_DEEP_OCEAN, TERRAIN_OCEAN, TERRAIN_BEACH, TERRAIN_GRASS, TERRAIN_FOREST, TERRAIN_MOUNTAIN, TERRAIN_SNOW };
 struct Hex {
-    f32 terrain;
+    TerrainType terrain;
 };
 
 struct PseudoStates {
@@ -56,6 +58,27 @@ struct HexState {
     List<SDL_Vertex> vertecies { };
 };
 
+TerrainType FloatToTerrain(const f32 terrain) {
+    if (terrain < 0.25F) { return TerrainType::TERRAIN_DEEP_OCEAN; }
+    if (terrain < 0.38F) { return TerrainType::TERRAIN_OCEAN; }
+    if (terrain < 0.43F) { return TerrainType::TERRAIN_BEACH; }
+    if (terrain < 0.60F) { return TerrainType::TERRAIN_GRASS; }
+    if (terrain < 0.72F) { return TerrainType::TERRAIN_FOREST; }
+    if (terrain < 0.85F) { return TerrainType::TERRAIN_MOUNTAIN; }
+    return TerrainType::TERRAIN_SNOW;
+}
+Color TerrainToColor(const TerrainType terrain) {
+    switch (terrain) {
+        case TerrainType::TERRAIN_DEEP_OCEAN:  return Color { 20U, 60U, 120U };
+        case TerrainType::TERRAIN_OCEAN:         return Color { 50U, 100U, 180U };
+        case TerrainType::TERRAIN_BEACH:         return colors::KHAKI;
+        case TerrainType::TERRAIN_GRASS:         return Color { 100U, 190U, 80U };
+        case TerrainType::TERRAIN_FOREST:        return colors::FOREST_GREEN;
+        case TerrainType::TERRAIN_MOUNTAIN:      return colors::GRAY;
+        case TerrainType::TERRAIN_SNOW:          return colors::WHITE;
+    }
+    __builtin_unreachable();
+}
 HexList<Hex> GenerateTerrain(const uint2 map_size, const u32 seed) {
     HexList<Hex> hexes;
     hexes.Resize(map_size);
@@ -64,31 +87,11 @@ HexList<Hex> GenerateTerrain(const uint2 map_size, const u32 seed) {
     for (u32 i = 0; i < hexes.Size(); i++) {
         const int2 axial = hexes.IndexToAxial(i);
         const float2 world = HexAxialToWorld(axial);
-        hexes[axial].terrain = (noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f) + 1.0F) * 0.5F;
+        hexes[axial].terrain = FloatToTerrain((noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f) + 1.0F) * 0.5F);
     }
     return hexes;
 }
-Color TerrainToColor(float terrain) {
-    if (terrain < 0.25F) {
-        return Color { 20U, 60U, 120U, 255U }; // deep ocean
-    }
-    if (terrain < 0.38F) {
-        return Color { 50U, 100U, 180U, 255U }; // ocean
-    }
-    if (terrain < 0.43F) {
-        return colors::khaki; // beach
-    }
-    if (terrain < 0.60F) {
-        return Color { 100U, 190U, 80U, 255U }; // grass
-    }
-    if (terrain < 0.72F) {
-        return colors::forest_green; // forest
-    }
-    if (terrain < 0.85F) {
-        return colors::gray; // mountain
-    }
-    return colors::white; // snow
-}
+
 HexList<HexDrawInfo> HexToHexDraw(const HexList<Hex>& hexes) {
     HexList<HexDrawInfo> result { };
     result.Resize(hexes.map_size);
@@ -134,8 +137,8 @@ struct HexSystem {
             if (counter_handle.IsValid()) { hex_state.counters[counter_handle.GetHandle()].selected = false; }
         }
 
-        if (hex_state.pseudo_states.axial_hover_now) { HexAppend(hex_state.vertecies, camera.scale, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover_now.value())), colors::hex_hover); }
-        if (hex_state.pseudo_states.axial_select_now) { HexAppend(hex_state.vertecies, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select_now.value())), colors::hex_select); }
+        if (hex_state.pseudo_states.axial_hover_now) { HexAppend(hex_state.vertecies, camera.scale, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover_now.value())), colors::HEX_HOVER); }
+        if (hex_state.pseudo_states.axial_select_now) { HexAppend(hex_state.vertecies, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select_now.value())), colors::HEX_SELECT); }
 
         // render map
         for (const HexDrawInfo& hex : hex_state.hex_draw.data) { HexAppend(hex_state.vertecies, camera.scale * 0.90F, camera.WorldToScreen(hex.world), hex.color); }
@@ -157,7 +160,7 @@ struct HexSystem {
             if (counter_handle_opt.IsValid()) {
                 const Handle counter_handle = counter_handle_opt.GetHandle();
 
-                constexpr Color COLOR{ colors::ruby_red };
+                constexpr Color COLOR { colors::RUBY_RED };
                 (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR.r, COLOR.g, COLOR.b, COLOR.a);
 
                 const int2 axial_end = hex_state.pseudo_states.axial_hover_now.value();
@@ -167,16 +170,14 @@ struct HexSystem {
                 const f32 distance_inv = 1.0F / static_cast<f32>(distance);
                 List<int2> axials;
 
-                for (u32 i = 1; i <= distance; ++i) {
-                    axials.EmplaceBack(HexCubeToAxial(HexCubeRound(HexCubeLerp(cube_start, cube_end, i * distance_inv))));
-                }
+                for (u32 i = 1; i <= distance; ++i) { axials.EmplaceBack(HexCubeToAxial(HexCubeRound(HexCubeLerp(cube_start, cube_end, i * distance_inv)))); }
                 for (u32 i = 0; i < distance; ++i) {
                     const int2& axial = axials[i];
                     const float2 world = HexAxialToWorld(axial);
                     const int2 screen = camera.WorldToScreen(world);
                     const float2 screen_f = static_cast<float2>(screen);
 
-                    HexAppend(hex_state.vertecies, camera.scale * 0.25F, screen, colors::ruby_red);
+                    HexAppend(hex_state.vertecies, camera.scale * 0.25F, screen, colors::RUBY_RED);
                     (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.vertecies.data.data(), static_cast<i32>(hex_state.vertecies.size()), nullptr, 0);
                     hex_state.vertecies.clear();
 
@@ -196,7 +197,6 @@ struct HexSystem {
                     hex_state.pseudo_states.axial_select_now = hex_state.pseudo_states.axial_select_enter = axial_end;
                 }
             }
-
         }
 
         hex_state.label_pool.Clear();
@@ -205,7 +205,7 @@ struct HexSystem {
 } // namespace
 
 void arcade::RunHex() {
-    Singleton::Get<WindowState>().clear_color = colors::light_sky_blue;
+    Singleton::Get<WindowState>().clear_color = colors::LIGHT_SKY_BLUE;
 
     HexState& hex_state = Singleton::Get<HexState>();
     hex_state.hex_map = GenerateTerrain({ 20, 6 }, 3489);
@@ -216,22 +216,22 @@ void arcade::RunHex() {
     camera.map_world_max = HexAxialToWorld(static_cast<int2>(hex_state.hex_map.map_size - uint2 { 1, 1 }));
 
     // GERMAN (feldgrau) — advancing right along road r=2
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 1, 2 }, .colors = { colors::dark_gray, colors::deep_gold }, .text_bottom = "4.PzD", .text_top = "HQ" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 3, 2 }, .colors = { colors::dark_gray, colors::steel_gray, colors::dark_gray }, .text_bottom = "5-5", .text_top = "xxx" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 4, 1 }, .colors = { colors::dark_gray, colors::steel_gray }, .text_bottom = "4-4", .text_top = "II" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 4, 3 }, .colors = { colors::dark_gray, colors::steel_gray }, .text_bottom = "8-3", .text_top = "x" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 5, 2 }, .colors = { colors::maroon }, .text_bottom = "ART", .text_top = "I" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 6, 1 }, .colors = { colors::dark_gray }, .text_bottom = "5-4", .text_top = "I" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 6, 2 }, .colors = { colors::dark_gray, colors::steel_gray }, .text_bottom = "6-4", .text_top = "II" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 1, 2 }, .colors = { colors::DARK_GRAY, colors::DEEP_GOLD }, .text_bottom = "4.PzD", .text_top = "HQ" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 3, 2 }, .colors = { colors::DARK_GRAY, colors::STEEL_GRAY, colors::DARK_GRAY }, .text_bottom = "5-5", .text_top = "xxx" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 4, 1 }, .colors = { colors::DARK_GRAY, colors::STEEL_GRAY }, .text_bottom = "4-4", .text_top = "II" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 4, 3 }, .colors = { colors::DARK_GRAY, colors::STEEL_GRAY }, .text_bottom = "8-3", .text_top = "x" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 5, 2 }, .colors = { colors::MAROON }, .text_bottom = "ART", .text_top = "I" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 6, 1 }, .colors = { colors::DARK_GRAY }, .text_bottom = "5-4", .text_top = "I" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 6, 2 }, .colors = { colors::DARK_GRAY, colors::STEEL_GRAY }, .text_bottom = "6-4", .text_top = "II" });
 
     // ALLIED (olive drab) — pulling back along road r=3
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 11, 3 }, .colors = { colors::olive, colors::dark_dark_brown }, .text_bottom = "5-6", .text_top = "II" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 11, 2 }, .colors = { colors::olive }, .text_bottom = "4-5", .text_top = "I" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 13, 3 }, .colors = { colors::brown }, .text_bottom = "ART", .text_top = "I" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 14, 4 }, .colors = { colors::olive, colors::dark_gray }, .text_bottom = "6-4", .text_top = "x" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 14, 2 }, .colors = { colors::olive, colors::dark_dark_brown }, .text_bottom = "5-7", .text_top = "II" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 15, 3 }, .colors = { colors::olive, colors::dark_dark_brown, colors::olive }, .text_bottom = "4-6", .text_top = "xxx" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 17, 3 }, .colors = { colors::olive, colors::deep_gold }, .text_bottom = "7.Army", .text_top = "HQ xxxx" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 11, 3 }, .colors = { colors::OLIVE, colors::DARK_DARK_BROWN }, .text_bottom = "5-6", .text_top = "II" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 11, 2 }, .colors = { colors::OLIVE }, .text_bottom = "4-5", .text_top = "I" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 13, 3 }, .colors = { colors::BROWN }, .text_bottom = "ART", .text_top = "I" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 14, 4 }, .colors = { colors::OLIVE, colors::DARK_GRAY }, .text_bottom = "6-4", .text_top = "x" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 14, 2 }, .colors = { colors::OLIVE, colors::DARK_DARK_BROWN }, .text_bottom = "5-7", .text_top = "II" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 15, 3 }, .colors = { colors::OLIVE, colors::DARK_DARK_BROWN, colors::OLIVE }, .text_bottom = "4-6", .text_top = "xxx" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 17, 3 }, .colors = { colors::OLIVE, colors::DEEP_GOLD }, .text_bottom = "7.Army", .text_top = "HQ xxxx" });
 
     // Systems
     Orchestra orchestra { };
@@ -258,4 +258,4 @@ void arcade::RunHex() {
     hex_state.counters.clear();
     globalData.Get<NodeTree>().clear();
 }
-}
+} // namespace pcg

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <SDL3/SDL_render.h>
 #include <array>
 
@@ -94,10 +94,10 @@ inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int
     }
     for (u32 i = 0; i < HEX_CORNERS; i++) {
         ColorF sdl_f_color = colors::ColorMul(hex_color, 0.8F);
-        // SDL_FColor sdl_f_color = colors::ToSDL_FColor(colors::white_smoke);
+        // SDL_FColor sdl_f_color = colors::ToSDL_FColor(colors::WHITE_SMOKE);
         vertecies.EmplaceBack(center, sdl_f_color, SDL_FPoint { });
         vertecies.EmplaceBack(points[i], hex_color, SDL_FPoint { });
         vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color, SDL_FPoint { });
     }
 }
-}
+} // namespace pce

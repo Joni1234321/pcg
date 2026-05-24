@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <functional>
 
 #include "0_engine/u_collections.hpp"
@@ -43,7 +43,7 @@ struct ParticleEmitter {
 
 struct ParticleSystem {
     void operator()() const {
-        constexpr Color color { colors::black };
+        constexpr Color color { colors::BLACK };
         const f32 delta_time { Singleton::Get<TickState>().delta_time };
         const miliseconds32 current_ms { TimeNowMS() };
         (void)SDL_SetRenderDrawColor(Singleton::Get<WindowState>().renderer, color.r, color.g, color.b, color.a);

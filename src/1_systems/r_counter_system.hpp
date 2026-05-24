@@ -16,6 +16,35 @@
 
 namespace pce {
 
+enum class Echelon : u8 {
+    ECHELON_SQUAD,
+    ECHELON_PLATOON,
+    ECHELON_COMPANY,
+    ECHELON_BATTALION,
+    ECHELON_REGIMENT,
+    ECHELON_BRIGADE,
+    ECHELON_DIVISION,
+    ECHELON_CORPS,
+    ECHELON_ARMY,
+    ECHELON_HQ,
+};
+
+[[nodiscard]] constexpr const char* EchelonToString(const Echelon echelon) {
+    switch (echelon) {
+        case Echelon::ECHELON_SQUAD:      return "..";
+        case Echelon::ECHELON_PLATOON:    return "...";
+        case Echelon::ECHELON_COMPANY:    return "I";
+        case Echelon::ECHELON_BATTALION:  return "II";
+        case Echelon::ECHELON_REGIMENT:   return "III";
+        case Echelon::ECHELON_BRIGADE:    return "x";
+        case Echelon::ECHELON_DIVISION:   return "xx";
+        case Echelon::ECHELON_CORPS:      return "xxx";
+        case Echelon::ECHELON_ARMY:       return "xxxx";
+        case Echelon::ECHELON_HQ:         return "HQ";
+    }
+    __builtin_unreachable();
+}
+
 struct Counter {
     int2 axial { };
     Array<SDL_Color, 3> colors { };
@@ -55,14 +84,14 @@ inline void RenderCounters(const Span<Counter>& counters) {
             constexpr f32 BORDER_THICKNESS = STACK_OFFSET * 0.20F;
 
             // shadow
-            const AABBF area_shadow = AABBF::FromCenter(counter_center + float2 { SHADOW_OFFSET * counter_size.x}, counter_size);
-            const SDL_Color SHADOW_COLOR = counter.selected ? colors::ColorWithAlpha(colors::hex_select, 1.0F) : colors::ColorWithAlpha(colors::black, 0.5F);
+            const AABBF area_shadow = AABBF::FromCenter(counter_center + float2 { SHADOW_OFFSET * counter_size.x }, counter_size);
+            const SDL_Color SHADOW_COLOR = counter.selected ? colors::ColorWithAlpha(colors::HEX_SELECT, 1.0F) : colors::ColorWithAlpha(colors::BLACK, 0.5F);
             (void)SDL_SetRenderDrawColor(window_state.renderer, SHADOW_COLOR.r, SHADOW_COLOR.g, SHADOW_COLOR.b, SHADOW_COLOR.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_shadow);
 
             // border
             AABBF area_border = AABBF::FromCenter(counter_center + float2 { STACK_OFFSET * counter_size.x * static_cast<f32>(i) }, counter_size);
-            const SDL_Color border_color = counter.selected ? colors::hex_select : colors::black;
+            const SDL_Color border_color = counter.selected ? colors::HEX_SELECT : colors::BLACK;
             (void)SDL_SetRenderDrawColor(window_state.renderer, border_color.r, border_color.g, border_color.b, border_color.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_border);
 
@@ -74,7 +103,7 @@ inline void RenderCounters(const Span<Counter>& counters) {
 
         // area
         const AABBF area_icon = AABBF::FromPoint(counter_point + counter_size * float2 { 0.20F, 0.25F }, counter_size * float2 { 0.6F, 0.4F });
-        constexpr Color COLOR_ICON { colors::gray_tint };
+        constexpr Color COLOR_ICON { colors::GRAY_TINT };
         (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_ICON.r, COLOR_ICON.g, COLOR_ICON.b, COLOR_ICON.a);
         (void)SDL_RenderFillRect(window_state.renderer, area_icon);
 

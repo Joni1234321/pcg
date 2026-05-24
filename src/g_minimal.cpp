@@ -1,4 +1,4 @@
-#include "0_engine/g_globals.hpp"
+﻿#include "0_engine/g_globals.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
 #include "1_systems/i_input_system.hpp"
@@ -16,7 +16,7 @@ using namespace pce;
 using namespace pce::ui;
 
 void arcade::RunMinimal() {
-    Singleton::Get<WindowState>().clear_color = colors::light_sky_blue;
+    Singleton::Get<WindowState>().clear_color = colors::LIGHT_SKY_BLUE;
 
     // Systems
     Orchestra orchestra { };
@@ -37,4 +37,4 @@ void arcade::RunMinimal() {
 
     while (!Singleton::Get<InputState>().quit && !Singleton::Get<InputState>().keys_down[SDLK_ESCAPE]) { orchestra.RunSystems(); }
 }
-}
+} // namespace pcg

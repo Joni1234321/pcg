@@ -1,4 +1,4 @@
-#include <algorithm>
+﻿#include <algorithm>
 #include "0_engine/u_util.hpp"
 #include "g_arcade.hpp"
 
@@ -80,7 +80,6 @@ constexpr Division german_infantry_division_1944 {
     .trucks = 900,
 };
 
-u8 Calculator(u8 attack, u8 defense) { }
 void SimulateBattle() {
     List defenders { german_infantry_division_1944, german_infantry_division_1944 };
     List attackers { soviet_rifle_division_1944, soviet_rifle_division_1944, soviet_rifle_division_1944 };
@@ -186,57 +185,57 @@ struct BannerFrame : Frame {
     explicit BannerFrame(BattleInfo& i) : info(i) { }
 
     // Full-window centering wrapper
-    Handle<Node> outer { B(frame).Node(fill, hug).Center().Fill(colors::clear).Build() };
+    Handle<Node> outer { B(frame).Node(fill, hug).Center().Fill(colors::CLEAR).Build() };
     Handle<Node> card { B(outer).Node(CARD_WIDTH, hug).Direction(vertical).Gap(0U).Build() };
 
     // Colorful header strip
     Handle<Node> header { BuildHeader() };
 
     // 3px border around the whole banner
-    Handle<Node> banner_border { B(card).Node(fill, hug).Fill(colors::dark_slate).Padding(3U).Build() };
-    Handle<Node> banner { B(banner_border).Node(fill, hug).Fill(colors::dark_gray).Build() };
-    Handle<Node> banner_left { BuildSide(banner, info.attacker, colors::warm_gray) };
+    Handle<Node> banner_border { B(card).Node(fill, hug).Fill(colors::DARK_SLATE).Padding(3U).Build() };
+    Handle<Node> banner { B(banner_border).Node(fill, hug).Fill(colors::DARK_GRAY).Build() };
+    Handle<Node> banner_left { BuildSide(banner, info.attacker, colors::WARM_GRAY) };
     Handle<Node> banner_mid { BuildOutcome(banner) };
-    Handle<Node> banner_right { BuildSide(banner, info.defender, colors::maroon) };
+    Handle<Node> banner_right { BuildSide(banner, info.defender, colors::MAROON) };
 
     // Details toggle button strip
-    Handle<Node> btn_row { B(card).Node(fill, hug).Fill(colors::dark_dark_brown).Padding2({ 10U, 5U }).Build() };
-    Handle<Node> btn_label { B(btn_row).Node(hug, hug).Text("▼  Details", FontSizes::small, colors::silver).Build() };
+    Handle<Node> btn_row { B(card).Node(fill, hug).Fill(colors::DARK_DARK_BROWN).Padding2({ 10U, 5U }).Build() };
+    Handle<Node> btn_label { B(btn_row).Node(hug, hug).Text("▼  Details", FontSizes::small, colors::SILVER).Build() };
 
 private:
     Handle<Node> BuildHeader() {
-        const Handle<Node> bar = B(card).Node(fill, hug).Fill(colors::ruby_red).Padding2({ 14U, 10U }).Gap(12U).Build();
-        (void)B(bar).Node(hug, hug).Text("⚔", FontSizes::h3, colors::white).Build();
-        (void)B(bar).Node(fill, hug).Text("COMBAT REPORT", FontSizes::h2, colors::white).Build();
-        (void)B(bar).Node(hug, hug).Text("⚔", FontSizes::h3, colors::white).Right().Build();
+        const Handle<Node> bar = B(card).Node(fill, hug).Fill(colors::RUBY_RED).Padding2({ 14U, 10U }).Gap(12U).Build();
+        (void)B(bar).Node(hug, hug).Text("⚔", FontSizes::h3, colors::WHITE).Build();
+        (void)B(bar).Node(fill, hug).Text("COMBAT REPORT", FontSizes::h2, colors::WHITE).Build();
+        (void)B(bar).Node(hug, hug).Text("⚔", FontSizes::h3, colors::WHITE).Right().Build();
         return bar;
     }
     Handle<Node> BuildSide(const Handle<Node> parent, const SideData& side, const Color accent) {
         // 2px border via accent-color padding wrapper
         const Handle<Node> border = B(parent).Node(fill, hug).Fill(accent).Padding(2U).Direction(vertical).Gap(2U).Build();
-        const Handle<Node> panel = B(border).Node(fill, hug).Direction(vertical).Gap(0U).Fill(colors::dark_gray).Build();
+        const Handle<Node> panel = B(border).Node(fill, hug).Direction(vertical).Gap(0U).Fill(colors::DARK_GRAY).Build();
 
         // CV at top
-        const Color cv_color = side.cv_after < side.cv_before ? colors::salmon : colors::lime;
-        const Handle<Node> cv = B(panel).Node(fill, hug).Fill(colors::dark_slate).Padding2({ 8U, 6U }).Direction(vertical).Gap(0U).Build();
-        (void)B(cv).Node(fill, hug).Text("CV", FontSizes::tiny, colors::silver).Build();
+        const Color cv_color = side.cv_after < side.cv_before ? colors::SALMON : colors::LIME;
+        const Handle<Node> cv = B(panel).Node(fill, hug).Fill(colors::DARK_SLATE).Padding2({ 8U, 6U }).Direction(vertical).Gap(0U).Build();
+        (void)B(cv).Node(fill, hug).Text("CV", FontSizes::tiny, colors::SILVER).Build();
         (void)B(cv).Node(fill, hug).Text(std::format("{}  →  {}", side.cv_before, side.cv_after), FontSizes::h2, cv_color).Build();
 
         // Division name + role
         const Handle<Node> hdr = B(panel).Node(fill, hug).Fill(accent).Padding2({ 8U, 6U }).Direction(vertical).Gap(1U).Build();
-        (void)B(hdr).Node(fill, hug).Text(side.division, FontSizes::h4, colors::white).Build();
-        (void)B(hdr).Node(fill, hug).Text(side.role, FontSizes::tiny, colors::white_smoke).Build();
+        (void)B(hdr).Node(fill, hug).Text(side.division, FontSizes::h4, colors::WHITE).Build();
+        (void)B(hdr).Node(fill, hug).Text(side.role, FontSizes::tiny, colors::WHITE_SMOKE).Build();
         return border;
     }
     Handle<Node> BuildOutcome(const Handle<Node> parent) {
         const bool attacker_wins = info.attacker.cv_after > info.defender.cv_after;
         const String& winner = attacker_wins ? info.attacker.division : info.defender.division;
 
-        const Handle<Node> box = B(parent).Node(340U, hug).Direction(vertical).Gap(2U).Fill(colors::dark_dark_brown).Padding2({ 10U, 8U }).Build();
-        (void)B(box).Node(fill, hug).Text(attacker_wins ? "AXIS VICTORY" : "SOVIET VICTORY", FontSizes::tiny, colors::silver).Center().Build();
-        (void)B(box).Node(fill, hug).Text(winner, FontSizes::h4, colors::deep_gold).Center().Build();
-        (void)B(box).Node(fill, 1U).Fill(colors::dark_slate).Build();
-        (void)B(box).Node(fill, hug).Text(std::format("{}:{}", info.attacker.cv_after, info.defender.cv_after), FontSizes::title, colors::white).Center().Build();
+        const Handle<Node> box = B(parent).Node(340U, hug).Direction(vertical).Gap(2U).Fill(colors::DARK_DARK_BROWN).Padding2({ 10U, 8U }).Build();
+        (void)B(box).Node(fill, hug).Text(attacker_wins ? "AXIS VICTORY" : "SOVIET VICTORY", FontSizes::tiny, colors::SILVER).Center().Build();
+        (void)B(box).Node(fill, hug).Text(winner, FontSizes::h4, colors::DEEP_GOLD).Center().Build();
+        (void)B(box).Node(fill, 1U).Fill(colors::DARK_SLATE).Build();
+        (void)B(box).Node(fill, hug).Text(std::format("{}:{}", info.attacker.cv_after, info.defender.cv_after), FontSizes::title, colors::WHITE).Center().Build();
         return box;
     }
 };
@@ -246,70 +245,70 @@ struct DetailsFrame : Frame {
     BattleInfo& info;
     explicit DetailsFrame(BattleInfo& i) : info(i) { }
 
-    Handle<Node> outer { B(frame).Node(fill, hug).Center().Fill(colors::clear).Build() };
-    Handle<Node> card { B(outer).Node(CARD_WIDTH, hug).Direction(vertical).Gap(0U).Fill(colors::dark_gray).Build() };
-    Handle<Node> body { B(card).Node(fill, hug).Gap(2U).Fill(colors::dark_slate).Padding(2U).Build() };
-    Handle<Node> body_left { BuildUnitTable(body, info.attacker, colors::warm_gray) };
+    Handle<Node> outer { B(frame).Node(fill, hug).Center().Fill(colors::CLEAR).Build() };
+    Handle<Node> card { B(outer).Node(CARD_WIDTH, hug).Direction(vertical).Gap(0U).Fill(colors::DARK_GRAY).Build() };
+    Handle<Node> body { B(card).Node(fill, hug).Gap(2U).Fill(colors::DARK_SLATE).Padding(2U).Build() };
+    Handle<Node> body_left { BuildUnitTable(body, info.attacker, colors::WARM_GRAY) };
     List<Handle<Node>> round_rows { }; // filled by BuildRoundsPanel — must be declared before body_mid
     Handle<Node> body_mid { BuildRoundsPanel(body) };
-    Handle<Node> body_right { BuildUnitTable(body, info.defender, colors::maroon) };
+    Handle<Node> body_right { BuildUnitTable(body, info.defender, colors::MAROON) };
 
 private:
     Handle<Node> BuildUnitTable(const Handle<Node> parent, const SideData& side, const Color accent) {
         // 2px accent border
         const Handle<Node> border = B(parent).Node(fill, hug).Fill(accent).Padding(2U).Direction(vertical).Gap(0U).Build();
-        const Handle<Node> panel = B(border).Node(fill, hug).Direction(vertical).Gap(0U).Fill(colors::white_smoke).Build();
+        const Handle<Node> panel = B(border).Node(fill, hug).Direction(vertical).Gap(0U).Fill(colors::WHITE_SMOKE).Build();
 
         const Handle<Node> label = B(panel).Node(fill, hug).Fill(accent).Padding2({ 6U, 3U }).Build();
-        (void)B(label).Node(fill, hug).Text("Unit Strengths", FontSizes::tiny, colors::white).Build();
+        (void)B(label).Node(fill, hug).Text("Unit Strengths", FontSizes::tiny, colors::WHITE).Build();
 
-        const Handle<Node> grid = B(panel).Node(fill, hug).Direction(vertical).Fill(colors::mid_gray).Gap(1U).Build();
+        const Handle<Node> grid = B(panel).Node(fill, hug).Direction(vertical).Fill(colors::MID_GRAY).Gap(1U).Build();
 
-        const Handle<Node> header = B(grid).Node(fill, hug).Fill(colors::dark_slate).Padding2({ 6U, 3U }).Build();
-        (void)B(header).Node(fill, hug).Text("Type", FontSizes::tiny, colors::silver).Build();
-        (void)B(header).Node(COL_NUM, hug).Text("Before", FontSizes::tiny, colors::silver).Right().Build();
-        (void)B(header).Node(COL_NUM, hug).Text("After", FontSizes::tiny, colors::silver).Right().Build();
-        (void)B(header).Node(COL_LOST, hug).Text("Lost", FontSizes::tiny, colors::salmon).Right().Build();
+        const Handle<Node> header = B(grid).Node(fill, hug).Fill(colors::DARK_SLATE).Padding2({ 6U, 3U }).Build();
+        (void)B(header).Node(fill, hug).Text("Type", FontSizes::tiny, colors::SILVER).Build();
+        (void)B(header).Node(COL_NUM, hug).Text("Before", FontSizes::tiny, colors::SILVER).Right().Build();
+        (void)B(header).Node(COL_NUM, hug).Text("After", FontSizes::tiny, colors::SILVER).Right().Build();
+        (void)B(header).Node(COL_LOST, hug).Text("Lost", FontSizes::tiny, colors::SALMON).Right().Build();
 
         for (u32 i = 0U; i < side.units.size(); ++i) {
             const UnitRow& unit = side.units[i];
-            const Color row_bg = (i % 2U == 0U) ? colors::white : colors::white_smoke;
+            const Color row_bg = (i % 2U == 0U) ? colors::WHITE : colors::WHITE_SMOKE;
             const Handle<Node> row = B(grid).Node(fill, hug).Fill(row_bg).Padding2({ 6U, 3U }).Build();
-            (void)B(row).Node(fill, hug).Text(unit.name, FontSizes::body, colors::black).Build();
-            (void)B(row).Node(COL_NUM, hug).Text(std::format("{}", unit.before), FontSizes::body, colors::dark_gray).Right().Build();
-            (void)B(row).Node(COL_NUM, hug).Text(std::format("{}", unit.after), FontSizes::body, colors::dark_gray).Right().Build();
+            (void)B(row).Node(fill, hug).Text(unit.name, FontSizes::body, colors::BLACK).Build();
+            (void)B(row).Node(COL_NUM, hug).Text(std::format("{}", unit.before), FontSizes::body, colors::DARK_GRAY).Right().Build();
+            (void)B(row).Node(COL_NUM, hug).Text(std::format("{}", unit.after), FontSizes::body, colors::DARK_GRAY).Right().Build();
             const u32 lost = unit.before > unit.after ? unit.before - unit.after : 0U;
-            (void)B(row).Node(COL_LOST, hug).Text(std::format("-{}", lost), FontSizes::body, colors::ruby_red).Right().Build();
+            (void)B(row).Node(COL_LOST, hug).Text(std::format("-{}", lost), FontSizes::body, colors::RUBY_RED).Right().Build();
         }
         return border;
     }
     Handle<Node> BuildRoundsPanel(const Handle<Node> parent) {
         // 2px dark_slate border
-        const Handle<Node> border = B(parent).Node(fill, hug).Fill(colors::dark_slate).Padding(2U).Direction(vertical).Gap(0U).Build();
-        const Handle<Node> panel = B(border).Node(fill, hug).Direction(vertical).Gap(0U).Fill(colors::white_smoke).Build();
+        const Handle<Node> border = B(parent).Node(fill, hug).Fill(colors::DARK_SLATE).Padding(2U).Direction(vertical).Gap(0U).Build();
+        const Handle<Node> panel = B(border).Node(fill, hug).Direction(vertical).Gap(0U).Fill(colors::WHITE_SMOKE).Build();
 
-        const Handle<Node> label = B(panel).Node(fill, hug).Fill(colors::dark_slate).Padding2({ 6U, 3U }).Build();
-        (void)B(label).Node(fill, hug).Text("Combat Rounds", FontSizes::tiny, colors::silver).Build();
+        const Handle<Node> label = B(panel).Node(fill, hug).Fill(colors::DARK_SLATE).Padding2({ 6U, 3U }).Build();
+        (void)B(label).Node(fill, hug).Text("Combat Rounds", FontSizes::tiny, colors::SILVER).Build();
 
-        const Handle<Node> grid = B(panel).Node(fill, hug).Direction(vertical).Fill(colors::mid_gray).Gap(1U).Build();
+        const Handle<Node> grid = B(panel).Node(fill, hug).Direction(vertical).Fill(colors::MID_GRAY).Gap(1U).Build();
 
-        const Handle<Node> rh = B(grid).Node(fill, hug).Fill(colors::dark_slate).Padding2({ 6U, 3U }).Gap(6U).Build();
-        (void)B(rh).Node(90U, hug).Text("Phase", FontSizes::tiny, colors::silver).Build();
-        (void)B(rh).Node(fill, hug).Text("Attacker", FontSizes::tiny, colors::light_sky_blue).Build();
-        (void)B(rh).Node(fill, hug).Text("Defender", FontSizes::tiny, colors::salmon).Build();
-        (void)B(rh).Node(100U, hug).Text("Atk -", FontSizes::tiny, colors::silver).Right().Build();
-        (void)B(rh).Node(100U, hug).Text("Def -", FontSizes::tiny, colors::silver).Right().Build();
+        const Handle<Node> rh = B(grid).Node(fill, hug).Fill(colors::DARK_SLATE).Padding2({ 6U, 3U }).Gap(6U).Build();
+        (void)B(rh).Node(90U, hug).Text("Phase", FontSizes::tiny, colors::SILVER).Build();
+        (void)B(rh).Node(fill, hug).Text("Attacker", FontSizes::tiny, colors::LIGHT_SKY_BLUE).Build();
+        (void)B(rh).Node(fill, hug).Text("Defender", FontSizes::tiny, colors::SALMON).Build();
+        (void)B(rh).Node(100U, hug).Text("Atk -", FontSizes::tiny, colors::SILVER).Right().Build();
+        (void)B(rh).Node(100U, hug).Text("Def -", FontSizes::tiny, colors::SILVER).Right().Build();
 
         for (u32 i = 0U; i < info.rounds.size(); ++i) {
             const RoundEntry& r = info.rounds[i];
-            const Color row_bg = (i % 2U == 0U) ? colors::ivory : colors::white;
+            const Color row_bg = (i % 2U == 0U) ? colors::IVORY : colors::WHITE;
             const Handle<Node> row = B(grid).Node(fill, hug).Fill(row_bg).Padding2({ 6U, 3U }).Gap(6U).Build();
             round_rows.push_back(row);
-            (void)B(row).Node(90U, hug).Text(std::format("#{} {}", i + 1U, r.phase), FontSizes::small, colors::deep_purple).Build();
-            (void)B(row).Node(fill, hug).Text(r.attacker_action, FontSizes::small, colors::navy).Build();
-            (void)B(row).Node(fill, hug).Text(r.defender_action, FontSizes::small, colors::maroon).Build();
-            (void)B(row).Node(100U, hug).Text(std::format("{}", r.attacker_losses), FontSizes::small, colors::ruby_red).Right().Build();
-            (void)B(row).Node(100U, hug).Text(std::format("{}", r.defender_losses), FontSizes::small, colors::ruby_red).Right().Build();
+            (void)B(row).Node(90U, hug).Text(std::format("#{} {}", i + 1U, r.phase), FontSizes::small, colors::DEEP_PURPLE).Build();
+            (void)B(row).Node(fill, hug).Text(r.attacker_action, FontSizes::small, colors::NAVY).Build();
+            (void)B(row).Node(fill, hug).Text(r.defender_action, FontSizes::small, colors::MAROON).Build();
+            (void)B(row).Node(100U, hug).Text(std::format("{}", r.attacker_losses), FontSizes::small, colors::RUBY_RED).Right().Build();
+            (void)B(row).Node(100U, hug).Text(std::format("{}", r.defender_losses), FontSizes::small, colors::RUBY_RED).Right().Build();
         }
         return border;
     }
@@ -321,27 +320,27 @@ struct RoundPopupFrame : Frame {
     explicit RoundPopupFrame(BattleInfo& i) : info(i) { }
 
     // fill×fill overlay so the card can be centered in the window
-    Handle<Node> outer { B(frame).Node(fill, fill).Center().Fill(colors::clear).Build() };
+    Handle<Node> outer { B(frame).Node(fill, fill).Center().Fill(colors::CLEAR).Build() };
     Handle<Node> card { B(outer).Node(760U, hug).Direction(vertical).Gap(0U).Build() };
 
-    Handle<Node> hdr { B(card).Node(fill, hug).Fill(colors::dark_slate).Padding2({ 14U, 10U }).Gap(10U).Build() };
-    Handle<Node> phase_lbl { B(hdr).Node(fill, hug).Text("Round", FontSizes::h3, colors::silver).Build() };
+    Handle<Node> hdr { B(card).Node(fill, hug).Fill(colors::DARK_SLATE).Padding2({ 14U, 10U }).Gap(10U).Build() };
+    Handle<Node> phase_lbl { B(hdr).Node(fill, hug).Text("Round", FontSizes::h3, colors::SILVER).Build() };
 
-    Handle<Node> body { B(card).Node(fill, hug).Direction(vertical).Gap(0U).Fill(colors::dark_gray).Padding(14U).Build() };
+    Handle<Node> body { B(card).Node(fill, hug).Direction(vertical).Gap(0U).Fill(colors::DARK_GRAY).Padding(14U).Build() };
 
-    Handle<Node> atk_hdr { B(body).Node(fill, hug).Text("Attacker Action", FontSizes::tiny, colors::warm_gray).Build() };
-    Handle<Node> atk_txt { B(body).Node(fill, hug).Text("", FontSizes::body, colors::white_smoke).Padding2({ 0U, 5U }).Build() };
+    Handle<Node> atk_hdr { B(body).Node(fill, hug).Text("Attacker Action", FontSizes::tiny, colors::WARM_GRAY).Build() };
+    Handle<Node> atk_txt { B(body).Node(fill, hug).Text("", FontSizes::body, colors::WHITE_SMOKE).Padding2({ 0U, 5U }).Build() };
 
-    Handle<Node> div { B(body).Node(fill, 1U).Fill(colors::dark_slate).Padding2({ 0U, 4U }).Build() };
+    Handle<Node> div { B(body).Node(fill, 1U).Fill(colors::DARK_SLATE).Padding2({ 0U, 4U }).Build() };
 
-    Handle<Node> def_hdr { B(body).Node(fill, hug).Text("Defender Action", FontSizes::tiny, colors::salmon).Build() };
-    Handle<Node> def_txt { B(body).Node(fill, hug).Text("", FontSizes::body, colors::white_smoke).Padding2({ 0U, 5U }).Build() };
+    Handle<Node> def_hdr { B(body).Node(fill, hug).Text("Defender Action", FontSizes::tiny, colors::SALMON).Build() };
+    Handle<Node> def_txt { B(body).Node(fill, hug).Text("", FontSizes::body, colors::WHITE_SMOKE).Padding2({ 0U, 5U }).Build() };
 
     Handle<Node> loss_row { B(body).Node(fill, hug).Gap(8U).Padding2({ 0U, 10U }).Build() };
-    Handle<Node> atk_loss { B(loss_row).Node(fill, hug).Text("", FontSizes::h2, colors::warm_gray).Build() };
-    Handle<Node> def_loss { B(loss_row).Node(fill, hug).Text("", FontSizes::h2, colors::ruby_red).Right().Build() };
+    Handle<Node> atk_loss { B(loss_row).Node(fill, hug).Text("", FontSizes::h2, colors::WARM_GRAY).Build() };
+    Handle<Node> def_loss { B(loss_row).Node(fill, hug).Text("", FontSizes::h2, colors::RUBY_RED).Right().Build() };
 
-    Handle<Node> hint { B(card).Node(fill, hug).Fill(colors::dark_dark_brown).Padding2({ 8U, 5U }).Text("click anywhere to dismiss", FontSizes::small, colors::silver).Center().Build() };
+    Handle<Node> hint { B(card).Node(fill, hug).Fill(colors::DARK_DARK_BROWN).Padding2({ 8U, 5U }).Text("click anywhere to dismiss", FontSizes::small, colors::SILVER).Center().Build() };
 
     void Update(const u32 idx) {
         const RoundEntry& r = info.rounds[idx];
@@ -368,7 +367,7 @@ struct StatusBarFrame : Frame {
     static constexpr u32 PANEL_WIDTH = 440U;
 
     Handle<Node> outer { B(frame).Node(fill, fill).Alignment(bottom_right).Build() };
-    Handle<Node> panel { B(outer).Node(PANEL_WIDTH, hug).Direction(vertical).Gap(1U).Fill(colors::dark_slate).Padding(2U).Build() };
+    Handle<Node> panel { B(outer).Node(PANEL_WIDTH, hug).Direction(vertical).Gap(1U).Fill(colors::DARK_SLATE).Padding(2U).Build() };
 
     Array<StatusEntry, NUM_ENTRIES> entries = BuildEntries();
 
@@ -385,12 +384,12 @@ private:
     Array<StatusEntry, NUM_ENTRIES> BuildEntries() {
         Array<StatusEntry, NUM_ENTRIES> result { };
         for (u32 i = 0U; i < NUM_ENTRIES; ++i) {
-            const Color row_bg = (i % 2U == 0U) ? colors::dark_dark_brown : colors::dark_gray;
+            const Color row_bg = (i % 2U == 0U) ? colors::DARK_DARK_BROWN : colors::DARK_GRAY;
             const Handle<Node> row = B(panel).Node(fill, hug).Direction(horizontal).Gap(6U).Fill(row_bg).Padding2({ 6U, 4U }).Build();
-            const Handle<Node> bar_bg = B(row).Node(BAR_WIDTH, BAR_HEIGHT).Fill(colors::dark_slate).Build();
-            const Handle<Node> bar_fill = B(bar_bg).Node(0U, BAR_HEIGHT).Fill(colors::forest_green).Build();
-            const Handle<Node> pct = B(row).Node(PCT_COL, hug).Text("0%", FontSizes::tiny, colors::silver).Right().Build();
-            const Handle<Node> msg = B(row).Node(fill, hug).Text("Idle", FontSizes::tiny, colors::silver).Build();
+            const Handle<Node> bar_bg = B(row).Node(BAR_WIDTH, BAR_HEIGHT).Fill(colors::DARK_SLATE).Build();
+            const Handle<Node> bar_fill = B(bar_bg).Node(0U, BAR_HEIGHT).Fill(colors::FOREST_GREEN).Build();
+            const Handle<Node> pct = B(row).Node(PCT_COL, hug).Text("0%", FontSizes::tiny, colors::SILVER).Right().Build();
+            const Handle<Node> msg = B(row).Node(fill, hug).Text("Idle", FontSizes::tiny, colors::SILVER).Build();
             result[i] = StatusEntry { bar_fill.id, pct.id, msg.id };
         }
         return result;
@@ -423,7 +422,7 @@ public:
     b8 running { true };
 
     BattleSim() {
-        Singleton::Get<WindowState>().clear_color = colors::dark_dark_brown;
+        Singleton::Get<WindowState>().clear_color = colors::DARK_DARK_BROWN;
         globalData[details_frame.tree].SetDisplay(false);
         globalData[popup_frame.tree].SetDisplay(false);
         status_bar.Set(0, 1.00F, "Terrain & weather loaded");

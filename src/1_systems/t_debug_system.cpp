@@ -1,4 +1,4 @@
-#include "t_debug_system.hpp"
+﻿#include "t_debug_system.hpp"
 
 #include "g_components.hpp"
 
@@ -100,42 +100,42 @@ void DebugSystem::operator()() {
     }
 }
 TestFrame::TestFrame() {
-    const Handle<Node> core_root = B(frame).Node(100U, 400U).Gap(20U).Fill(colors::clear).Build();
+    const Handle<Node> core_root = B(frame).Node(100U, 400U).Gap(20U).Fill(colors::CLEAR).Build();
     {
-        const Handle<Node> root = B(core_root).Node(100U, 100U).Padding2({ 5U, 5U }).Fill(colors::forest_green).Build();
-        const Handle<Node> box1 = B(root).Node(fill).Fill(colors::yellow).Padding2({ 5U, 5U }).Build();
-        Handle<Node> box11 = B(box1).Node(fill).Fill(colors::blue).Build();
-        Handle<Node> box12 = B(box1).Node(fill).Fill(colors::chocolate).Build();
+        const Handle<Node> root = B(core_root).Node(100U, 100U).Padding2({ 5U, 5U }).Fill(colors::FOREST_GREEN).Build();
+        const Handle<Node> box1 = B(root).Node(fill).Fill(colors::YELLOW).Padding2({ 5U, 5U }).Build();
+        Handle<Node> box11 = B(box1).Node(fill).Fill(colors::BLUE).Build();
+        Handle<Node> box12 = B(box1).Node(fill).Fill(colors::CHOCOLATE).Build();
 
-        Handle<Node> box2 = B(root).Node(fill).Fill(colors::red).Build();
-        Handle<Node> box3 = B(root).Node(hug, fill).Padding2({ 10U, 10U }).Fill(colors::black).Build();
+        Handle<Node> box2 = B(root).Node(fill).Fill(colors::RED).Build();
+        Handle<Node> box3 = B(root).Node(hug, fill).Padding2({ 10U, 10U }).Fill(colors::BLACK).Build();
     }
     {
-        const Handle<Node> root = B(core_root).Node(100U, 100U).Padding2({ 5U, 5U }).Fill(colors::green).Build();
-        Handle<Node> box1 = B(root).Node(fill).Fill(colors::yellow).Padding2({ 5U, 5U }).Build();
-        Handle<Node> box2 = B(root).Node(fill).Fill(colors::red).Build();
+        const Handle<Node> root = B(core_root).Node(100U, 100U).Padding2({ 5U, 5U }).Fill(colors::GREEN).Build();
+        Handle<Node> box1 = B(root).Node(fill).Fill(colors::YELLOW).Padding2({ 5U, 5U }).Build();
+        Handle<Node> box2 = B(root).Node(fill).Fill(colors::RED).Build();
     }
     {
-        const Handle<Node> root = B(core_root).Node(hug).Padding2({ 5U, 5U }).Direction(vertical).Fill(colors::deep_purple).Build();
-        Handle<Node> box1 = B(root).Node(hug).Text("Play", FontSizes::h1, colors::radiant_orange).Padding2({ 10U, 0U }).Build();
-        Handle<Node> box2 = B(root).Node(hug).Text("Settings", FontSizes::h1, colors::cool_teal).Padding2({ 10U, 0U }).Build();
-        Handle<Node> box3 = B(root).Node(hug).Text("Exit", FontSizes::h1, colors::ruby_red).Padding2({ 10U, 0U }).Build();
+        const Handle<Node> root = B(core_root).Node(hug).Padding2({ 5U, 5U }).Direction(vertical).Fill(colors::DEEP_PURPLE).Build();
+        Handle<Node> box1 = B(root).Node(hug).Text("Play", FontSizes::h1, colors::RADIANT_ORANGE).Padding2({ 10U, 0U }).Build();
+        Handle<Node> box2 = B(root).Node(hug).Text("Settings", FontSizes::h1, colors::COOL_TEAL).Padding2({ 10U, 0U }).Build();
+        Handle<Node> box3 = B(root).Node(hug).Text("Exit", FontSizes::h1, colors::RUBY_RED).Padding2({ 10U, 0U }).Build();
     }
     {
-        const Handle<Node> root = B(core_root).Node(100U, 100U).Padding2({ 5U, 5U }).Fill(colors::sea_green).Build();
-        Handle<Node> box1 = B(root).Node(fill).Fill(colors::yellow).Padding2({ 5U, 5U }).Build();
-        Handle<Node> box2 = B(root).Node(fill).Fill(colors::red).Build();
-        Handle<Node> box3 = B(root).Node(hug).Padding2({ 10U, 10U }).Fill(colors::black).Build();
+        const Handle<Node> root = B(core_root).Node(100U, 100U).Padding2({ 5U, 5U }).Fill(colors::SEA_GREEN).Build();
+        Handle<Node> box1 = B(root).Node(fill).Fill(colors::YELLOW).Padding2({ 5U, 5U }).Build();
+        Handle<Node> box2 = B(root).Node(fill).Fill(colors::RED).Build();
+        Handle<Node> box3 = B(root).Node(hug).Padding2({ 10U, 10U }).Fill(colors::BLACK).Build();
     }
     {
         constexpr u32 width = 100U;
-        const Handle<Node> root = B(core_root).Node(hug, 400U).Padding2({ 5U, 5U }).Fill(colors::forest_green).Build();
-        Handle<Node> box1 = B(root).Node(width, fill).Fill(colors::yellow).Padding2({ 5U, 5U }).Build();
-        Handle<Node> box2 = B(root).Node(width * 2, fill).Fill(colors::red).Build();
-        const Handle<Node> box3 = B(root).Node(width * 3, fill).Padding2({ 4U, 4U }).Gap(2U).Fill(colors::black).Build();
-        Handle<Node> box31 = B(box3).Node(fill).Fill(colors::cyan).Build();
-        Handle<Node> box32 = B(box3).Node(fill).Fill(colors::chocolate).Build();
-        Handle<Node> box33 = B(box3).Node(fill).Fill(colors::yellow).Build();
+        const Handle<Node> root = B(core_root).Node(hug, 400U).Padding2({ 5U, 5U }).Fill(colors::FOREST_GREEN).Build();
+        Handle<Node> box1 = B(root).Node(width, fill).Fill(colors::YELLOW).Padding2({ 5U, 5U }).Build();
+        Handle<Node> box2 = B(root).Node(width * 2, fill).Fill(colors::RED).Build();
+        const Handle<Node> box3 = B(root).Node(width * 3, fill).Padding2({ 4U, 4U }).Gap(2U).Fill(colors::BLACK).Build();
+        Handle<Node> box31 = B(box3).Node(fill).Fill(colors::CYAN).Build();
+        Handle<Node> box32 = B(box3).Node(fill).Fill(colors::CHOCOLATE).Build();
+        Handle<Node> box33 = B(box3).Node(fill).Fill(colors::YELLOW).Build();
     }
 }
-}
+} // namespace pce::ui

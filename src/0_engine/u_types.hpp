@@ -50,9 +50,7 @@ using c16 = char16_t; // NOLINT(*-identifier-naming)
 using c32 = char32_t; // NOLINT(*-identifier-naming)
 using b8 = bool;      // NOLINT(*-identifier-naming)
 
-
 template <class T> using Optional = std::optional<T>;
-
 
 template <typename T> struct Vec2 {
     T x;
