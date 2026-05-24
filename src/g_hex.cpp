@@ -1,6 +1,7 @@
 ﻿#include <algorithm>
 #include <cmath>
 #include <format>
+#include <functional>
 #include <iterator>
 #include <optional>
 #include <queue>
@@ -151,10 +152,10 @@ struct HexSystem {
         HexState& hex_state = Singleton::Get<HexState>();
 
         // precompute
-        UnorderedMap<int2, List<Handle<Unit>>> unit_by_axial;
+        UnorderedMap<int2, List<Handle<Unit>>> units_by_axial;
         for (u32 i = 0; i < hex_state.units.size(); i ++) {
             Handle<Unit> unit_handle = hex_state.units.IndexToHandle(i);
-            unit_by_axial[hex_state.units[unit_handle].axial].EmplaceBack(unit_handle);
+            units_by_axial[hex_state.units[unit_handle].axial].EmplaceBack(unit_handle);
         }
 
 
@@ -169,8 +170,8 @@ struct HexSystem {
             hex_state.pseudo_states.axial_select = mouse_axial;
 
             // unit selection
-            if (mouse_axial.has_value() && unit_by_axial.contains(mouse_axial.value())) {
-                const List<Handle<Unit>>& unit_handles = unit_by_axial[mouse_axial.value()];
+            if (mouse_axial.has_value() && units_by_axial.contains(mouse_axial.value())) {
+                const List<Handle<Unit>>& unit_handles = units_by_axial[mouse_axial.value()];
                 if (select_new) {
                     hex_state.pseudo_states.unit_handles_select = List { { unit_handles[0] }};
                 }
@@ -199,7 +200,7 @@ struct HexSystem {
 
         // render units
         hex_state.counters.Clear();
-        for (const auto& [axial, unit_handles] : unit_by_axial) {
+        for (const auto& [axial, unit_handles] : units_by_axial) {
             Counter& counter = hex_state.counters.Get();
             counter.axial = axial;
             Echelon echelon { Echelon::ECHELON_SQUAD };
@@ -276,8 +277,8 @@ struct HexSystem {
             cost_at_axial[axial_start] = 0;
 
             auto is_enemy = [&](const int2 axial) -> b8 {
-                if (!unit_by_axial.contains(axial)) { return false; }
-                for (const Handle unit_handle_enemy : unit_by_axial.at(axial)) {
+                if (!units_by_axial.contains(axial)) { return false; }
+                for (const Handle unit_handle_enemy : units_by_axial.at(axial)) {
                     if (hex_state.units[unit_handle_enemy].tag != units_selected[0].tag) { return true; }
                 }
                 return false;
@@ -327,16 +328,33 @@ struct HexSystem {
                 (void)TTF_DrawRendererText(label, screen_f.x - camera.scale * 0.5F, screen_f.y - pt * 0.5F);
             }
 
-            // move
             if (input_state.right_mouse_down) {
-                const auto it = std::ranges::upper_bound(axial_and_cost_with_path, distance_reach, std::less{}, &CostAndAxial::cost);
-                if (it != axial_and_cost_with_path.begin()) {
-                    const CostAndAxial& cost_and_axial_end = *std::prev(it);
-                    for (Unit& unit : units_selected) {
-                        unit.axial = cost_and_axial_end.axial;
-                        unit.move -= cost_and_axial_end.cost;
+                if (is_enemy(axial_hover)) {
+                    auto units_hover = units_by_axial[axial_hover] | std::views::transform(handle_to_unit);
+                    // attack
+                    u32 dmg = std::ranges::fold_left(units_selected | std::views::transform(&Unit::dmg), 0U, std::plus{});
+                    u32 def = std::ranges::fold_left(units_hover | std::views::transform(&Unit::def), 0U, std::plus{});
+                    f32 ratio = static_cast<f32>(dmg) / static_cast<f32>(def);
+                    if (ratio >= 2.0F) {
+                        // reduce dmg and defense by 2 for all defenders. with saturating sub
                     }
-                    hex_state.pseudo_states.axial_select = cost_and_axial_end.axial;
+                    else {
+                        // reduce dmg and defense by 2 for all attackers. with saturating sub
+
+                    }
+                }
+                else {
+                    // move
+                    const auto it = std::ranges::upper_bound(axial_and_cost_with_path, distance_reach, std::less{}, &CostAndAxial::cost);
+                    if (it != axial_and_cost_with_path.begin()) {
+                        const CostAndAxial& cost_and_axial_end = *std::prev(it);
+                        for (Unit& unit : units_selected) {
+                            unit.axial = cost_and_axial_end.axial;
+                            unit.move -= cost_and_axial_end.cost;
+                        }
+                        hex_state.pseudo_states.axial_select = cost_and_axial_end.axial;
+                    }
+
                 }
             }
         }
