@@ -45,7 +45,8 @@ enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK };
     __builtin_unreachable();
 }
 struct CounterStack {
-    Color color;
+    Color color_background;
+    Color color_icon;
     Color color_border;
 };
 struct Counter {
@@ -77,7 +78,7 @@ inline void RenderCounters(const Pool<Counter>& counters) {
         // draw static counters
         for (i32 i = static_cast<i32>(counter.stack.size()) - 1; i >= 0; i--) {
             const CounterStack& counter_stack = counter.stack[static_cast<u32>(i)];
-            if (counter_stack.color.a == 0) { continue; }
+            if (counter_stack.color_icon.a == 0) { continue; }
 
             constexpr f32 OFFSET_STACK = 1.0F / 16.0F;
             constexpr f32 OFFSET_SHADOW = OFFSET_STACK * 0.15F;
@@ -92,14 +93,12 @@ inline void RenderCounters(const Pool<Counter>& counters) {
             (void)SDL_RenderFillRect(window_state.renderer, area_shadow);
 
             // border
-            const SDL_Color color_border = counter_stack.color_border;
-            (void)SDL_SetRenderDrawColor(window_state.renderer, color_border.r, color_border.g, color_border.b, color_border.a);
+            (void)SDL_SetRenderDrawColor(window_state.renderer, counter_stack.color_border.r, counter_stack.color_border.g, counter_stack.color_border.b, counter_stack.color_border.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_counter);
 
             // background
             const AABBF area_background = area_counter.WithPadding(float2 { BORDER_THICKNESS * counter_size.x });;
-            const Color color_background = colors::GRAY;
-            (void)SDL_SetRenderDrawColor(window_state.renderer, color_background.r, color_background.g, color_background.b, color_background.a);
+            (void)SDL_SetRenderDrawColor(window_state.renderer, counter_stack.color_background.r, counter_stack.color_background.g, counter_stack.color_background.b, counter_stack.color_background.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_background);
         }
 
@@ -110,13 +109,14 @@ inline void RenderCounters(const Pool<Counter>& counters) {
         (void)SDL_RenderFillRect(window_state.renderer, area_icon_border);
 
         const AABBF area_icon = area_icon_border.WithPadding(float2 { camera.scale / 40.0F });
-        const Color color_icon = counter.stack[0].color;
+        const Color color_icon = counter.stack[0].color_icon;
         (void)SDL_SetRenderDrawColor(window_state.renderer, color_icon.r, color_icon.g, color_icon.b, color_icon.a);
         (void)SDL_RenderFillRect(window_state.renderer, area_icon);
 
         // labels
         if (camera.scale >= TEXT_MIN_SCALE) {
             (void)TTF_SetTextFont(counter.label_bottom, font);
+            // (void)TTF_SetTextColorFloat(counter.label_bottom, 0.0F, 0.0F, 0.0F, 1.0F);
             (void)TTF_SetTextWrapWidth(counter.label_bottom, static_cast<i32>(counter_size.x));
             (void)TTF_DrawRendererText(counter.label_bottom, counter_point.x, counter_point.y + counter_size.y - static_cast<f32>(pt));
 

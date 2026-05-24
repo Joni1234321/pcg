@@ -75,6 +75,29 @@ struct Color {
 
     constexpr Color() = default;
     constexpr Color(u8 r, u8 g, u8 b, u8 a = 255U) : r(r), g(g), b(b), a(a) { }
+    [[nodiscard]] static constexpr Color FromHsl(f32 hue, f32 saturation, f32 luminance, f32 a = 1.0F) {
+        const f32 c = (1.0F - (luminance >= 0.5F ? 2.0F * luminance - 1.0F : 1.0F - 2.0F * luminance)) * saturation;
+        const f32 hp = hue / 60.0F;
+        const f32 hp2 = hp - 2.0F * static_cast<f32>(static_cast<i32>(hp * 0.5F));
+        const f32 xa = hp2 - 1.0F;
+        const f32 x  = c * (1.0F - (xa < 0.0F ? -xa : xa));
+        f32 r = 0.0F;
+        f32 g = 0.0F;
+        f32 b = 0.0F;
+        if      (hp < 1.0F) { r = c; g = x; }
+        else if (hp < 2.0F) { r = x; g = c; }
+        else if (hp < 3.0F) { g = c; b = x; }
+        else if (hp < 4.0F) { g = x; b = c; }
+        else if (hp < 5.0F) { r = x; b = c; }
+        else                { r = c; b = x; }
+        const f32 m = luminance - c * 0.5F;
+        return Color {
+            static_cast<u8>((r + m) * 255.0F),
+            static_cast<u8>((g + m) * 255.0F),
+            static_cast<u8>((b + m) * 255.0F),
+            static_cast<u8>(a * 255.0F),
+        };
+    }
     [[nodiscard]] constexpr operator SDL_Color() const { return *reinterpret_cast<const SDL_Color*>(this); }
     constexpr static f32 TO_FCOLOR = 1.0F / 255.0F;
     [[nodiscard]] constexpr operator ColorF() const { return ColorF { r * TO_FCOLOR, g * TO_FCOLOR, b * TO_FCOLOR, a * TO_FCOLOR }; }

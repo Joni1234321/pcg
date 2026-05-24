@@ -4,6 +4,7 @@
 
 #include "0_engine/u_types.hpp"
 #include "u_texture.hpp"
+#include "u_util.hpp"
 
 namespace pce::colors {
 // NOLINTBEGIN(*-use-designated-initializers)
@@ -109,6 +110,12 @@ constexpr Color ASH_GRAY { 124U, 124U, 124U };    // #7C7C7C - Muted ash gray
 // Hex Battle
 constexpr Color HEX_HOVER { 190U, 205U, 175U }; // muted sage-green hover ring
 constexpr Color HEX_SELECT { 210U, 165U, 30U }; // warm amber-gold selection ring
+
+constexpr f32 COUNTRY_LUMINANCE = 0.3F;
+constexpr Color WG_GER_BG = Color::FromHsl(90.0F, 0.20F, COUNTRY_LUMINANCE);
+constexpr Color WG_SOV_BG = Color::FromHsl(2.0F, 0.60F, COUNTRY_LUMINANCE);
+constexpr Color WG_USA_BG = Color::FromHsl(218.0F, 0.60F, COUNTRY_LUMINANCE);
+
 
 inline Color AnimateFast(const f32 t) {
     const u8 red = static_cast<u8>((std::sin(t * 0.5F + 0.0F) * 0.5F + 0.5F) * 255U);
