@@ -193,3 +193,11 @@ struct Archetype {
     [[nodiscard]] static constexpr Entity begin() noexcept { return Entity { 0U }; }
     [[nodiscard]] constexpr Entity end() const noexcept { return Entity { Count }; }
 };
+
+// clang-format off
+template <class T> constexpr void HashCombine(size_t& seed, const T& v) noexcept { seed ^= std::hash<T>{}(v) + 0x9e3779b9u + (seed << 6) + (seed >> 2); }
+
+template <class T> struct std::hash<Vec2<T>> { size_t operator()(const Vec2<T> v) const noexcept { size_t h = std::hash<T>{}(v.x); HashCombine(h, v.y); return h; } };
+template <class T> struct std::hash<Vec3<T>> { size_t operator()(const Vec3<T> v) const noexcept { size_t h = std::hash<T>{}(v.x); HashCombine(h, v.y); HashCombine(h, v.z); return h; } };
+template <class T> struct std::hash<Vec4<T>> { size_t operator()(const Vec4<T> v) const noexcept { size_t h = std::hash<T>{}(v.x); HashCombine(h, v.y); HashCombine(h, v.z); HashCombine(h, v.w); return h; } };
+// clang-format on

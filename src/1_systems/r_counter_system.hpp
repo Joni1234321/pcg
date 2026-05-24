@@ -36,7 +36,7 @@ enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHEL
 
 struct Counter {
     int2 axial { };
-    Array<SDL_Color, 3> colors { };
+    Array<Color, 12> colors { };
     Label label_top;
     Label label_bottom;
     b8 selected { false };
@@ -62,36 +62,35 @@ inline void RenderCounters(const Pool<Counter>& counters) {
 
         // draw static counters
         for (i32 i = static_cast<i32>(counter.colors.size()) - 1; i >= 0; i--) {
-            SDL_Color color_background = counter.colors[static_cast<u32>(i)];
+            if (counter.colors[static_cast<u32>(i)].a == 0) { continue; }
 
-            if (color_background.a == 0) { continue; }
-
-            constexpr f32 STACK_OFFSET = 1.0F / 10.0F;
-            constexpr f32 SHADOW_OFFSET = STACK_OFFSET * 0.25F;
-            constexpr f32 BORDER_THICKNESS = STACK_OFFSET * 0.20F;
+            constexpr f32 OFFSET_STACK = 1.0F / 10.0F;
+            constexpr f32 OFFSET_SHADOW = OFFSET_STACK * 0.25F;
+            constexpr f32 BORDER_THICKNESS = OFFSET_STACK * 0.20F;
 
             // shadow
-            const AABBF area_shadow = AABBF::FromCenter(counter_center + float2 { SHADOW_OFFSET * counter_size.x }, counter_size);
-            const SDL_Color SHADOW_COLOR = counter.selected ? colors::ColorWithAlpha(colors::HEX_SELECT, 1.0F) : colors::ColorWithAlpha(colors::BLACK, 0.5F);
-            (void)SDL_SetRenderDrawColor(window_state.renderer, SHADOW_COLOR.r, SHADOW_COLOR.g, SHADOW_COLOR.b, SHADOW_COLOR.a);
+            const AABBF area_shadow = AABBF::FromCenter(counter_center + float2 { OFFSET_SHADOW * counter_size.x }, counter_size);
+            const SDL_Color COLOR_SHADOW = false ? colors::ColorWithAlpha(colors::HEX_SELECT, 1.0F) : colors::ColorWithAlpha(colors::BLACK, 0.5F);
+            (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_SHADOW.r, COLOR_SHADOW.g, COLOR_SHADOW.b, COLOR_SHADOW.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_shadow);
 
             // border
-            AABBF area_border = AABBF::FromCenter(counter_center + float2 { STACK_OFFSET * counter_size.x * static_cast<f32>(i) }, counter_size);
-            const SDL_Color border_color = counter.selected ? colors::HEX_SELECT : colors::BLACK;
-            (void)SDL_SetRenderDrawColor(window_state.renderer, border_color.r, border_color.g, border_color.b, border_color.a);
+            AABBF area_border = AABBF::FromCenter(counter_center + float2 { OFFSET_STACK * counter_size.x * static_cast<f32>(i) }, counter_size);
+            const SDL_Color color_border = counter.selected ? colors::HEX_SELECT : colors::BLACK;
+            (void)SDL_SetRenderDrawColor(window_state.renderer, color_border.r, color_border.g, color_border.b, color_border.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_border);
 
             // background
-            AABBF area_background = AABBF::FromCenter(counter_center + float2 { STACK_OFFSET * counter_size.x * static_cast<f32>(i) }, counter_size - float2 { BORDER_THICKNESS * counter_size.x });
+            AABBF area_background = AABBF::FromCenter(counter_center + float2 { OFFSET_STACK * counter_size.x * static_cast<f32>(i) }, counter_size - float2 { BORDER_THICKNESS * counter_size.x });
+            const Color color_background = colors::GRAY;
             (void)SDL_SetRenderDrawColor(window_state.renderer, color_background.r, color_background.g, color_background.b, color_background.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_background);
         }
 
         // area
         const AABBF area_icon = AABBF::FromPoint(counter_point + counter_size * float2 { 0.20F, 0.25F }, counter_size * float2 { 0.6F, 0.4F });
-        constexpr Color COLOR_ICON { colors::GRAY_TINT };
-        (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_ICON.r, COLOR_ICON.g, COLOR_ICON.b, COLOR_ICON.a);
+        const Color color_area = counter.colors[0];
+        (void)SDL_SetRenderDrawColor(window_state.renderer, color_area.r, color_area.g, color_area.b, color_area.a);
         (void)SDL_RenderFillRect(window_state.renderer, area_icon);
 
         // labels

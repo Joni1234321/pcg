@@ -147,13 +147,30 @@ struct HexSystem {
         hex_state.vertecies.clear();
 
         // render units
+        UnorderedMap<int2, List<Handle<Unit>>> unit_by_axial;
+        for (u32 i = 0; i < hex_state.units.size(); i ++) {
+            Handle<Unit> unit_handle = hex_state.units.IndexToHandle(i);
+            unit_by_axial[hex_state.units[unit_handle].axial].EmplaceBack(unit_handle);
+        }
+
         hex_state.counters.Clear();
-        for (const Unit& unit : hex_state.units) {
+        for (const auto& [axial, unit_handles] : unit_by_axial) {
             Counter& counter = hex_state.counters.Get();
-            counter.axial = unit.axial;
-            counter.colors[0] = unit.color;
-            counter.label_top.SetText(EchelonToString(unit.echelon));
-            counter.label_bottom.SetText(std::format("{}-{}", unit.dmg, unit.move));
+            counter.axial = axial;
+            Echelon echelon {Echelon::ECHELON_SQUAD};
+            u32 dmg = 0;
+            u32 move = 0;
+            counter.colors = {};
+            for (u32 i = 0; i < math::Min<u32>(counter.colors.size(), unit_handles.size()); i++) {
+                const Unit& unit = hex_state.units[unit_handles[i]];
+                counter.colors[i] = unit.color;
+                dmg += unit.dmg;
+                move += unit.move;
+                echelon = math::Max(unit.echelon, echelon);
+            }
+            counter.label_top.SetText(EchelonToString(echelon));
+            counter.label_bottom.SetText(std::format("{}-{}", dmg, move));
+            counter.selected = hex_state.pseudo_states.axial_select_now.has_value() && hex_state.pseudo_states.axial_select_now.value() == counter.axial;
         }
         RenderCounters(hex_state.counters);
 
@@ -230,22 +247,53 @@ void arcade::RunHex() {
     camera.map_world_max = HexAxialToWorld(static_cast<int2>(hex_state.hex_map.map_size - uint2 { 1, 1 }));
 
     // GERMAN (feldgrau) — advancing right along road r=2
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_HQ,        .color = colors::DARK_GRAY, .axial = {  1, 2 }, .dmg = 0, .move = 0, .def = 0 });
+    // rear / command
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_HQ,        .color = colors::DARK_GRAY, .axial = {  0, 2 }, .dmg = 0, .move = 0, .def = 0 }); // Army HQ
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_ARMY,      .color = colors::DARK_GRAY, .axial = {  0, 2 }, .dmg = 0, .move = 0, .def = 0 }); // stacked w/ HQ
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_HQ,        .color = colors::DARK_GRAY, .axial = {  1, 2 }, .dmg = 0, .move = 0, .def = 0 }); // I.Korps HQ
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_DIVISION,  .color = colors::DARK_GRAY, .axial = {  2, 1 }, .dmg = 0, .move = 3, .def = 2 }); // 7.PzDiv
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_DIVISION,  .color = colors::DARK_GRAY, .axial = {  2, 3 }, .dmg = 0, .move = 3, .def = 2 }); // 5.InfDiv
+    // northern flank
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_CORPS,     .color = colors::DARK_GRAY, .axial = {  2, 0 }, .dmg = 4, .move = 4, .def = 1 }); // II.Korps
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_REGIMENT,  .color = colors::DARK_GRAY, .axial = {  3, 0 }, .dmg = 6, .move = 4, .def = 2 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::DARK_GRAY, .axial = {  5, 0 }, .dmg = 4, .move = 5, .def = 0 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::DARK_GRAY, .axial = {  7, 0 }, .dmg = 3, .move = 6, .def = 0 }); // recon
+    // center
     (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_CORPS,     .color = colors::DARK_GRAY, .axial = {  3, 2 }, .dmg = 5, .move = 5, .def = 0 });
     (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::DARK_GRAY, .axial = {  4, 1 }, .dmg = 4, .move = 4, .def = 0 });
     (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BRIGADE,   .color = colors::DARK_GRAY, .axial = {  4, 3 }, .dmg = 8, .move = 3, .def = 0 });
     (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::MAROON,    .axial = {  5, 2 }, .dmg = 0, .move = 0, .def = 0 }); // ART
     (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::DARK_GRAY, .axial = {  6, 1 }, .dmg = 5, .move = 4, .def = 0 });
     (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::DARK_GRAY, .axial = {  6, 2 }, .dmg = 6, .move = 4, .def = 0 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::DARK_GRAY, .axial = {  6, 2 }, .dmg = 5, .move = 4, .def = 1 }); // stacked
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::MAROON,    .axial = {  7, 2 }, .dmg = 0, .move = 0, .def = 0 }); // fwd ART
+    // southern flank
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_REGIMENT,  .color = colors::DARK_GRAY, .axial = {  3, 5 }, .dmg = 6, .move = 3, .def = 2 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::DARK_GRAY, .axial = {  5, 4 }, .dmg = 5, .move = 4, .def = 0 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::DARK_GRAY, .axial = {  7, 4 }, .dmg = 4, .move = 5, .def = 0 });
 
     // ALLIED (olive drab) — pulling back along road r=3
+    // front / screening
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::OLIVE,     .axial = {  9, 2 }, .dmg = 3, .move = 6, .def = 0 }); // recon
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::BROWN,     .axial = {  9, 3 }, .dmg = 0, .move = 0, .def = 0 }); // fwd ART
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::OLIVE,     .axial = { 10, 4 }, .dmg = 4, .move = 5, .def = 1 });
     (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::OLIVE,     .axial = { 11, 3 }, .dmg = 5, .move = 6, .def = 0 });
     (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::OLIVE,     .axial = { 11, 2 }, .dmg = 4, .move = 5, .def = 0 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::OLIVE,     .axial = { 11, 3 }, .dmg = 3, .move = 5, .def = 0 }); // stacked
+    // main body
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_REGIMENT,  .color = colors::OLIVE,     .axial = { 12, 1 }, .dmg = 6, .move = 4, .def = 2 });
     (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::BROWN,     .axial = { 13, 3 }, .dmg = 0, .move = 0, .def = 0 }); // ART
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BRIGADE,   .color = colors::OLIVE,     .axial = { 13, 4 }, .dmg = 7, .move = 4, .def = 1 });
     (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BRIGADE,   .color = colors::OLIVE,     .axial = { 14, 4 }, .dmg = 6, .move = 4, .def = 0 });
     (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::OLIVE,     .axial = { 14, 2 }, .dmg = 5, .move = 7, .def = 0 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_DIVISION,  .color = colors::OLIVE,     .axial = { 14, 2 }, .dmg = 0, .move = 3, .def = 3 }); // stacked
+    // rear / command
     (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_CORPS,     .color = colors::OLIVE,     .axial = { 15, 3 }, .dmg = 4, .move = 6, .def = 0 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_CORPS,     .color = colors::OLIVE,     .axial = { 16, 1 }, .dmg = 3, .move = 5, .def = 1 }); // II.Corps
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_DIVISION,  .color = colors::OLIVE,     .axial = { 16, 4 }, .dmg = 0, .move = 3, .def = 3 });
     (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_HQ,        .color = colors::OLIVE,     .axial = { 17, 3 }, .dmg = 0, .move = 0, .def = 0 }); // 7.Army
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_ARMY,      .color = colors::OLIVE,     .axial = { 17, 3 }, .dmg = 0, .move = 0, .def = 0 }); // stacked w/ HQ
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_HQ,        .color = colors::OLIVE,     .axial = { 19, 2 }, .dmg = 0, .move = 0, .def = 0 }); // High Command
 
     // Systems
     Orchestra orchestra { };
