@@ -116,7 +116,6 @@ constexpr Color WG_GER_BG = Color::FromHsl(90.0F, 0.20F, COUNTRY_LUMINANCE);
 constexpr Color WG_SOV_BG = Color::FromHsl(2.0F, 0.60F, COUNTRY_LUMINANCE);
 constexpr Color WG_USA_BG = Color::FromHsl(218.0F, 0.60F, COUNTRY_LUMINANCE);
 
-
 inline Color AnimateFast(const f32 t) {
     const u8 red = static_cast<u8>((std::sin(t * 0.5F + 0.0F) * 0.5F + 0.5F) * 255U);
     const u8 green = static_cast<u8>((std::sin(t * 0.7F + 2.0F) * 0.5F + 0.5F) * 255U);

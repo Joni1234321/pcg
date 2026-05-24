@@ -34,9 +34,9 @@ enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK };
 
 [[nodiscard]] constexpr String UnitIconToString(const UnitIcon icon) {
     switch (icon) {
-        case UnitIcon::ICON_INF:  return "inf";
-        case UnitIcon::ICON_ART:  return "art";
-        case UnitIcon::ICON_HQ:   return "hq";
+        case UnitIcon::ICON_INF: return "inf";
+        case UnitIcon::ICON_ART: return "art";
+        case UnitIcon::ICON_HQ: return "hq";
         case UnitIcon::ICON_TANK: return "tnk";
     }
     __builtin_unreachable();
@@ -94,7 +94,8 @@ inline void RenderCounters(const Pool<Counter>& counters) {
             (void)SDL_RenderFillRect(window_state.renderer, area_counter);
 
             // background
-            const AABBF area_background = area_counter.WithPadding(float2 { BORDER_THICKNESS * counter_size.x });;
+            const AABBF area_background = area_counter.WithPadding(float2 { BORDER_THICKNESS * counter_size.x });
+            ;
             (void)SDL_SetRenderDrawColor(window_state.renderer, counter_stack.color_background.r, counter_stack.color_background.g, counter_stack.color_background.b, counter_stack.color_background.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_background);
         }

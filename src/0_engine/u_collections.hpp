@@ -2,16 +2,15 @@
 
 #include <algorithm>
 #include <array>
-#include <bitset>
 #include <format>
 #include <functional>
-#include <queue>
 #include <set>
 #include <span>
 #include <stack>
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <ranges>
 
 #include "0_engine/u_types.hpp"
 #include "0_engine/u_util.hpp"
@@ -236,6 +235,8 @@ template <typename T, typename H = T> struct HandleList {
     }
     [[nodiscard]] constexpr b8 ValidHandle(const Handle<H> handle) const noexcept { return handle.id - offset_handle.id < size(); }
     [[nodiscard]] constexpr Handle<H> FirstHandle() const noexcept { return offset_handle; }
+    [[nodiscard]] constexpr auto handle_to_view () { return std::views::transform([this](const Handle<H> handle) -> T& { return this->operator[](handle);}); }
+    [[nodiscard]] constexpr auto handle_to_view () const { return std::views::transform([this](const Handle<H> handle) -> const T& { return this->operator[](handle);}); }
 };
 template <typename K, typename V> class FlatMap {
     List<K> keys { };
@@ -331,8 +332,11 @@ template <class T, u32 BLOCK_SIZE = 128U> struct Pool {
     List<UniquePointer<Array<T, BLOCK_SIZE>>> blocks { };
 
     u32 size { 0 };
-    void Clear()   { size = 0U; }
-    void Destroy() { blocks.clear(); size = 0U; }
+    void Clear() { size = 0U; }
+    void Destroy() {
+        blocks.clear();
+        size = 0U;
+    }
     T& Get() {
         const u32 block = size / BLOCK_SIZE;
         const u32 cell = size % BLOCK_SIZE;
@@ -348,24 +352,31 @@ template <class T, u32 BLOCK_SIZE = 128U> struct Pool {
         using Ref = std::conditional_t<std::is_const_v<PoolType>, const T&, T&>;
 
         PoolType& pool;
-        u32       index;
+        u32 index;
 
-        Ref            operator*()  const { return pool.blocks[index / BLOCK_SIZE]->operator[](index % BLOCK_SIZE); }
-        PoolIteratorT& operator++()       { ++index; return *this; }
-        PoolIteratorT  operator++(int)    { PoolIteratorT t = *this; ++index; return t; }
+        Ref operator*() const { return pool.blocks[index / BLOCK_SIZE]->operator[](index % BLOCK_SIZE); }
+        PoolIteratorT& operator++() {
+            ++index;
+            return *this;
+        }
+        PoolIteratorT operator++(int) {
+            PoolIteratorT t = *this;
+            ++index;
+            return t;
+        }
         bool operator==(const PoolIteratorT& o) const { return index == o.index; }
         bool operator!=(const PoolIteratorT& o) const { return index != o.index; }
     };
 
-    using Iterator      = PoolIteratorT<Pool>;
+    using Iterator = PoolIteratorT<Pool>;
     using ConstIterator = PoolIteratorT<const Pool>;
 
-    Iterator      begin()        { return { *this, 0U }; }
-    Iterator      end()          { return { *this, size }; }
-    ConstIterator begin()  const { return { *this, 0U }; }
-    ConstIterator end()    const { return { *this, size }; }
+    Iterator begin() { return { *this, 0U }; }
+    Iterator end() { return { *this, size }; }
+    ConstIterator begin() const { return { *this, 0U }; }
+    ConstIterator end() const { return { *this, size }; }
     ConstIterator cbegin() const { return { *this, 0U }; }
-    ConstIterator cend()   const { return { *this, size }; }
+    ConstIterator cend() const { return { *this, size }; }
 
     u32 Size() const { return size; }
 };

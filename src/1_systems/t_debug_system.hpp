@@ -6,7 +6,7 @@
 namespace pce::ui {
 struct TickComponent : NodeComponentBase {
     using Property = std::tuple<String&, nanoseconds64, nanoseconds64>;
-    explicit TickComponent(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(hug).Text(FontSizes::tiny, colors::RADIANT_ORANGE).Build() } { }
+    explicit TickComponent(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(hug).Text(FontSizes::body, colors::RADIANT_ORANGE).Build() } { }
     void SetProperty(const Property& property) const;
 };
 static_assert(NodeComponent<TickComponent>);
@@ -28,7 +28,7 @@ struct TickFrame : Frame {
     void Update();
 
     Handle<Node> root { B(frame).Node(hug).Padding2({ 10U, 0U }).Direction(vertical).Build() };
-    Handle<Node> ticks { B(root).Node(hug).Padding2({ 0U, 4U }).Text(FontSizes::tiny, colors::RADIANT_ORANGE).Build() };
+    Handle<Node> ticks { B(root).Node(hug).Padding2({ 0U, 4U }).Text(FontSizes::body, colors::RADIANT_ORANGE).Build() };
     NodeComponentPool<TickComponent> systems { B(root).Pool<TickComponent>() };
 };
 struct DebugFrame : Frame {

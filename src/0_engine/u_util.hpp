@@ -114,4 +114,5 @@ template <typename T> [[nodiscard]] constexpr Vec4<T> Abs(Vec4<T> v) { return { 
 template <typename T> [[nodiscard]] constexpr Vec2<T> Lerp(Vec2<T> a, Vec2<T> b, f32 t) { return { Lerp(a.x, b.x, t), Lerp(a.y, b.y, t) }; }
 template <typename T> [[nodiscard]] constexpr Vec3<T> Lerp(Vec3<T> a, Vec3<T> b, f32 t) { return { Lerp(a.x, b.x, t), Lerp(a.y, b.y, t), Lerp(a.z, b.z, t) }; }
 template <typename T> [[nodiscard]] constexpr Vec4<T> Lerp(Vec4<T> a, Vec4<T> b, f32 t) { return { Lerp(a.x, b.x, t), Lerp(a.y, b.y, t), Lerp(a.z, b.z, t), Lerp(a.w, b.w, t) }; }
+template <typename T> [[nodiscard]] constexpr T SaturatingSub(const T val, const T sub) { return val > sub ? val - sub : T { 0 }; }
 } // namespace pce::math
