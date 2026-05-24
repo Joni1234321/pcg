@@ -4,7 +4,9 @@
 #include "0_engine/r_window_state.hpp"
 #include "0_engine/u_assets.hpp"
 #include "0_engine/u_logger.hpp"
+#include "0_engine/u_collections.hpp"
 
+#include "SDL3_ttf/SDL_ttf.h"
 #include "SDL3/SDL_pixels.h"
 #include "SDL3/SDL_rect.h"
 #include "SDL3_image/SDL_image.h"
@@ -41,6 +43,7 @@ struct DestroyText {
 struct Label {
     UniquePointer<TTF_Text, DestroyText> ttf_text { TTF_CreateText(Singleton::Get<WindowState>().text_engine, nullptr, "", 0) };
     operator TTF_Text*() const { return ttf_text.Get(); }
+    void SetText (const String& string) const { TTF_SetTextString(ttf_text.Get(), string.c_str(), string.size());  }
 };
 struct AABBF {
     float2 point;

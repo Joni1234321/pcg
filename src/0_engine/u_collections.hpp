@@ -330,17 +330,43 @@ template <class T> struct ParticlePool {
 template <class T, u32 BLOCK_SIZE = 128U> struct Pool {
     List<UniquePointer<Array<T, BLOCK_SIZE>>> blocks { };
 
-    u32 active { 0 };
-    void Clear() { active = 0U; }
+    u32 size { 0 };
+    void Clear()   { size = 0U; }
+    void Destroy() { blocks.clear(); size = 0U; }
     T& Get() {
-        active++;
-        const u32 block = active / BLOCK_SIZE;
-        const u32 cell = active % BLOCK_SIZE;
-        if (block == blocks.size()) { blocks.EmplaceBack(UniquePointer<Array<T, BLOCK_SIZE>>(new Array<T, BLOCK_SIZE>())); }
+        const u32 block = size / BLOCK_SIZE;
+        const u32 cell = size % BLOCK_SIZE;
+        if (block == blocks.size()) { blocks.EmplaceBack(new Array<T, BLOCK_SIZE>()); }
 
+        size++;
         UniquePointer<Array<T, BLOCK_SIZE>>& array = blocks[block];
         T& item = array->operator[](cell);
         return item;
     }
+
+    template <class PoolType> struct PoolIteratorT {
+        using Ref = std::conditional_t<std::is_const_v<PoolType>, const T&, T&>;
+
+        PoolType& pool;
+        u32       index;
+
+        Ref            operator*()  const { return pool.blocks[index / BLOCK_SIZE]->operator[](index % BLOCK_SIZE); }
+        PoolIteratorT& operator++()       { ++index; return *this; }
+        PoolIteratorT  operator++(int)    { PoolIteratorT t = *this; ++index; return t; }
+        bool operator==(const PoolIteratorT& o) const { return index == o.index; }
+        bool operator!=(const PoolIteratorT& o) const { return index != o.index; }
+    };
+
+    using Iterator      = PoolIteratorT<Pool>;
+    using ConstIterator = PoolIteratorT<const Pool>;
+
+    Iterator      begin()        { return { *this, 0U }; }
+    Iterator      end()          { return { *this, size }; }
+    ConstIterator begin()  const { return { *this, 0U }; }
+    ConstIterator end()    const { return { *this, size }; }
+    ConstIterator cbegin() const { return { *this, 0U }; }
+    ConstIterator cend()   const { return { *this, size }; }
+
+    u32 Size() const { return size; }
 };
 } // namespace pce

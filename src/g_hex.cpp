@@ -39,6 +39,14 @@ enum class TerrainType : u8 { TERRAIN_DEEP_OCEAN, TERRAIN_OCEAN, TERRAIN_BEACH, 
 struct Hex {
     TerrainType terrain;
 };
+struct Unit {
+    Echelon echelon;
+    Color color;
+    int2 axial;
+    u32 dmg;
+    u32 move;
+    u32 def;
+};
 
 struct PseudoStates {
     std::optional<int2> axial_hover_now;
@@ -53,7 +61,8 @@ struct HexState {
     PseudoStates pseudo_states;
     HexList<HexDrawInfo> hex_draw;
     HexList<Hex> hex_map;
-    HandleList<Counter> counters;
+    HandleList<Unit> units;
+    Pool<Counter> counters;
     Pool<Label> label_pool;
     List<SDL_Vertex> vertecies { };
 };
@@ -69,13 +78,13 @@ TerrainType FloatToTerrain(const f32 terrain) {
 }
 Color TerrainToColor(const TerrainType terrain) {
     switch (terrain) {
-        case TerrainType::TERRAIN_DEEP_OCEAN:  return Color { 20U, 60U, 120U };
-        case TerrainType::TERRAIN_OCEAN:         return Color { 50U, 100U, 180U };
-        case TerrainType::TERRAIN_BEACH:         return colors::KHAKI;
-        case TerrainType::TERRAIN_GRASS:         return Color { 100U, 190U, 80U };
-        case TerrainType::TERRAIN_FOREST:        return colors::FOREST_GREEN;
-        case TerrainType::TERRAIN_MOUNTAIN:      return colors::GRAY;
-        case TerrainType::TERRAIN_SNOW:          return colors::WHITE;
+        case TerrainType::TERRAIN_DEEP_OCEAN: return Color { 20U, 60U, 120U };
+        case TerrainType::TERRAIN_OCEAN: return Color { 50U, 100U, 180U };
+        case TerrainType::TERRAIN_BEACH: return colors::KHAKI;
+        case TerrainType::TERRAIN_GRASS: return Color { 100U, 190U, 80U };
+        case TerrainType::TERRAIN_FOREST: return colors::FOREST_GREEN;
+        case TerrainType::TERRAIN_MOUNTAIN: return colors::GRAY;
+        case TerrainType::TERRAIN_SNOW: return colors::WHITE;
     }
     __builtin_unreachable();
 }
@@ -128,15 +137,6 @@ struct HexSystem {
         }
 
         // pseudo states draw
-        if (hex_state.pseudo_states.axial_select_enter) {
-            const OptionalHandle<Counter> counter_handle = find_handle_of(hex_state.counters, hex_state.pseudo_states.axial_select_enter.value(), &Counter::axial);
-            if (counter_handle.IsValid()) { hex_state.counters[counter_handle.GetHandle()].selected = true; }
-        }
-        if (hex_state.pseudo_states.axial_select_exit) {
-            const OptionalHandle<Counter> counter_handle = find_handle_of(hex_state.counters, hex_state.pseudo_states.axial_select_exit.value(), &Counter::axial);
-            if (counter_handle.IsValid()) { hex_state.counters[counter_handle.GetHandle()].selected = false; }
-        }
-
         if (hex_state.pseudo_states.axial_hover_now) { HexAppend(hex_state.vertecies, camera.scale, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover_now.value())), colors::HEX_HOVER); }
         if (hex_state.pseudo_states.axial_select_now) { HexAppend(hex_state.vertecies, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select_now.value())), colors::HEX_SELECT); }
 
@@ -146,7 +146,15 @@ struct HexSystem {
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.vertecies.data.data(), static_cast<i32>(hex_state.vertecies.size()), nullptr, 0);
         hex_state.vertecies.clear();
 
-        // render counters
+        // render units
+        hex_state.counters.Clear();
+        for (const Unit& unit : hex_state.units) {
+            Counter& counter = hex_state.counters.Get();
+            counter.axial = unit.axial;
+            counter.colors[0] = unit.color;
+            counter.label_top.SetText(EchelonToString(unit.echelon));
+            counter.label_bottom.SetText(std::format("{}-{}", unit.dmg, unit.move));
+        }
         RenderCounters(hex_state.counters);
 
         // movement https://www.redblobgames.com/grids/hexagons/#distances
@@ -156,9 +164,9 @@ struct HexSystem {
 
         if (hex_state.pseudo_states.axial_hover_now && hex_state.pseudo_states.axial_select_now && hex_state.pseudo_states.axial_hover_now != hex_state.pseudo_states.axial_select_now) {
             const int2 axial_start = hex_state.pseudo_states.axial_select_now.value();
-            const OptionalHandle counter_handle_opt = find_handle_of(hex_state.counters, axial_start, &Counter::axial);
-            if (counter_handle_opt.IsValid()) {
-                const Handle counter_handle = counter_handle_opt.GetHandle();
+            const OptionalHandle<Unit> unit_handle_opt = find_handle_of(hex_state.units, axial_start, &Unit::axial);
+            if (unit_handle_opt.IsValid()) {
+                const Handle<Unit> unit_handle = unit_handle_opt.GetHandle();
 
                 constexpr Color COLOR { colors::RUBY_RED };
                 (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR.r, COLOR.g, COLOR.b, COLOR.a);
@@ -191,8 +199,8 @@ struct HexSystem {
 
                 // move
                 if (input_state.right_mouse_down) {
-                    Counter& counter = hex_state.counters[counter_handle];
-                    counter.axial = axial_end;
+                    Unit& unit = hex_state.units[unit_handle];
+                    unit.axial = axial_end;
                     hex_state.pseudo_states.axial_select_exit = hex_state.pseudo_states.axial_select_now;
                     hex_state.pseudo_states.axial_select_now = hex_state.pseudo_states.axial_select_enter = axial_end;
                 }
@@ -216,22 +224,22 @@ void arcade::RunHex() {
     camera.map_world_max = HexAxialToWorld(static_cast<int2>(hex_state.hex_map.map_size - uint2 { 1, 1 }));
 
     // GERMAN (feldgrau) — advancing right along road r=2
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 1, 2 }, .colors = { colors::DARK_GRAY, colors::DEEP_GOLD }, .text_bottom = "4.PzD", .text_top = "HQ" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 3, 2 }, .colors = { colors::DARK_GRAY, colors::STEEL_GRAY, colors::DARK_GRAY }, .text_bottom = "5-5", .text_top = "xxx" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 4, 1 }, .colors = { colors::DARK_GRAY, colors::STEEL_GRAY }, .text_bottom = "4-4", .text_top = "II" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 4, 3 }, .colors = { colors::DARK_GRAY, colors::STEEL_GRAY }, .text_bottom = "8-3", .text_top = "x" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 5, 2 }, .colors = { colors::MAROON }, .text_bottom = "ART", .text_top = "I" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 6, 1 }, .colors = { colors::DARK_GRAY }, .text_bottom = "5-4", .text_top = "I" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 6, 2 }, .colors = { colors::DARK_GRAY, colors::STEEL_GRAY }, .text_bottom = "6-4", .text_top = "II" });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_HQ,        .color = colors::DARK_GRAY, .axial = {  1, 2 }, .dmg = 0, .move = 0, .def = 0 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_CORPS,     .color = colors::DARK_GRAY, .axial = {  3, 2 }, .dmg = 5, .move = 5, .def = 0 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::DARK_GRAY, .axial = {  4, 1 }, .dmg = 4, .move = 4, .def = 0 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BRIGADE,   .color = colors::DARK_GRAY, .axial = {  4, 3 }, .dmg = 8, .move = 3, .def = 0 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::MAROON,    .axial = {  5, 2 }, .dmg = 0, .move = 0, .def = 0 }); // ART
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::DARK_GRAY, .axial = {  6, 1 }, .dmg = 5, .move = 4, .def = 0 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::DARK_GRAY, .axial = {  6, 2 }, .dmg = 6, .move = 4, .def = 0 });
 
     // ALLIED (olive drab) — pulling back along road r=3
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 11, 3 }, .colors = { colors::OLIVE, colors::DARK_DARK_BROWN }, .text_bottom = "5-6", .text_top = "II" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 11, 2 }, .colors = { colors::OLIVE }, .text_bottom = "4-5", .text_top = "I" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 13, 3 }, .colors = { colors::BROWN }, .text_bottom = "ART", .text_top = "I" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 14, 4 }, .colors = { colors::OLIVE, colors::DARK_GRAY }, .text_bottom = "6-4", .text_top = "x" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 14, 2 }, .colors = { colors::OLIVE, colors::DARK_DARK_BROWN }, .text_bottom = "5-7", .text_top = "II" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 15, 3 }, .colors = { colors::OLIVE, colors::DARK_DARK_BROWN, colors::OLIVE }, .text_bottom = "4-6", .text_top = "xxx" });
-    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 17, 3 }, .colors = { colors::OLIVE, colors::DEEP_GOLD }, .text_bottom = "7.Army", .text_top = "HQ xxxx" });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::OLIVE,     .axial = { 11, 3 }, .dmg = 5, .move = 6, .def = 0 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::OLIVE,     .axial = { 11, 2 }, .dmg = 4, .move = 5, .def = 0 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::BROWN,     .axial = { 13, 3 }, .dmg = 0, .move = 0, .def = 0 }); // ART
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BRIGADE,   .color = colors::OLIVE,     .axial = { 14, 4 }, .dmg = 6, .move = 4, .def = 0 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::OLIVE,     .axial = { 14, 2 }, .dmg = 5, .move = 7, .def = 0 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_CORPS,     .color = colors::OLIVE,     .axial = { 15, 3 }, .dmg = 4, .move = 6, .def = 0 });
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_HQ,        .color = colors::OLIVE,     .axial = { 17, 3 }, .dmg = 0, .move = 0, .def = 0 }); // 7.Army
 
     // Systems
     Orchestra orchestra { };
@@ -255,7 +263,7 @@ void arcade::RunHex() {
     // Free TTF-owning state BEFORE Window destructor calls TTF_Quit/SDL_Quit,
     // otherwise Labels (TTF_Text) in CounterState are destroyed during static destruction
     // after SDL is dead, causing an access violation (0xC0000005).
-    hex_state.counters.clear();
+    hex_state.counters.Destroy();
     globalData.Get<NodeTree>().clear();
 }
 } // namespace pcg

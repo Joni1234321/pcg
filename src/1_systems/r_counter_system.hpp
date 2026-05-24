@@ -16,31 +16,20 @@
 
 namespace pce {
 
-enum class Echelon : u8 {
-    ECHELON_SQUAD,
-    ECHELON_PLATOON,
-    ECHELON_COMPANY,
-    ECHELON_BATTALION,
-    ECHELON_REGIMENT,
-    ECHELON_BRIGADE,
-    ECHELON_DIVISION,
-    ECHELON_CORPS,
-    ECHELON_ARMY,
-    ECHELON_HQ,
-};
+enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHELON_BATTALION, ECHELON_REGIMENT, ECHELON_BRIGADE, ECHELON_DIVISION, ECHELON_CORPS, ECHELON_ARMY, ECHELON_HQ };
 
-[[nodiscard]] constexpr const char* EchelonToString(const Echelon echelon) {
+[[nodiscard]] constexpr String EchelonToString(const Echelon echelon) {
     switch (echelon) {
-        case Echelon::ECHELON_SQUAD:      return "..";
-        case Echelon::ECHELON_PLATOON:    return "...";
-        case Echelon::ECHELON_COMPANY:    return "I";
-        case Echelon::ECHELON_BATTALION:  return "II";
-        case Echelon::ECHELON_REGIMENT:   return "III";
-        case Echelon::ECHELON_BRIGADE:    return "x";
-        case Echelon::ECHELON_DIVISION:   return "xx";
-        case Echelon::ECHELON_CORPS:      return "xxx";
-        case Echelon::ECHELON_ARMY:       return "xxxx";
-        case Echelon::ECHELON_HQ:         return "HQ";
+        case Echelon::ECHELON_SQUAD: return "..";
+        case Echelon::ECHELON_PLATOON: return "...";
+        case Echelon::ECHELON_COMPANY: return "I";
+        case Echelon::ECHELON_BATTALION: return "II";
+        case Echelon::ECHELON_REGIMENT: return "III";
+        case Echelon::ECHELON_BRIGADE: return "x";
+        case Echelon::ECHELON_DIVISION: return "xx";
+        case Echelon::ECHELON_CORPS: return "xxx";
+        case Echelon::ECHELON_ARMY: return "xxxx";
+        case Echelon::ECHELON_HQ: return "HQ";
     }
     __builtin_unreachable();
 }
@@ -48,14 +37,12 @@ enum class Echelon : u8 {
 struct Counter {
     int2 axial { };
     Array<SDL_Color, 3> colors { };
-    String text_bottom;
-    String text_top;
     Label label_top;
     Label label_bottom;
     b8 selected { false };
 };
 
-inline void RenderCounters(const Span<Counter>& counters) {
+inline void RenderCounters(const Pool<Counter>& counters) {
     static constexpr f32 TEXT_MIN_SCALE = 18.0F;
     const CameraState& camera = Singleton::Get<CameraState>();
     const WindowState& window_state = Singleton::Get<WindowState>();
@@ -109,18 +96,13 @@ inline void RenderCounters(const Span<Counter>& counters) {
 
         // labels
         if (camera.scale >= TEXT_MIN_SCALE) {
-            if (!counter.text_bottom.empty()) {
-                (void)TTF_SetTextFont(counter.label_bottom, font);
-                (void)TTF_SetTextString(counter.label_bottom, counter.text_bottom.c_str(), counter.text_bottom.size());
-                (void)TTF_SetTextWrapWidth(counter.label_bottom, static_cast<i32>(counter_size.x));
-                (void)TTF_DrawRendererText(counter.label_bottom, counter_point.x, counter_point.y + counter_size.y - static_cast<f32>(pt));
-            }
-            if (!counter.text_top.empty()) {
-                (void)TTF_SetTextFont(counter.label_top, font);
-                (void)TTF_SetTextString(counter.label_top, counter.text_top.c_str(), counter.text_top.size());
-                (void)TTF_SetTextWrapWidth(counter.label_top, static_cast<i32>(counter_size.x));
-                (void)TTF_DrawRendererText(counter.label_top, counter_point.x, counter_point.y);
-            }
+            (void)TTF_SetTextFont(counter.label_bottom, font);
+            (void)TTF_SetTextWrapWidth(counter.label_bottom, static_cast<i32>(counter_size.x));
+            (void)TTF_DrawRendererText(counter.label_bottom, counter_point.x, counter_point.y + counter_size.y - static_cast<f32>(pt));
+
+            (void)TTF_SetTextFont(counter.label_top, font);
+            (void)TTF_SetTextWrapWidth(counter.label_top, static_cast<i32>(counter_size.x));
+            (void)TTF_DrawRendererText(counter.label_top, counter_point.x, counter_point.y);
         }
     }
 }
