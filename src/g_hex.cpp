@@ -167,30 +167,36 @@ struct HexSystem {
             const OptionalHandle<Unit> unit_handle_opt = find_handle_of(hex_state.units, axial_start, &Unit::axial);
             if (unit_handle_opt.IsValid()) {
                 const Handle<Unit> unit_handle = unit_handle_opt.GetHandle();
+                Unit& unit = hex_state.units[unit_handle];
 
                 constexpr Color COLOR { colors::RUBY_RED };
                 (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR.r, COLOR.g, COLOR.b, COLOR.a);
 
-                const int2 axial_end = hex_state.pseudo_states.axial_hover_now.value();
+                const int2 axial_hover = hex_state.pseudo_states.axial_hover_now.value();
                 const int3 cube_start = HexAxialToCube(axial_start);
-                const int3 cube_end = HexAxialToCube(axial_end);
-                const u32 distance = HexCubeDistance(cube_start, cube_end);
-                const f32 distance_inv = 1.0F / static_cast<f32>(distance);
-                List<int2> axials;
+                const int3 cube_hover = HexAxialToCube(axial_hover);
+                const u32 distance = HexCubeDistance(cube_start, cube_hover);
+                const u32 distance_end = math::Min(distance, unit.move);
 
-                for (u32 i = 1; i <= distance; ++i) { axials.EmplaceBack(HexCubeToAxial(HexCubeRound(HexCubeLerp(cube_start, cube_end, i * distance_inv)))); }
-                for (u32 i = 0; i < distance; ++i) {
+                List<int2> axials;
+                const f32 distance_inv = 1.0F / static_cast<f32>(distance);
+                for (u32 i = 0; i <= distance; ++i) { axials.EmplaceBack(HexCubeToAxial(HexCubeRound(HexCubeLerp(cube_start, cube_hover, static_cast<f32>(i) * distance_inv)))); }
+
+                const int2 axial_end = axials[distance_end];
+
+                for (u32 i = 1; i < axials.size(); ++i) {
                     const int2& axial = axials[i];
                     const float2 world = HexAxialToWorld(axial);
                     const int2 screen = camera.WorldToScreen(world);
                     const float2 screen_f = static_cast<float2>(screen);
 
-                    HexAppend(hex_state.vertecies, camera.scale * 0.25F, screen, colors::RUBY_RED);
+                    const Color movement_color = i > distance_end ? colors::BLACK : colors::RUBY_RED;
+                    HexAppend(hex_state.vertecies, camera.scale * 0.25F, screen, movement_color);
                     (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.vertecies.data.data(), static_cast<i32>(hex_state.vertecies.size()), nullptr, 0);
                     hex_state.vertecies.clear();
 
                     const Label& label = hex_state.label_pool.Get();
-                    const String string_distance = std::format("{}", i + 1);
+                    const String string_distance = std::format("{}", i);
                     (void)TTF_SetTextWrapWidth(label, camera.scale);
                     (void)TTF_SetTextFont(label, font_movement);
                     (void)TTF_SetTextString(label, string_distance.c_str(), string_distance.size());
@@ -199,8 +205,8 @@ struct HexSystem {
 
                 // move
                 if (input_state.right_mouse_down) {
-                    Unit& unit = hex_state.units[unit_handle];
                     unit.axial = axial_end;
+                    unit.move -= distance_end;
                     hex_state.pseudo_states.axial_select_exit = hex_state.pseudo_states.axial_select_now;
                     hex_state.pseudo_states.axial_select_now = hex_state.pseudo_states.axial_select_enter = axial_end;
                 }
