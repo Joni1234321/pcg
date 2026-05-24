@@ -41,6 +41,7 @@ struct Hex {
 };
 struct Unit {
     Echelon echelon;
+    UnitIcon icon;
     Color color;
     int2 axial;
     u32 dmg;
@@ -56,6 +57,8 @@ struct PseudoStates {
     std::optional<int2> axial_select_now;
     std::optional<int2> axial_select_enter;
     std::optional<int2> axial_select_exit;
+
+    List<Handle<Unit>> unit_handles_select_now;
 };
 struct HexState {
     PseudoStates pseudo_states;
@@ -120,6 +123,14 @@ struct HexSystem {
         const FontCollection& font_collection = Singleton::Get<FontCollection>();
         HexState& hex_state = Singleton::Get<HexState>();
 
+        // precompute
+        UnorderedMap<int2, List<Handle<Unit>>> unit_by_axial;
+        for (u32 i = 0; i < hex_state.units.size(); i ++) {
+            Handle<Unit> unit_handle = hex_state.units.IndexToHandle(i);
+            unit_by_axial[hex_state.units[unit_handle].axial].EmplaceBack(unit_handle);
+        }
+
+
         // pseudo states set
         const float2 mouse_world = camera.ScreenToWorld(input_state.mouse_position);
         const Optional<int2> mouse_axial = hex_state.hex_draw.Contains(HexWorldToAxial(mouse_world)) ? Optional { HexWorldToAxial(mouse_world) } : std::nullopt;
@@ -134,7 +145,27 @@ struct HexSystem {
             hex_state.pseudo_states.axial_select_enter = select_new ? mouse_axial : std::nullopt;
             hex_state.pseudo_states.axial_select_exit = select_new ? hex_state.pseudo_states.axial_select_now : std::nullopt;
             hex_state.pseudo_states.axial_select_now = mouse_axial;
+
+            // unit selection
+            if (mouse_axial.has_value()) {
+                if (unit_by_axial.contains(mouse_axial.value())) {
+                    const List<Handle<Unit>>& unit_handles = unit_by_axial[mouse_axial.value()];
+                    if (select_new) {
+                        hex_state.pseudo_states.unit_handles_select_now.clear();
+                        hex_state.pseudo_states.unit_handles_select_now.EmplaceBack(unit_handles[0]);
+                    }
+                    else {
+                        const u32 i = unit_handles.IndexOf(hex_state.pseudo_states.unit_handles_select_now[0]);
+                        hex_state.pseudo_states.unit_handles_select_now.clear();
+                        hex_state.pseudo_states.unit_handles_select_now.EmplaceBack(unit_handles[(i + 1) % unit_handles.size()]);
+                    }
+                }
+            }
+            else {
+                hex_state.pseudo_states.unit_handles_select_now.clear();
+            }
         }
+
 
         // pseudo states draw
         if (hex_state.pseudo_states.axial_hover_now) { HexAppend(hex_state.vertecies, camera.scale, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover_now.value())), colors::HEX_HOVER); }
@@ -147,30 +178,47 @@ struct HexSystem {
         hex_state.vertecies.clear();
 
         // render units
-        UnorderedMap<int2, List<Handle<Unit>>> unit_by_axial;
-        for (u32 i = 0; i < hex_state.units.size(); i ++) {
-            Handle<Unit> unit_handle = hex_state.units.IndexToHandle(i);
-            unit_by_axial[hex_state.units[unit_handle].axial].EmplaceBack(unit_handle);
-        }
-
         hex_state.counters.Clear();
         for (const auto& [axial, unit_handles] : unit_by_axial) {
             Counter& counter = hex_state.counters.Get();
             counter.axial = axial;
-            Echelon echelon {Echelon::ECHELON_SQUAD};
+            Echelon echelon { Echelon::ECHELON_SQUAD };
+            UnitIcon icon { UnitIcon::ICON_INF };
             u32 dmg = 0;
             u32 move = 0;
-            counter.colors = {};
-            for (u32 i = 0; i < math::Min<u32>(counter.colors.size(), unit_handles.size()); i++) {
-                const Unit& unit = hex_state.units[unit_handles[i]];
-                counter.colors[i] = unit.color;
-                dmg += unit.dmg;
-                move += unit.move;
-                echelon = math::Max(unit.echelon, echelon);
+            counter.stack = {};
+            u32 counters_on_hex = math::Min<u32>(counter.stack.size(), unit_handles.size());
+            if (hex_state.pseudo_states.axial_select_now == axial) {
+                // drawing selected
+                const Handle<Unit> unit_handle_selected = hex_state.pseudo_states.unit_handles_select_now[0];
+                const Unit& unit_selected = hex_state.units[unit_handle_selected];
+                counter.stack[0] = CounterStack { .color = unit_selected.color, .color_border = colors::HEX_SELECT };
+                dmg = unit_selected.dmg;
+                move = unit_selected.move;
+                echelon = unit_selected.echelon;
+                icon = unit_selected.icon;
+
+                for (u32 i = 0, j = 1; i < counters_on_hex; i++) {
+                    const Handle<Unit> unit_handle = unit_handles[i];
+                    if (unit_handle == unit_handle_selected) { continue; }
+                    const Unit& unit = hex_state.units[unit_handle];
+                    counter.stack[j++] = CounterStack { .color = unit.color, .color_border = colors::YELLOW };
+                }
+            }
+            else {
+                // drawing plain
+                for (u32 i = 0; i < counters_on_hex; i++) {
+                    const Handle<Unit> unit_handle = unit_handles[i];
+                    const Unit& unit = hex_state.units[unit_handle];
+                    counter.stack[i] = CounterStack { .color = unit.color, .color_border = colors::BLACK };
+                    dmg += unit.dmg;
+                    move = math::Max(unit.move, move);
+                    if (unit.echelon >= echelon) { echelon = unit.echelon; icon = unit.icon; }
+                }
             }
             counter.label_top.SetText(EchelonToString(echelon));
+            counter.label_center.SetText(UnitIconToString(icon));
             counter.label_bottom.SetText(std::format("{}-{}", dmg, move));
-            counter.selected = hex_state.pseudo_states.axial_select_now.has_value() && hex_state.pseudo_states.axial_select_now.value() == counter.axial;
         }
         RenderCounters(hex_state.counters);
 
@@ -179,54 +227,52 @@ struct HexSystem {
         const Font& font_movement = font_collection.GetFontBold(static_cast<FontSizes>(pt));
         TTF_SetFontWrapAlignment(font_movement, TTF_HORIZONTAL_ALIGN_CENTER);
 
-        if (hex_state.pseudo_states.axial_hover_now && hex_state.pseudo_states.axial_select_now && hex_state.pseudo_states.axial_hover_now != hex_state.pseudo_states.axial_select_now) {
+        if (hex_state.pseudo_states.axial_hover_now && hex_state.pseudo_states.axial_select_now && hex_state.pseudo_states.axial_hover_now != hex_state.pseudo_states.axial_select_now
+            && !hex_state.pseudo_states.unit_handles_select_now.empty()) {
             const int2 axial_start = hex_state.pseudo_states.axial_select_now.value();
-            const OptionalHandle<Unit> unit_handle_opt = find_handle_of(hex_state.units, axial_start, &Unit::axial);
-            if (unit_handle_opt.IsValid()) {
-                const Handle<Unit> unit_handle = unit_handle_opt.GetHandle();
-                Unit& unit = hex_state.units[unit_handle];
+            const Handle<Unit> unit_handle = hex_state.pseudo_states.unit_handles_select_now[0];
+            Unit& unit = hex_state.units[unit_handle];
 
-                constexpr Color COLOR { colors::RUBY_RED };
-                (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR.r, COLOR.g, COLOR.b, COLOR.a);
+            constexpr Color COLOR { colors::RUBY_RED };
+            (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR.r, COLOR.g, COLOR.b, COLOR.a);
 
-                const int2 axial_hover = hex_state.pseudo_states.axial_hover_now.value();
-                const int3 cube_start = HexAxialToCube(axial_start);
-                const int3 cube_hover = HexAxialToCube(axial_hover);
-                const u32 distance = HexCubeDistance(cube_start, cube_hover);
-                const u32 distance_end = math::Min(distance, unit.move);
+            const int2 axial_hover = hex_state.pseudo_states.axial_hover_now.value();
+            const int3 cube_start = HexAxialToCube(axial_start);
+            const int3 cube_hover = HexAxialToCube(axial_hover);
+            const u32 distance = HexCubeDistance(cube_start, cube_hover);
+            const u32 distance_end = math::Min(distance, unit.move);
 
-                List<int2> axials;
-                const f32 distance_inv = 1.0F / static_cast<f32>(distance);
-                for (u32 i = 0; i <= distance; ++i) { axials.EmplaceBack(HexCubeToAxial(HexCubeRound(HexCubeLerp(cube_start, cube_hover, static_cast<f32>(i) * distance_inv)))); }
+            List<int2> axials;
+            const f32 distance_inv = 1.0F / static_cast<f32>(distance);
+            for (u32 i = 0; i <= distance; ++i) { axials.EmplaceBack(HexCubeToAxial(HexCubeRound(HexCubeLerp(cube_start, cube_hover, static_cast<f32>(i) * distance_inv)))); }
 
-                const int2 axial_end = axials[distance_end];
+            const int2 axial_end = axials[distance_end];
 
-                for (u32 i = 1; i < axials.size(); ++i) {
-                    const int2& axial = axials[i];
-                    const float2 world = HexAxialToWorld(axial);
-                    const int2 screen = camera.WorldToScreen(world);
-                    const float2 screen_f = static_cast<float2>(screen);
+            for (u32 i = 1; i < axials.size(); ++i) {
+                const int2& axial = axials[i];
+                const float2 world = HexAxialToWorld(axial);
+                const int2 screen = camera.WorldToScreen(world);
+                const float2 screen_f = static_cast<float2>(screen);
 
-                    const Color movement_color = i > distance_end ? colors::BLACK : colors::RUBY_RED;
-                    HexAppend(hex_state.vertecies, camera.scale * 0.25F, screen, movement_color);
-                    (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.vertecies.data.data(), static_cast<i32>(hex_state.vertecies.size()), nullptr, 0);
-                    hex_state.vertecies.clear();
+                const Color movement_color = i > distance_end ? colors::BLACK : colors::RUBY_RED;
+                HexAppend(hex_state.vertecies, camera.scale * 0.25F, screen, movement_color);
+                (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.vertecies.data.data(), static_cast<i32>(hex_state.vertecies.size()), nullptr, 0);
+                hex_state.vertecies.clear();
 
-                    const Label& label = hex_state.label_pool.Get();
-                    const String string_distance = std::format("{}", i);
-                    (void)TTF_SetTextWrapWidth(label, camera.scale);
-                    (void)TTF_SetTextFont(label, font_movement);
-                    (void)TTF_SetTextString(label, string_distance.c_str(), string_distance.size());
-                    (void)TTF_DrawRendererText(label, screen_f.x - camera.scale * 0.5F, screen_f.y - pt * 0.5F);
-                }
+                const Label& label = hex_state.label_pool.Get();
+                const String string_distance = std::format("{}", i);
+                (void)TTF_SetTextWrapWidth(label, camera.scale);
+                (void)TTF_SetTextFont(label, font_movement);
+                (void)TTF_SetTextString(label, string_distance.c_str(), string_distance.size());
+                (void)TTF_DrawRendererText(label, screen_f.x - camera.scale * 0.5F, screen_f.y - pt * 0.5F);
+            }
 
-                // move
-                if (input_state.right_mouse_down) {
-                    unit.axial = axial_end;
-                    unit.move -= distance_end;
-                    hex_state.pseudo_states.axial_select_exit = hex_state.pseudo_states.axial_select_now;
-                    hex_state.pseudo_states.axial_select_now = hex_state.pseudo_states.axial_select_enter = axial_end;
-                }
+            // move
+            if (input_state.right_mouse_down) {
+                unit.axial = axial_end;
+                unit.move -= distance_end;
+                hex_state.pseudo_states.axial_select_exit = hex_state.pseudo_states.axial_select_now;
+                hex_state.pseudo_states.axial_select_now = hex_state.pseudo_states.axial_select_enter = axial_end;
             }
         }
 
@@ -246,54 +292,25 @@ void arcade::RunHex() {
     camera.map_world_min = { 0.0F, 0.0F };
     camera.map_world_max = HexAxialToWorld(static_cast<int2>(hex_state.hex_map.map_size - uint2 { 1, 1 }));
 
-    // GERMAN (feldgrau) — advancing right along road r=2
-    // rear / command
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_HQ,        .color = colors::DARK_GRAY, .axial = {  0, 2 }, .dmg = 0, .move = 0, .def = 0 }); // Army HQ
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_ARMY,      .color = colors::DARK_GRAY, .axial = {  0, 2 }, .dmg = 0, .move = 0, .def = 0 }); // stacked w/ HQ
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_HQ,        .color = colors::DARK_GRAY, .axial = {  1, 2 }, .dmg = 0, .move = 0, .def = 0 }); // I.Korps HQ
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_DIVISION,  .color = colors::DARK_GRAY, .axial = {  2, 1 }, .dmg = 0, .move = 3, .def = 2 }); // 7.PzDiv
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_DIVISION,  .color = colors::DARK_GRAY, .axial = {  2, 3 }, .dmg = 0, .move = 3, .def = 2 }); // 5.InfDiv
-    // northern flank
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_CORPS,     .color = colors::DARK_GRAY, .axial = {  2, 0 }, .dmg = 4, .move = 4, .def = 1 }); // II.Korps
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_REGIMENT,  .color = colors::DARK_GRAY, .axial = {  3, 0 }, .dmg = 6, .move = 4, .def = 2 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::DARK_GRAY, .axial = {  5, 0 }, .dmg = 4, .move = 5, .def = 0 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::DARK_GRAY, .axial = {  7, 0 }, .dmg = 3, .move = 6, .def = 0 }); // recon
-    // center
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_CORPS,     .color = colors::DARK_GRAY, .axial = {  3, 2 }, .dmg = 5, .move = 5, .def = 0 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::DARK_GRAY, .axial = {  4, 1 }, .dmg = 4, .move = 4, .def = 0 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BRIGADE,   .color = colors::DARK_GRAY, .axial = {  4, 3 }, .dmg = 8, .move = 3, .def = 0 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::MAROON,    .axial = {  5, 2 }, .dmg = 0, .move = 0, .def = 0 }); // ART
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::DARK_GRAY, .axial = {  6, 1 }, .dmg = 5, .move = 4, .def = 0 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::DARK_GRAY, .axial = {  6, 2 }, .dmg = 6, .move = 4, .def = 0 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::DARK_GRAY, .axial = {  6, 2 }, .dmg = 5, .move = 4, .def = 1 }); // stacked
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::MAROON,    .axial = {  7, 2 }, .dmg = 0, .move = 0, .def = 0 }); // fwd ART
-    // southern flank
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_REGIMENT,  .color = colors::DARK_GRAY, .axial = {  3, 5 }, .dmg = 6, .move = 3, .def = 2 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::DARK_GRAY, .axial = {  5, 4 }, .dmg = 5, .move = 4, .def = 0 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::DARK_GRAY, .axial = {  7, 4 }, .dmg = 4, .move = 5, .def = 0 });
+    // GERMAN (feldgrau) — advancing east
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_ARMY,      .icon = UnitIcon::ICON_HQ,  .color = colors::DARK_GRAY, .axial = {  0, 2 }, .dmg = 0, .move = 50, .def = 0 }); // Heeresgruppe HQ
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_CORPS,     .icon = UnitIcon::ICON_HQ,  .color = colors::DARK_GRAY, .axial = {  2, 2 }, .dmg = 0, .move = 50, .def = 0 }); // I.Korps HQ
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_REGIMENT,  .icon = UnitIcon::ICON_INF, .color = colors::DARK_GRAY, .axial = {  4, 1 }, .dmg = 6, .move = 4, .def = 2 }); // Inf.Rgt.7
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_REGIMENT,  .icon = UnitIcon::ICON_INF, .color = colors::DARK_GRAY, .axial = {  4, 3 }, .dmg = 6, .move = 4, .def = 2 }); // Inf.Rgt.8
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK,.color = colors::DARK_GRAY, .axial = {  5, 2 }, .dmg = 7, .move = 6, .def = 1 }); // Pz.Abt.5
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_ART, .color = colors::MAROON,    .axial = {  3, 2 }, .dmg = 5, .move = 2, .def = 0 }); // Art.Abt.3
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .color = colors::DARK_GRAY, .axial = {  6, 1 }, .dmg = 5, .move = 5, .def = 1 }); // II./Rgt.7
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .color = colors::DARK_GRAY, .axial = {  6, 3 }, .dmg = 5, .move = 5, .def = 1 }); // II./Rgt.8
 
-    // ALLIED (olive drab) — pulling back along road r=3
-    // front / screening
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::OLIVE,     .axial = {  9, 2 }, .dmg = 3, .move = 6, .def = 0 }); // recon
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::BROWN,     .axial = {  9, 3 }, .dmg = 0, .move = 0, .def = 0 }); // fwd ART
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::OLIVE,     .axial = { 10, 4 }, .dmg = 4, .move = 5, .def = 1 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::OLIVE,     .axial = { 11, 3 }, .dmg = 5, .move = 6, .def = 0 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::OLIVE,     .axial = { 11, 2 }, .dmg = 4, .move = 5, .def = 0 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::OLIVE,     .axial = { 11, 3 }, .dmg = 3, .move = 5, .def = 0 }); // stacked
-    // main body
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_REGIMENT,  .color = colors::OLIVE,     .axial = { 12, 1 }, .dmg = 6, .move = 4, .def = 2 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_COMPANY,   .color = colors::BROWN,     .axial = { 13, 3 }, .dmg = 0, .move = 0, .def = 0 }); // ART
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BRIGADE,   .color = colors::OLIVE,     .axial = { 13, 4 }, .dmg = 7, .move = 4, .def = 1 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BRIGADE,   .color = colors::OLIVE,     .axial = { 14, 4 }, .dmg = 6, .move = 4, .def = 0 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .color = colors::OLIVE,     .axial = { 14, 2 }, .dmg = 5, .move = 7, .def = 0 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_DIVISION,  .color = colors::OLIVE,     .axial = { 14, 2 }, .dmg = 0, .move = 3, .def = 3 }); // stacked
-    // rear / command
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_CORPS,     .color = colors::OLIVE,     .axial = { 15, 3 }, .dmg = 4, .move = 6, .def = 0 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_CORPS,     .color = colors::OLIVE,     .axial = { 16, 1 }, .dmg = 3, .move = 5, .def = 1 }); // II.Corps
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_DIVISION,  .color = colors::OLIVE,     .axial = { 16, 4 }, .dmg = 0, .move = 3, .def = 3 });
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_HQ,        .color = colors::OLIVE,     .axial = { 17, 3 }, .dmg = 0, .move = 0, .def = 0 }); // 7.Army
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_ARMY,      .color = colors::OLIVE,     .axial = { 17, 3 }, .dmg = 0, .move = 0, .def = 0 }); // stacked w/ HQ
-    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_HQ,        .color = colors::OLIVE,     .axial = { 19, 2 }, .dmg = 0, .move = 0, .def = 0 }); // High Command
+    // ALLIED (olive drab) — defending west
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_ARMY,      .icon = UnitIcon::ICON_HQ,  .color = colors::OLIVE,     .axial = { 19, 3 }, .dmg = 0, .move = 50, .def = 0 }); // 1st Army HQ
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_CORPS,     .icon = UnitIcon::ICON_HQ,  .color = colors::OLIVE,     .axial = { 17, 3 }, .dmg = 0, .move = 50, .def = 0 }); // V Corps HQ
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_REGIMENT,  .icon = UnitIcon::ICON_INF, .color = colors::OLIVE,     .axial = { 14, 2 }, .dmg = 5, .move = 4, .def = 3 }); // 16th Inf.Rgt
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_REGIMENT,  .icon = UnitIcon::ICON_INF, .color = colors::OLIVE,     .axial = { 14, 4 }, .dmg = 5, .move = 4, .def = 3 }); // 18th Inf.Rgt
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK,.color = colors::OLIVE,     .axial = { 13, 3 }, .dmg = 6, .move = 6, .def = 1 }); // 70th Tank Bn
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_ART, .color = colors::BROWN,     .axial = { 15, 3 }, .dmg = 5, .move = 2, .def = 0 }); // 62nd FA Bn
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .color = colors::OLIVE,     .axial = { 12, 2 }, .dmg = 4, .move = 5, .def = 2 }); // 1/16th Bn
+    (void)hex_state.units.EmplaceBack(Unit { .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .color = colors::OLIVE,     .axial = { 12, 4 }, .dmg = 4, .move = 5, .def = 2 }); // 1/18th Bn
 
     // Systems
     Orchestra orchestra { };

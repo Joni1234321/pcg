@@ -52,6 +52,9 @@ struct AABBF {
     [[nodiscard]] static constexpr AABBF FromPoint(const float2 point, const float2 size) { return AABBF { .point = point, .size = size }; }
     [[nodiscard]] static constexpr AABBF FromCenter(const float2 center, const float2 size) { return AABBF { .point = center - size * float2 { 0.5F }, .size = size }; }
     [[nodiscard]] constexpr operator const SDL_FRect*() const { return reinterpret_cast<const SDL_FRect*>(this); }
+
+    [[nodiscard]] constexpr AABBF WithPadding (const float2 padding) const { return FromPoint(point + padding, size - padding * float2 { 2.0F }); }
+    [[nodiscard]] constexpr AABBF WithOffset (const float2 offset) const { return FromPoint(point + offset, size); }
 };
 struct ColorF {
     f32 r;

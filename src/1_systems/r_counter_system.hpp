@@ -16,7 +16,7 @@
 
 namespace pce {
 
-enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHELON_BATTALION, ECHELON_REGIMENT, ECHELON_BRIGADE, ECHELON_DIVISION, ECHELON_CORPS, ECHELON_ARMY, ECHELON_HQ };
+enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHELON_BATTALION, ECHELON_REGIMENT, ECHELON_BRIGADE, ECHELON_DIVISION, ECHELON_CORPS, ECHELON_ARMY };
 
 [[nodiscard]] constexpr String EchelonToString(const Echelon echelon) {
     switch (echelon) {
@@ -29,17 +29,31 @@ enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHEL
         case Echelon::ECHELON_DIVISION: return "xx";
         case Echelon::ECHELON_CORPS: return "xxx";
         case Echelon::ECHELON_ARMY: return "xxxx";
-        case Echelon::ECHELON_HQ: return "HQ";
     }
     __builtin_unreachable();
 }
 
+enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK };
+
+[[nodiscard]] constexpr String UnitIconToString(const UnitIcon icon) {
+    switch (icon) {
+        case UnitIcon::ICON_INF:  return "inf";
+        case UnitIcon::ICON_ART:  return "art";
+        case UnitIcon::ICON_HQ:   return "hq";
+        case UnitIcon::ICON_TANK: return "tnk";
+    }
+    __builtin_unreachable();
+}
+struct CounterStack {
+    Color color;
+    Color color_border;
+};
 struct Counter {
     int2 axial { };
-    Array<Color, 12> colors { };
+    Array<CounterStack, 12> stack { };
     Label label_top;
+    Label label_center;
     Label label_bottom;
-    b8 selected { false };
 };
 
 inline void RenderCounters(const Pool<Counter>& counters) {
@@ -61,36 +75,43 @@ inline void RenderCounters(const Pool<Counter>& counters) {
         const float2 counter_point = counter_center - counter_size * float2 { 0.5F };
 
         // draw static counters
-        for (i32 i = static_cast<i32>(counter.colors.size()) - 1; i >= 0; i--) {
-            if (counter.colors[static_cast<u32>(i)].a == 0) { continue; }
+        for (i32 i = static_cast<i32>(counter.stack.size()) - 1; i >= 0; i--) {
+            const CounterStack& counter_stack = counter.stack[static_cast<u32>(i)];
+            if (counter_stack.color.a == 0) { continue; }
 
-            constexpr f32 OFFSET_STACK = 1.0F / 10.0F;
-            constexpr f32 OFFSET_SHADOW = OFFSET_STACK * 0.25F;
-            constexpr f32 BORDER_THICKNESS = OFFSET_STACK * 0.20F;
+            constexpr f32 OFFSET_STACK = 1.0F / 16.0F;
+            constexpr f32 OFFSET_SHADOW = OFFSET_STACK * 0.15F;
+            constexpr f32 BORDER_THICKNESS = OFFSET_STACK * 0.30F;
+
+            const AABBF area_counter = AABBF::FromCenter(counter_center + float2 { OFFSET_STACK * counter_size.x * static_cast<f32>(i) }, counter_size);
 
             // shadow
-            const AABBF area_shadow = AABBF::FromCenter(counter_center + float2 { OFFSET_SHADOW * counter_size.x }, counter_size);
-            const SDL_Color COLOR_SHADOW = false ? colors::ColorWithAlpha(colors::HEX_SELECT, 1.0F) : colors::ColorWithAlpha(colors::BLACK, 0.5F);
+            const AABBF area_shadow = area_counter.WithOffset(float2 { OFFSET_SHADOW * counter_size.x });
+            const SDL_Color COLOR_SHADOW = colors::ColorWithAlpha(colors::BLACK, 0.5F);
             (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_SHADOW.r, COLOR_SHADOW.g, COLOR_SHADOW.b, COLOR_SHADOW.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_shadow);
 
             // border
-            AABBF area_border = AABBF::FromCenter(counter_center + float2 { OFFSET_STACK * counter_size.x * static_cast<f32>(i) }, counter_size);
-            const SDL_Color color_border = counter.selected ? colors::HEX_SELECT : colors::BLACK;
+            const SDL_Color color_border = counter_stack.color_border;
             (void)SDL_SetRenderDrawColor(window_state.renderer, color_border.r, color_border.g, color_border.b, color_border.a);
-            (void)SDL_RenderFillRect(window_state.renderer, area_border);
+            (void)SDL_RenderFillRect(window_state.renderer, area_counter);
 
             // background
-            AABBF area_background = AABBF::FromCenter(counter_center + float2 { OFFSET_STACK * counter_size.x * static_cast<f32>(i) }, counter_size - float2 { BORDER_THICKNESS * counter_size.x });
+            const AABBF area_background = area_counter.WithPadding(float2 { BORDER_THICKNESS * counter_size.x });;
             const Color color_background = colors::GRAY;
             (void)SDL_SetRenderDrawColor(window_state.renderer, color_background.r, color_background.g, color_background.b, color_background.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_background);
         }
 
         // area
-        const AABBF area_icon = AABBF::FromPoint(counter_point + counter_size * float2 { 0.20F, 0.25F }, counter_size * float2 { 0.6F, 0.4F });
-        const Color color_area = counter.colors[0];
-        (void)SDL_SetRenderDrawColor(window_state.renderer, color_area.r, color_area.g, color_area.b, color_area.a);
+        const AABBF area_icon_border = AABBF::FromPoint(counter_point + counter_size * float2 { 0.20F, 0.25F }, counter_size * float2 { 0.6F, 0.4F });
+        const Color color_icon_border { colors::BLACK };
+        (void)SDL_SetRenderDrawColor(window_state.renderer, color_icon_border.r, color_icon_border.g, color_icon_border.b, color_icon_border.a);
+        (void)SDL_RenderFillRect(window_state.renderer, area_icon_border);
+
+        const AABBF area_icon = area_icon_border.WithPadding(float2 { camera.scale / 40.0F });
+        const Color color_icon = counter.stack[0].color;
+        (void)SDL_SetRenderDrawColor(window_state.renderer, color_icon.r, color_icon.g, color_icon.b, color_icon.a);
         (void)SDL_RenderFillRect(window_state.renderer, area_icon);
 
         // labels
@@ -99,7 +120,13 @@ inline void RenderCounters(const Pool<Counter>& counters) {
             (void)TTF_SetTextWrapWidth(counter.label_bottom, static_cast<i32>(counter_size.x));
             (void)TTF_DrawRendererText(counter.label_bottom, counter_point.x, counter_point.y + counter_size.y - static_cast<f32>(pt));
 
+            (void)TTF_SetTextFont(counter.label_center, font);
+            (void)TTF_SetTextColorFloat(counter.label_center, 0.0F, 0.0F, 0.0F, 1.0F);
+            (void)TTF_SetTextWrapWidth(counter.label_center, static_cast<i32>(counter_size.x));
+            // (void)TTF_DrawRendererText(counter.label_center, counter_point.x, counter_point.y + counter_size.y * 0.4F - static_cast<f32>(pt) * 0.3F);
+
             (void)TTF_SetTextFont(counter.label_top, font);
+            // (void)TTF_SetTextColorFloat(counter.label_top, 0.0F, 0.0F, 0.0F, 1.0F);
             (void)TTF_SetTextWrapWidth(counter.label_top, static_cast<i32>(counter_size.x));
             (void)TTF_DrawRendererText(counter.label_top, counter_point.x, counter_point.y);
         }
