@@ -53,6 +53,14 @@ public:
         return static_cast<u32>(std::distance(range.begin(), iterator));
     }
 };
-
+class _Find_Handle_Of_fn {
+public:
+    template <class T, class V, class P> [[nodiscard]] constexpr OptionalHandle<T> operator()(const HandleList<T>& handleList, const V& value, P projection) const {
+        const auto& iterator = std::ranges::find(handleList, value, projection);
+        if (iterator == handleList.end()) { return OptionalHandle<T>{ std::nullopt }; }
+        return handleList.IteratorToHandle(iterator);
+    }
+};
 inline constexpr _Find_Index_Of_fn find_index_of;
+inline constexpr _Find_Handle_Of_fn find_handle_of;
 } // namespace pce

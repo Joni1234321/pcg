@@ -50,6 +50,10 @@ using c16 = char16_t; // NOLINT(*-identifier-naming)
 using c32 = char32_t; // NOLINT(*-identifier-naming)
 using b8 = bool;      // NOLINT(*-identifier-naming)
 
+
+template <class T> using Optional = std::optional<T>;
+
+
 template <typename T> struct Vec2 {
     T x;
     T y;
@@ -153,7 +157,6 @@ template <class> struct Handle {
     explicit constexpr Handle(const u32 id) : id(id) { }
     b8 operator==(const Handle&) const = default;
 };
-
 template <class T> struct OptionalHandle {
     constexpr OptionalHandle() noexcept : id(U32_MAX) { }
     constexpr OptionalHandle(std::nullopt_t) noexcept : id(U32_MAX) { }

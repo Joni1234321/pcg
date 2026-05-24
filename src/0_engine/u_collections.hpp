@@ -26,7 +26,6 @@ template <typename T> using Stack = std::stack<T>;
 template <class K, class V> using UnorderedMap = std::unordered_map<K, V>;
 template <class T, class C = std::less<T>> using Set = std::set<T, C>;
 template <class T, class C = std::less<T>> using Multiset = std::multiset<T, C>;
-template <class T> using Optional = std::optional<T>;
 template <typename T, typename D = std::default_delete<T>> class UniquePointer {
     T* pointer;
     [[no_unique_address]] D destructor { };
@@ -182,6 +181,9 @@ template <typename T, typename H = T> struct HandleList {
     using iterator = List<T>::iterator;
     using const_iterator = List<T>::const_iterator;
 
+    Handle<H> offset_handle { 0U };
+    List<T> data;
+
     constexpr HandleList() : data() { }
     constexpr HandleList(std::initializer_list<T> init_list) : data(std::move(init_list)) { }
     explicit constexpr HandleList(u32 size) : data(size) { }
@@ -234,13 +236,7 @@ template <typename T, typename H = T> struct HandleList {
     }
     [[nodiscard]] constexpr b8 ValidHandle(const Handle<H> handle) const noexcept { return handle.id - offset_handle.id < size(); }
     [[nodiscard]] constexpr Handle<H> FirstHandle() const noexcept { return offset_handle; }
-    Handle<H> offset_handle { 0U };
 
-    constexpr void swap_back(const Handle<H> handle) {
-        // std::swap(particle, emitter.particles.back()); emitter.particles.data.data.pop_back();
-    }
-
-    List<T> data;
 };
 template <typename K, typename V> class FlatMap {
     List<K> keys { };

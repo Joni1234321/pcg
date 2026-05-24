@@ -26,7 +26,7 @@ struct Counter {
     b8 selected { false };
 };
 
-inline void RenderCounters(const List<Counter>& counters) {
+inline void RenderCounters(const Span<Counter>& counters) {
     static constexpr f32 TEXT_MIN_SCALE = 18.0F;
     const CameraState& camera = Singleton::Get<CameraState>();
     const WindowState& window_state = Singleton::Get<WindowState>();

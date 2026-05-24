@@ -51,7 +51,7 @@ struct HexState {
     PseudoStates pseudo_states;
     HexList<HexDrawInfo> hex_draw;
     HexList<Hex> hex_map;
-    List<Counter> counters;
+    HandleList<Counter> counters;
     Pool<Label> label_pool;
     List<SDL_Vertex> vertecies { };
 };
@@ -126,12 +126,12 @@ struct HexSystem {
 
         // pseudo states draw
         if (hex_state.pseudo_states.axial_select_enter) {
-            Optional<u32> i = find_index_of(hex_state.counters, hex_state.pseudo_states.axial_select_enter.value(), &Counter::axial);
-            if (i.has_value()) { hex_state.counters[i.value()].selected = true; }
+            const OptionalHandle<Counter> counter_handle = find_handle_of(hex_state.counters, hex_state.pseudo_states.axial_select_enter.value(), &Counter::axial);
+            if (counter_handle.IsValid()) { hex_state.counters[counter_handle.GetHandle()].selected = true; }
         }
         if (hex_state.pseudo_states.axial_select_exit) {
-            Optional<u32> i = find_index_of(hex_state.counters, hex_state.pseudo_states.axial_select_exit.value(), &Counter::axial);
-            if (i.has_value()) { hex_state.counters[i.value()].selected = false; }
+            const OptionalHandle<Counter> counter_handle = find_handle_of(hex_state.counters, hex_state.pseudo_states.axial_select_exit.value(), &Counter::axial);
+            if (counter_handle.IsValid()) { hex_state.counters[counter_handle.GetHandle()].selected = false; }
         }
 
         if (hex_state.pseudo_states.axial_hover_now) { HexAppend(hex_state.vertecies, camera.scale, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover_now.value())), colors::hex_hover); }
@@ -152,41 +152,49 @@ struct HexSystem {
         TTF_SetFontWrapAlignment(font_movement, TTF_HORIZONTAL_ALIGN_CENTER);
 
         if (hex_state.pseudo_states.axial_hover_now && hex_state.pseudo_states.axial_select_now && hex_state.pseudo_states.axial_hover_now != hex_state.pseudo_states.axial_select_now) {
-            constexpr Color color{ colors::ruby_red };
-            (void)SDL_SetRenderDrawColor(window_state.renderer, color.r, color.g, color.b, color.a);
-
             const int2 axial_start = hex_state.pseudo_states.axial_select_now.value();
-            const int2 axial_end = hex_state.pseudo_states.axial_hover_now.value();
-            const int3 cube_start = HexAxialToCube(axial_start);
-            const int3 cube_end = HexAxialToCube(axial_end);
-            const u32 distance = HexCubeDistance(cube_start, cube_end);
-            const f32 distance_inv = 1.0F / static_cast<f32>(distance);
-            List<int2> axials;
-            Optional<u32> counter_index = find_index_of(hex_state.counters, axial_start, &Counter::axial);
+            const OptionalHandle counter_handle_opt = find_handle_of(hex_state.counters, axial_start, &Counter::axial);
+            if (counter_handle_opt.IsValid()) {
+                const Handle counter_handle = counter_handle_opt.GetHandle();
 
-            for (u32 i = 0; i < distance; ++i) {
-                axials.EmplaceBack(HexCubeToAxial(HexCubeRound(HexCubeLerp(cube_start, cube_end, i * distance_inv))));
-            }
-            for (u32 i = 0; i < distance; ++i) {
-                const int2& axial = axials[i];
-                const float2 world = HexAxialToWorld(axial);
-                const int2 screen = camera.WorldToScreen(world);
-                const float2 screen_f = static_cast<float2>(screen);
+                constexpr Color COLOR{ colors::ruby_red };
+                (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR.r, COLOR.g, COLOR.b, COLOR.a);
 
-                HexAppend(hex_state.vertecies, camera.scale * 0.25F, screen, colors::ruby_red);
-                (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.vertecies.data.data(), static_cast<i32>(hex_state.vertecies.size()), nullptr, 0);
-                hex_state.vertecies.clear();
+                const int2 axial_end = hex_state.pseudo_states.axial_hover_now.value();
+                const int3 cube_start = HexAxialToCube(axial_start);
+                const int3 cube_end = HexAxialToCube(axial_end);
+                const u32 distance = HexCubeDistance(cube_start, cube_end);
+                const f32 distance_inv = 1.0F / static_cast<f32>(distance);
+                List<int2> axials;
 
-                const Label& label = hex_state.label_pool.Get();
-                const String string_distance = std::format("{}", distance - i);
-                (void)TTF_SetTextWrapWidth(label, camera.scale);
-                (void)TTF_SetTextFont(label, font_movement);
-                (void)TTF_SetTextString(label, string_distance.c_str(), string_distance.size());
-                (void)TTF_DrawRendererText(label, screen_f.x - camera.scale * 0.5F, screen_f.y - pt * 0.5F);
-            }
-            if (counter_index.has_value() && input_state.right_mouse_down) {
-                Counter& counter = hex_state.counters[counter_index.value()];
-                counter.axial = axial_end;
+                for (u32 i = 1; i <= distance; ++i) {
+                    axials.EmplaceBack(HexCubeToAxial(HexCubeRound(HexCubeLerp(cube_start, cube_end, i * distance_inv))));
+                }
+                for (u32 i = 0; i < distance; ++i) {
+                    const int2& axial = axials[i];
+                    const float2 world = HexAxialToWorld(axial);
+                    const int2 screen = camera.WorldToScreen(world);
+                    const float2 screen_f = static_cast<float2>(screen);
+
+                    HexAppend(hex_state.vertecies, camera.scale * 0.25F, screen, colors::ruby_red);
+                    (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.vertecies.data.data(), static_cast<i32>(hex_state.vertecies.size()), nullptr, 0);
+                    hex_state.vertecies.clear();
+
+                    const Label& label = hex_state.label_pool.Get();
+                    const String string_distance = std::format("{}", i + 1);
+                    (void)TTF_SetTextWrapWidth(label, camera.scale);
+                    (void)TTF_SetTextFont(label, font_movement);
+                    (void)TTF_SetTextString(label, string_distance.c_str(), string_distance.size());
+                    (void)TTF_DrawRendererText(label, screen_f.x - camera.scale * 0.5F, screen_f.y - pt * 0.5F);
+                }
+
+                // move
+                if (input_state.right_mouse_down) {
+                    Counter& counter = hex_state.counters[counter_handle];
+                    counter.axial = axial_end;
+                    hex_state.pseudo_states.axial_select_exit = hex_state.pseudo_states.axial_select_now;
+                    hex_state.pseudo_states.axial_select_now = hex_state.pseudo_states.axial_select_enter = axial_end;
+                }
             }
 
         }
@@ -208,22 +216,22 @@ void arcade::RunHex() {
     camera.map_world_max = HexAxialToWorld(static_cast<int2>(hex_state.hex_map.map_size - uint2 { 1, 1 }));
 
     // GERMAN (feldgrau) — advancing right along road r=2
-    hex_state.counters.EmplaceBack(Counter { .axial = { 1, 2 }, .colors = { colors::dark_gray, colors::deep_gold }, .text_bottom = "4.PzD", .text_top = "HQ" });
-    hex_state.counters.EmplaceBack(Counter { .axial = { 3, 2 }, .colors = { colors::dark_gray, colors::steel_gray, colors::dark_gray }, .text_bottom = "5-5", .text_top = "xxx" });
-    hex_state.counters.EmplaceBack(Counter { .axial = { 4, 1 }, .colors = { colors::dark_gray, colors::steel_gray }, .text_bottom = "4-4", .text_top = "II" });
-    hex_state.counters.EmplaceBack(Counter { .axial = { 4, 3 }, .colors = { colors::dark_gray, colors::steel_gray }, .text_bottom = "8-3", .text_top = "x" });
-    hex_state.counters.EmplaceBack(Counter { .axial = { 5, 2 }, .colors = { colors::maroon }, .text_bottom = "ART", .text_top = "I" });
-    hex_state.counters.EmplaceBack(Counter { .axial = { 6, 1 }, .colors = { colors::dark_gray }, .text_bottom = "5-4", .text_top = "I" });
-    hex_state.counters.EmplaceBack(Counter { .axial = { 6, 2 }, .colors = { colors::dark_gray, colors::steel_gray }, .text_bottom = "6-4", .text_top = "II" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 1, 2 }, .colors = { colors::dark_gray, colors::deep_gold }, .text_bottom = "4.PzD", .text_top = "HQ" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 3, 2 }, .colors = { colors::dark_gray, colors::steel_gray, colors::dark_gray }, .text_bottom = "5-5", .text_top = "xxx" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 4, 1 }, .colors = { colors::dark_gray, colors::steel_gray }, .text_bottom = "4-4", .text_top = "II" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 4, 3 }, .colors = { colors::dark_gray, colors::steel_gray }, .text_bottom = "8-3", .text_top = "x" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 5, 2 }, .colors = { colors::maroon }, .text_bottom = "ART", .text_top = "I" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 6, 1 }, .colors = { colors::dark_gray }, .text_bottom = "5-4", .text_top = "I" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 6, 2 }, .colors = { colors::dark_gray, colors::steel_gray }, .text_bottom = "6-4", .text_top = "II" });
 
     // ALLIED (olive drab) — pulling back along road r=3
-    hex_state.counters.EmplaceBack(Counter { .axial = { 11, 3 }, .colors = { colors::olive, colors::dark_dark_brown }, .text_bottom = "5-6", .text_top = "II" });
-    hex_state.counters.EmplaceBack(Counter { .axial = { 11, 2 }, .colors = { colors::olive }, .text_bottom = "4-5", .text_top = "I" });
-    hex_state.counters.EmplaceBack(Counter { .axial = { 13, 3 }, .colors = { colors::brown }, .text_bottom = "ART", .text_top = "I" });
-    hex_state.counters.EmplaceBack(Counter { .axial = { 14, 4 }, .colors = { colors::olive, colors::dark_gray }, .text_bottom = "6-4", .text_top = "x" });
-    hex_state.counters.EmplaceBack(Counter { .axial = { 14, 2 }, .colors = { colors::olive, colors::dark_dark_brown }, .text_bottom = "5-7", .text_top = "II" });
-    hex_state.counters.EmplaceBack(Counter { .axial = { 15, 3 }, .colors = { colors::olive, colors::dark_dark_brown, colors::olive }, .text_bottom = "4-6", .text_top = "xxx" });
-    hex_state.counters.EmplaceBack(Counter { .axial = { 17, 3 }, .colors = { colors::olive, colors::deep_gold }, .text_bottom = "7.Army", .text_top = "HQ xxxx" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 11, 3 }, .colors = { colors::olive, colors::dark_dark_brown }, .text_bottom = "5-6", .text_top = "II" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 11, 2 }, .colors = { colors::olive }, .text_bottom = "4-5", .text_top = "I" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 13, 3 }, .colors = { colors::brown }, .text_bottom = "ART", .text_top = "I" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 14, 4 }, .colors = { colors::olive, colors::dark_gray }, .text_bottom = "6-4", .text_top = "x" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 14, 2 }, .colors = { colors::olive, colors::dark_dark_brown }, .text_bottom = "5-7", .text_top = "II" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 15, 3 }, .colors = { colors::olive, colors::dark_dark_brown, colors::olive }, .text_bottom = "4-6", .text_top = "xxx" });
+    (void)hex_state.counters.EmplaceBack(Counter { .axial = { 17, 3 }, .colors = { colors::olive, colors::deep_gold }, .text_bottom = "7.Army", .text_top = "HQ xxxx" });
 
     // Systems
     Orchestra orchestra { };
