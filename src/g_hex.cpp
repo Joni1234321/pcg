@@ -1,12 +1,14 @@
 ﻿#include <algorithm>
+#include <cmath>
 #include <format>
-#include <functional>
 #include <optional>
+#include <queue>
 #include <ranges>
+#include <unordered_map>
+#include <vector>
 
 #include "0_engine/g_globals.hpp"
 #include "0_engine/r_window_state.hpp"
-#include "0_engine/u_algorithm.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
 #include "0_engine/u_fonts.hpp"
@@ -241,36 +243,70 @@ struct HexSystem {
         if (!hex_state.pseudo_states.unit_handles_select.empty() && hex_state.pseudo_states.axial_hover.has_value() && hex_state.pseudo_states.axial_hover != hex_state.pseudo_states.axial_select) {
             const int2 axial_start = hex_state.pseudo_states.axial_select.value();
             auto handle_to_unit = [&](const Handle<Unit> unit_handle) -> Unit& { return hex_state.units[unit_handle]; };
-            auto units_selected = hex_state.pseudo_states.unit_handles_select |  std::views::transform(handle_to_unit);
+            auto units_selected = hex_state.pseudo_states.unit_handles_select | std::views::transform(handle_to_unit);
 
             constexpr Color COLOR { colors::RUBY_RED };
             (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR.r, COLOR.g, COLOR.b, COLOR.a);
 
             const int2 axial_hover = hex_state.pseudo_states.axial_hover.value();
-            const int3 cube_start = HexAxialToCube(axial_start);
-            const int3 cube_hover = HexAxialToCube(axial_hover);
-            const u32 distance = HexCubeDistance(cube_start, cube_hover);
-            const u32 distance_end = math::Min(distance, std::ranges::min(units_selected | std::views::transform(&Unit::move)));
 
-            List<int2> axials;
-            const f32 distance_inv = 1.0F / static_cast<f32>(distance);
-            for (u32 i = 0; i <= distance; ++i) { axials.EmplaceBack(HexCubeToAxial(HexCubeRound(HexCubeLerp(cube_start, cube_hover, static_cast<f32>(i) * distance_inv)))); }
+            // path finding
+            struct CostAndAxial { u32 cost; int2 axial; };
+            List<CostAndAxial> axial_path;
+            auto cmp = [](const CostAndAxial& a, const CostAndAxial& b) -> b8 { return a.cost > b.cost; };
+            std::priority_queue<CostAndAxial, std::vector<CostAndAxial>, decltype(cmp)> frontier(cmp);
+            std::unordered_map<int2, int2> came_from;
+            std::unordered_map<int2, u32> cost_at_axial;
 
-            const int2 axial_end = axials[distance_end];
+            frontier.push(CostAndAxial {.cost=0, .axial=axial_start});
+            came_from[axial_start] = axial_start;
+            cost_at_axial[axial_start] = 0;
 
-            for (u32 i = 1; i < axials.size(); ++i) {
-                const int2& axial = axials[i];
-                const float2 world = HexAxialToWorld(axial);
+            auto is_enemy = [&](const int2 axial) -> b8 {
+                if (!unit_by_axial.contains(axial)) { return false; }
+                for (const Handle unit_handle_enemy : unit_by_axial.at(axial)) {
+                    if (hex_state.units[unit_handle_enemy].tag != units_selected[0].tag) { return true; }
+                }
+                return false;
+            };
+
+            while (!frontier.empty()) {
+                const CostAndAxial current = frontier.top();
+                frontier.pop();
+
+                if (current.axial == axial_hover) { break; } // finished
+
+                for (const int2 axial_neighbour_offset : HEX_AXIAL_NEIGHBOURS) {
+                    const int2 axial_next = current.axial + axial_neighbour_offset;
+                    if (!hex_state.hex_map.Contains(axial_next) || is_enemy(axial_next)) { continue; }
+
+                    u32 cost = 1;
+                    const u32 new_cost = cost_at_axial[current.axial] + cost;
+                    if (!cost_at_axial.contains(axial_next) || new_cost < cost_at_axial[axial_next]) {
+                        cost_at_axial[axial_next] = new_cost;
+                        frontier.push({ .cost=new_cost + HexCubeDistance(HexAxialToCube(axial_next), HexAxialToCube(axial_hover)), .axial=axial_next });
+                        came_from[axial_next] = current.axial;
+                    }
+                }
+            }
+            if (came_from.contains(axial_hover)) {
+                for (int2 axial = axial_hover; axial != axial_start; axial = came_from[axial]) { axial_path.EmplaceBack( CostAndAxial { .cost = cost_at_axial[axial], .axial = axial }); }
+                std::ranges::reverse(axial_path);
+            }
+
+            const u32 distance_reach = std::ranges::min(units_selected | std::views::transform(&Unit::move));
+            for (CostAndAxial cost_and_axial : axial_path) {
+                const float2 world = HexAxialToWorld(cost_and_axial.axial);
                 const int2 screen = camera.WorldToScreen(world);
                 const float2 screen_f = static_cast<float2>(screen);
 
-                const Color movement_color = i > distance_end ? colors::BLACK : colors::RUBY_RED;
+                const Color movement_color = cost_and_axial.cost > distance_reach ? colors::BLACK : colors::RUBY_RED;
                 HexAppend(hex_state.verts, camera.scale * 0.25F, screen, movement_color);
                 (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts.data.data(), static_cast<i32>(hex_state.verts.size()), nullptr, 0);
                 hex_state.verts.clear();
 
                 const Label& label = hex_state.label_pool.Get();
-                const String string_distance = std::format("{}", i);
+                const String string_distance = std::format("{}", cost_and_axial.cost);
                 (void)TTF_SetTextWrapWidth(label, camera.scale);
                 (void)TTF_SetTextFont(label, font_movement);
                 (void)TTF_SetTextString(label, string_distance.c_str(), string_distance.size());
@@ -279,11 +315,12 @@ struct HexSystem {
 
             // move
             if (input_state.right_mouse_down) {
+                const CostAndAxial cost_and_axial_end = axial_path[distance_reach];
                 for (Unit& unit : units_selected) {
-                    unit.axial = axial_end;
-                    unit.move -= distance_end;
+                    unit.axial = cost_and_axial_end.axial;
+                    unit.move -= cost_and_axial_end.cost;
                 }
-                hex_state.pseudo_states.axial_select = axial_end;
+                hex_state.pseudo_states.axial_select = cost_and_axial_end.axial;
             }
         }
 
@@ -308,28 +345,28 @@ void arcade::RunHex() {
 
     (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_ARMY,      .icon = UnitIcon::ICON_HQ,  .color = next_color(), .axial = {  0, 2 }, .dmg = 0, .move = 50, .def = 0 }); // Heeresgruppe HQ
     (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_CORPS,     .icon = UnitIcon::ICON_HQ,  .color = next_color(), .axial = {  2, 2 }, .dmg = 0, .move = 50, .def = 0 }); // I.Korps HQ
-    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_REGIMENT,  .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = {  4, 1 }, .dmg = 6, .move = 4,  .def = 2 }); // Inf.Rgt.7
-    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_REGIMENT,  .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = {  4, 3 }, .dmg = 6, .move = 4,  .def = 2 }); // Inf.Rgt.8
-    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK,.color = next_color(), .axial = {  5, 2 }, .dmg = 7, .move = 6,  .def = 1 }); // Pz.Abt.5
-    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_ART, .color = next_color(), .axial = {  3, 2 }, .dmg = 5, .move = 2,  .def = 0 }); // Art.Abt.3
-    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = {  6, 1 }, .dmg = 5, .move = 5,  .def = 1 }); // II./Rgt.7
-    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = {  6, 3 }, .dmg = 5, .move = 5,  .def = 1 }); // II./Rgt.8
+    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_REGIMENT,  .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = {  4, 1 }, .dmg = 6, .move = 7,  .def = 2 }); // Inf.Rgt.7
+    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_REGIMENT,  .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = {  4, 3 }, .dmg = 6, .move = 7,  .def = 2 }); // Inf.Rgt.8
+    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK,.color = next_color(), .axial = {  5, 2 }, .dmg = 7, .move = 7,  .def = 1 }); // Pz.Abt.5
+    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_ART, .color = next_color(), .axial = {  3, 2 }, .dmg = 5, .move = 7,  .def = 0 }); // Art.Abt.3
+    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = {  6, 1 }, .dmg = 5, .move = 7,  .def = 1 }); // II./Rgt.7
+    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = {  6, 3 }, .dmg = 5, .move = 7,  .def = 1 }); // II./Rgt.8
 
     (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_ARMY,      .icon = UnitIcon::ICON_HQ,  .color = next_color(), .axial = { 14, 3 }, .dmg = 0, .move = 50, .def = 0 }); // Front HQ
     (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_CORPS,     .icon = UnitIcon::ICON_HQ,  .color = next_color(), .axial = { 13, 3 }, .dmg = 0, .move = 50, .def = 0 }); // I Gds Corps HQ
-    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_REGIMENT,  .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = { 11, 2 }, .dmg = 5, .move = 4,  .def = 3 }); // 16th Rifle Rgt
-    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_REGIMENT,  .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = { 11, 4 }, .dmg = 5, .move = 4,  .def = 3 }); // 18th Rifle Rgt
-    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK,.color = next_color(), .axial = { 10, 3 }, .dmg = 6, .move = 6,  .def = 1 }); // T-34 Bn
-    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_ART, .color = next_color(), .axial = { 12, 3 }, .dmg = 5, .move = 2,  .def = 0 }); // 62nd Art Bn
-    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = {  9, 2 }, .dmg = 4, .move = 5,  .def = 2 }); // 1/16th Bn
-    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = {  9, 4 }, .dmg = 4, .move = 5,  .def = 2 }); // 1/18th Bn
+    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_REGIMENT,  .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = { 11, 2 }, .dmg = 5, .move = 7,  .def = 3 }); // 16th Rifle Rgt
+    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_REGIMENT,  .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = { 11, 4 }, .dmg = 5, .move = 7,  .def = 3 }); // 18th Rifle Rgt
+    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK,.color = next_color(), .axial = { 10, 3 }, .dmg = 6, .move = 7,  .def = 1 }); // T-34 Bn
+    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_ART, .color = next_color(), .axial = { 12, 3 }, .dmg = 5, .move = 7,  .def = 0 }); // 62nd Art Bn
+    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = {  9, 2 }, .dmg = 4, .move = 7,  .def = 2 }); // 1/16th Bn
+    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = {  9, 4 }, .dmg = 4, .move = 7,  .def = 2 }); // 1/18th Bn
 
-    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_REGIMENT,  .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = {  4, 2 }, .dmg = 4, .move = 3,  .def = 2 }); // 55th Rifle Rgt (encircled)
+    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_REGIMENT,  .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = {  4, 2 }, .dmg = 4, .move = 7,  .def = 2 }); // 55th Rifle Rgt (encircled)
 
     (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_ARMY,      .icon = UnitIcon::ICON_HQ,  .color = next_color(), .axial = {17, 1 }, .dmg = 0, .move = 50, .def = 0 }); // 12th Army Group HQ
     (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_CORPS,     .icon = UnitIcon::ICON_HQ,  .color = next_color(), .axial = {17, 2 }, .dmg = 0, .move = 50, .def = 0 }); // V Corps HQ
-    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_REGIMENT,  .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = {17, 3 }, .dmg = 6, .move = 4,  .def = 2 }); // 16th Inf Rgt
-    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK,.color = next_color(), .axial = {17, 4 }, .dmg = 7, .move = 6,  .def = 1 }); // 745th Tank Bn (Sherman)
+    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_REGIMENT,  .icon = UnitIcon::ICON_INF, .color = next_color(), .axial = {17, 3 }, .dmg = 6, .move = 7,  .def = 2 }); // 16th Inf Rgt
+    (void)hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK,.color = next_color(), .axial = {17, 4 }, .dmg = 7, .move = 7,  .def = 1 }); // 745th Tank Bn (Sherman)
 
     // Systems
     Orchestra orchestra { };

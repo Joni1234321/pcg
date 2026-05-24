@@ -8,9 +8,6 @@
 #include "0_engine/u_colors.hpp"
 #include "0_engine/u_fonts.hpp"
 #include "0_engine/u_texture.hpp"
-#include "0_engine/u_util.hpp"
-#include "SDL3/SDL_pixels.h"
-#include "SDL3/SDL_rect.h"
 #include "r_camera_system.hpp"
 #include "r_hex_system.hpp"
 
@@ -88,7 +85,7 @@ inline void RenderCounters(const Pool<Counter>& counters) {
 
             // shadow
             const AABBF area_shadow = area_counter.WithOffset(float2 { OFFSET_SHADOW * counter_size.x });
-            const SDL_Color COLOR_SHADOW = colors::ColorWithAlpha(colors::BLACK, 0.5F);
+            constexpr Color COLOR_SHADOW = colors::ColorWithAlpha(colors::BLACK, 0.5F);
             (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_SHADOW.r, COLOR_SHADOW.g, COLOR_SHADOW.b, COLOR_SHADOW.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_shadow);
 
@@ -104,8 +101,8 @@ inline void RenderCounters(const Pool<Counter>& counters) {
 
         // area
         const AABBF area_icon_border = AABBF::FromPoint(counter_point + counter_size * float2 { 0.20F, 0.25F }, counter_size * float2 { 0.6F, 0.4F });
-        const Color color_icon_border { colors::BLACK };
-        (void)SDL_SetRenderDrawColor(window_state.renderer, color_icon_border.r, color_icon_border.g, color_icon_border.b, color_icon_border.a);
+        constexpr Color COLOR_ICON_BORDER { colors::BLACK };
+        (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_ICON_BORDER.r, COLOR_ICON_BORDER.g, COLOR_ICON_BORDER.b, COLOR_ICON_BORDER.a);
         (void)SDL_RenderFillRect(window_state.renderer, area_icon_border);
 
         const AABBF area_icon = area_icon_border.WithPadding(float2 { camera.scale / 40.0F });
