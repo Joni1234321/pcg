@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <SDL3/SDL_render.h>
 #include <array>
+#include <optional>
 
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
@@ -86,9 +87,16 @@ template <class T> struct HexList {
         map_size = new_size;
         data.resize(Size());
     }
+    constexpr List<T>::iterator begin() { return data.begin(); }
+    constexpr List<T>::iterator end() { return data.end(); }
+    constexpr List<T>::const_iterator begin() const { return data.begin(); }
+    constexpr List<T>::const_iterator end() const { return data.end(); }
+    constexpr List<T>::const_iterator cbegin() const { return data.cbegin(); }
+    constexpr List<T>::const_iterator cend() const { return data.cend(); }
+
 };
 
-inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int2 hex_screen, const ColorF hex_color) {
+inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int2 hex_screen, const ColorF hex_color, const Optional<ColorF> hex_color_inner = std::nullopt) {
     SDL_FPoint center { .x = static_cast<f32>(hex_screen.x), .y = static_cast<f32>(hex_screen.y) };
     Array<SDL_FPoint, HEX_CORNERS> points { };
     for (u32 i = 0; i < HEX_CORNERS; i++) {
@@ -96,9 +104,7 @@ inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int
         points[i] = SDL_FPoint { .x = vertex.x, .y = vertex.y };
     }
     for (u32 i = 0; i < HEX_CORNERS; i++) {
-        ColorF sdl_f_color = colors::ColorMul(hex_color, 0.8F);
-        // SDL_FColor sdl_f_color = colors::ToSDL_FColor(colors::WHITE_SMOKE);
-        vertecies.EmplaceBack(center, sdl_f_color, SDL_FPoint { });
+        vertecies.EmplaceBack(center, hex_color_inner.value_or(colors::ColorMul(hex_color, 1.2F)));
         vertecies.EmplaceBack(points[i], hex_color, SDL_FPoint { });
         vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color, SDL_FPoint { });
     }

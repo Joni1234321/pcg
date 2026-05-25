@@ -95,7 +95,6 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
 
             // background
             const AABBF area_background = area_counter.WithPadding(float2 { BORDER_THICKNESS * counter_size.x });
-            ;
             (void)SDL_SetRenderDrawColor(window_state.renderer, counter_stack.color_background.r, counter_stack.color_background.g, counter_stack.color_background.b, counter_stack.color_background.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_background);
         }
@@ -121,7 +120,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             (void)TTF_SetTextFont(counter.label_center, font);
             (void)TTF_SetTextColorFloat(counter.label_center, 0.0F, 0.0F, 0.0F, 1.0F);
             (void)TTF_SetTextWrapWidth(counter.label_center, static_cast<i32>(counter_size.x));
-            // (void)TTF_DrawRendererText(counter.label_center, counter_point.x, counter_point.y + counter_size.y * 0.4F - static_cast<f32>(pt) * 0.3F);
+            (void)TTF_DrawRendererText(counter.label_center, counter_point.x, counter_point.y + counter_size.y * 0.4F - static_cast<f32>(pt) * 0.3F);
 
             (void)TTF_SetTextFont(counter.label_top, font);
             // (void)TTF_SetTextColorFloat(counter.label_top, 0.0F, 0.0F, 0.0F, 1.0F);

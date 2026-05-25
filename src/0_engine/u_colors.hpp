@@ -108,7 +108,7 @@ constexpr Color STEEL_GRAY { 120U, 120U, 120U };  // #787878 - Mid-tone gray
 constexpr Color ASH_GRAY { 124U, 124U, 124U };    // #7C7C7C - Muted ash gray
 
 constexpr Color DARK_GREEN { 0U, 110U, 60U };
-
+constexpr Color MAP_BACKGROUND = Color::FromHsl(40.0F, 0.50F, 0.2F);
 // Hex Battle
 constexpr Color HEX_HOVER { 190U, 205U, 175U }; // muted sage-green hover ring
 constexpr Color HEX_SELECT { 210U, 165U, 30U }; // warm amber-gold selection ring
