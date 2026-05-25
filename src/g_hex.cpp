@@ -53,7 +53,7 @@ HexList<HexDrawInfo> HexToHexDraw(const HexList<Hex>& hexes) {
 [[nodiscard]] b8 AxialIsEnemy(const HexState& hex_state, const int2 axial) {
     return hex_state.units_by_axial.contains(axial) && std::ranges::any_of(hex_state.units_by_axial.at(axial) | hex_state.units.handle_to_view(), [&](const Unit& unit) -> b8 { return unit.tag != hex_state.player_tag; });
 }
-List<AxialAndCost> HexPathAStar(HexState& hex_state, const int2 axial_start, const int2 axial_end) {
+List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start, const int2 axial_end) {
     List<AxialAndCost> axial_path;
     auto cmp = [](const AxialAndCost& a, const AxialAndCost& b) -> ::b8 { return a.cost > b.cost; };
     std::priority_queue<AxialAndCost, std::vector<AxialAndCost>, decltype(cmp)> frontier(cmp);
@@ -77,7 +77,7 @@ List<AxialAndCost> HexPathAStar(HexState& hex_state, const int2 axial_start, con
             const u32 cost = TerrainToMovementCost(hex_state.hex_map[axial_next].terrain);
             const u32 new_cost = cost_at_axial[current.axial] + cost;
             if (!cost_at_axial.contains(axial_next) || new_cost < cost_at_axial[axial_next]) {
-                const u32 heuristic_distance = HexCubeDistance(HexAxialToCube(axial_next), HexAxialToCube(axial_end));
+                const u32 heuristic_distance = HexAxialDistance(axial_next, axial_end);
                 cost_at_axial[axial_next] = new_cost;
                 frontier.push({ .cost = new_cost + heuristic_distance, .axial = axial_next });
                 came_from[axial_next] = current.axial;
@@ -98,18 +98,20 @@ void UnitToCounterAppend(HexState& hex_state) {
         Echelon echelon { Echelon::ECHELON_SQUAD };
         UnitIcon icon { UnitIcon::ICON_INF };
         u32 dmg = 0;
+        u32 def = 0;
         u32 move = 0;
         counter.stack = { };
         const u32 counters_on_hex = math::Min<u32>(counter.stack.size(), unit_handles.size());
-        if (hex_state.pseudo_states.axial_select == axial_unit) {
+        if (hex_state.pseudo_states.unit_selection.has_value() && hex_state.pseudo_states.axial_select == axial_unit) {
+            dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
+            def = hex_state.pseudo_states.unit_selection->def_sum;
+            move = hex_state.pseudo_states.unit_selection->move_min;
             // drawing selected
             u32 i = 0;
-            for (; i < hex_state.pseudo_states.unit_handles_select.size(); i++) {
-                const Handle<Unit> unit_handle_selected = hex_state.pseudo_states.unit_handles_select[i];
+            for (; i < hex_state.pseudo_states.unit_selection->unit_handles.size(); i++) {
+                const Handle<Unit> unit_handle_selected = hex_state.pseudo_states.unit_selection->unit_handles[i];
                 const Unit& unit_selected = hex_state.units[unit_handle_selected];
                 counter.stack[i] = Counter { .color_background = CountryTagToColor(unit_selected.tag), .color_icon = unit_selected.color, .color_border = colors::HEX_SELECT };
-                dmg += unit_selected.dmg;
-                move = math::Max(unit_selected.move, move);
                 if (unit_selected.echelon >= echelon) {
                     echelon = unit_selected.echelon;
                     icon = unit_selected.icon;
@@ -119,7 +121,7 @@ void UnitToCounterAppend(HexState& hex_state) {
             // only color for rest
             for (u32 j = 0; j < counters_on_hex; j++) {
                 const Handle<Unit> unit_handle = unit_handles[j];
-                if (hex_state.pseudo_states.unit_handles_select.Contains(unit_handle)) { continue; }
+                if (hex_state.pseudo_states.unit_selection->unit_handles.Contains(unit_handle)) { continue; }
                 const Unit& unit = hex_state.units[unit_handle];
                 counter.stack[i++] = Counter { .color_background = CountryTagToColor(unit.tag), .color_icon = unit.color, .color_border = colors::YELLOW };
             }
@@ -130,6 +132,7 @@ void UnitToCounterAppend(HexState& hex_state) {
                 const Unit& unit = hex_state.units[unit_handle];
                 counter.stack[i] = Counter { .color_background = CountryTagToColor(unit.tag), .color_icon = unit.color, .color_border = colors::BLACK };
                 dmg += unit.dmg;
+                def += unit.def;
                 move = math::Max(unit.move, move);
                 if (unit.echelon >= echelon) {
                     echelon = unit.echelon;
@@ -139,7 +142,7 @@ void UnitToCounterAppend(HexState& hex_state) {
         }
         counter.label_top.SetText(EchelonToString(echelon));
         counter.label_center.SetText(UnitIconToString(icon));
-        counter.label_bottom.SetText(std::format("{}-{}", dmg, move));
+        counter.label_bottom.SetText(std::format("{}-{}-{}", dmg, def, move));
     }
 }
 PlayerAction GetPlayerAction(const HexState& hex_state) {
@@ -148,13 +151,11 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
     if (hex_state.pseudo_states.axial_hover.has_value()) {
         // unit selection
         if (input_state.left_mouse_down) { return hex_state.units_by_axial.contains(hex_state.pseudo_states.axial_hover.value()) ? PlayerAction::PLAYER_ACTION_SELECT : PlayerAction::PLAYER_ACTION_DESELECT; }
-        if (!hex_state.pseudo_states.unit_handles_select.empty()) {
-            auto units_selected = hex_state.pseudo_states.unit_handles_select | hex_state.units.handle_to_view();
+        if (hex_state.pseudo_states.unit_selection.has_value()) {
             if (AxialIsEnemy(hex_state, hex_state.pseudo_states.axial_hover.value())) {
-                const u32 units_selected_movement = std::ranges::min(units_selected | std::views::transform(&Unit::move));
-                constexpr u32 MOVE_COST_ATTACK = 3U;
-                if (units_selected_movement > MOVE_COST_ATTACK) { return input_state.right_mouse_down ? PlayerAction::PLAYER_ACTION_ATTACK_CLICK : PlayerAction::PLAYER_ACTION_ATTACK_HOVER; }
-            } else if (hex_state.pseudo_states.axial_hover != hex_state.pseudo_states.axial_select) {
+                return input_state.right_mouse_down ? PlayerAction::PLAYER_ACTION_ATTACK_CLICK : PlayerAction::PLAYER_ACTION_ATTACK_HOVER;
+            }
+            if (hex_state.pseudo_states.axial_hover != hex_state.pseudo_states.axial_select) {
                 return input_state.right_mouse_down ? PlayerAction::PLAYER_ACTION_MOVE_CLICK : PlayerAction::PLAYER_ACTION_MOVE_HOVER;
             }
         }
@@ -176,6 +177,15 @@ struct HexSystem {
         for (u32 i = 0; i < hex_state.units.size(); i++) {
             Handle<Unit> unit_handle = hex_state.units.IndexToHandle(i);
             hex_state.units_by_axial[hex_state.units[unit_handle].axial].EmplaceBack(unit_handle);
+        }
+
+        if (hex_state.pseudo_states.unit_selection.has_value()) {
+            const auto unit_selection = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
+            hex_state.pseudo_states.unit_selection->def_sum = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::def), u32{ 0 }, std::plus{});
+            hex_state.pseudo_states.unit_selection->dmg_sum = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::dmg), u32{ 0 }, std::plus{});
+            const auto [move_min, move_max] = std::ranges::minmax(unit_selection | std::views::transform(&Unit::move), std::less {});
+            hex_state.pseudo_states.unit_selection->move_min = move_min;
+            hex_state.pseudo_states.unit_selection->move_max = move_max;
         }
 
         // pseudo states set
@@ -200,39 +210,41 @@ struct HexSystem {
 
         // logic and render
         hex_state.player_action = GetPlayerAction(hex_state);
+
         switch (hex_state.player_action) {
             case PlayerAction::PLAYER_ACTION_NONE: break;
             case PlayerAction::PLAYER_ACTION_SELECT: {
                 const b8 select_new = hex_state.pseudo_states.axial_select != hex_state.pseudo_states.axial_hover;
                 hex_state.pseudo_states.axial_select = hex_state.pseudo_states.axial_hover;
                 const List<Handle<Unit>>& unit_handles = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()];
+                List<Handle<Unit>> unit_handles_selection;
                 if (select_new) {
-                    hex_state.pseudo_states.unit_handles_select = List { { unit_handles[0] } };
+                    unit_handles_selection = List { { unit_handles[0] } };
                 } else {
-                    const u32 i = unit_handles.IndexOf(hex_state.pseudo_states.unit_handles_select[0]);
+                    const u32 i = unit_handles.IndexOf(hex_state.pseudo_states.unit_selection->unit_handles[0]);
                     const u32 next = i + 1; // select next or all
-                    hex_state.pseudo_states.unit_handles_select = next == unit_handles.size() ? unit_handles : List { { unit_handles[next] } };
+                    unit_handles_selection = next == unit_handles.size() ? unit_handles : List { { unit_handles[next] } };
                 }
+                hex_state.pseudo_states.unit_selection = UnitGroup { .unit_handles = unit_handles_selection };
                 break;
             }
             case PlayerAction::PLAYER_ACTION_DESELECT: {
                 hex_state.pseudo_states.axial_select = std::nullopt;
-                hex_state.pseudo_states.unit_handles_select.clear();
+                hex_state.pseudo_states.unit_selection = std::nullopt;
                 break;
             }
             case PlayerAction::PLAYER_ACTION_MOVE_CLICK: {
                 // movement https://www.redblobgames.com/grids/hexagons/#distances
                 const int2 axial_start = hex_state.pseudo_states.axial_select.value();
                 const int2 axial_hover = hex_state.pseudo_states.axial_hover.value();
-                auto units_selected = hex_state.pseudo_states.unit_handles_select | hex_state.units.handle_to_view();
-                const u32 units_selected_movement = std::ranges::min(units_selected | std::views::transform(&Unit::move));
+                auto units_selected = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
 
                 constexpr Color COLOR { colors::RUBY_RED };
                 (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR.r, COLOR.g, COLOR.b, COLOR.a);
 
                 // path finding
-                List<AxialAndCost> axial_path = HexPathAStar(hex_state, axial_start, axial_hover);
-                const auto it = std::ranges::upper_bound(axial_path, units_selected_movement, std::less { }, &AxialAndCost::cost);
+                List<AxialAndCost> axial_path = HexAxialPathAStar(hex_state, axial_start, axial_hover);
+                const auto it = std::ranges::upper_bound(axial_path, hex_state.pseudo_states.unit_selection->move_min, std::less { }, &AxialAndCost::cost);
                 if (it != axial_path.begin()) {
                     const AxialAndCost& cost_and_axial_end = *std::prev(it);
                     for (Unit& unit : units_selected) {
@@ -244,13 +256,19 @@ struct HexSystem {
                 break;
             }
             case PlayerAction::PLAYER_ACTION_MOVE_HOVER: {
-                const int2 axial_start = hex_state.pseudo_states.axial_select.value();
-                const int2 axial_hover = hex_state.pseudo_states.axial_hover.value();
+                const List<AxialAndCost> axial_path = HexAxialPathAStar(hex_state, hex_state.pseudo_states.axial_select.value(), hex_state.pseudo_states.axial_hover.value());
 
-                auto units_selected = hex_state.pseudo_states.unit_handles_select | hex_state.units.handle_to_view();
+                auto units_selected = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
                 const u32 units_selected_movement = std::ranges::min(units_selected | std::views::transform(&Unit::move));
+                for (const AxialAndCost cost_and_axial : axial_path) {
+                    const float2 world = HexAxialToWorld(cost_and_axial.axial);
+                    const int2 screen = camera.WorldToScreen(world);
 
-                List<AxialAndCost> axial_path = HexPathAStar(hex_state, axial_start, axial_hover);
+                    const Color movement_color = cost_and_axial.cost > units_selected_movement ? colors::BLACK : colors::RUBY_RED;
+                    HexAppend(hex_state.verts, camera.scale * 0.25F, screen, movement_color);
+                }
+                (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts.data.data(), static_cast<i32>(hex_state.verts.size()), nullptr, 0);
+                hex_state.verts.clear();
 
                 const f32 pt = camera.scale * 0.3F;
                 const Font& font_movement = font_collection.GetFontBold(static_cast<FontSizes>(pt));
@@ -260,14 +278,9 @@ struct HexSystem {
                     const int2 screen = camera.WorldToScreen(world);
                     const float2 screen_f = static_cast<float2>(screen);
 
-                    const Color movement_color = cost_and_axial.cost > units_selected_movement ? colors::BLACK : colors::RUBY_RED;
-                    HexAppend(hex_state.verts, camera.scale * 0.25F, screen, movement_color);
-                    (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts.data.data(), static_cast<i32>(hex_state.verts.size()), nullptr, 0);
-                    hex_state.verts.clear();
-
                     const Label& label = hex_state.label_pool.Get();
                     const String string_distance = std::format("{}", cost_and_axial.cost);
-                    (void)TTF_SetTextWrapWidth(label, camera.scale);
+                    (void)TTF_SetTextWrapWidth(label, static_cast<i32>(camera.scale));
                     (void)TTF_SetTextFont(label, font_movement);
                     (void)TTF_SetTextString(label, string_distance.c_str(), string_distance.size());
                     (void)TTF_DrawRendererText(label, screen_f.x - camera.scale * 0.5F, screen_f.y - pt * 0.5F);
@@ -275,34 +288,48 @@ struct HexSystem {
                 break;
             }
             case PlayerAction::PLAYER_ACTION_ATTACK_CLICK: {
-                auto units_selected = hex_state.pseudo_states.unit_handles_select | hex_state.units.handle_to_view();
+                const u32 distance = HexAxialDistance(hex_state.pseudo_states.axial_hover.value(), hex_state.pseudo_states.axial_select.value());
+                const b8 can_attack = hex_state.pseudo_states.unit_selection->move_min > MOVE_COST_ATTACK && distance == 1;
+                if (!can_attack) { break; }
+
+                auto units_selected = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
                 auto units_hover = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()] | hex_state.units.handle_to_view();
                 // attack
-                const u32 dmg = std::ranges::fold_left(units_selected | std::views::transform(&Unit::dmg), 0U, std::plus { });
+                const u32 dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
                 const u32 def = std::ranges::fold_left(units_hover | std::views::transform(&Unit::def), 0U, std::plus { });
                 const f32 ratio = static_cast<f32>(dmg) / static_cast<f32>(def);
-                if (ratio >= 2.0F) {
-                    for (Unit& defender : units_hover) {
-                        defender.dmg = math::SaturatingSub(defender.dmg, 3U);
-                        defender.def = math::SaturatingSub(defender.def, 3U);
-                    }
-                    for (Unit& attacker : units_selected) {
-                        attacker.dmg = math::SaturatingSub(attacker.dmg, 1U);
-                        attacker.def = math::SaturatingSub(attacker.def, 1U);
-                    }
-                } else {
-                    for (Unit& attacker : units_selected) {
-                        attacker.dmg = math::SaturatingSub(attacker.dmg, 3U);
-                        attacker.def = math::SaturatingSub(attacker.def, 3U);
-                    }
-                    for (Unit& defender : units_hover) {
-                        defender.dmg = math::SaturatingSub(defender.dmg, 1U);
-                        defender.def = math::SaturatingSub(defender.def, 1U);
-                    }
+                struct BattleOutcome {
+                    u32 dmg_attacker;
+                    u32 dmg_defender;
+                } battle_outcome;
+                battle_outcome =  ratio >= 2.0F ? BattleOutcome { .dmg_attacker = 1U, .dmg_defender = 3U } : BattleOutcome { .dmg_attacker = 3U, .dmg_defender = 1U };
+                for (Unit& defender : units_hover) {
+                    defender.dmg = math::SaturatingSub(defender.dmg, battle_outcome.dmg_defender);
+                    defender.def = math::SaturatingSub(defender.def, battle_outcome.dmg_defender);
                 }
+                for (Unit& attacker : units_selected) {
+                    attacker.dmg = math::SaturatingSub(attacker.dmg, battle_outcome.dmg_attacker);
+                    attacker.def = math::SaturatingSub(attacker.def, battle_outcome.dmg_attacker);
+                    attacker.move = math::SaturatingSub(attacker.move, MOVE_COST_ATTACK);
+                }
+
                 break;
             }
-            case PlayerAction::PLAYER_ACTION_ATTACK_HOVER: break;
+            case PlayerAction::PLAYER_ACTION_ATTACK_HOVER:
+                const u32 distance = HexAxialDistance(hex_state.pseudo_states.axial_hover.value(), hex_state.pseudo_states.axial_select.value());
+                const b8 can_attack = hex_state.pseudo_states.unit_selection->move_min > MOVE_COST_ATTACK && distance == 1;
+
+                const float2 world = HexAxialToWorld(hex_state.pseudo_states.axial_hover.value());
+                const int2 screen = camera.WorldToScreen(world);
+
+                Color color_inner = can_attack ? colors::RUBY_RED : colors::BLACK;
+                HexAppend(hex_state.verts, camera.scale * 0.25F, screen, colors::GRAY);
+                HexAppend(hex_state.verts, camera.scale * 0.20F, screen, color_inner);
+                if (can_attack) { HexAppend(hex_state.verts, camera.scale * 0.10F, screen, colors::DARK_GREEN); }
+                (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts.data.data(), static_cast<i32>(hex_state.verts.size()), nullptr, 0);
+                hex_state.verts.clear();
+
+                break;
         }
     }
 };

@@ -1,12 +1,16 @@
 #pragma once
+#include "0_engine/u_collections.hpp"
 #include "0_engine/u_types.hpp"
 #include "1_systems/r_counter_system.hpp"
+#include "1_systems/r_hex_system.hpp"
 
 namespace pcg {
 using namespace pce;
 enum class CountryTag : u8 { TAG_GER, TAG_SOV, TAG_USA };
 enum class TerrainType : u8 { TERRAIN_DEEP_OCEAN, TERRAIN_OCEAN, TERRAIN_BEACH, TERRAIN_GRASS, TERRAIN_FOREST, TERRAIN_MOUNTAIN, TERRAIN_SNOW };
 enum class PlayerAction { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_ACTION_DESELECT, PLAYER_ACTION_MOVE_CLICK, PLAYER_ACTION_MOVE_HOVER, PLAYER_ACTION_ATTACK_CLICK, PLAYER_ACTION_ATTACK_HOVER };
+
+constexpr u32 MOVE_COST_ATTACK = 3U;
 
 struct Hex {
     TerrainType terrain;
@@ -21,18 +25,25 @@ struct Unit {
     u32 move;
     u32 def;
 };
+struct UnitGroup {
+    List<Handle<Unit>> unit_handles;
+    u32 dmg_sum;
+    u32 def_sum;
+    u32 move_min;
+    u32 move_max;
+};
 struct HexDrawInfo {
     float2 world { };
     Color color { };
 };
 struct PseudoTarget {
-    int2 axial;
+    int2 axial{};
     List<Handle<Unit>> units;
 };
 struct PseudoStates {
     Optional<int2> axial_hover;
     Optional<int2> axial_select;
-    List<Handle<Unit>> unit_handles_select;
+    Optional<UnitGroup> unit_selection;
 };
 struct AxialAndCost {
     u32 cost;

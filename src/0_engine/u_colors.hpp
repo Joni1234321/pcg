@@ -107,6 +107,8 @@ constexpr Color CHARCOAL_GRAY { 63U, 63U, 63U };  // #3F3F3F - Dark charcoal gra
 constexpr Color STEEL_GRAY { 120U, 120U, 120U };  // #787878 - Mid-tone gray
 constexpr Color ASH_GRAY { 124U, 124U, 124U };    // #7C7C7C - Muted ash gray
 
+constexpr Color DARK_GREEN { 0U, 110U, 60U };
+
 // Hex Battle
 constexpr Color HEX_HOVER { 190U, 205U, 175U }; // muted sage-green hover ring
 constexpr Color HEX_SELECT { 210U, 165U, 30U }; // warm amber-gold selection ring
