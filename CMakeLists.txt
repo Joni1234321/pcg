@@ -35,14 +35,14 @@ fetchcontent_makeavailable(SDL3 SDL3_ttf SDL3_image)
 
 add_executable(pcg
                src/pcg.cpp
-               src/g_clickcore.cpp
-               src/g_cosmoclick.cpp
-               src/g_commandstrike.cpp
-               src/g_battlesim.cpp
+              # src/g_clickcore.cpp
+              # src/g_cosmoclick.cpp
+               #src/g_commandstrike.cpp
+              # src/g_battlesim.cpp
                src/g_hex.cpp
-               src/g_hexbattle.cpp
-               src/g_factory.cpp
-               src/g_game.cpp
+              # src/g_hexbattle.cpp
+              # src/g_factory.cpp
+               #src/g_game.cpp
                src/1_systems/t_debug_system.cpp
                src/1_systems/r_ui_node.cpp
 )

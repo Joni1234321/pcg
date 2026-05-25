@@ -4,13 +4,13 @@
 #include <array>
 #include <format>
 #include <functional>
+#include <ranges>
 #include <set>
 #include <span>
 #include <stack>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <ranges>
 
 #include "0_engine/u_types.hpp"
 #include "0_engine/u_util.hpp"
@@ -235,8 +235,12 @@ template <typename T, typename H = T> struct HandleList {
     }
     [[nodiscard]] constexpr b8 ValidHandle(const Handle<H> handle) const noexcept { return handle.id - offset_handle.id < size(); }
     [[nodiscard]] constexpr Handle<H> FirstHandle() const noexcept { return offset_handle; }
-    [[nodiscard]] constexpr auto handle_to_view () { return std::views::transform([this](const Handle<H> handle) -> T& { return this->operator[](handle);}); }
-    [[nodiscard]] constexpr auto handle_to_view () const { return std::views::transform([this](const Handle<H> handle) -> const T& { return this->operator[](handle);}); }
+    [[nodiscard]] constexpr auto handle_to_view() {
+        return std::views::transform([this](const Handle<H> handle) -> T& { return this->operator[](handle); });
+    }
+    [[nodiscard]] constexpr auto handle_to_view() const {
+        return std::views::transform([this](const Handle<H> handle) -> const T& { return this->operator[](handle); });
+    }
 };
 template <typename K, typename V> class FlatMap {
     List<K> keys { };

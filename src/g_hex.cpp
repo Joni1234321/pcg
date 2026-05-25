@@ -1,4 +1,6 @@
-﻿#include <algorithm>
+﻿#include "g_hex.hpp"
+
+#include <algorithm>
 #include <cmath>
 #include <format>
 #include <functional>
@@ -38,108 +40,6 @@ namespace pcg {
 using namespace pce;
 using namespace pce::ui;
 namespace {
-struct HexDrawInfo {
-    float2 world { };
-    Color color { };
-};
-enum class CountryTag : u8 { TAG_GER, TAG_SOV, TAG_USA };
-enum class TerrainType : u8 { TERRAIN_DEEP_OCEAN, TERRAIN_OCEAN, TERRAIN_BEACH, TERRAIN_GRASS, TERRAIN_FOREST, TERRAIN_MOUNTAIN, TERRAIN_SNOW };
-struct Hex {
-    TerrainType terrain;
-};
-struct Unit {
-    CountryTag tag;
-    Echelon echelon;
-    UnitIcon icon;
-    Color color;
-    int2 axial;
-    u32 dmg;
-    u32 move;
-    u32 def;
-};
-enum class PlayerAction { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_ACTION_DESELECT, PLAYER_ACTION_MOVE_CLICK, PLAYER_ACTION_MOVE_HOVER, PLAYER_ACTION_ATTACK_CLICK, PLAYER_ACTION_ATTACK_HOVER };
-
-struct PseudoTarget {
-    int2 axial;
-    List<Handle<Unit>> units;
-};
-struct PseudoStates {
-    std::optional<int2> axial_hover;
-    std::optional<int2> axial_select;
-    List<Handle<Unit>> unit_handles_select;
-};
-struct HexState {
-    HexList<Hex> hex_map;
-    HandleList<Unit> units;
-
-    // cache logic
-    CountryTag player_tag;
-    PlayerAction player_action;
-    UnorderedMap<int2, List<Handle<Unit>>> units_by_axial;
-    PseudoStates pseudo_states;
-
-    // cache drawing
-    HexList<HexDrawInfo> hex_draw;
-    Pool<Counter> counters;
-    Pool<Label> label_pool;
-    List<SDL_Vertex> verts { };
-};
-
-[[nodiscard]] constexpr TerrainType FloatToTerrain(const f32 terrain) {
-    if (terrain < 0.25F) { return TerrainType::TERRAIN_DEEP_OCEAN; }
-    if (terrain < 0.38F) { return TerrainType::TERRAIN_OCEAN; }
-    if (terrain < 0.43F) { return TerrainType::TERRAIN_BEACH; }
-    if (terrain < 0.60F) { return TerrainType::TERRAIN_GRASS; }
-    if (terrain < 0.72F) { return TerrainType::TERRAIN_FOREST; }
-    if (terrain < 0.85F) { return TerrainType::TERRAIN_MOUNTAIN; }
-    return TerrainType::TERRAIN_SNOW;
-}
-[[nodiscard]] constexpr Color TerrainToColor(const TerrainType terrain) {
-    switch (terrain) {
-        case TerrainType::TERRAIN_DEEP_OCEAN: return Color { 20U, 60U, 120U };
-        case TerrainType::TERRAIN_OCEAN: return Color { 50U, 100U, 180U };
-        case TerrainType::TERRAIN_BEACH: return colors::KHAKI;
-        case TerrainType::TERRAIN_GRASS: return Color { 100U, 190U, 80U };
-        case TerrainType::TERRAIN_FOREST: return colors::FOREST_GREEN;
-        case TerrainType::TERRAIN_MOUNTAIN: return colors::GRAY;
-        case TerrainType::TERRAIN_SNOW: return colors::WHITE;
-    }
-    __builtin_unreachable();
-}
-[[nodiscard]] constexpr u32 TerrainToMovementCost(const TerrainType terrain) {
-    switch (terrain) {
-        case TerrainType::TERRAIN_DEEP_OCEAN: return 255U;
-        case TerrainType::TERRAIN_OCEAN: return 255U;
-        case TerrainType::TERRAIN_BEACH: return 2U;
-        case TerrainType::TERRAIN_GRASS: return 1U;
-        case TerrainType::TERRAIN_FOREST: return 3U;
-        case TerrainType::TERRAIN_MOUNTAIN: return 5U;
-        case TerrainType::TERRAIN_SNOW: return 4U;
-    }
-    __builtin_unreachable();
-}
-[[nodiscard]] constexpr Color CountryTagToColor(const CountryTag tag) {
-    switch (tag) {
-        case CountryTag::TAG_GER: return colors::WG_GER_BG;
-        case CountryTag::TAG_SOV: return colors::WG_SOV_BG;
-        case CountryTag::TAG_USA: return colors::WG_USA_BG;
-    }
-    __builtin_unreachable();
-}
-
-HexList<Hex> GenerateTerrain(const uint2 map_size, const u32 seed) {
-    HexList<Hex> hexes;
-    hexes.Resize(map_size);
-    constexpr f32 SCALE = 0.04F;
-    const f32 seed_f = static_cast<f32>(seed);
-    for (u32 i = 0; i < hexes.Size(); i++) {
-        const int2 axial = hexes.IndexToAxial(i);
-        const float2 world = HexAxialToWorld(axial);
-        hexes[axial].terrain = FloatToTerrain((noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f) + 1.0F) * 0.5F);
-    }
-    return hexes;
-}
-
 HexList<HexDrawInfo> HexToHexDraw(const HexList<Hex>& hexes) {
     HexList<HexDrawInfo> result { };
     result.Resize(hexes.map_size);
@@ -150,13 +50,10 @@ HexList<HexDrawInfo> HexToHexDraw(const HexList<Hex>& hexes) {
     }
     return result;
 }
-
-struct AxialAndCost {
-    u32 cost;
-    int2 axial;
-};
-[[nodiscard]] b8 AxialIsEnemy(const HexState& hex_state, const int2 axial) { return hex_state.units_by_axial.contains(axial) && std::ranges::any_of(hex_state.units_by_axial.at(axial) | hex_state.units.handle_to_view(),  [&](const Unit& unit) -> b8 { return unit.tag != hex_state.player_tag; }); }
-List<AxialAndCost> HexAStarPath(HexState& hex_state, const int2 axial_start, const int2 axial_end) {
+[[nodiscard]] b8 AxialIsEnemy(const HexState& hex_state, const int2 axial) {
+    return hex_state.units_by_axial.contains(axial) && std::ranges::any_of(hex_state.units_by_axial.at(axial) | hex_state.units.handle_to_view(), [&](const Unit& unit) -> b8 { return unit.tag != hex_state.player_tag; });
+}
+List<AxialAndCost> HexPathAStar(HexState& hex_state, const int2 axial_start, const int2 axial_end) {
     List<AxialAndCost> axial_path;
     auto cmp = [](const AxialAndCost& a, const AxialAndCost& b) -> ::b8 { return a.cost > b.cost; };
     std::priority_queue<AxialAndCost, std::vector<AxialAndCost>, decltype(cmp)> frontier(cmp);
@@ -193,21 +90,73 @@ List<AxialAndCost> HexAStarPath(HexState& hex_state, const int2 axial_start, con
     }
     return axial_path;
 }
+
+void UnitToCounterAppend(HexState& hex_state) {
+    for (const auto& [axial_unit, unit_handles] : hex_state.units_by_axial) {
+        CounterStack& counter = hex_state.counters.Get();
+        counter.axial = axial_unit;
+        Echelon echelon { Echelon::ECHELON_SQUAD };
+        UnitIcon icon { UnitIcon::ICON_INF };
+        u32 dmg = 0;
+        u32 move = 0;
+        counter.stack = { };
+        const u32 counters_on_hex = math::Min<u32>(counter.stack.size(), unit_handles.size());
+        if (hex_state.pseudo_states.axial_select == axial_unit) {
+            // drawing selected
+            u32 i = 0;
+            for (; i < hex_state.pseudo_states.unit_handles_select.size(); i++) {
+                const Handle<Unit> unit_handle_selected = hex_state.pseudo_states.unit_handles_select[i];
+                const Unit& unit_selected = hex_state.units[unit_handle_selected];
+                counter.stack[i] = Counter { .color_background = CountryTagToColor(unit_selected.tag), .color_icon = unit_selected.color, .color_border = colors::HEX_SELECT };
+                dmg += unit_selected.dmg;
+                move = math::Max(unit_selected.move, move);
+                if (unit_selected.echelon >= echelon) {
+                    echelon = unit_selected.echelon;
+                    icon = unit_selected.icon;
+                }
+            }
+
+            // only color for rest
+            for (u32 j = 0; j < counters_on_hex; j++) {
+                const Handle<Unit> unit_handle = unit_handles[j];
+                if (hex_state.pseudo_states.unit_handles_select.Contains(unit_handle)) { continue; }
+                const Unit& unit = hex_state.units[unit_handle];
+                counter.stack[i++] = Counter { .color_background = CountryTagToColor(unit.tag), .color_icon = unit.color, .color_border = colors::YELLOW };
+            }
+        } else {
+            // drawing plain
+            for (u32 i = 0; i < counters_on_hex; i++) {
+                const Handle<Unit> unit_handle = unit_handles[i];
+                const Unit& unit = hex_state.units[unit_handle];
+                counter.stack[i] = Counter { .color_background = CountryTagToColor(unit.tag), .color_icon = unit.color, .color_border = colors::BLACK };
+                dmg += unit.dmg;
+                move = math::Max(unit.move, move);
+                if (unit.echelon >= echelon) {
+                    echelon = unit.echelon;
+                    icon = unit.icon;
+                }
+            }
+        }
+        counter.label_top.SetText(EchelonToString(echelon));
+        counter.label_center.SetText(UnitIconToString(icon));
+        counter.label_bottom.SetText(std::format("{}-{}", dmg, move));
+    }
+}
 PlayerAction GetPlayerAction(const HexState& hex_state) {
     const InputState& input_state = Singleton::Get<InputState>();
 
     if (hex_state.pseudo_states.axial_hover.has_value()) {
         // unit selection
-        if (input_state.left_mouse_down) {
-            return hex_state.units_by_axial.contains(hex_state.pseudo_states.axial_hover.value()) ? PlayerAction::PLAYER_ACTION_SELECT : PlayerAction::PLAYER_ACTION_DESELECT;
-        }
+        if (input_state.left_mouse_down) { return hex_state.units_by_axial.contains(hex_state.pseudo_states.axial_hover.value()) ? PlayerAction::PLAYER_ACTION_SELECT : PlayerAction::PLAYER_ACTION_DESELECT; }
         if (!hex_state.pseudo_states.unit_handles_select.empty()) {
             auto units_selected = hex_state.pseudo_states.unit_handles_select | hex_state.units.handle_to_view();
             if (AxialIsEnemy(hex_state, hex_state.pseudo_states.axial_hover.value())) {
                 const u32 units_selected_movement = std::ranges::min(units_selected | std::views::transform(&Unit::move));
                 constexpr u32 MOVE_COST_ATTACK = 3U;
                 if (units_selected_movement > MOVE_COST_ATTACK) { return input_state.right_mouse_down ? PlayerAction::PLAYER_ACTION_ATTACK_CLICK : PlayerAction::PLAYER_ACTION_ATTACK_HOVER; }
-            } else if (hex_state.pseudo_states.axial_hover != hex_state.pseudo_states.axial_select) { return input_state.right_mouse_down ? PlayerAction::PLAYER_ACTION_MOVE_CLICK : PlayerAction::PLAYER_ACTION_MOVE_HOVER; }
+            } else if (hex_state.pseudo_states.axial_hover != hex_state.pseudo_states.axial_select) {
+                return input_state.right_mouse_down ? PlayerAction::PLAYER_ACTION_MOVE_CLICK : PlayerAction::PLAYER_ACTION_MOVE_HOVER;
+            }
         }
     }
     return PlayerAction::PLAYER_ACTION_NONE;
@@ -235,7 +184,7 @@ struct HexSystem {
         hex_state.player_tag = CountryTag::TAG_GER;
         hex_state.player_action = PlayerAction::PLAYER_ACTION_NONE;
 
-        // pseudo states draw
+        // render pseudo states
         if (hex_state.pseudo_states.axial_hover) { HexAppend(hex_state.verts, camera.scale, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover.value())), colors::HEX_HOVER); }
         if (hex_state.pseudo_states.axial_select) { HexAppend(hex_state.verts, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select.value())), colors::HEX_SELECT); }
 
@@ -246,63 +195,14 @@ struct HexSystem {
 
         // render units
         hex_state.counters.Clear();
-        for (const auto& [axial, unit_handles] : hex_state.units_by_axial) {
-            Counter& counter = hex_state.counters.Get();
-            counter.axial = axial;
-            Echelon echelon { Echelon::ECHELON_SQUAD };
-            UnitIcon icon { UnitIcon::ICON_INF };
-            u32 dmg = 0;
-            u32 move = 0;
-            counter.stack = { };
-            const u32 counters_on_hex = math::Min<u32>(counter.stack.size(), unit_handles.size());
-            if (hex_state.pseudo_states.axial_select == axial) {
-                // drawing selected
-                u32 i = 0;
-                for (; i < hex_state.pseudo_states.unit_handles_select.size(); i++) {
-                    const Handle<Unit> unit_handle_selected = hex_state.pseudo_states.unit_handles_select[i];
-                    const Unit& unit_selected = hex_state.units[unit_handle_selected];
-                    counter.stack[i] = CounterStack { .color_background = CountryTagToColor(unit_selected.tag), .color_icon = unit_selected.color, .color_border = colors::HEX_SELECT };
-                    dmg += unit_selected.dmg;
-                    move = math::Max(unit_selected.move, move);
-                    if (unit_selected.echelon >= echelon) {
-                        echelon = unit_selected.echelon;
-                        icon = unit_selected.icon;
-                    }
-                }
-
-                // only color for rest
-                for (u32 j = 0; j < counters_on_hex; j++) {
-                    const Handle<Unit> unit_handle = unit_handles[j];
-                    if (hex_state.pseudo_states.unit_handles_select.Contains(unit_handle)) { continue; }
-                    const Unit& unit = hex_state.units[unit_handle];
-                    counter.stack[i++] = CounterStack { .color_background = CountryTagToColor(unit.tag), .color_icon = unit.color, .color_border = colors::YELLOW };
-                }
-            } else {
-                // drawing plain
-                for (u32 i = 0; i < counters_on_hex; i++) {
-                    const Handle<Unit> unit_handle = unit_handles[i];
-                    const Unit& unit = hex_state.units[unit_handle];
-                    counter.stack[i] = CounterStack { .color_background = CountryTagToColor(unit.tag), .color_icon = unit.color, .color_border = colors::BLACK };
-                    dmg += unit.dmg;
-                    move = math::Max(unit.move, move);
-                    if (unit.echelon >= echelon) {
-                        echelon = unit.echelon;
-                        icon = unit.icon;
-                    }
-                }
-            }
-            counter.label_top.SetText(EchelonToString(echelon));
-            counter.label_center.SetText(UnitIconToString(icon));
-            counter.label_bottom.SetText(std::format("{}-{}", dmg, move));
-        }
+        UnitToCounterAppend(hex_state);
         RenderCounters(hex_state.counters);
 
+        // logic and render
         hex_state.player_action = GetPlayerAction(hex_state);
         switch (hex_state.player_action) {
-            case PlayerAction::PLAYER_ACTION_NONE:
-                break;
-            case PlayerAction::PLAYER_ACTION_SELECT:
-            {
+            case PlayerAction::PLAYER_ACTION_NONE: break;
+            case PlayerAction::PLAYER_ACTION_SELECT: {
                 const b8 select_new = hex_state.pseudo_states.axial_select != hex_state.pseudo_states.axial_hover;
                 hex_state.pseudo_states.axial_select = hex_state.pseudo_states.axial_hover;
                 const List<Handle<Unit>>& unit_handles = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()];
@@ -331,7 +231,7 @@ struct HexSystem {
                 (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR.r, COLOR.g, COLOR.b, COLOR.a);
 
                 // path finding
-                List<AxialAndCost> axial_path = HexAStarPath(hex_state, axial_start, axial_hover);
+                List<AxialAndCost> axial_path = HexPathAStar(hex_state, axial_start, axial_hover);
                 const auto it = std::ranges::upper_bound(axial_path, units_selected_movement, std::less { }, &AxialAndCost::cost);
                 if (it != axial_path.begin()) {
                     const AxialAndCost& cost_and_axial_end = *std::prev(it);
@@ -350,7 +250,7 @@ struct HexSystem {
                 auto units_selected = hex_state.pseudo_states.unit_handles_select | hex_state.units.handle_to_view();
                 const u32 units_selected_movement = std::ranges::min(units_selected | std::views::transform(&Unit::move));
 
-                List<AxialAndCost> axial_path = HexAStarPath(hex_state, axial_start, axial_hover);
+                List<AxialAndCost> axial_path = HexPathAStar(hex_state, axial_start, axial_hover);
 
                 const f32 pt = camera.scale * 0.3F;
                 const Font& font_movement = font_collection.GetFontBold(static_cast<FontSizes>(pt));
@@ -371,10 +271,9 @@ struct HexSystem {
                     (void)TTF_SetTextFont(label, font_movement);
                     (void)TTF_SetTextString(label, string_distance.c_str(), string_distance.size());
                     (void)TTF_DrawRendererText(label, screen_f.x - camera.scale * 0.5F, screen_f.y - pt * 0.5F);
-
                 }
                 break;
-        }
+            }
             case PlayerAction::PLAYER_ACTION_ATTACK_CLICK: {
                 auto units_selected = hex_state.pseudo_states.unit_handles_select | hex_state.units.handle_to_view();
                 auto units_hover = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()] | hex_state.units.handle_to_view();

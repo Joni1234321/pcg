@@ -41,20 +41,20 @@ enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK };
     }
     __builtin_unreachable();
 }
-struct CounterStack {
+struct Counter {
     Color color_background;
     Color color_icon;
     Color color_border;
 };
-struct Counter {
+struct CounterStack {
     int2 axial { };
-    Array<CounterStack, 12> stack { };
+    Array<Counter, 12> stack { };
     Label label_top;
     Label label_center;
     Label label_bottom;
 };
 
-inline void RenderCounters(const Pool<Counter>& counters) {
+inline void RenderCounters(const Pool<CounterStack>& counters) {
     static constexpr f32 TEXT_MIN_SCALE = 18.0F;
     const CameraState& camera = Singleton::Get<CameraState>();
     const WindowState& window_state = Singleton::Get<WindowState>();
@@ -66,7 +66,7 @@ inline void RenderCounters(const Pool<Counter>& counters) {
     const ui::Font& font = font_collection.GetFontBold(static_cast<ui::FontSizes>(pt));
     TTF_SetFontWrapAlignment(font, TTF_HORIZONTAL_ALIGN_CENTER);
 
-    for (const Counter& counter : counters) {
+    for (const CounterStack& counter : counters) {
         const float2 world = HexAxialToWorld(counter.axial);
         const int2 screen = camera.WorldToScreen(world);
         const float2 counter_center = static_cast<float2>(screen);
@@ -74,7 +74,7 @@ inline void RenderCounters(const Pool<Counter>& counters) {
 
         // draw static counters
         for (i32 i = static_cast<i32>(counter.stack.size()) - 1; i >= 0; i--) {
-            const CounterStack& counter_stack = counter.stack[static_cast<u32>(i)];
+            const Counter& counter_stack = counter.stack[static_cast<u32>(i)];
             if (counter_stack.color_icon.a == 0) { continue; }
 
             constexpr f32 OFFSET_STACK = 1.0F / 16.0F;

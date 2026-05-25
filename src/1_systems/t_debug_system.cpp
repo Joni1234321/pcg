@@ -1,11 +1,9 @@
 ﻿#include "t_debug_system.hpp"
 
-#include "g_components.hpp"
-
 #include "0_engine/u_colors.hpp"
 #include "0_engine/u_types.hpp"
-
 #include "1_systems/i_input_system.hpp"
+#include "1_systems/t_tick_system.hpp"
 #include "1_systems/u_orchestra.hpp"
 
 namespace pce::ui {
