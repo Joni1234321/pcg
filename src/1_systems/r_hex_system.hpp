@@ -80,6 +80,7 @@ template <class T> struct HexList {
         return x < map_size.x && y < map_size.y;
     }
     [[nodiscard]] constexpr T& operator[](int2 axial) { return data[AxialToIndex(axial)]; }
+    [[nodiscard]] constexpr const T& operator[](int2 axial) const { return data[AxialToIndex(axial)]; }
     [[nodiscard]] constexpr u32 Size() const { return map_size.x * map_size.y; }
 
     void Resize(const uint2 new_size) {

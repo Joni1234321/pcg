@@ -15,7 +15,8 @@ enum class TerrainType : u8 { TERRAIN_DEEP_OCEAN, TERRAIN_OCEAN, TERRAIN_BEACH, 
 enum class PlayerAction { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_ACTION_DESELECT, PLAYER_ACTION_MOVE_CLICK, PLAYER_ACTION_MOVE_HOVER, PLAYER_ACTION_ATTACK_CLICK, PLAYER_ACTION_ATTACK_HOVER };
 enum class TerrainScheme : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER }; // colorschema.md
 
-constexpr u32 MOVE_COST_ATTACK = 3U;
+constexpr u32 MOVE_COST_ATTACK = 2U;
+constexpr u32 MOVE_COST_ATTACK_PLANNED = 6U;
 constexpr TerrainScheme TERRAIN_SCHEME = TerrainScheme::SLATE_TABLE;
 constexpr f32 BORDER_INNER_RADIUS = 0.90F;
 constexpr f32 BORDER_TEETH_DEPTH   = 0.12F; // how far the tip pushes towards the hex centre

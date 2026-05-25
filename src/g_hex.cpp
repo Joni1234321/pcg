@@ -53,6 +53,12 @@ HexList<HexDrawInfo> HexToHexDraw(const HexList<Hex>& hexes) {
 [[nodiscard]] b8 AxialIsEnemy(const HexState& hex_state, const int2 axial) {
     return hex_state.units_by_axial.contains(axial) && !std::ranges::contains(hex_state.units_by_axial.at(axial) | hex_state.units.handle_to_view(), hex_state.player_tag, &Unit::tag);
 }
+[[nodiscard]] b8 AxialIsEnemyOrZoc(const HexState& hex_state, const int2 axial) {
+    return AxialIsEnemy(hex_state, axial) || std::ranges::any_of(HEX_AXIAL_NEIGHBOURS, [&](const int2 axial_offset) -> b8 { return AxialIsEnemy(hex_state, axial + axial_offset); });
+}
+[[nodiscard]] u8 AxialAdjecentEnemyControl (const HexState& hex_state, const int2 axial) {
+    return std::ranges::count_if(HEX_AXIAL_NEIGHBOURS, [&](const int2 axial_offset) -> b8 { return hex_state.hex_map.Contains(axial + axial_offset) && hex_state.hex_map[axial + axial_offset].country_tag != hex_state.player_tag; });
+}
 List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start, const int2 axial_end) {
     List<AxialAndCost> axial_path;
     auto cmp = [](const AxialAndCost& a, const AxialAndCost& b) -> ::b8 { return a.cost > b.cost; };
@@ -74,12 +80,14 @@ List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start
             const int2 axial_next = current.axial + axial_neighbour_offset;
             if (!hex_state.hex_map.Contains(axial_next) || AxialIsEnemy(hex_state, axial_next)) { continue; }
 
-            const u32 cost = TerrainToMovementCost(hex_state.hex_map[axial_next].terrain);
-            const u32 new_cost = cost_at_axial[current.axial] + cost;
-            if (!cost_at_axial.contains(axial_next) || new_cost < cost_at_axial[axial_next]) {
+            const Hex& hex = hex_state.hex_map[axial_next];
+            const u32 cost_conquer = AxialIsEnemyOrZoc(hex_state, axial_next) * 1U + (AxialAdjecentEnemyControl(hex_state, axial_next) > 0) * 1U;
+            const u32 cost_terrain = TerrainToMovementCost(hex.terrain);
+            const u32 cost_new = cost_at_axial[current.axial] + cost_terrain + cost_conquer;
+            if (!cost_at_axial.contains(axial_next) || cost_new < cost_at_axial[axial_next]) {
                 const u32 heuristic_distance = HexAxialDistance(axial_next, axial_end);
-                cost_at_axial[axial_next] = new_cost;
-                frontier.push({ .cost = new_cost + heuristic_distance, .axial = axial_next });
+                cost_at_axial[axial_next] = cost_new;
+                frontier.push({ .cost = cost_new + heuristic_distance, .axial = axial_next });
                 came_from[axial_next] = current.axial;
             }
         }
@@ -245,8 +253,18 @@ struct HexSystem {
 
                 // path finding
                 List<AxialAndCost> axial_path = HexAxialPathAStar(hex_state, axial_start, axial_hover);
-                const auto it = std::ranges::upper_bound(axial_path, hex_state.pseudo_states.unit_selection->move_min, std::less { }, &AxialAndCost::cost);
+                const List<AxialAndCost>::iterator it = std::ranges::upper_bound(axial_path, hex_state.pseudo_states.unit_selection->move_min, std::less { }, &AxialAndCost::cost);
                 if (it != axial_path.begin()) {
+                    for (List<AxialAndCost>::iterator step = axial_path.begin(); step != it; ++step) {
+                        hex_state.hex_map[step->axial].country_tag = hex_state.player_tag;
+                        // zone of control
+                        for (const int2 offset : HEX_AXIAL_NEIGHBOURS) {
+                            const int2 axial_neighbour = step->axial + offset;
+                            if (!hex_state.hex_map.Contains(axial_neighbour)) { continue; }
+                            if (!AxialIsEnemyOrZoc(hex_state, axial_neighbour)) { hex_state.hex_map[axial_neighbour].country_tag = hex_state.player_tag; }
+                        }
+                    }
+
                     const AxialAndCost& cost_and_axial_end = *std::prev(it);
                     for (Unit& unit : units_selected) {
                         unit.axial = cost_and_axial_end.axial;
@@ -296,27 +314,35 @@ struct HexSystem {
 
                 auto units_attacker = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
                 auto units_defender = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()] | hex_state.units.handle_to_view();
+                int2 axial_battle = units_defender[0].axial;
+
                 // attack
                 const u32 dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
                 const u32 def = std::ranges::fold_left(units_defender | std::views::transform(&Unit::def), 0U, std::plus { });
                 const f32 ratio = static_cast<f32>(dmg) / static_cast<f32>(def);
                 enum class PostBattleOutcome { DEFENDER_COUNTER_ATTACKED, DEFENDER_SCOUTED, DEFENDER_HELD, DEFENDER_RETREAT, DEFENDER_ROUT, DEFENDER_SURRENDER };
                 struct BattleOutcome {
-                    PostBattleOutcome battle_outcome;
+                    PostBattleOutcome post_battle_outcome;
                     u32 dmg_attacker;
                     u32 dmg_defender;
                 } battle_outcome;
                 if (ratio >= 2.0F) {
-                    battle_outcome = BattleOutcome { .battle_outcome = PostBattleOutcome::DEFENDER_RETREAT, .dmg_attacker = 1U, .dmg_defender = 3U };
+                    battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_RETREAT, .dmg_attacker = 1U, .dmg_defender = 3U };
                 } else if (ratio >= 1.5F ) {
-                    battle_outcome = BattleOutcome { .battle_outcome = PostBattleOutcome::DEFENDER_HELD, .dmg_attacker = 2U, .dmg_defender = 1U };
+                    battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_HELD, .dmg_attacker = 2U, .dmg_defender = 1U };
                 }
                 else if (ratio <= 0.3F) {
-                    battle_outcome = BattleOutcome { .battle_outcome = PostBattleOutcome::DEFENDER_COUNTER_ATTACKED, .dmg_attacker = 3U, .dmg_defender = 1U };
+                    battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_COUNTER_ATTACKED, .dmg_attacker = 3U, .dmg_defender = 1U };
                 }
                 else {
-                    battle_outcome = BattleOutcome {.battle_outcome = PostBattleOutcome::DEFENDER_SCOUTED, .dmg_attacker = 2U, .dmg_defender = 1U };
+                    battle_outcome = BattleOutcome {.post_battle_outcome = PostBattleOutcome::DEFENDER_SCOUTED, .dmg_attacker = 2U, .dmg_defender = 1U };
                 }
+
+                const b8 attacker_won =
+                    battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_RETREAT ||
+                    battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_ROUT ||
+                    battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_SURRENDER;
+
                 for (Unit& attacker : units_attacker) {
                     attacker.dmg = math::SaturatingSub(attacker.dmg, battle_outcome.dmg_attacker);
                     attacker.def = math::SaturatingSub(attacker.def, battle_outcome.dmg_attacker / 2);
@@ -326,7 +352,7 @@ struct HexSystem {
                     defender.dmg = math::SaturatingSub(defender.dmg, battle_outcome.dmg_defender);
                     defender.def = math::SaturatingSub(defender.def, battle_outcome.dmg_defender / 2);
                 }
-                switch (battle_outcome.battle_outcome) {
+                switch (battle_outcome.post_battle_outcome) {
                     case PostBattleOutcome::DEFENDER_COUNTER_ATTACKED:
                         for (Unit& attacker : units_attacker) {
                             const int2 axial_retreat = attacker.tag == CountryTag::TAG_GER ? int2 {-2, 0} : int2 {2, 0};
@@ -352,6 +378,10 @@ struct HexSystem {
                         break;
                 }
 
+                if (attacker_won) {
+                    hex_state.hex_map[axial_battle].country_tag = units_attacker[0].tag;
+                }
+
                 break;
             }
             case PlayerAction::PLAYER_ACTION_ATTACK_HOVER:
@@ -362,7 +392,7 @@ struct HexSystem {
                 const float2 world = HexAxialToWorld(hex_state.pseudo_states.axial_hover.value());
                 const int2 screen = camera.WorldToScreen(world);
 
-                Color color_inner = can_attack ? colors::RUBY_RED : colors::BLACK;
+                const Color color_inner = can_attack ? colors::RUBY_RED : colors::BLACK;
                 HexAppend(hex_state.verts, camera.scale * 0.25F, screen, colors::GRAY);
                 HexAppend(hex_state.verts, camera.scale * 0.20F, screen, color_inner);
                 if (can_attack) { HexAppend(hex_state.verts, camera.scale * 0.10F, screen, colors::DARK_GREEN); }
