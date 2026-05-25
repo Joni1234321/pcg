@@ -16,8 +16,11 @@ enum class PlayerAction { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_ACTIO
 enum class TerrainScheme : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER }; // colorschema.md
 
 constexpr u32 MOVE_COST_ATTACK = 3U;
-constexpr TerrainScheme TERRAIN_SCHEME = TerrainScheme::CIV_VIBRANT;
+constexpr TerrainScheme TERRAIN_SCHEME = TerrainScheme::SLATE_TABLE;
 constexpr f32 BORDER_INNER_RADIUS = 0.90F;
+constexpr f32 BORDER_TEETH_DEPTH   = 0.12F; // how far the tip pushes towards the hex centre
+constexpr f32 BORDER_TEETH_HALF    = 0.18F; // half-width of the tooth base along the edge
+constexpr u32 BORDER_TEETH_EVERY   = 1U;    // emit a tooth every Nth border edge
 
 struct Hex {
     TerrainType terrain;
@@ -183,110 +186,109 @@ inline void GenerateTerritory(HexState& hex_state) {
 }
 
 // ai genrated border
+//
+// Pixel-perfect rationale:
+//   HexAppend draws each tile as `center_int + HEX_ANGLE[i] * scale` -- the
+//   centre is rounded to a pixel once and the corners are sub-pixel floats.
+//   We mirror that exact convention here so the strip's geometry shares the
+//   same `center_int` and the same `scale` factor as the tile it sits on,
+//   which keeps the strip's inner edge pixel-perfectly aligned with the
+//   tile's outer edge (when BORDER_INNER_RADIUS == the tile's draw radius,
+//   currently 0.90).
+//
+//   For teeth across a country border we want red and blue to face each
+//   other. Each country's inner edge endpoints are anchored on its own
+//   centre, so the inner midpoints differ slightly between red and blue.
+//   We therefore anchor every tooth's base midpoint to a *single shared*
+//   screen point -- the lattice-edge midpoint rounded once in world space
+//   -- and project that anchor onto each country's inner edge. Both
+//   countries end up with base midpoints on the same perpendicular line
+//   through the shared anchor, so their tooth tips face each other.
 inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera) {
-    struct BEdge {
-        float2 w0 { };
-        float2 w1 { };
-        float2 inward { };   // unit normal pointing into the owning hex (towards centre)
-        i32    partner0 { -1 };
-        i32    partner1 { -1 };
-    };
-    constexpr u32 COUNTRY_COUNT = 4U; // index by CountryTag value (TAG_NONE=0 skipped)
-    std::array<std::vector<BEdge>, COUNTRY_COUNT> per_country { };
-
+    const f32 sc = camera.scale;
+    const f32 inner_r = BORDER_INNER_RADIUS;
     for (u32 i = 0; i < hex_state.hex_map.Size(); i++) {
         const Hex& hex = hex_state.hex_map.data[i];
         if (hex.country_tag == CountryTag::TAG_NONE) { continue; }
-        const int2 axial = hex_state.hex_map.IndexToAxial(i);
-        const float2 center = HexAxialToWorld(axial);
+        const int2     axial             = hex_state.hex_map.IndexToAxial(i);
+        const float2   own_center_w      = HexAxialToWorld(axial);
+        const int2     own_center_screen = camera.WorldToScreen(own_center_w);
+        const ColorF   col               = static_cast<ColorF>(CountryTagToColor(hex.country_tag));
+        const f32      cx                = static_cast<f32>(own_center_screen.x);
+        const f32      cy                = static_cast<f32>(own_center_screen.y);
+        u32 edge_index = 0U;
         for (u32 s = 0; s < HEX_CORNERS; s++) {
             const int2 nax = axial + HEX_AXIAL_NEIGHBOURS[s];
             const CountryTag ntag = hex_state.hex_map.Contains(nax) ? hex_state.hex_map[nax].country_tag : CountryTag::TAG_NONE;
             if (ntag == hex.country_tag) { continue; }
             // visual side index from neighbour index (screen y is down vs math y-up)
-            const u32 side = (HEX_CORNERS - s) % HEX_CORNERS;
-            const u32 j    = (side + 1U) % HEX_CORNERS;
-            // corners on the lattice at radius 1.0 - adjacent same-country hexes share them exactly
-            const float2 p0 = center + HEX_ANGLE[side];
-            const float2 p1 = center + HEX_ANGLE[j];
-            const float2 emid { (p0.x + p1.x) * 0.5F, (p0.y + p1.y) * 0.5F };
-            float2 inward { center.x - emid.x, center.y - emid.y };
-            const f32 ilen = std::sqrt(inward.x * inward.x + inward.y * inward.y);
-            if (ilen > 0.0001F) { inward.x /= ilen; inward.y /= ilen; }
-            per_country[static_cast<u32>(hex.country_tag)].push_back(BEdge { p0, p1, inward });
-        }
-    }
+            const u32    side    = (HEX_CORNERS - s) % HEX_CORNERS;
+            const u32    j       = (side + 1U) % HEX_CORNERS;
+            const float2 ang_a   = HEX_ANGLE[side];
+            const float2 ang_b   = HEX_ANGLE[j];
+            // Outer ring at the lattice corner (radius 1.0), inner ring at the
+            // same radial position the tile uses (radius BORDER_INNER_RADIUS).
+            // Same rounding policy as HexAppend -> the strip's inner edge lies
+            // exactly on the tile's outer edge.
+            const SDL_FPoint outer_a { cx + ang_a.x * sc,           cy + ang_a.y * sc };
+            const SDL_FPoint outer_b { cx + ang_b.x * sc,           cy + ang_b.y * sc };
+            const SDL_FPoint inner_a { cx + ang_a.x * sc * inner_r, cy + ang_a.y * sc * inner_r };
+            const SDL_FPoint inner_b { cx + ang_b.x * sc * inner_r, cy + ang_b.y * sc * inner_r };
+            // strip tri 1: inner_a, inner_b, outer_b
+            hex_state.verts.EmplaceBack(inner_a, col, SDL_FPoint { });
+            hex_state.verts.EmplaceBack(inner_b, col, SDL_FPoint { });
+            hex_state.verts.EmplaceBack(outer_b, col, SDL_FPoint { });
+            // strip tri 2: inner_a, outer_b, outer_a
+            hex_state.verts.EmplaceBack(inner_a, col, SDL_FPoint { });
+            hex_state.verts.EmplaceBack(outer_b, col, SDL_FPoint { });
+            hex_state.verts.EmplaceBack(outer_a, col, SDL_FPoint { });
 
-    auto snap_key = [](const float2 p) -> u64 {
-        const i32 qx = static_cast<i32>(std::round(p.x * 4096.0F));
-        const i32 qy = static_cast<i32>(std::round(p.y * 4096.0F));
-        return (static_cast<u64>(static_cast<u32>(qx)) << 32) | static_cast<u64>(static_cast<u32>(qy));
-    };
-    for (u32 tag_i = 1; tag_i < COUNTRY_COUNT; tag_i++) {
-        auto& edges = per_country[tag_i];
-        if (edges.empty()) { continue; }
-        std::unordered_map<u64, std::array<i32, 4>> bucket;
-        auto push_bucket = [&](float2 corner, i32 ei) {
-            auto& slot = bucket.try_emplace(snap_key(corner), std::array<i32, 4> { -1, -1, -1, -1 }).first->second;
-            for (i32 k = 0; k < 4; k++) {
-                if (slot[k] == -1) { slot[k] = ei; return; }
+            if ((edge_index % BORDER_TEETH_EVERY) == 0U) {
+                // Shared anchor: the lattice-edge midpoint rounded once in
+                // world space. Identical for both countries that share this
+                // edge -> red and blue teeth project onto the same screen
+                // point and end up facing each other.
+                const float2 emid_w {
+                    own_center_w.x + (ang_a.x + ang_b.x) * 0.5F,
+                    own_center_w.y + (ang_a.y + ang_b.y) * 0.5F,
+                };
+                const int2       anchor_int = camera.WorldToScreen(emid_w);
+                const SDL_FPoint anchor { static_cast<f32>(anchor_int.x), static_cast<f32>(anchor_int.y) };
+                // Project the shared anchor onto this country's inner edge to
+                // get the tooth base midpoint.
+                const f32 ex     = inner_b.x - inner_a.x;
+                const f32 ey     = inner_b.y - inner_a.y;
+                const f32 elen2  = ex * ex + ey * ey;
+                if (elen2 > 0.0001F) {
+                    f32 t = ((anchor.x - inner_a.x) * ex + (anchor.y - inner_a.y) * ey) / elen2;
+                    if (t < 0.0F) { t = 0.0F; }
+                    if (t > 1.0F) { t = 1.0F; }
+                    const SDL_FPoint base_mid { inner_a.x + ex * t, inner_a.y + ey * t };
+                    const f32 elen  = std::sqrt(elen2);
+                    const f32 ux    = ex / elen;
+                    const f32 uy    = ey / elen;
+                    f32       half  = BORDER_TEETH_HALF * sc;
+                    if (half > elen * 0.5F) { half = elen * 0.5F; } // clamp so wide teeth never overshoot the edge
+                    const SDL_FPoint base_a { base_mid.x - ux * half, base_mid.y - uy * half };
+                    const SDL_FPoint base_b { base_mid.x + ux * half, base_mid.y + uy * half };
+                    // Inward direction in screen = from edge-midpoint towards
+                    // own centre, derived in the same coord frame as the strip.
+                    float2    inward { -(ang_a.x + ang_b.x) * 0.5F, -(ang_a.y + ang_b.y) * 0.5F };
+                    const f32 ilen = std::sqrt(inward.x * inward.x + inward.y * inward.y);
+                    if (ilen > 0.0001F) {
+                        inward.x /= ilen;
+                        inward.y /= ilen;
+                        const SDL_FPoint apex {
+                            base_mid.x + inward.x * BORDER_TEETH_DEPTH * sc,
+                            base_mid.y + inward.y * BORDER_TEETH_DEPTH * sc,
+                        };
+                        hex_state.verts.EmplaceBack(base_a, col, SDL_FPoint { });
+                        hex_state.verts.EmplaceBack(base_b, col, SDL_FPoint { });
+                        hex_state.verts.EmplaceBack(apex,   col, SDL_FPoint { });
+                    }
+                }
             }
-        };
-        for (i32 ei = 0; ei < static_cast<i32>(edges.size()); ei++) {
-            push_bucket(edges[ei].w0, ei);
-            push_bucket(edges[ei].w1, ei);
-        }
-        auto find_partner = [&](float2 corner, i32 self) -> i32 {
-            const auto it = bucket.find(snap_key(corner));
-            if (it == bucket.end()) { return -1; }
-            for (i32 k = 0; k < 4; k++) {
-                if (it->second[k] != -1 && it->second[k] != self) { return it->second[k]; }
-            }
-            return -1;
-        };
-        for (i32 ei = 0; ei < static_cast<i32>(edges.size()); ei++) {
-            edges[ei].partner0 = find_partner(edges[ei].w0, ei);
-            edges[ei].partner1 = find_partner(edges[ei].w1, ei);
-        }
-
-        auto miter_dir = [&](float2 my_inward, i32 partner) -> float2 {
-            if (partner < 0) { return my_inward; }
-            const float2 other = edges[partner].inward;
-            float2 m { my_inward.x + other.x, my_inward.y + other.y };
-            const f32 mlen = std::sqrt(m.x * m.x + m.y * m.y);
-            if (mlen < 0.0001F) { return my_inward; }
-            m.x /= mlen; m.y /= mlen;
-            const f32 d = m.x * my_inward.x + m.y * my_inward.y;
-            const f32 inv = d > 0.25F ? 1.0F / d : 4.0F; // clamp so very sharp turns don't spike
-            return float2 { m.x * inv, m.y * inv };
-        };
-        auto world_to_screen_fpoint = [&](float2 w) -> SDL_FPoint {
-            const int2 s = camera.WorldToScreen(w);
-            return SDL_FPoint { static_cast<f32>(s.x), static_cast<f32>(s.y) };
-        };
-
-        const ColorF col = static_cast<ColorF>(CountryTagToColor(static_cast<CountryTag>(tag_i)));
-        for (const BEdge& e : edges) {
-            const float2 m0 = miter_dir(e.inward, e.partner0);
-            const float2 m1 = miter_dir(e.inward, e.partner1);
-            const f32 inner_shift = 1.0F - BORDER_INNER_RADIUS; // positive = inset into hex
-            const f32 outer_shift = BORDER_THICKNESS;
-            const float2 a_in_w  { e.w0.x + m0.x * inner_shift, e.w0.y + m0.y * inner_shift };
-            const float2 b_in_w  { e.w1.x + m1.x * inner_shift, e.w1.y + m1.y * inner_shift };
-            const float2 a_out_w { e.w0.x - m0.x * outer_shift, e.w0.y - m0.y * outer_shift };
-            const float2 b_out_w { e.w1.x - m1.x * outer_shift, e.w1.y - m1.y * outer_shift };
-            const SDL_FPoint a_in  = world_to_screen_fpoint(a_in_w);
-            const SDL_FPoint b_in  = world_to_screen_fpoint(b_in_w);
-            const SDL_FPoint a_out = world_to_screen_fpoint(a_out_w);
-            const SDL_FPoint b_out = world_to_screen_fpoint(b_out_w);
-            // tri 1: a_in, b_in, b_out
-            hex_state.verts.EmplaceBack(a_in,  col, SDL_FPoint { });
-            hex_state.verts.EmplaceBack(b_in,  col, SDL_FPoint { });
-            hex_state.verts.EmplaceBack(b_out, col, SDL_FPoint { });
-            // tri 2: a_in, b_out, a_out
-            hex_state.verts.EmplaceBack(a_in,  col, SDL_FPoint { });
-            hex_state.verts.EmplaceBack(b_out, col, SDL_FPoint { });
-            hex_state.verts.EmplaceBack(a_out, col, SDL_FPoint { });
+            edge_index++;
         }
     }
 }

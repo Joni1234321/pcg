@@ -200,7 +200,6 @@ struct HexSystem {
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts.data.data(), static_cast<i32>(hex_state.verts.size()), nullptr, 0);
         hex_state.verts.clear();
 
-        (void)SDL_SetRenderDrawBlendMode(window_state.renderer, SDL_BLENDMODE_BLEND);
         AppendCountryBorders(hex_state, camera);
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts.data.data(), static_cast<i32>(hex_state.verts.size()), nullptr, 0);
         hex_state.verts.clear();
@@ -380,7 +379,7 @@ void arcade::RunHex() {
     Singleton::Get<WindowState>().clear_color = Color::FromHsl(180.0F, 0.5F, 0.20F);
 
     HexState& hex_state = Singleton::Get<HexState>();
-    hex_state.hex_map = GenerateTerrain({ 100, 100 }, 3489);
+    hex_state.hex_map = GenerateTerrain({ 20, 6 }, 3489);
     hex_state.hex_draw = HexToHexDraw(hex_state.hex_map);
 
     CameraState& camera = Singleton::Get<CameraState>();
