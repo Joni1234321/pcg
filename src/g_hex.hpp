@@ -1,5 +1,7 @@
 #pragma once
+#include <algorithm>
 #include <queue>
+#include <ranges>
 
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_types.hpp"
@@ -11,8 +13,11 @@ using namespace pce;
 enum class CountryTag : u8 { TAG_NONE, TAG_GER, TAG_SOV, TAG_USA };
 enum class TerrainType : u8 { TERRAIN_DEEP_OCEAN, TERRAIN_OCEAN, TERRAIN_BEACH, TERRAIN_GRASS, TERRAIN_FOREST, TERRAIN_MOUNTAIN, TERRAIN_SNOW };
 enum class PlayerAction { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_ACTION_DESELECT, PLAYER_ACTION_MOVE_CLICK, PLAYER_ACTION_MOVE_HOVER, PLAYER_ACTION_ATTACK_CLICK, PLAYER_ACTION_ATTACK_HOVER };
+enum class TerrainScheme : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER }; // colorschema.md
 
 constexpr u32 MOVE_COST_ATTACK = 3U;
+constexpr TerrainScheme TERRAIN_SCHEME = TerrainScheme::CIV_VIBRANT;
+constexpr f32 BORDER_INNER_RADIUS = 0.90F;
 
 struct Hex {
     TerrainType terrain;
@@ -90,9 +95,6 @@ struct HexState {
     __builtin_unreachable();
 }
 
-// colorschema.md
-enum class TerrainScheme : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER };
-constexpr TerrainScheme TERRAIN_SCHEME = TerrainScheme::SLATE_TABLE;
 
 [[nodiscard]] constexpr Color TerrainToColorScheme(const TerrainType terrain) {
     if constexpr (TERRAIN_SCHEME == TerrainScheme::CIV_VIBRANT) {
@@ -179,4 +181,115 @@ inline void GenerateTerritory(HexState& hex_state) {
         }
     }
 }
+
+// ai genrated border
+inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera) {
+    struct BEdge {
+        float2 w0 { };
+        float2 w1 { };
+        float2 inward { };   // unit normal pointing into the owning hex (towards centre)
+        i32    partner0 { -1 };
+        i32    partner1 { -1 };
+    };
+    constexpr u32 COUNTRY_COUNT = 4U; // index by CountryTag value (TAG_NONE=0 skipped)
+    std::array<std::vector<BEdge>, COUNTRY_COUNT> per_country { };
+
+    for (u32 i = 0; i < hex_state.hex_map.Size(); i++) {
+        const Hex& hex = hex_state.hex_map.data[i];
+        if (hex.country_tag == CountryTag::TAG_NONE) { continue; }
+        const int2 axial = hex_state.hex_map.IndexToAxial(i);
+        const float2 center = HexAxialToWorld(axial);
+        for (u32 s = 0; s < HEX_CORNERS; s++) {
+            const int2 nax = axial + HEX_AXIAL_NEIGHBOURS[s];
+            const CountryTag ntag = hex_state.hex_map.Contains(nax) ? hex_state.hex_map[nax].country_tag : CountryTag::TAG_NONE;
+            if (ntag == hex.country_tag) { continue; }
+            // visual side index from neighbour index (screen y is down vs math y-up)
+            const u32 side = (HEX_CORNERS - s) % HEX_CORNERS;
+            const u32 j    = (side + 1U) % HEX_CORNERS;
+            // corners on the lattice at radius 1.0 - adjacent same-country hexes share them exactly
+            const float2 p0 = center + HEX_ANGLE[side];
+            const float2 p1 = center + HEX_ANGLE[j];
+            const float2 emid { (p0.x + p1.x) * 0.5F, (p0.y + p1.y) * 0.5F };
+            float2 inward { center.x - emid.x, center.y - emid.y };
+            const f32 ilen = std::sqrt(inward.x * inward.x + inward.y * inward.y);
+            if (ilen > 0.0001F) { inward.x /= ilen; inward.y /= ilen; }
+            per_country[static_cast<u32>(hex.country_tag)].push_back(BEdge { p0, p1, inward });
+        }
+    }
+
+    auto snap_key = [](const float2 p) -> u64 {
+        const i32 qx = static_cast<i32>(std::round(p.x * 4096.0F));
+        const i32 qy = static_cast<i32>(std::round(p.y * 4096.0F));
+        return (static_cast<u64>(static_cast<u32>(qx)) << 32) | static_cast<u64>(static_cast<u32>(qy));
+    };
+    for (u32 tag_i = 1; tag_i < COUNTRY_COUNT; tag_i++) {
+        auto& edges = per_country[tag_i];
+        if (edges.empty()) { continue; }
+        std::unordered_map<u64, std::array<i32, 4>> bucket;
+        auto push_bucket = [&](float2 corner, i32 ei) {
+            auto& slot = bucket.try_emplace(snap_key(corner), std::array<i32, 4> { -1, -1, -1, -1 }).first->second;
+            for (i32 k = 0; k < 4; k++) {
+                if (slot[k] == -1) { slot[k] = ei; return; }
+            }
+        };
+        for (i32 ei = 0; ei < static_cast<i32>(edges.size()); ei++) {
+            push_bucket(edges[ei].w0, ei);
+            push_bucket(edges[ei].w1, ei);
+        }
+        auto find_partner = [&](float2 corner, i32 self) -> i32 {
+            const auto it = bucket.find(snap_key(corner));
+            if (it == bucket.end()) { return -1; }
+            for (i32 k = 0; k < 4; k++) {
+                if (it->second[k] != -1 && it->second[k] != self) { return it->second[k]; }
+            }
+            return -1;
+        };
+        for (i32 ei = 0; ei < static_cast<i32>(edges.size()); ei++) {
+            edges[ei].partner0 = find_partner(edges[ei].w0, ei);
+            edges[ei].partner1 = find_partner(edges[ei].w1, ei);
+        }
+
+        auto miter_dir = [&](float2 my_inward, i32 partner) -> float2 {
+            if (partner < 0) { return my_inward; }
+            const float2 other = edges[partner].inward;
+            float2 m { my_inward.x + other.x, my_inward.y + other.y };
+            const f32 mlen = std::sqrt(m.x * m.x + m.y * m.y);
+            if (mlen < 0.0001F) { return my_inward; }
+            m.x /= mlen; m.y /= mlen;
+            const f32 d = m.x * my_inward.x + m.y * my_inward.y;
+            const f32 inv = d > 0.25F ? 1.0F / d : 4.0F; // clamp so very sharp turns don't spike
+            return float2 { m.x * inv, m.y * inv };
+        };
+        auto world_to_screen_fpoint = [&](float2 w) -> SDL_FPoint {
+            const int2 s = camera.WorldToScreen(w);
+            return SDL_FPoint { static_cast<f32>(s.x), static_cast<f32>(s.y) };
+        };
+
+        const ColorF col = static_cast<ColorF>(CountryTagToColor(static_cast<CountryTag>(tag_i)));
+        for (const BEdge& e : edges) {
+            const float2 m0 = miter_dir(e.inward, e.partner0);
+            const float2 m1 = miter_dir(e.inward, e.partner1);
+            const f32 inner_shift = 1.0F - BORDER_INNER_RADIUS; // positive = inset into hex
+            const f32 outer_shift = BORDER_THICKNESS;
+            const float2 a_in_w  { e.w0.x + m0.x * inner_shift, e.w0.y + m0.y * inner_shift };
+            const float2 b_in_w  { e.w1.x + m1.x * inner_shift, e.w1.y + m1.y * inner_shift };
+            const float2 a_out_w { e.w0.x - m0.x * outer_shift, e.w0.y - m0.y * outer_shift };
+            const float2 b_out_w { e.w1.x - m1.x * outer_shift, e.w1.y - m1.y * outer_shift };
+            const SDL_FPoint a_in  = world_to_screen_fpoint(a_in_w);
+            const SDL_FPoint b_in  = world_to_screen_fpoint(b_in_w);
+            const SDL_FPoint a_out = world_to_screen_fpoint(a_out_w);
+            const SDL_FPoint b_out = world_to_screen_fpoint(b_out_w);
+            // tri 1: a_in, b_in, b_out
+            hex_state.verts.EmplaceBack(a_in,  col, SDL_FPoint { });
+            hex_state.verts.EmplaceBack(b_in,  col, SDL_FPoint { });
+            hex_state.verts.EmplaceBack(b_out, col, SDL_FPoint { });
+            // tri 2: a_in, b_out, a_out
+            hex_state.verts.EmplaceBack(a_in,  col, SDL_FPoint { });
+            hex_state.verts.EmplaceBack(b_out, col, SDL_FPoint { });
+            hex_state.verts.EmplaceBack(a_out, col, SDL_FPoint { });
+        }
+    }
+}
+
+
 } // namespace pcg

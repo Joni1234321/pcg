@@ -200,6 +200,11 @@ struct HexSystem {
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts.data.data(), static_cast<i32>(hex_state.verts.size()), nullptr, 0);
         hex_state.verts.clear();
 
+        (void)SDL_SetRenderDrawBlendMode(window_state.renderer, SDL_BLENDMODE_BLEND);
+        AppendCountryBorders(hex_state, camera);
+        (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts.data.data(), static_cast<i32>(hex_state.verts.size()), nullptr, 0);
+        hex_state.verts.clear();
+
         // render units
         hex_state.counters.Clear();
         UnitToCounterAppend(hex_state);
