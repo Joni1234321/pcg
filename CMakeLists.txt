@@ -31,25 +31,7 @@ fetchcontent_declare(SDL3_ttf
 fetchcontent_declare(SDL3_image
                      GIT_REPOSITORY "https://github.com/libsdl-org/SDL_image.git"
                      GIT_TAG "release-3.4.4" EXCLUDE_FROM_ALL)
-fetchcontent_declare(imgui
-                     GIT_REPOSITORY "https://github.com/ocornut/imgui.git"
-                     GIT_TAG "v1.91.6" EXCLUDE_FROM_ALL)
-fetchcontent_makeavailable(SDL3 SDL3_ttf SDL3_image imgui)
-
-# imgui ships without a CMakeLists.txt — build a static lib from its sources
-# plus the SDL3 + SDLRenderer3 backends we use.
-add_library(imgui STATIC
-            ${imgui_SOURCE_DIR}/imgui.cpp
-            ${imgui_SOURCE_DIR}/imgui_draw.cpp
-            ${imgui_SOURCE_DIR}/imgui_tables.cpp
-            ${imgui_SOURCE_DIR}/imgui_widgets.cpp
-            ${imgui_SOURCE_DIR}/imgui_demo.cpp
-            ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
-            ${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer3.cpp)
-target_include_directories(imgui PUBLIC
-                           ${imgui_SOURCE_DIR}
-                           ${imgui_SOURCE_DIR}/backends)
-target_link_libraries(imgui PUBLIC SDL3::SDL3)
+fetchcontent_makeavailable(SDL3 SDL3_ttf SDL3_image)
 
 add_executable(pcg
                src/pcg.cpp
@@ -69,7 +51,6 @@ target_link_libraries(pcg
                       PRIVATE SDL3::SDL3
                       PRIVATE SDL3_ttf::SDL3_ttf
                       PRIVATE SDL3_image::SDL3_image
-                      PRIVATE imgui
 )
 
 target_include_directories(pcg PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
