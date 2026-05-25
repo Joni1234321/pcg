@@ -37,7 +37,7 @@ struct HexDrawInfo {
     Color color { };
 };
 struct PseudoTarget {
-    int2 axial{};
+    int2 axial { };
     List<Handle<Unit>> units;
 };
 struct PseudoStates {

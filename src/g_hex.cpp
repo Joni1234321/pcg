@@ -51,7 +51,7 @@ HexList<HexDrawInfo> HexToHexDraw(const HexList<Hex>& hexes) {
     return result;
 }
 [[nodiscard]] b8 AxialIsEnemy(const HexState& hex_state, const int2 axial) {
-    return hex_state.units_by_axial.contains(axial) && std::ranges::any_of(hex_state.units_by_axial.at(axial) | hex_state.units.handle_to_view(), [&](const Unit& unit) -> b8 { return unit.tag != hex_state.player_tag; });
+    return hex_state.units_by_axial.contains(axial) && !std::ranges::contains(hex_state.units_by_axial.at(axial) | hex_state.units.handle_to_view(), hex_state.player_tag, &Unit::tag);
 }
 List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start, const int2 axial_end) {
     List<AxialAndCost> axial_path;
@@ -152,12 +152,8 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
         // unit selection
         if (input_state.left_mouse_down) { return hex_state.units_by_axial.contains(hex_state.pseudo_states.axial_hover.value()) ? PlayerAction::PLAYER_ACTION_SELECT : PlayerAction::PLAYER_ACTION_DESELECT; }
         if (hex_state.pseudo_states.unit_selection.has_value()) {
-            if (AxialIsEnemy(hex_state, hex_state.pseudo_states.axial_hover.value())) {
-                return input_state.right_mouse_down ? PlayerAction::PLAYER_ACTION_ATTACK_CLICK : PlayerAction::PLAYER_ACTION_ATTACK_HOVER;
-            }
-            if (hex_state.pseudo_states.axial_hover != hex_state.pseudo_states.axial_select) {
-                return input_state.right_mouse_down ? PlayerAction::PLAYER_ACTION_MOVE_CLICK : PlayerAction::PLAYER_ACTION_MOVE_HOVER;
-            }
+            if (AxialIsEnemy(hex_state, hex_state.pseudo_states.axial_hover.value())) { return input_state.right_mouse_down ? PlayerAction::PLAYER_ACTION_ATTACK_CLICK : PlayerAction::PLAYER_ACTION_ATTACK_HOVER; }
+            if (hex_state.pseudo_states.axial_hover != hex_state.pseudo_states.axial_select) { return input_state.right_mouse_down ? PlayerAction::PLAYER_ACTION_MOVE_CLICK : PlayerAction::PLAYER_ACTION_MOVE_HOVER; }
         }
     }
     return PlayerAction::PLAYER_ACTION_NONE;
@@ -181,17 +177,18 @@ struct HexSystem {
 
         if (hex_state.pseudo_states.unit_selection.has_value()) {
             const auto unit_selection = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
-            hex_state.pseudo_states.unit_selection->def_sum = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::def), u32{ 0 }, std::plus{});
-            hex_state.pseudo_states.unit_selection->dmg_sum = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::dmg), u32{ 0 }, std::plus{});
-            const auto [move_min, move_max] = std::ranges::minmax(unit_selection | std::views::transform(&Unit::move), std::less {});
+            hex_state.pseudo_states.unit_selection->def_sum = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::def), u32 { 0 }, std::plus { });
+            hex_state.pseudo_states.unit_selection->dmg_sum = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::dmg), u32 { 0 }, std::plus { });
+            const auto [move_min, move_max] = std::ranges::minmax(unit_selection | std::views::transform(&Unit::move), std::less { });
             hex_state.pseudo_states.unit_selection->move_min = move_min;
             hex_state.pseudo_states.unit_selection->move_max = move_max;
         }
 
         // pseudo states set
         const float2 mouse_world = camera.ScreenToWorld(input_state.mouse_position);
+        if (hex_state.pseudo_states.unit_selection.has_value()) { hex_state.pseudo_states.axial_select = hex_state.units[hex_state.pseudo_states.unit_selection->unit_handles[0]].axial; } // update selection
         hex_state.pseudo_states.axial_hover = hex_state.hex_draw.Contains(HexWorldToAxial(mouse_world)) ? Optional { HexWorldToAxial(mouse_world) } : std::nullopt;
-        hex_state.player_tag = CountryTag::TAG_GER;
+        hex_state.player_tag = hex_state.pseudo_states.unit_selection.has_value() ? hex_state.units[hex_state.pseudo_states.unit_selection->unit_handles[0]].tag : CountryTag::TAG_GER;
         hex_state.player_action = PlayerAction::PLAYER_ACTION_NONE;
 
         // render pseudo states
@@ -288,36 +285,75 @@ struct HexSystem {
                 break;
             }
             case PlayerAction::PLAYER_ACTION_ATTACK_CLICK: {
-                const u32 distance = HexAxialDistance(hex_state.pseudo_states.axial_hover.value(), hex_state.pseudo_states.axial_select.value());
-                const b8 can_attack = hex_state.pseudo_states.unit_selection->move_min > MOVE_COST_ATTACK && distance == 1;
+                const b8 within_range = std::ranges::all_of(hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view(), [&](const Unit& unit) -> b8 { return HexAxialDistance(unit.axial, hex_state.pseudo_states.axial_hover.value()) == 1; });
+                const b8 attacker_is_hq = std::ranges::contains(hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view(), UnitIcon::ICON_HQ, &Unit::icon);
+                const b8 can_attack = hex_state.pseudo_states.unit_selection->move_min > MOVE_COST_ATTACK && within_range && !attacker_is_hq;
                 if (!can_attack) { break; }
 
-                auto units_selected = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
-                auto units_hover = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()] | hex_state.units.handle_to_view();
+                auto units_attacker = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
+                auto units_defender = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()] | hex_state.units.handle_to_view();
                 // attack
                 const u32 dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
-                const u32 def = std::ranges::fold_left(units_hover | std::views::transform(&Unit::def), 0U, std::plus { });
+                const u32 def = std::ranges::fold_left(units_defender | std::views::transform(&Unit::def), 0U, std::plus { });
                 const f32 ratio = static_cast<f32>(dmg) / static_cast<f32>(def);
+                enum class PostBattleOutcome { DEFENDER_COUNTER_ATTACKED, DEFENDER_SCOUTED, DEFENDER_HELD, DEFENDER_RETREAT, DEFENDER_ROUT, DEFENDER_SURRENDER };
                 struct BattleOutcome {
+                    PostBattleOutcome battle_outcome;
                     u32 dmg_attacker;
                     u32 dmg_defender;
                 } battle_outcome;
-                battle_outcome =  ratio >= 2.0F ? BattleOutcome { .dmg_attacker = 1U, .dmg_defender = 3U } : BattleOutcome { .dmg_attacker = 3U, .dmg_defender = 1U };
-                for (Unit& defender : units_hover) {
-                    defender.dmg = math::SaturatingSub(defender.dmg, battle_outcome.dmg_defender);
-                    defender.def = math::SaturatingSub(defender.def, battle_outcome.dmg_defender);
+                if (ratio >= 2.0F) {
+                    battle_outcome = BattleOutcome { .battle_outcome = PostBattleOutcome::DEFENDER_RETREAT, .dmg_attacker = 1U, .dmg_defender = 3U };
+                } else if (ratio >= 1.5F ) {
+                    battle_outcome = BattleOutcome { .battle_outcome = PostBattleOutcome::DEFENDER_HELD, .dmg_attacker = 2U, .dmg_defender = 1U };
                 }
-                for (Unit& attacker : units_selected) {
+                else if (ratio <= 0.3F) {
+                    battle_outcome = BattleOutcome { .battle_outcome = PostBattleOutcome::DEFENDER_COUNTER_ATTACKED, .dmg_attacker = 3U, .dmg_defender = 1U };
+                }
+                else {
+                    battle_outcome = BattleOutcome {.battle_outcome = PostBattleOutcome::DEFENDER_SCOUTED, .dmg_attacker = 2U, .dmg_defender = 1U };
+                }
+                for (Unit& attacker : units_attacker) {
                     attacker.dmg = math::SaturatingSub(attacker.dmg, battle_outcome.dmg_attacker);
-                    attacker.def = math::SaturatingSub(attacker.def, battle_outcome.dmg_attacker);
+                    attacker.def = math::SaturatingSub(attacker.def, battle_outcome.dmg_attacker / 2);
                     attacker.move = math::SaturatingSub(attacker.move, MOVE_COST_ATTACK);
+                }
+                for (Unit& defender : units_defender) {
+                    defender.dmg = math::SaturatingSub(defender.dmg, battle_outcome.dmg_defender);
+                    defender.def = math::SaturatingSub(defender.def, battle_outcome.dmg_defender / 2);
+                }
+                switch (battle_outcome.battle_outcome) {
+                    case PostBattleOutcome::DEFENDER_COUNTER_ATTACKED:
+                        for (Unit& attacker : units_attacker) {
+                            const int2 axial_retreat = attacker.tag == CountryTag::TAG_GER ? int2 {-2, 0} : int2 {2, 0};
+                            attacker.axial += axial_retreat;
+                        }
+                        break;
+                    case PostBattleOutcome::DEFENDER_SCOUTED:
+                    case PostBattleOutcome::DEFENDER_HELD: break;
+                    case PostBattleOutcome::DEFENDER_RETREAT:
+                        for (Unit& defender : units_defender) {
+                            const int2 axial_retreat = defender.tag == CountryTag::TAG_GER ? int2 {-2, 0} : int2 {2, 0};
+                            defender.axial += axial_retreat;
+                        }
+                        break;
+                    case PostBattleOutcome::DEFENDER_ROUT:
+                        for (Unit& defender : units_defender) {
+                            const int2 axial_retreat = defender.tag == CountryTag::TAG_GER ? int2 {-3, 0} : int2 {3, 0};
+                            defender.axial += axial_retreat;
+                        }
+                        break;
+                    case PostBattleOutcome::DEFENDER_SURRENDER:
+                        // unit breaks
+                        break;
                 }
 
                 break;
             }
             case PlayerAction::PLAYER_ACTION_ATTACK_HOVER:
-                const u32 distance = HexAxialDistance(hex_state.pseudo_states.axial_hover.value(), hex_state.pseudo_states.axial_select.value());
-                const b8 can_attack = hex_state.pseudo_states.unit_selection->move_min > MOVE_COST_ATTACK && distance == 1;
+                const b8 within_range = std::ranges::all_of(hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view(), [&](const Unit& unit) -> b8 { return HexAxialDistance(unit.axial, hex_state.pseudo_states.axial_hover.value()) == 1; });
+                const b8 attacker_is_hq = std::ranges::contains(hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view(), UnitIcon::ICON_HQ, &Unit::icon);
+                const b8 can_attack = hex_state.pseudo_states.unit_selection->move_min > MOVE_COST_ATTACK && within_range && !attacker_is_hq;
 
                 const float2 world = HexAxialToWorld(hex_state.pseudo_states.axial_hover.value());
                 const int2 screen = camera.WorldToScreen(world);
