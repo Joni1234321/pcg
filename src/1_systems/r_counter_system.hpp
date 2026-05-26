@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <SDL3/SDL_render.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#include <functional>
+#include <optional>
 
 #include "0_engine/g_globals.hpp"
 #include "0_engine/r_window_state.hpp"
@@ -64,8 +66,8 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
     const float2 counter_size = float2 { camera.scale * COUNTER_SIZE } * float2 { 1.0F, 0.8F };
 
     const ui::FontSize pt_normal = static_cast<ui::FontSize>(counter_size.y * 0.25F);
-    const ui::FontSize pt_small = static_cast<ui::FontSize>(counter_size.y * 0.20F);
-    constexpr ui::FontSize FONT_MIN_SIZE = 3;
+    const ui::FontSize pt_small = static_cast<ui::FontSize>(counter_size.y * 0.15F);
+    constexpr ui::FontSize FONT_MIN_SIZE = 5;
     const Optional<std::reference_wrapper<const ui::Font>> font_normal_opt = pt_normal < FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_normal));
     const Optional<std::reference_wrapper<const ui::Font>> font_small_opt = pt_small < FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_small));
 
