@@ -73,7 +73,7 @@ const DIVISIONS: Record<string, Division> = {
 // division - contains mix of regiments. Combined arms
 // Operational:
 // corps; contains multiple division. and unique support units. like heavy arty. that can be assigned to any sub unit
-// army - 
+// army -
 
 
 const UNIT_KEYS: [keyof Division, string][] = [
@@ -258,9 +258,9 @@ function simulate(attacker: Division, defender: Division): { attacker: Division;
   // regiment takes a town
   // division takes a city district
   // corps takes a city
-  
-  
-  // close combat assault 
+
+
+  // close combat assault
 
   // terrain should have something
   // we need fire superiority. to suppress
@@ -269,78 +269,102 @@ function simulate(attacker: Division, defender: Division): { attacker: Division;
   // artillery / mortar reduces this to 3 : 1
 
 
-  // logic is as follows. An attacker spearheads into positioreducesns. 
+  // logic is as follows. An attacker spearheads into positioreducesns.
   // A defender knows this and makes a frontline thin. Then reinforces where spearhead should be with reinforcements to patch other weak areas
-  
+
 
   // now for defense thresholds. without buildup
-  //  1K: half battalion. observation only. march through it 
+  //  1K: half battalion. observation only. march through it
   //  2K: 1 battalion strength regiment, can delay 12-24hrs (kampfgruppe 45)
   //  5K: 1 regiment. hold probing attacks and unsupported assults. But prepared attack it falls down (soviet rifle quiet sector)
   // 10K: 1 division. 2 : 1 repel. 3 : 1 hold for a day (normandy)
   // 15K: 1 division + attachments. 4 : 1 (cassino / stalingrad tractor factory)
 
-  // from rifle company handbook fm 7-10 1944 
+  // from rifle company handbook fm 7-10 1944
   // move
-  // day / night. 
+  // day / night.
 
   // attack
   // battalion   has reconned the are
   // approach march (day). 300 yds max split / less if woods. (visibile). Wpn squad at back. Mortar follow each platoon. patrols and scouts at side and front
   // march. if both platoon takes their. then reserve moves
   // one platoon at a time. unless faster is important
-  // zone of attack 
+  // zone of attack
 
 
-  // defense    
+  // defense
   // frontage: poor observation / field of fire:  500 yds (woods)
   // frontage: good observation / field of fire: 1000 yds (plains/fields)
   // unlikely to be attacked: above 1000 yds
   // depth: max 500 yds. each unit can reach eachother in small arms (m1 range is 500) (rifle support range)
   // depth: min 150 yds. each unit should not be hit by same artillery
 
-  // defense. hold: fire at effective range. delay: Fire above effective range. 
-  
+  // defense. hold: fire at effective range. delay: Fire above effective range.
+
 
   // day: hold woods (few at field)
   // night: hold fields (few in woods
-  
+
   // platoon defense
   // (FRONTLINE) repel with range
   // (SUPPORT) support frontline, limit penetration, counterattack, protect flanks
   // frontage (by fire ): 250 yds (woods). 500 yds (fields). 500+ (fields, clear vision)
   // frontage (physical): 300 yds (rest is by fire)
-  
+
   // squad deploymnet: flanks so they have mutual overlap in middle
   // 60 mm deployment: arm and hand reach. 100 yds
   // defense: trench or foxhole
-  //    
+  //
 
   // so i guess each unit is one o fthe following
   // attack / defense / support
   // move / hold / attack
 
-
-  // regiment defense   
-  // frontage: 2000 yds (woods). 5000 yds (field). 
+  // regiment defense
+  // frontage: 2000 yds (woods). 5000 yds (field).
   // battalion defense:
   // frontage: 1000 yds (woods). 2000 yds (field). 2500 yds (open field) 3500 yds (swamp/stream)
   // depth: 800-1400 yds
 
-  // clearing woods / deep  defense (good observability by enemy), camuflage  
+  // clearing woods / deep  defense (good observability by enemy), camuflage
+
+  // armored division FM17-100
+  // depth: 1hr (up to 20 miles)
+
+  // tank platoon FM17-30
+  // (5 tanks) smallest combat unit
+  // tank battalion FM17-33
+  // frontage: 2000 yds max (infantry 1500 yds hard, 600 yds ez)
+  // (45 tanks) battalion was attached to infantry divs  (at omaha 1 battalion per inf regiment)
+  // battalion gives each company a frontage / objective (p 98). reserve company follows 300-1000 yds. (dont use reserve company as artillery, use artillery for artillery). Reserve needs to defend against counterattaks
+  // battalion envelopes enemy. battalion in reserve of division to counterattack (p 117). battalion on defense is only counterattack
+  // you either have armored battalion. and seperate armored battalion (detached)
+  // battleorder video (https://www.youtube.com/watch?v=-AcLX9y9zKg) battalion supported infantry division.
+
+  // tank division
+  // moved from regiment to battalion CC teams (combat command see below). they removed excess tank to reach a 50/50 infantry to tank ratio. hence why only 3 tank bat and 3 inf bat.
+  // gets attached corps artillery battalions or infantry regiments for security (non motorized)
+  // combat command is the same as kampfgruppe. or mission based groups. or modern bcts.
+  // cca and ccb maneuver. (sometimes maneuver ccr)
+  // artilery stays division level. other supports are given to cc units.
+  // each cc could get 1 armor bat and inf bat. or 2 bat and 1 inf bat. to the cca and 1 amror bat and 1 inf to ccb and ccr could have 1 inf bat, with attached inf reg
+
+  // https://en.wikipedia.org/wiki/Combat_command
+  // they called the brigade a combat command
+  // thought of as a shared point for logisitics. splitting into teams CCA CCB CCR (a, b and reserve)
 
 
   // supply classes
 
   // field fortifications
-  // 02K: 04K power. 
+  // 02K: 04K power.
   // 05K: 10K power. tobruk
   // 10K: overkill unless kursk
 
 
   // bunkers
   // 02K: 05K power held for weeks (iwo jima)
-  // 05K: 15K seelow. 3 day delay 1 mil soviets 
+  // 05K: 15K seelow. 3 day delay 1 mil soviets
   // 10K: requires siege tactics / air power (ww1)
 
   // min for 10km tile is 3K. otherwise its open. 08-12K is good. 60% loss = rout
@@ -392,11 +416,11 @@ function simulate(attacker: Division, defender: Division): { attacker: Division;
   // e.g. 3000 men in woods: 2.0 * 0.4 = 0.8x — woods help but not enough men to use it
   //      12000 men in woods: 2.0 * 1.0 = 2.0x — full benefit
   //      1000 men in fortified: 5.0 * 0.1 = 0.5x — bunkers don't man themselves
-/// ai stop 
+/// ai stop
 
 
   /// ok if full recon.
-  
+
   if (defender.manpower < garrisonThresholds.thin) {
     // bypassed in hours
     // we probe during day
@@ -404,19 +428,19 @@ function simulate(attacker: Division, defender: Division): { attacker: Division;
     // we sneak behind enemies.
     // then we fight them. effectively meaning defenders are at a disadvantage.
 
-    /// attacking 10k men into 2k men 
+    /// attacking 10k men into 2k men
     /// recon attacks happens first
-    /// at night we roll to go behind positions or attack a few. 
-    /// then the enemy is penaltized. 
+    /// at night we roll to go behind positions or attack a few.
+    /// then the enemy is penaltized.
     /// so before breakthrough attacker at disadvantage.
     /// after breakthrough attacker at advantage.
 
-    /// without recon commander commits reservers.  when outmatched 
+    /// without recon commander commits reservers.  when outmatched
   }
 
   // kursk example: 16 km ^ 2 = 1 corps. 8 km ^ 2 div. 4 km ^ 2 reg. 2 km ^ 2 bat. 1 km ^ 1 comp.
-  // so this is the factor of triangle. 
-  // Companies Front. 1 comp. 2 bat. 4 reg. 8 div. 16 corps. 
+  // so this is the factor of triangle.
+  // Companies Front. 1 comp. 2 bat. 4 reg. 8 div. 16 corps.
   // Companies Equipment. 1 comp. 3 bat. 9 reg. 27 div. 81 corops.
 
   // so for a tradeoff. smaller tiles are like more micromanagement for a real scale war.
@@ -426,7 +450,7 @@ function simulate(attacker: Division, defender: Division): { attacker: Division;
   // the wite 2 setup is a bit wierd. i like the range ammo abstraction
   // so i would like to try and expand on that with more ideas. with direct dice rolls for each company * strength
 
-  // the further down i go in abstraction the more odds are easier to manage. And requires better AI i guess. 
+  // the further down i go in abstraction the more odds are easier to manage. And requires better AI i guess.
   // So a squad fightning another squad can more become  1:1 victory.
   // but div would have to be 2:1
 
@@ -435,46 +459,46 @@ function simulate(attacker: Division, defender: Division): { attacker: Division;
   // Regiment smallest self sufficinet. unit. it has arty, rifle, and anti tank.
   // so each company attacks...
 
-  // so do i have an idea??? maybe. 
+  // so do i have an idea??? maybe.
   // the attacker tries to attack with each company. the defender rolls a dice to see if they defend
-  // the attackere wins often if they are 2:1 
-  
+  // the attackere wins often if they are 2:1
+
   // so the idea is that the game stores each company as state.
-  // adn then they get reinforceed. but maybe i should go more abstract like other war games. 
+  // adn then they get reinforceed. but maybe i should go more abstract like other war games.
   // that means div level of complexity?
 
   // so instead of doing dice roll for each attack on  atrench. to be a simple dice roll for each regiment instead
-  
+
 
   // suppression logic. 1 105 battery. disrupted. 2 batteries suppressed. 4 batteries pinned. 8 batteries stunned.
   // ok. you have a regiment attacking another regiment. 3 battalions. So 3 unique targets.
   // ai generated scenario
   // I/II/III 394th vs I/II/III 1028th
   // 394th has art bat. with 3 batteries of 12 med guns + 12 heavy guns. 1028th has 8 guns left.
-  // I/1028 - defending village. II/1028 - defending hilltop east. III/1028 - defending woods south 
+  // I/1028 - defending village. II/1028 - defending hilltop east. III/1028 - defending woods south
 
 
   // RECON: 0500 0700
-  // I/394 recons village (recon platoon). draws MG fire. Finds 2 strongpoints. loses 8 
+  // I/394 recons village (recon platoon). draws MG fire. Finds 2 strongpoints. loses 8
   // II/394 spots trench. finds gap. lose 3 men
-  // III/394 moves through woods. Ambushed lose 23. attacks 6 
+  // III/394 moves through woods. Ambushed lose 23. attacks 6
   // 394 found I/1028 II/1028. 1 gap. 1 strongpoint
 
   // 0700 0800 ARTILLERY
   // Planning. Strong point. 4 Batteries. Trenches 2 Batteries. Woods 2 Batteries
-  // I/1028th lose 40 rifle. 1mg permanent. suppressed. Half effective. 1hr 
+  // I/1028th lose 40 rifle. 1mg permanent. suppressed. Half effective. 1hr
   // II/1028th lose 25 rifle. half suppress (trench). 25% effecctive.
-  // III/1028th lose 10. Random fire. No suppression (hidden). 
-  
+  // III/1028th lose 10. Random fire. No suppression (hidden).
+
   // 0800 1100 ASSAULT
-  // Planning. Main force attacks gap. 
+  // Planning. Main force attacks gap.
   // II/394 attacks hill gap with support
   // III/394 suppresses village
   // I/394 also attacks gap north??? how does this make sense?
 
 
-  // MAIN ATTACK 
-  // II/1028 (675 vs 1650) 2.4 : 1. 
+  // MAIN ATTACK
+  // II/1028 (675 vs 1650) 2.4 : 1.
 
   // lets assume a hex has 12 features. villages/forrests/fields/hills.
   // flatland: 4 villages 4 fields 2 hills 2 forrests.
@@ -484,9 +508,9 @@ function simulate(attacker: Division, defender: Division): { attacker: Division;
   // heavy woods: 2 villages 8 forrests 2 hills
 
   // ok for this regiment battle we assume its a 1v1 on a 2|3|2 hex grid.
-  // ai automatically handles the hex positioning. 
-  // 50/50 either front or middle row. scouts has to detect where the enemy is.  
-  // then artillery suppresses each tile. 
+  // ai automatically handles the hex positioning.
+  // 50/50 either front or middle row. scouts has to detect where the enemy is.
+  // then artillery suppresses each tile.
 
 
   // 0500 scout round. find positions and determine attacks
@@ -497,27 +521,27 @@ function simulate(attacker: Division, defender: Division): { attacker: Division;
 
   // 0700 artillery round.  suppression
   // outcomes. suppressed. pinned. stunned. no effect. destroyed
-  
+
   // 0900 assault round. take ground.
   //   I/394 attacks tile 11.
   //  II/394 attacks tile 12
   // III/394 supports tile 11.
-  // outcomes. defenders held. defenders retreat. defenders rout. defenders counterattack. 
+  // outcomes. defenders held. defenders retreat. defenders rout. defenders counterattack.
   // modifiers. flanks. ambushed.
 
-  // battalion commander moves 
-  // does that make sense? 
-  
-  // so order goes like this 
+  // battalion commander moves
+  // does that make sense?
+
+  // so order goes like this
   // recon -> art ->  attacker move, defender react
-  // 
+  //
 
   // ww2 casual data:
   // Attacking infantry in the open: 2-4% of engaged strength per day
   // Attacking infantry with fire support: 1-3%
   // Defending infantry in prepared positions: 0.5-1.5%
   // Defending infantry in the open: 2-3% (artillery eats you)
-  // Urban combat (boh sides): 3-6%  
+  // Urban combat (boh sides): 3-6%
 
   // we also have position (3-6 km) /  zone (10-20km)  attack / defense.
 
