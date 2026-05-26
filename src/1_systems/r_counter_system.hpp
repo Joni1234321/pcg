@@ -56,17 +56,18 @@ struct CounterStack {
 };
 
 inline void RenderCounters(const Pool<CounterStack>& counters) {
-    static constexpr f32 TEXT_MIN_SCALE = 18.0F;
     const CameraState& camera = Singleton::Get<CameraState>();
     const WindowState& window_state = Singleton::Get<WindowState>();
     const ui::FontCollection& font_collection = Singleton::Get<ui::FontCollection>();
 
     constexpr f32 COUNTER_SIZE = 1.1F;
     const float2 counter_size = float2 { camera.scale * COUNTER_SIZE } * float2 { 1.0F, 0.8F };
-    const i32 pt_normal = static_cast<i32>(counter_size.y * 0.25F);
-    const i32 pt_small = static_cast<i32>(counter_size.y * 0.20F);
-    const ui::Font& font_normal = font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_normal));
-    const ui::Font& font_small = font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_small));
+
+    const ui::FontSize pt_normal = static_cast<ui::FontSize>(counter_size.y * 0.25F);
+    const ui::FontSize pt_small = static_cast<ui::FontSize>(counter_size.y * 0.20F);
+    constexpr ui::FontSize FONT_MIN_SIZE = 3;
+    const Optional<std::reference_wrapper<const ui::Font>> font_normal_opt = pt_normal < FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_normal));
+    const Optional<std::reference_wrapper<const ui::Font>> font_small_opt = pt_small < FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_small));
 
     for (const CounterStack& counter : counters) {
         const float2 world = HexAxialToWorld(counter.axial);
@@ -112,8 +113,9 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         (void)SDL_SetRenderDrawColor(window_state.renderer, color_icon.r, color_icon.g, color_icon.b, color_icon.a);
         (void)SDL_RenderFillRect(window_state.renderer, area_icon);
 
-        // labels
-        if (camera.scale >= TEXT_MIN_SCALE) {
+        //labels
+        if (font_normal_opt.has_value()) {
+            const ui::Font& font_normal = font_normal_opt.value();
             TTF_SetFontWrapAlignment(font_normal, TTF_HORIZONTAL_ALIGN_CENTER);
 
             (void)TTF_SetTextFont(counter.label_bottom, font_normal);
@@ -130,7 +132,10 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             // (void)TTF_SetTextColorFloat(counter.label_top, 0.0F, 0.0F, 0.0F, 1.0F);
             (void)TTF_SetTextWrapWidth(counter.label_top, static_cast<i32>(counter_size.x));
             (void)TTF_DrawRendererText(counter.label_top, counter_point.x, counter_point.y);
+        }
 
+        if (font_small_opt.has_value()) {
+            const ui::Font& font_small = font_small_opt.value();
             // surface bc then i draw vertically
             (void)TTF_SetTextFont(counter.label_vertical, font_small);
             (void)TTF_SetTextWrapWidth(counter.label_vertical, static_cast<i32>(counter_size.y));
@@ -149,5 +154,4 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         }
     }
 }
-
 } // namespace pce

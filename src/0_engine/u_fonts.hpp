@@ -7,7 +7,7 @@
 #include "0_engine/u_logger.hpp"
 
 namespace pce::ui {
-using FontSize = u8;
+using FontSize = u16;
 enum class FontSizes : FontSize { body = 16U, h1 = 34U, h2 = 30U, h3 = 24U, h4 = 20U, h5 = 18U, small = 14U, tiny = 12U, title = 52U, massive = 72U };
 class Font : LogLifetimeWithCount<Font> {
     struct CloseFont {
