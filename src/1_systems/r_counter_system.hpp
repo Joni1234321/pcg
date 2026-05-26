@@ -52,6 +52,7 @@ struct CounterStack {
     Label label_top;
     Label label_center;
     Label label_bottom;
+    SurfaceLabel label_vertical;
 };
 
 inline void RenderCounters(const Pool<CounterStack>& counters) {
@@ -63,8 +64,10 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
     constexpr f32 COUNTER_SIZE = 1.1F;
     const float2 counter_size = float2 { camera.scale * COUNTER_SIZE } * float2 { 1.0F, 0.8F };
     const i32 pt = static_cast<i32>(counter_size.y * 0.25F);
-    const ui::Font& font = font_collection.GetFontBold(static_cast<ui::FontSizes>(pt));
-    TTF_SetFontWrapAlignment(font, TTF_HORIZONTAL_ALIGN_CENTER);
+    const ui::Font& font_normal = font_collection.GetFontBold(static_cast<ui::FontSizes>(pt));
+    const i32 pt_small = static_cast<i32>(counter_size.y * 0.20F);
+    const ui::Font& font_small = font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_small));
+    TTF_SetFontWrapAlignment(font_normal, TTF_HORIZONTAL_ALIGN_CENTER);
 
     for (const CounterStack& counter : counters) {
         const float2 world = HexAxialToWorld(counter.axial);
@@ -112,20 +115,39 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
 
         // labels
         if (camera.scale >= TEXT_MIN_SCALE) {
-            (void)TTF_SetTextFont(counter.label_bottom, font);
+            (void)TTF_SetTextFont(counter.label_bottom, font_normal);
             // (void)TTF_SetTextColorFloat(counter.label_bottom, 0.0F, 0.0F, 0.0F, 1.0F);
             (void)TTF_SetTextWrapWidth(counter.label_bottom, static_cast<i32>(counter_size.x));
             (void)TTF_DrawRendererText(counter.label_bottom, counter_point.x, counter_point.y + counter_size.y - static_cast<f32>(pt));
 
-            (void)TTF_SetTextFont(counter.label_center, font);
+            (void)TTF_SetTextFont(counter.label_center, font_normal);
             (void)TTF_SetTextColorFloat(counter.label_center, 0.0F, 0.0F, 0.0F, 1.0F);
             (void)TTF_SetTextWrapWidth(counter.label_center, static_cast<i32>(counter_size.x));
             (void)TTF_DrawRendererText(counter.label_center, counter_point.x, counter_point.y + counter_size.y * 0.4F - static_cast<f32>(pt) * 0.3F);
 
-            (void)TTF_SetTextFont(counter.label_top, font);
+            (void)TTF_SetTextFont(counter.label_top, font_normal);
             // (void)TTF_SetTextColorFloat(counter.label_top, 0.0F, 0.0F, 0.0F, 1.0F);
             (void)TTF_SetTextWrapWidth(counter.label_top, static_cast<i32>(counter_size.x));
             (void)TTF_DrawRendererText(counter.label_top, counter_point.x, counter_point.y);
+
+            // surface bc then i draw vertically
+            (void)TTF_SetTextFont(counter.label_vertical, font_small);
+            (void)TTF_SetTextWrapWidth(counter.label_vertical, static_cast<i32>(counter_size.y));
+            SDL_Surface* surface = SDL_CreateSurface(static_cast<i32>(counter_size.y), pt_small, SDL_PIXELFORMAT_ARGB8888);
+            if (surface) {
+                (void)TTF_DrawSurfaceText(counter.label_vertical, 0, 0, surface);
+                SDL_Texture* tex = SDL_CreateTextureFromSurface(window_state.renderer, surface);
+                SDL_DestroySurface(surface);
+                if (tex) {
+                    const AABBF dst = AABBF::FromCenter(
+                        float2 { counter_point.x + counter_size.x - static_cast<f32>(pt_small) * 0.5F, counter_center.y },
+                        float2 { counter_size.y, static_cast<f32>(pt_small) }
+                    );
+                    constexpr f32 ANGLE_DEGREES = 90.0;
+                    SDL_RenderTextureRotated(window_state.renderer, tex, nullptr, dst, ANGLE_DEGREES, nullptr, SDL_FLIP_NONE);
+                    SDL_DestroyTexture(tex);
+                }
+            }
         }
     }
 }

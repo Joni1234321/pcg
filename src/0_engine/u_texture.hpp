@@ -45,6 +45,11 @@ struct Label {
     operator TTF_Text*() const { return ttf_text.Get(); }
     void SetText(const String& string) const { TTF_SetTextString(ttf_text.Get(), string.c_str(), string.size()); }
 };
+struct SurfaceLabel {
+    UniquePointer<TTF_Text, DestroyText> ttf_text { TTF_CreateText(Singleton::Get<WindowState>().surface_text_engine, nullptr, "", 0) };
+    operator TTF_Text*() const { return ttf_text.Get(); }
+    void SetText(const String& string) const { TTF_SetTextString(ttf_text.Get(), string.c_str(), string.size()); }
+};
 struct AABBF {
     float2 point;
     float2 size;

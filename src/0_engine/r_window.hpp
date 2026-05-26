@@ -33,6 +33,7 @@ struct Window {
         }
         SDL_SetRenderDrawBlendMode(window_state.renderer, SDL_BLENDMODE_BLEND);
         window_state.text_engine = TTF_CreateRendererTextEngine(window_state.renderer);
+        window_state.surface_text_engine = TTF_CreateSurfaceTextEngine();
         window_state.screen_size = size;
 
         Singleton::Get<ui::FontCollection>().SetFontFile(Asset(PATH_FONT_NORMAL), Asset(PATH_FONT_COURIER_REGULAR));
@@ -43,6 +44,7 @@ struct Window {
         SDL_DestroyRenderer(Singleton::Get<WindowState>().renderer);
         SDL_DestroyWindow(Singleton::Get<WindowState>().window);
         TTF_DestroyRendererTextEngine(Singleton::Get<WindowState>().text_engine);
+        TTF_DestroySurfaceTextEngine(Singleton::Get<WindowState>().surface_text_engine);
         TTF_Quit();
         SDL_Quit();
     }

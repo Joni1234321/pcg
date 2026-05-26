@@ -141,6 +141,7 @@ void UnitToCounterAppend(HexState& hex_state) {
         counter.label_top.SetText(EchelonToString(echelon));
         counter.label_center.SetText(UnitIconToString(icon));
         counter.label_bottom.SetText(std::format("{}-{}-{}", dmg, def, move));
+        counter.label_vertical.SetText("1/123");
     }
 }
 PlayerAction GetPlayerAction(const HexState& hex_state) {
