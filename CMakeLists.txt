@@ -8,13 +8,19 @@ option(SET_CLANG_TIDY "Enable clang tidy" FALSE)
 set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
+foreach (FLAG_VAR CMAKE_C_FLAGS CMAKE_CXX_FLAGS CMAKE_EXE_LINKER_FLAGS CMAKE_SHARED_LINKER_FLAGS)
+    if (DEFINED ${FLAG_VAR})
+        string(REPLACE "-stdlib=libc++" "" ${FLAG_VAR} "${${FLAG_VAR}}")
+        set(${FLAG_VAR} "${${FLAG_VAR}}" CACHE STRING "" FORCE)
+    endif ()
+endforeach ()
 
 # ccache
-find_program(CCACHE_PROGRAM ccache REQUIRED)
-set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
-set(CMAKE_C_COMPILER_LAUNCHER   ${CCACHE_PROGRAM})
+find_program(CCACHE_PROGRAM ccache)
+if (CCACHE_PROGRAM)
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+    set(CMAKE_C_COMPILER_LAUNCHER   ${CCACHE_PROGRAM})
+endif ()
 
 # libs — downloaded once into 3rdparty/, reused across all build dirs
 set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/3rdparty" CACHE PATH "" FORCE)
@@ -74,3 +80,57 @@ add_custom_command(
 		COMMENT "Copying assets to output directory"
 		VERBATIM
 )
+
+if (WIN32 OR MINGW OR MSYS OR CMAKE_SYSTEM_NAME STREQUAL "MSYS")
+    # Find runtime DLLs by scanning the actual import table of pcg.exe and copy
+    # them next to it. This ships *only* what the exe really needs (SDL3, image
+    # libs, libc++, etc.) instead of bulk-copying the entire compiler prefix.
+    get_filename_component(CXX_COMPILER_BIN_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)
+    set(PCG_RUNTIME_SEARCH_DIRS "${CXX_COMPILER_BIN_DIR}")
+    if (CMAKE_PREFIX_PATH)
+        list(APPEND PCG_RUNTIME_SEARCH_DIRS "${CMAKE_PREFIX_PATH}/bin")
+    endif ()
+
+    # Dev convenience: do the same bundling into the build dir so double-click
+    # works straight from build/xd/.
+    add_custom_command(
+            TARGET pcg POST_BUILD
+            COMMAND "${CMAKE_COMMAND}"
+                    -DEXECUTABLE=$<TARGET_FILE:pcg>
+                    -DOUTPUT_DIR=$<TARGET_FILE_DIR:pcg>
+                    "-DSEARCH_DIRS=${PCG_RUNTIME_SEARCH_DIRS}"
+                    -P "${CMAKE_SOURCE_DIR}/cmake/bundle_runtime_deps.cmake"
+            COMMENT "Bundling runtime DLLs next to pcg.exe"
+            VERBATIM
+    )
+endif ()
+
+# ---------------------------------------------------------------------------
+# Shipping / packaging  (AI-generated section)
+# ---------------------------------------------------------------------------
+# Usage:
+#     cmake --install build/xd --prefix release      # plain folder
+#     cmake --build  build/xd --target package       # zip in build/xd/
+#
+# Produces a self-contained folder of ~10-20 MB you can hand to anyone on the
+# same OS — just unzip and run pcg.exe.
+
+install(TARGETS pcg RUNTIME DESTINATION .)
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/assets" DESTINATION .)
+
+if (WIN32 OR MINGW OR MSYS OR CMAKE_SYSTEM_NAME STREQUAL "MSYS")
+    install(CODE "
+        set(EXECUTABLE  \"\${CMAKE_INSTALL_PREFIX}/$<TARGET_FILE_NAME:pcg>\")
+        set(OUTPUT_DIR  \"\${CMAKE_INSTALL_PREFIX}\")
+        set(SEARCH_DIRS \"${PCG_RUNTIME_SEARCH_DIRS}\")
+        include(\"${CMAKE_SOURCE_DIR}/cmake/bundle_runtime_deps.cmake\")
+    ")
+endif ()
+
+set(CPACK_PACKAGE_NAME              "pcg")
+set(CPACK_PACKAGE_VERSION           "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_FILE_NAME         "pcg-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}")
+set(CPACK_GENERATOR                 "ZIP")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "pcg")
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)
+include(CPack)
