@@ -21,9 +21,9 @@ constexpr u32 MOVE_COST_ATTACK = 2U;
 constexpr u32 MOVE_COST_ATTACK_PLANNED = 6U;
 constexpr TerrainScheme TERRAIN_SCHEME = TerrainScheme::SLATE_TABLE;
 constexpr f32 BORDER_INNER_RADIUS = 0.90F;
-constexpr f32 BORDER_TEETH_DEPTH   = 0.12F;
-constexpr f32 BORDER_TEETH_HALF    = 0.18F;
-constexpr u32 BORDER_TEETH_EVERY   = 1U;
+constexpr f32 BORDER_TEETH_DEPTH = 0.12F;
+constexpr f32 BORDER_TEETH_HALF = 0.18F;
+constexpr u32 BORDER_TEETH_EVERY = 1U;
 
 struct HexOwner {
     CountryTag tag { CountryTag::TAG_NONE };
@@ -35,6 +35,7 @@ struct Hex {
 };
 struct Unit {
     OptionalHandle<Unit> parent;
+    char name[11] { };
     CountryTag tag;
     Echelon echelon;
     UnitIcon icon;
@@ -101,30 +102,29 @@ struct HexState {
     __builtin_unreachable();
 }
 
-
 [[nodiscard]] constexpr Color TerrainToColorScheme(const TerrainType terrain) {
     if constexpr (TERRAIN_SCHEME == TerrainScheme::CIV_VIBRANT) {
         return TerrainToColor(terrain); // saturated default (existing palette)
     } else if constexpr (TERRAIN_SCHEME == TerrainScheme::SLATE_TABLE) {
         // cool, desaturated - like a board game printed on slate.
         switch (terrain) {
-            case TerrainType::TERRAIN_DEEP_OCEAN: return Color {  28U,  38U,  55U };
-            case TerrainType::TERRAIN_OCEAN:      return Color {  52U,  72U,  96U };
-            case TerrainType::TERRAIN_BEACH:      return Color { 156U, 144U, 110U };
-            case TerrainType::TERRAIN_GRASS:      return Color { 102U, 122U,  86U };
-            case TerrainType::TERRAIN_FOREST:     return Color {  62U,  84U,  60U };
-            case TerrainType::TERRAIN_MOUNTAIN:   return Color {  92U,  92U, 100U };
-            case TerrainType::TERRAIN_SNOW:       return Color { 198U, 204U, 212U };
+            case TerrainType::TERRAIN_DEEP_OCEAN: return Color { 28U, 38U, 55U };
+            case TerrainType::TERRAIN_OCEAN: return Color { 52U, 72U, 96U };
+            case TerrainType::TERRAIN_BEACH: return Color { 156U, 144U, 110U };
+            case TerrainType::TERRAIN_GRASS: return Color { 102U, 122U, 86U };
+            case TerrainType::TERRAIN_FOREST: return Color { 62U, 84U, 60U };
+            case TerrainType::TERRAIN_MOUNTAIN: return Color { 92U, 92U, 100U };
+            case TerrainType::TERRAIN_SNOW: return Color { 198U, 204U, 212U };
         }
     } else { // HOI4_PAPER - warm parchment / political-map feel.
         switch (terrain) {
-            case TerrainType::TERRAIN_DEEP_OCEAN: return Color {  88U, 112U, 142U };
-            case TerrainType::TERRAIN_OCEAN:      return Color { 130U, 158U, 184U };
-            case TerrainType::TERRAIN_BEACH:      return Color { 220U, 200U, 158U };
-            case TerrainType::TERRAIN_GRASS:      return Color { 178U, 184U, 132U };
-            case TerrainType::TERRAIN_FOREST:     return Color { 128U, 144U,  96U };
-            case TerrainType::TERRAIN_MOUNTAIN:   return Color { 152U, 138U, 116U };
-            case TerrainType::TERRAIN_SNOW:       return Color { 232U, 226U, 210U };
+            case TerrainType::TERRAIN_DEEP_OCEAN: return Color { 88U, 112U, 142U };
+            case TerrainType::TERRAIN_OCEAN: return Color { 130U, 158U, 184U };
+            case TerrainType::TERRAIN_BEACH: return Color { 220U, 200U, 158U };
+            case TerrainType::TERRAIN_GRASS: return Color { 178U, 184U, 132U };
+            case TerrainType::TERRAIN_FOREST: return Color { 128U, 144U, 96U };
+            case TerrainType::TERRAIN_MOUNTAIN: return Color { 152U, 138U, 116U };
+            case TerrainType::TERRAIN_SNOW: return Color { 232U, 226U, 210U };
         }
     }
     __builtin_unreachable();
@@ -213,28 +213,28 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
     for (u32 i = 0; i < hex_state.hex_map.Size(); i++) {
         const Hex& hex = hex_state.hex_map.data[i];
         if (hex.owner.tag == CountryTag::TAG_NONE) { continue; }
-        const int2     axial             = hex_state.hex_map.IndexToAxial(i);
-        const float2   own_center_w      = HexAxialToWorld(axial);
-        const int2     own_center_screen = camera.WorldToScreen(own_center_w);
-        const ColorF   col               = static_cast<ColorF>(CountryTagToColor(hex.owner.tag));
-        const f32      cx                = static_cast<f32>(own_center_screen.x);
-        const f32      cy                = static_cast<f32>(own_center_screen.y);
+        const int2 axial = hex_state.hex_map.IndexToAxial(i);
+        const float2 own_center_w = HexAxialToWorld(axial);
+        const int2 own_center_screen = camera.WorldToScreen(own_center_w);
+        const ColorF col = static_cast<ColorF>(CountryTagToColor(hex.owner.tag));
+        const f32 cx = static_cast<f32>(own_center_screen.x);
+        const f32 cy = static_cast<f32>(own_center_screen.y);
         u32 edge_index = 0U;
         for (u32 s = 0; s < HEX_CORNERS; s++) {
             const int2 nax = axial + HEX_AXIAL_NEIGHBOURS[s];
             const CountryTag ntag = hex_state.hex_map.Contains(nax) ? hex_state.hex_map[nax].owner.tag : CountryTag::TAG_NONE;
             if (ntag == hex.owner.tag) { continue; }
             // visual side index from neighbour index (screen y is down vs math y-up)
-            const u32    side    = (HEX_CORNERS - s) % HEX_CORNERS;
-            const u32    j       = (side + 1U) % HEX_CORNERS;
-            const float2 ang_a   = HEX_ANGLE[side];
-            const float2 ang_b   = HEX_ANGLE[j];
+            const u32 side = (HEX_CORNERS - s) % HEX_CORNERS;
+            const u32 j = (side + 1U) % HEX_CORNERS;
+            const float2 ang_a = HEX_ANGLE[side];
+            const float2 ang_b = HEX_ANGLE[j];
             // Outer ring at the lattice corner (radius 1.0), inner ring at the
             // same radial position the tile uses (radius BORDER_INNER_RADIUS).
             // Same rounding policy as HexAppend -> the strip's inner edge lies
             // exactly on the tile's outer edge.
-            const SDL_FPoint outer_a { cx + ang_a.x * sc,           cy + ang_a.y * sc };
-            const SDL_FPoint outer_b { cx + ang_b.x * sc,           cy + ang_b.y * sc };
+            const SDL_FPoint outer_a { cx + ang_a.x * sc, cy + ang_a.y * sc };
+            const SDL_FPoint outer_b { cx + ang_b.x * sc, cy + ang_b.y * sc };
             const SDL_FPoint inner_a { cx + ang_a.x * sc * inner_r, cy + ang_a.y * sc * inner_r };
             const SDL_FPoint inner_b { cx + ang_b.x * sc * inner_r, cy + ang_b.y * sc * inner_r };
             // strip tri 1: inner_a, inner_b, outer_b
@@ -255,28 +255,28 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
                     own_center_w.x + (ang_a.x + ang_b.x) * 0.5F,
                     own_center_w.y + (ang_a.y + ang_b.y) * 0.5F,
                 };
-                const int2       anchor_int = camera.WorldToScreen(emid_w);
+                const int2 anchor_int = camera.WorldToScreen(emid_w);
                 const SDL_FPoint anchor { static_cast<f32>(anchor_int.x), static_cast<f32>(anchor_int.y) };
                 // Project the shared anchor onto this country's inner edge to
                 // get the tooth base midpoint.
-                const f32 ex     = inner_b.x - inner_a.x;
-                const f32 ey     = inner_b.y - inner_a.y;
-                const f32 elen2  = ex * ex + ey * ey;
+                const f32 ex = inner_b.x - inner_a.x;
+                const f32 ey = inner_b.y - inner_a.y;
+                const f32 elen2 = ex * ex + ey * ey;
                 if (elen2 > 0.0001F) {
                     f32 t = ((anchor.x - inner_a.x) * ex + (anchor.y - inner_a.y) * ey) / elen2;
                     if (t < 0.0F) { t = 0.0F; }
                     if (t > 1.0F) { t = 1.0F; }
                     const SDL_FPoint base_mid { inner_a.x + ex * t, inner_a.y + ey * t };
-                    const f32 elen  = std::sqrt(elen2);
-                    const f32 ux    = ex / elen;
-                    const f32 uy    = ey / elen;
-                    f32       half  = BORDER_TEETH_HALF * sc;
+                    const f32 elen = std::sqrt(elen2);
+                    const f32 ux = ex / elen;
+                    const f32 uy = ey / elen;
+                    f32 half = BORDER_TEETH_HALF * sc;
                     if (half > elen * 0.5F) { half = elen * 0.5F; } // clamp so wide teeth never overshoot the edge
                     const SDL_FPoint base_a { base_mid.x - ux * half, base_mid.y - uy * half };
                     const SDL_FPoint base_b { base_mid.x + ux * half, base_mid.y + uy * half };
                     // Inward direction in screen = from edge-midpoint towards
                     // own centre, derived in the same coord frame as the strip.
-                    float2    inward { -(ang_a.x + ang_b.x) * 0.5F, -(ang_a.y + ang_b.y) * 0.5F };
+                    float2 inward { -(ang_a.x + ang_b.x) * 0.5F, -(ang_a.y + ang_b.y) * 0.5F };
                     const f32 ilen = std::sqrt(inward.x * inward.x + inward.y * inward.y);
                     if (ilen > 0.0001F) {
                         inward.x /= ilen;
@@ -287,7 +287,7 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
                         };
                         hex_state.verts.EmplaceBack(base_a, col, SDL_FPoint { });
                         hex_state.verts.EmplaceBack(base_b, col, SDL_FPoint { });
-                        hex_state.verts.EmplaceBack(apex,   col, SDL_FPoint { });
+                        hex_state.verts.EmplaceBack(apex, col, SDL_FPoint { });
                     }
                 }
             }
@@ -295,6 +295,5 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
         }
     }
 }
-
 
 } // namespace pcg

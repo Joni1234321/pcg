@@ -11,7 +11,9 @@
 #include "1_systems/i_input_system.hpp"
 
 namespace pce::ui {
-const Font& FontCollection::GetFontNormal(const FontSizes size) const {
+const Font& FontCollection::GetFontNormal(FontSizes size) const {
+    assert(static_cast<FontSize>(size) > 0);
+    size = math::Max(size, static_cast<FontSizes>(1));
     if (!fonts_normal.HasKey(size)) {
         fonts_normal.EmplaceBack(size, font_path_normal, static_cast<FontSize>(size));
         if (fonts_normal[size].FailedLoading()) {
@@ -21,7 +23,9 @@ const Font& FontCollection::GetFontNormal(const FontSizes size) const {
     }
     return fonts_normal[size];
 }
-const Font& FontCollection::GetFontBold(const FontSizes size) const {
+const Font& FontCollection::GetFontBold(FontSizes size) const {
+    assert(static_cast<FontSize>(size) > 0);
+    size = math::Max(size, static_cast<FontSizes>(1));
     if (!fonts_bold.HasKey(size)) {
         fonts_bold.EmplaceBack(size, font_path_bold, static_cast<FontSize>(size));
         if (fonts_bold[size].FailedLoading()) {
@@ -298,8 +302,7 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
             get_major_layout(tree.styles[parent_constrained[0U]], node_style.direction).resolved += left_over;
         }
 
-        auto children =
-            tree.children[node] | std::views::filter([&tree, &node_style, &get_minor_layout](const Handle<Node> child) -> bool { return get_minor_layout(tree.styles[child], node_style.direction).constraint == LayoutLength::parent_constraint; });
+        auto children = tree.children[node] | std::views::filter([&tree, &node_style, &get_minor_layout](const Handle<Node> child) -> bool { return get_minor_layout(tree.styles[child], node_style.direction).constraint == LayoutLength::parent_constraint; });
         for (const Handle child : children) { get_minor_layout(tree.styles[child], node_style.direction).resolved = get_minor(node_style.InnerBoxSize(), node_style.direction); }
     }
 
