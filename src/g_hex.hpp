@@ -4,9 +4,11 @@
 #include <ranges>
 
 #include "0_engine/u_collections.hpp"
+#include "0_engine/u_texture.hpp"
 #include "0_engine/u_types.hpp"
 #include "1_systems/r_counter_system.hpp"
 #include "1_systems/r_hex_system.hpp"
+#include "SDL3/SDL_render.h"
 
 namespace pcg {
 using namespace pce;
@@ -19,9 +21,9 @@ constexpr u32 MOVE_COST_ATTACK = 2U;
 constexpr u32 MOVE_COST_ATTACK_PLANNED = 6U;
 constexpr TerrainScheme TERRAIN_SCHEME = TerrainScheme::SLATE_TABLE;
 constexpr f32 BORDER_INNER_RADIUS = 0.90F;
-constexpr f32 BORDER_TEETH_DEPTH   = 0.12F; // how far the tip pushes towards the hex centre
-constexpr f32 BORDER_TEETH_HALF    = 0.18F; // half-width of the tooth base along the edge
-constexpr u32 BORDER_TEETH_EVERY   = 1U;    // emit a tooth every Nth border edge
+constexpr f32 BORDER_TEETH_DEPTH   = 0.12F;
+constexpr f32 BORDER_TEETH_HALF    = 0.18F;
+constexpr u32 BORDER_TEETH_EVERY   = 1U;
 
 struct HexOwner {
     CountryTag tag { CountryTag::TAG_NONE };
@@ -32,6 +34,7 @@ struct Hex {
     HexOwner owner;
 };
 struct Unit {
+    OptionalHandle<Unit> parent;
     CountryTag tag;
     Echelon echelon;
     UnitIcon icon;
