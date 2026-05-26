@@ -23,9 +23,13 @@ constexpr f32 BORDER_TEETH_DEPTH   = 0.12F; // how far the tip pushes towards th
 constexpr f32 BORDER_TEETH_HALF    = 0.18F; // half-width of the tooth base along the edge
 constexpr u32 BORDER_TEETH_EVERY   = 1U;    // emit a tooth every Nth border edge
 
+struct HexOwner {
+    CountryTag tag { CountryTag::TAG_NONE };
+    b8 contested { false };
+};
 struct Hex {
     TerrainType terrain;
-    CountryTag country_tag { CountryTag::TAG_NONE };
+    HexOwner owner;
 };
 struct Unit {
     CountryTag tag;
@@ -43,10 +47,6 @@ struct UnitGroup {
     u32 def_sum;
     u32 move_min;
     u32 move_max;
-};
-struct HexDrawInfo {
-    float2 world { };
-    Color color { };
 };
 struct PseudoTarget {
     int2 axial { };
@@ -72,7 +72,6 @@ struct HexState {
     PseudoStates pseudo_states;
 
     // cache drawing
-    HexList<HexDrawInfo> hex_draw;
     Pool<CounterStack> counters;
     Pool<Label> label_pool;
     List<SDL_Vertex> verts { };
@@ -163,24 +162,24 @@ constexpr HexList<Hex> GenerateTerrain(const uint2 map_size, const u32 seed) {
 }
 
 inline void GenerateTerritory(HexState& hex_state) {
-    std::ranges::fill(hex_state.hex_map | std::views::transform(&Hex::country_tag), CountryTag::TAG_NONE);
+    std::ranges::fill(hex_state.hex_map | std::views::transform(&Hex::owner), HexOwner { .tag = CountryTag::TAG_NONE, .contested = false });
 
     Queue<int2> frontier;
     for (const auto& [axial, unit_handles] : hex_state.units_by_axial) {
         if (!hex_state.hex_map.Contains(axial)) { continue; }
         if (unit_handles.empty()) { continue; }
-        hex_state.hex_map[axial].country_tag = hex_state.units[unit_handles[0]].tag;
+        hex_state.hex_map[axial].owner = HexOwner { .tag = hex_state.units[unit_handles[0]].tag, .contested = false };
         frontier.EmplaceBack(axial);
     }
     while (!frontier.empty()) {
         const int2 current = frontier.front();
         frontier.Pop();
-        const CountryTag current_tag = hex_state.hex_map[current].country_tag;
+        const HexOwner hex_owner = hex_state.hex_map[current].owner;
         for (const int2 offset : HEX_AXIAL_NEIGHBOURS) {
             const int2 next = current + offset;
             if (!hex_state.hex_map.Contains(next)) { continue; }
-            if (hex_state.hex_map[next].country_tag != CountryTag::TAG_NONE) { continue; }
-            hex_state.hex_map[next].country_tag = current_tag;
+            if (hex_state.hex_map[next].owner.tag != CountryTag::TAG_NONE) { continue; }
+            hex_state.hex_map[next].owner = HexOwner { .tag = hex_owner.tag, .contested = false };
             frontier.EmplaceBack(next);
         }
     }
@@ -210,18 +209,18 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
     const f32 inner_r = BORDER_INNER_RADIUS;
     for (u32 i = 0; i < hex_state.hex_map.Size(); i++) {
         const Hex& hex = hex_state.hex_map.data[i];
-        if (hex.country_tag == CountryTag::TAG_NONE) { continue; }
+        if (hex.owner.tag == CountryTag::TAG_NONE) { continue; }
         const int2     axial             = hex_state.hex_map.IndexToAxial(i);
         const float2   own_center_w      = HexAxialToWorld(axial);
         const int2     own_center_screen = camera.WorldToScreen(own_center_w);
-        const ColorF   col               = static_cast<ColorF>(CountryTagToColor(hex.country_tag));
+        const ColorF   col               = static_cast<ColorF>(CountryTagToColor(hex.owner.tag));
         const f32      cx                = static_cast<f32>(own_center_screen.x);
         const f32      cy                = static_cast<f32>(own_center_screen.y);
         u32 edge_index = 0U;
         for (u32 s = 0; s < HEX_CORNERS; s++) {
             const int2 nax = axial + HEX_AXIAL_NEIGHBOURS[s];
-            const CountryTag ntag = hex_state.hex_map.Contains(nax) ? hex_state.hex_map[nax].country_tag : CountryTag::TAG_NONE;
-            if (ntag == hex.country_tag) { continue; }
+            const CountryTag ntag = hex_state.hex_map.Contains(nax) ? hex_state.hex_map[nax].owner.tag : CountryTag::TAG_NONE;
+            if (ntag == hex.owner.tag) { continue; }
             // visual side index from neighbour index (screen y is down vs math y-up)
             const u32    side    = (HEX_CORNERS - s) % HEX_CORNERS;
             const u32    j       = (side + 1U) % HEX_CORNERS;

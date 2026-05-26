@@ -40,16 +40,6 @@ namespace pcg {
 using namespace pce;
 using namespace pce::ui;
 namespace {
-HexList<HexDrawInfo> HexToHexDraw(const HexList<Hex>& hexes) {
-    HexList<HexDrawInfo> result { };
-    result.Resize(hexes.map_size);
-    for (u32 i = 0; i < hexes.Size(); i++) {
-        const Hex& hex_data = hexes.data[i];
-        const int2 axial = hexes.IndexToAxial(i);
-        result[axial] = HexDrawInfo { .world = HexAxialToWorld(axial), .color = TerrainToColorScheme(hex_data.terrain) };
-    }
-    return result;
-}
 [[nodiscard]] b8 AxialIsEnemy(const HexState& hex_state, const int2 axial) {
     return hex_state.units_by_axial.contains(axial) && !std::ranges::contains(hex_state.units_by_axial.at(axial) | hex_state.units.handle_to_view(), hex_state.player_tag, &Unit::tag);
 }
@@ -57,7 +47,7 @@ HexList<HexDrawInfo> HexToHexDraw(const HexList<Hex>& hexes) {
     return AxialIsEnemy(hex_state, axial) || std::ranges::any_of(HEX_AXIAL_NEIGHBOURS, [&](const int2 axial_offset) -> b8 { return AxialIsEnemy(hex_state, axial + axial_offset); });
 }
 [[nodiscard]] u8 AxialAdjecentEnemyControl (const HexState& hex_state, const int2 axial) {
-    return std::ranges::count_if(HEX_AXIAL_NEIGHBOURS, [&](const int2 axial_offset) -> b8 { return hex_state.hex_map.Contains(axial + axial_offset) && hex_state.hex_map[axial + axial_offset].country_tag != hex_state.player_tag; });
+    return std::ranges::count_if(HEX_AXIAL_NEIGHBOURS, [&](const int2 axial_offset) -> b8 { return hex_state.hex_map.Contains(axial + axial_offset) && hex_state.hex_map[axial + axial_offset].owner.tag != hex_state.player_tag; });
 }
 List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start, const int2 axial_end) {
     List<AxialAndCost> axial_path;
@@ -81,7 +71,7 @@ List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start
             if (!hex_state.hex_map.Contains(axial_next) || AxialIsEnemy(hex_state, axial_next)) { continue; }
 
             const Hex& hex = hex_state.hex_map[axial_next];
-            const u32 cost_conquer = AxialIsEnemyOrZoc(hex_state, axial_next) * 1U + (AxialAdjecentEnemyControl(hex_state, axial_next) > 0) * 1U;
+            const u32 cost_conquer = (hex.owner.tag != hex_state.player_tag) + hex.owner.contested + AxialIsEnemyOrZoc(hex_state, axial_next) + (AxialAdjecentEnemyControl(hex_state, axial_next) > 0) * 1U;
             const u32 cost_terrain = TerrainToMovementCost(hex.terrain);
             const u32 cost_new = cost_at_axial[current.axial] + cost_terrain + cost_conquer;
             if (!cost_at_axial.contains(axial_next) || cost_new < cost_at_axial[axial_next]) {
@@ -204,7 +194,20 @@ struct HexSystem {
         if (hex_state.pseudo_states.axial_select) { HexAppend(hex_state.verts, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select.value())), colors::HEX_SELECT); }
 
         // render map
-        for (const HexDrawInfo& hex : hex_state.hex_draw.data) { HexAppend(hex_state.verts, camera.scale * 0.90F, camera.WorldToScreen(hex.world), hex.color); }
+        for (u32 i = 0; i < hex_state.hex_map.Size(); i++) {
+            const Hex& hex = hex_state.hex_map.data[i];
+            const int2 axial = hex_state.hex_map.IndexToAxial(i);
+            const float2 world = HexAxialToWorld(axial);
+            Color color = TerrainToColorScheme(hex.terrain);
+            if (hex.owner.contested) {
+                color = color.Mul(0.90F);
+            }
+            HexAppend(hex_state.verts, camera.scale * 0.90F, camera.WorldToScreen(world), color);
+
+            if (hex.owner.contested) {
+            HexAppend(hex_state.verts, camera.scale * 0.70F, camera.WorldToScreen(world), color.Mul(0.80F));
+            }
+        }
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts.data.data(), static_cast<i32>(hex_state.verts.size()), nullptr, 0);
         hex_state.verts.clear();
 
@@ -256,12 +259,16 @@ struct HexSystem {
                 const List<AxialAndCost>::iterator it = std::ranges::upper_bound(axial_path, hex_state.pseudo_states.unit_selection->move_min, std::less { }, &AxialAndCost::cost);
                 if (it != axial_path.begin()) {
                     for (List<AxialAndCost>::iterator step = axial_path.begin(); step != it; ++step) {
-                        hex_state.hex_map[step->axial].country_tag = hex_state.player_tag;
+                        Hex& hex_center = hex_state.hex_map[step->axial];
+                        if (hex_center.owner.tag != hex_state.player_tag) { hex_center.owner = HexOwner { .tag = hex_state.player_tag, .contested = true }; } // conquer
                         // zone of control
                         for (const int2 offset : HEX_AXIAL_NEIGHBOURS) {
                             const int2 axial_neighbour = step->axial + offset;
                             if (!hex_state.hex_map.Contains(axial_neighbour)) { continue; }
-                            if (!AxialIsEnemyOrZoc(hex_state, axial_neighbour)) { hex_state.hex_map[axial_neighbour].country_tag = hex_state.player_tag; }
+                            if (!AxialIsEnemyOrZoc(hex_state, axial_neighbour)) {
+                            Hex& hex_neighbour = hex_state.hex_map[axial_neighbour];
+                                if (hex_neighbour.owner.tag != hex_state.player_tag) { hex_neighbour.owner = HexOwner { .tag = hex_state.player_tag, .contested = true }; } // conquer
+                            }
                         }
                     }
 
@@ -379,7 +386,8 @@ struct HexSystem {
                 }
 
                 if (attacker_won) {
-                    hex_state.hex_map[axial_battle].country_tag = units_attacker[0].tag;
+                    Hex& hex_battle = hex_state.hex_map[axial_battle];
+                    if (hex_battle.owner.tag != hex_state.player_tag) { hex_battle.owner = HexOwner { .tag = hex_state.player_tag, .contested = true }; } // conquer
                 }
 
                 break;
@@ -410,7 +418,6 @@ void arcade::RunHex() {
 
     HexState& hex_state = Singleton::Get<HexState>();
     hex_state.hex_map = GenerateTerrain({ 20, 6 }, 3489);
-    hex_state.hex_draw = HexToHexDraw(hex_state.hex_map);
 
     CameraState& camera = Singleton::Get<CameraState>();
     camera.map_world_min = { 0.0F, 0.0F };

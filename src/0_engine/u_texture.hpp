@@ -111,6 +111,7 @@ struct Color {
             static_cast<u8>(a * 255.0F),
         };
     }
+    [[nodiscard]] constexpr Color Mul(const f32 factor) const { return Color { static_cast<u8>(r * factor), static_cast<u8>(g * factor), static_cast<u8>(b * factor), a }; }
     [[nodiscard]] constexpr operator SDL_Color() const { return *reinterpret_cast<const SDL_Color*>(this); }
     constexpr static f32 TO_FCOLOR = 1.0F / 255.0F;
     [[nodiscard]] constexpr operator ColorF() const { return ColorF { r * TO_FCOLOR, g * TO_FCOLOR, b * TO_FCOLOR, a * TO_FCOLOR }; }
