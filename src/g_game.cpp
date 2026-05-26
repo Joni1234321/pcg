@@ -185,9 +185,7 @@ void Game::PlayTick(pce::Tick tick, pce::ui::RenderNodeSystem& node_render_syste
     return;
     if (!debug) { return; }
 
-    auto construction_queue_to_string = [](const ConstructionQueue& construction_queue) -> String {
-        return { "{:3} / {:3} Q:{:3}", math::Min(construction_queue.size(), construction_queue.construction_capacity), construction_queue.construction_capacity, construction_queue.size() };
-    };
+    auto construction_queue_to_string = [](const ConstructionQueue& construction_queue) -> String { return { "{:3} / {:3} Q:{:3}", math::Min(construction_queue.size(), construction_queue.construction_capacity), construction_queue.construction_capacity, construction_queue.size() }; };
 
     constexpr u32 width = 20U;
 

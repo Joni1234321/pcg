@@ -19,7 +19,7 @@ NamespaceIndentation: None
 LambdaBodyIndentation: Signature
 
 # --- line width --------------------------------------------------------------
-ColumnLimit: 250
+ColumnLimit: 320
 ReflowComments: Never
 
 # --- braces (attach everything) ----------------------------------------------

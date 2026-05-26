@@ -104,8 +104,7 @@ template <typename T> struct List {
 
     // Generic collection converter  CREDIT goes the bot for this madness
     template <typename Container> explicit List(const Container& container) requires std::is_constructible_v<std::vector<T>, typename Container::iterator, typename Container::iterator> : data(container.begin(), container.end()) { }
-    template <typename Container> explicit List(Container&& container) requires std::is_constructible_v<std::vector<T>, typename Container::iterator, typename Container::iterator>
-        : data(std::make_move_iterator(container.begin()), std::make_move_iterator(container.end())) { }
+    template <typename Container> explicit List(Container&& container) requires std::is_constructible_v<std::vector<T>, typename Container::iterator, typename Container::iterator> : data(std::make_move_iterator(container.begin()), std::make_move_iterator(container.end())) { }
 
     [[nodiscard]] constexpr u32 size() const noexcept { return static_cast<u32>(data.size()); }
     [[nodiscard]] constexpr u32 Size() const noexcept { return static_cast<u32>(data.size()); }

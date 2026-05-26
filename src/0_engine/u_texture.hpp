@@ -120,7 +120,7 @@ struct Color {
     [[nodiscard]] constexpr operator SDL_Color() const { return *reinterpret_cast<const SDL_Color*>(this); }
     constexpr static f32 TO_FCOLOR = 1.0F / 255.0F;
     [[nodiscard]] constexpr operator ColorF() const { return ColorF { r * TO_FCOLOR, g * TO_FCOLOR, b * TO_FCOLOR, a * TO_FCOLOR }; }
-    [[nodiscard]] constexpr Color WithAlpha (const u8 a) const { return Color { r, g, b, a }; }
-    [[nodiscard]] constexpr Color WithAlpha (const f32 a) const { return Color { r, g, b, static_cast<u8>(a * 255.0F) }; }
+    [[nodiscard]] constexpr Color WithAlpha(const u8 a) const { return Color { r, g, b, a }; }
+    [[nodiscard]] constexpr Color WithAlpha(const f32 a) const { return Color { r, g, b, static_cast<u8>(a * 255.0F) }; }
 };
 } // namespace pce
