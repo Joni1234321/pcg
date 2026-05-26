@@ -41,11 +41,9 @@ Go to `view -> tool window -> vcpkg` (bottom) then i unisntalled ZLIB and it wor
 
 # Shipping
 
-You don't *have* to run anything special — the build dir at `build/xd/` is
-already runnable thanks to a post-build step. The flow below just gives you
-a clean, redistributable folder.
-
-`ship.cmd` is an optional convenience wrapper. It runs:
+The build dir at `build/xd/` is already runnable thanks to a post-build step
+that copies the required DLLs next to `pcg.exe`. To produce a clean,
+redistributable folder, run:
 
 ```cmd
 cmake --preset xd
@@ -54,8 +52,8 @@ cmake --install build/xd --prefix release
 ```
 
 Output: `release\` — a self-contained folder (~15 MB exe + DLLs + assets).
-Double-click `release\pcg.exe` to run. CMake creates the folder; you don't
-need to make it yourself, and nothing in the build depends on it existing.
+Double-click `release\pcg.exe` to run. CMake creates the folder; nothing in
+the build depends on it existing, so you can delete it any time.
 
 For a distributable ZIP:
 
