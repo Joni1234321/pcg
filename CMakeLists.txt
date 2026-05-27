@@ -136,3 +136,10 @@ set(CPACK_GENERATOR                 "ZIP")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "pcg")
 set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)
 include(CPack)
+
+
+add_executable(meshdemo src/g_meshdemo.cpp)
+target_link_libraries(meshdemo
+                      PRIVATE SDL3::SDL3
+                      PRIVATE SDL3_ttf::SDL3_ttf)
+target_include_directories(meshdemo PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
