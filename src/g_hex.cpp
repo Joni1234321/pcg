@@ -199,40 +199,64 @@ struct HexSystem {
             HexAppend(hex_state.verts, camera.scale * 0.90F, camera.WorldToScreen(world), color);
             if (hex.owner.contested) { HexAppend(hex_state.verts, camera.scale * 0.70F, camera.WorldToScreen(world), color.Mul(0.80F)); }
         }
-        (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts.data.data(), static_cast<i32>(hex_state.verts.size()), nullptr, 0);
+        (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
         hex_state.verts.clear();
 
         AppendCountryBorders(hex_state, camera);
-        (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts.data.data(), static_cast<i32>(hex_state.verts.size()), nullptr, 0);
+        (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
         hex_state.verts.clear();
-
 
         // render hq
         if (hex_state.pseudo_states.unit_selection) {
-            auto draw_line = [&](const Color color, const int2 axial_a, const int2 axial_b) -> void {
+            auto draw_line = [&](const Color color, const int2 axial_a, const int2 axial_b) {
                 const int2 screen_a = camera.WorldToScreen(HexAxialToWorld(axial_a));
-                const int2 screen_b   = camera.WorldToScreen(HexAxialToWorld(axial_b));
-                (void)SDL_SetRenderDrawColor(window_state.renderer, color.r, color.g, color.b, color.a);
-                (void)SDL_RenderLine(window_state.renderer, screen_a.x, screen_a.y, screen_b.x, screen_b.y);
+                const int2 screen_b = camera.WorldToScreen(HexAxialToWorld(axial_b));
+                const float2 screen_delta = float2(screen_b) - float2(screen_a);
+                const float screen_length = std::hypot(screen_delta.x, screen_delta.y);
+                if (screen_length < 1.0F) { return; }
+                const float2 screen_perpendicular = float2(-screen_delta.y, screen_delta.x) / float2(screen_length);
+                constexpr float oob_line_width_factor = 0.02F;
+                const float half_width = camera.scale * oob_line_width_factor;
+                if (half_width < 0.5F) { return; }
+                const float2 screen_fa = float2(screen_a);
+                const float2 screen_fb = float2(screen_b);
+
+                auto render_quad = [&](const Color color, const float half_w) {
+                    const float2 screen_extrude = screen_perpendicular * float2(half_w);
+                    const ColorF color_f(color);
+                    const Array<Vertex, 4> quad_verts { {
+                        { screen_fa + screen_extrude, color_f },
+                        { screen_fb + screen_extrude, color_f },
+                        { screen_fb - screen_extrude, color_f },
+                        { screen_fa - screen_extrude, color_f },
+                    } };
+                    constexpr Array<i32, 6> QUAD_INDICES = { 0, 1, 2, 0, 2, 3 };
+                    (void)SDL_RenderGeometry(window_state.renderer, nullptr, reinterpret_cast<const SDL_Vertex*>(quad_verts.data()), quad_verts.size(), QUAD_INDICES.data(), QUAD_INDICES.size()); // NOLINT(*-pro-type-reinterpret-cast)
+                };
+
+                render_quad(colors::BLACK.WithAlpha(0.7F), half_width * 3.0F);
+                render_quad(color, half_width);
             };
             for (const Handle<Unit>& unit_handle : hex_state.pseudo_states.unit_selection.value().unit_handles) {
                 const int2 axial_unit = hex_state.units[unit_handle].axial;
 
-                for (const Handle<Unit>& child : hex_state.units_oob[unit_handle]) {
-                    draw_line(colors::GREEN, axial_unit, hex_state.units[child].axial);
+                for (const Handle<Unit>& unit_handle_child : hex_state.units_oob[unit_handle]) {
+                    const int2 axial_child = hex_state.units[unit_handle_child].axial;
+                    draw_line(colors::LIGHT_SKY_BLUE, axial_unit, axial_child);
                 }
 
                 const HandleOptional<Unit>& parent = hex_state.units[unit_handle].parent;
                 if (parent.IsValid()) {
                     const int2 axial_parent = hex_state.units[parent.GetHandle()].axial;
-                    draw_line(colors::ORANGE, axial_unit, axial_parent);
-                    for (const Handle<Unit>& sibling : hex_state.units_oob[parent.GetHandle()]) {
-                        draw_line(colors::YELLOW, axial_parent, hex_state.units[sibling].axial);
+                    draw_line(colors::RED, axial_unit, axial_parent);
+                    for (const Handle<Unit>& unit_handle_sibling : hex_state.units_oob[parent.GetHandle()]) {
+                        if (unit_handle_sibling == unit_handle) { continue; }
+                        const int2 axial_sibling = hex_state.units[unit_handle_sibling].axial;
+                        draw_line(colors::YELLOW, axial_parent, axial_sibling);
                     }
                 }
             }
         }
-
 
         // render units
         hex_state.counters.Clear();
@@ -312,10 +336,11 @@ struct HexSystem {
                     const Color movement_color = cost_and_axial.cost > units_selected_movement ? colors::BLACK : colors::RUBY_RED;
                     HexAppend(hex_state.verts, camera.scale * 0.25F, screen, movement_color);
                 }
-                (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts.data.data(), static_cast<i32>(hex_state.verts.size()), nullptr, 0);
+                (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
                 hex_state.verts.clear();
 
                 const f32 pt = camera.scale * 0.3F;
+                if (static_cast<FontSize>(pt) < FONT_MIN_SIZE) { break; }
                 const Font& font_movement = font_collection.GetFontBold(static_cast<FontSizes>(pt));
                 TTF_SetFontWrapAlignment(font_movement, TTF_HORIZONTAL_ALIGN_CENTER);
                 for (AxialAndCost cost_and_axial : axial_path) {
@@ -327,7 +352,7 @@ struct HexSystem {
                     const String string_distance = std::format("{}", cost_and_axial.cost);
                     (void)TTF_SetTextWrapWidth(label, static_cast<i32>(camera.scale));
                     (void)TTF_SetTextFont(label, font_movement);
-                    (void)TTF_SetTextString(label, string_distance.c_str(), string_distance.size());
+                    label.SetText(string_distance);
                     (void)TTF_DrawRendererText(label, screen_f.x - camera.scale * 0.5F, screen_f.y - pt * 0.5F);
                 }
                 break;
@@ -409,7 +434,8 @@ struct HexSystem {
             case PlayerAction::PLAYER_ACTION_ATTACK_HOVER:
                 const b8 within_range = std::ranges::all_of(hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view(), [&](const Unit& unit) -> b8 { return HexAxialDistance(unit.axial, hex_state.pseudo_states.axial_hover.value()) == 1; });
                 const b8 attacker_is_hq = std::ranges::contains(hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view(), UnitIcon::ICON_HQ, &Unit::icon);
-                const b8 can_attack = hex_state.pseudo_states.unit_selection->move_min > MOVE_COST_ATTACK && within_range && !attacker_is_hq;
+                const b8 attacker_has_movement = hex_state.pseudo_states.unit_selection->move_min > MOVE_COST_ATTACK;
+                const b8 can_attack = attacker_has_movement && within_range && !attacker_is_hq;
 
                 const float2 world = HexAxialToWorld(hex_state.pseudo_states.axial_hover.value());
                 const int2 screen = camera.WorldToScreen(world);
@@ -417,9 +443,34 @@ struct HexSystem {
                 const Color color_inner = can_attack ? colors::RUBY_RED : colors::BLACK;
                 HexAppend(hex_state.verts, camera.scale * 0.25F, screen, colors::GRAY);
                 HexAppend(hex_state.verts, camera.scale * 0.20F, screen, color_inner);
+
                 if (can_attack) { HexAppend(hex_state.verts, camera.scale * 0.10F, screen, colors::DARK_GREEN); }
-                (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts.data.data(), static_cast<i32>(hex_state.verts.size()), nullptr, 0);
+                (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
                 hex_state.verts.clear();
+
+                const f32 pt = camera.scale * 0.1F;
+                if (static_cast<FontSize>(pt) < FONT_MIN_SIZE) { break; }
+                const Font& font_attack = font_collection.GetFontBold(static_cast<FontSizes>(pt));
+                TTF_SetFontWrapAlignment(font_attack, TTF_HORIZONTAL_ALIGN_CENTER);
+                const Label& label = hex_state.label_pool.Get();
+                (void)TTF_SetTextWrapWidth(label, static_cast<i32>(camera.scale));
+                (void)TTF_SetTextFont(label, font_attack);
+
+                if (can_attack) {
+                    auto units_attacker = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
+                    auto units_defender = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()] | hex_state.units.handle_to_view();
+                    const u32 dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
+                    const u32 def = std::ranges::fold_left(units_defender | std::views::transform(&Unit::def), 0U, std::plus { });
+                    label.SetText(std::format("{}->{}", dmg, def));
+                } else if (attacker_is_hq) {
+                    label.SetText("hq cannot attack");
+                } else if (!within_range) {
+                    label.SetText("can only attack adjecent units");
+                } else if (!attacker_has_movement) {
+                    label.SetText(std::format("no movement\n{} < {}", hex_state.pseudo_states.unit_selection->move_min, MOVE_COST_ATTACK));
+                }
+                const float2 screen_f = static_cast<float2>(screen);
+                (void)TTF_DrawRendererText(label, screen_f.x - camera.scale * 0.5F, screen_f.y - pt * 0.5F);
 
                 break;
         }

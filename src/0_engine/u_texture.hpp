@@ -71,6 +71,7 @@ struct ColorF {
     constexpr ColorF(f32 r, f32 g, f32 b, f32 a = 1.0F) : r(r), g(g), b(b), a(a) { }
     [[nodiscard]] constexpr operator SDL_FColor() const { return *reinterpret_cast<const SDL_FColor*>(this); }
 };
+static_assert(sizeof(ColorF) == sizeof(SDL_FColor));
 
 struct Color {
     u8 r;
@@ -120,7 +121,17 @@ struct Color {
     [[nodiscard]] constexpr operator SDL_Color() const { return *reinterpret_cast<const SDL_Color*>(this); }
     constexpr static f32 TO_FCOLOR = 1.0F / 255.0F;
     [[nodiscard]] constexpr operator ColorF() const { return ColorF { r * TO_FCOLOR, g * TO_FCOLOR, b * TO_FCOLOR, a * TO_FCOLOR }; }
-    [[nodiscard]] constexpr Color WithAlpha(const u8 a) const { return Color { r, g, b, a }; }
     [[nodiscard]] constexpr Color WithAlpha(const f32 a) const { return Color { r, g, b, static_cast<u8>(a * 255.0F) }; }
 };
+static_assert(sizeof(Color) == sizeof(SDL_Color));
+
+struct Vertex {
+    float2 position;
+    ColorF color;
+    float2 coordinate { };
+    constexpr Vertex() = default;
+    constexpr Vertex(const float2 position, const ColorF color) : position { position }, color { color } { }
+    [[nodiscard]] constexpr operator SDL_Vertex() const { return *reinterpret_cast<const SDL_Vertex*>(this); }
+};
+static_assert(sizeof(Vertex) == sizeof(SDL_Vertex));
 } // namespace pce

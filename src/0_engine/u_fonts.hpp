@@ -9,6 +9,7 @@
 namespace pce::ui {
 using FontSize = u16;
 enum class FontSizes : FontSize { body = 16U, h1 = 34U, h2 = 30U, h3 = 24U, h4 = 20U, h5 = 18U, small = 14U, tiny = 12U, title = 52U, massive = 72U };
+constexpr FontSize FONT_MIN_SIZE = 5;
 class Font : LogLifetimeWithCount<Font> {
     struct CloseFont {
         void operator()(TTF_Font* font) const {

@@ -283,6 +283,7 @@ public:
     [[nodiscard]] constexpr b8 HasKey(const K& key) const { return std::ranges::find(keys, key) != keys.end(); }
     [[nodiscard]] constexpr V& operator[](const K& key) {
         const u32 pos = keys.IndexOf(key);
+        STL_ASSERT(pos < values.size(), "FlatMap key not found");
         return values[pos];
     }
 

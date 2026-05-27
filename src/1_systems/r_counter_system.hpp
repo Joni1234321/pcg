@@ -14,7 +14,6 @@
 #include "r_hex_system.hpp"
 
 namespace pce {
-
 enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHELON_BATTALION, ECHELON_REGIMENT, ECHELON_BRIGADE, ECHELON_DIVISION, ECHELON_CORPS, ECHELON_ARMY };
 
 [[nodiscard]] constexpr String EchelonToString(const Echelon echelon) {
@@ -67,9 +66,8 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
 
     const ui::FontSize pt_normal = static_cast<ui::FontSize>(counter_size.y * 0.25F);
     const ui::FontSize pt_small = static_cast<ui::FontSize>(counter_size.y * 0.15F);
-    constexpr ui::FontSize FONT_MIN_SIZE = 5;
-    const Optional<std::reference_wrapper<const ui::Font>> font_normal_opt = pt_normal < FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_normal));
-    const Optional<std::reference_wrapper<const ui::Font>> font_small_opt = pt_small < FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_small));
+    const Optional<std::reference_wrapper<const ui::Font>> font_normal_opt = pt_normal < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_normal));
+    const Optional<std::reference_wrapper<const ui::Font>> font_small_opt = pt_small < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_small));
 
     for (const CounterStack& counter : counters) {
         const float2 world = HexAxialToWorld(counter.axial);

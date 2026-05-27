@@ -1,6 +1,5 @@
 #pragma once
 #include <algorithm>
-#include <queue>
 #include <ranges>
 
 #include "0_engine/u_collections.hpp"
@@ -8,7 +7,6 @@
 #include "0_engine/u_types.hpp"
 #include "1_systems/r_counter_system.hpp"
 #include "1_systems/r_hex_system.hpp"
-#include "SDL3/SDL_render.h"
 
 namespace pcg {
 using namespace pce;
@@ -81,7 +79,7 @@ struct HexState {
     // cache drawing
     Pool<CounterStack> counters;
     Pool<Label> label_pool;
-    List<SDL_Vertex> verts { };
+    List<Vertex> verts { };
 };
 [[nodiscard]] constexpr TerrainType FloatToTerrain(const f32 terrain) {
     if (terrain < 0.25F) { return TerrainType::TERRAIN_DEEP_OCEAN; }
@@ -192,6 +190,9 @@ inline void GenerateTerritory(HexState& hex_state) {
     }
 }
 
+inline b8 SDL_RenderGeometry(SDL_Renderer* renderer, SDL_Texture* texture, const Span<Vertex> vertices, const Span<i32> indices) { return SDL_RenderGeometry(renderer, texture, reinterpret_cast<const SDL_Vertex*>(vertices.data()), vertices.size(), indices.data(), indices.size()); }
+inline b8 SDL_RenderGeometry(SDL_Renderer* renderer, SDL_Texture* texture, const Span<Vertex> vertices) { return SDL_RenderGeometry(renderer, texture, reinterpret_cast<const SDL_Vertex*>(vertices.data()), vertices.size(), nullptr, 0); }
+
 // ai genrated border
 //
 // Pixel-perfect rationale:
@@ -237,18 +238,18 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
             // same radial position the tile uses (radius BORDER_INNER_RADIUS).
             // Same rounding policy as HexAppend -> the strip's inner edge lies
             // exactly on the tile's outer edge.
-            const SDL_FPoint outer_a { cx + ang_a.x * sc, cy + ang_a.y * sc };
-            const SDL_FPoint outer_b { cx + ang_b.x * sc, cy + ang_b.y * sc };
-            const SDL_FPoint inner_a { cx + ang_a.x * sc * inner_r, cy + ang_a.y * sc * inner_r };
-            const SDL_FPoint inner_b { cx + ang_b.x * sc * inner_r, cy + ang_b.y * sc * inner_r };
+            const float2 outer_a { cx + ang_a.x * sc, cy + ang_a.y * sc };
+            const float2 outer_b { cx + ang_b.x * sc, cy + ang_b.y * sc };
+            const float2 inner_a { cx + ang_a.x * sc * inner_r, cy + ang_a.y * sc * inner_r };
+            const float2 inner_b { cx + ang_b.x * sc * inner_r, cy + ang_b.y * sc * inner_r };
             // strip tri 1: inner_a, inner_b, outer_b
-            hex_state.verts.EmplaceBack(inner_a, col, SDL_FPoint { });
-            hex_state.verts.EmplaceBack(inner_b, col, SDL_FPoint { });
-            hex_state.verts.EmplaceBack(outer_b, col, SDL_FPoint { });
+            hex_state.verts.EmplaceBack(inner_a, col);
+            hex_state.verts.EmplaceBack(inner_b, col);
+            hex_state.verts.EmplaceBack(outer_b, col);
             // strip tri 2: inner_a, outer_b, outer_a
-            hex_state.verts.EmplaceBack(inner_a, col, SDL_FPoint { });
-            hex_state.verts.EmplaceBack(outer_b, col, SDL_FPoint { });
-            hex_state.verts.EmplaceBack(outer_a, col, SDL_FPoint { });
+            hex_state.verts.EmplaceBack(inner_a, col);
+            hex_state.verts.EmplaceBack(outer_b, col);
+            hex_state.verts.EmplaceBack(outer_a, col);
 
             if ((edge_index % BORDER_TEETH_EVERY) == 0U) {
                 // Shared anchor: the lattice-edge midpoint rounded once in
@@ -276,8 +277,8 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
                     const f32 uy = ey / elen;
                     f32 half = BORDER_TEETH_HALF * sc;
                     if (half > elen * 0.5F) { half = elen * 0.5F; } // clamp so wide teeth never overshoot the edge
-                    const SDL_FPoint base_a { base_mid.x - ux * half, base_mid.y - uy * half };
-                    const SDL_FPoint base_b { base_mid.x + ux * half, base_mid.y + uy * half };
+                    const float2 base_a { base_mid.x - ux * half, base_mid.y - uy * half };
+                    const float2 base_b { base_mid.x + ux * half, base_mid.y + uy * half };
                     // Inward direction in screen = from edge-midpoint towards
                     // own centre, derived in the same coord frame as the strip.
                     float2 inward { -(ang_a.x + ang_b.x) * 0.5F, -(ang_a.y + ang_b.y) * 0.5F };
@@ -285,13 +286,13 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
                     if (ilen > 0.0001F) {
                         inward.x /= ilen;
                         inward.y /= ilen;
-                        const SDL_FPoint apex {
+                        const float2 apex {
                             base_mid.x + inward.x * BORDER_TEETH_DEPTH * sc,
                             base_mid.y + inward.y * BORDER_TEETH_DEPTH * sc,
                         };
-                        hex_state.verts.EmplaceBack(base_a, col, SDL_FPoint { });
-                        hex_state.verts.EmplaceBack(base_b, col, SDL_FPoint { });
-                        hex_state.verts.EmplaceBack(apex, col, SDL_FPoint { });
+                        hex_state.verts.EmplaceBack(base_a, col);
+                        hex_state.verts.EmplaceBack(base_b, col);
+                        hex_state.verts.EmplaceBack(apex, col);
                     }
                 }
             }

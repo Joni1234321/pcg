@@ -95,17 +95,14 @@ template <class T> struct HexList {
     constexpr List<T>::const_iterator cend() const { return data.cend(); }
 };
 
-inline void HexAppend(List<SDL_Vertex>& vertecies, const f32 hex_size, const int2 hex_screen, const ColorF hex_color, const Optional<ColorF> hex_color_inner = std::nullopt) {
-    SDL_FPoint center { .x = static_cast<f32>(hex_screen.x), .y = static_cast<f32>(hex_screen.y) };
-    Array<SDL_FPoint, HEX_CORNERS> points { };
-    for (u32 i = 0; i < HEX_CORNERS; i++) {
-        const float2 vertex = float2 { hex_screen } + HEX_ANGLE[i] * float2 { hex_size };
-        points[i] = SDL_FPoint { .x = vertex.x, .y = vertex.y };
-    }
+inline void HexAppend(List<Vertex>& vertecies, const f32 hex_size, const int2 hex_screen, const ColorF hex_color, const Optional<ColorF> hex_color_inner = std::nullopt) {
+    float2 center { hex_screen };
+    Array<float2, HEX_CORNERS> points { };
+    for (u32 i = 0; i < HEX_CORNERS; i++) { points[i] = center + HEX_ANGLE[i] * float2 { hex_size }; }
     for (u32 i = 0; i < HEX_CORNERS; i++) {
         vertecies.EmplaceBack(center, hex_color_inner.value_or(colors::ColorMul(hex_color, 1.2F)));
-        vertecies.EmplaceBack(points[i], hex_color, SDL_FPoint { });
-        vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color, SDL_FPoint { });
+        vertecies.EmplaceBack(points[i], hex_color);
+        vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color);
     }
 }
 } // namespace pce
