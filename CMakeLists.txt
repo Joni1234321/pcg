@@ -61,6 +61,8 @@ target_link_libraries(pcg
 
 target_include_directories(pcg PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+target_compile_options(pcg PRIVATE -Wno-unsequenced)
+
 if (SET_WARNINGS_ENABLED)
 	target_compile_options(pcg PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif ()

@@ -196,9 +196,7 @@ struct HexSystem {
             const int2 axial = hex_state.hex_map.IndexToAxial(i);
             const float2 world = HexAxialToWorld(axial);
             Color color = TerrainToColorScheme(hex.terrain);
-            if (hex.owner.contested) { color = color.Mul(0.90F); }
             HexAppend(hex_state.verts, camera.scale * 0.90F, camera.WorldToScreen(world), color);
-
             if (hex.owner.contested) { HexAppend(hex_state.verts, camera.scale * 0.70F, camera.WorldToScreen(world), color.Mul(0.80F)); }
         }
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts.data.data(), static_cast<i32>(hex_state.verts.size()), nullptr, 0);
@@ -207,6 +205,34 @@ struct HexSystem {
         AppendCountryBorders(hex_state, camera);
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts.data.data(), static_cast<i32>(hex_state.verts.size()), nullptr, 0);
         hex_state.verts.clear();
+
+
+        // render hq
+        if (hex_state.pseudo_states.unit_selection) {
+            auto draw_line = [&](const Color color, const int2 axial_a, const int2 axial_b) -> void {
+                const int2 screen_a = camera.WorldToScreen(HexAxialToWorld(axial_a));
+                const int2 screen_b   = camera.WorldToScreen(HexAxialToWorld(axial_b));
+                (void)SDL_SetRenderDrawColor(window_state.renderer, color.r, color.g, color.b, color.a);
+                (void)SDL_RenderLine(window_state.renderer, screen_a.x, screen_a.y, screen_b.x, screen_b.y);
+            };
+            for (const Handle<Unit>& unit_handle : hex_state.pseudo_states.unit_selection.value().unit_handles) {
+                const int2 axial_unit = hex_state.units[unit_handle].axial;
+
+                for (const Handle<Unit>& child : hex_state.units_oob[unit_handle]) {
+                    draw_line(colors::GREEN, axial_unit, hex_state.units[child].axial);
+                }
+
+                const HandleOptional<Unit>& parent = hex_state.units[unit_handle].parent;
+                if (parent.IsValid()) {
+                    const int2 axial_parent = hex_state.units[parent.GetHandle()].axial;
+                    draw_line(colors::ORANGE, axial_unit, axial_parent);
+                    for (const Handle<Unit>& sibling : hex_state.units_oob[parent.GetHandle()]) {
+                        draw_line(colors::YELLOW, axial_parent, hex_state.units[sibling].axial);
+                    }
+                }
+            }
+        }
+
 
         // render units
         hex_state.counters.Clear();
@@ -400,48 +426,45 @@ struct HexSystem {
     }
 };
 
-
-const char* NumberToOrdinal (u32 number) {
+const char* NumberToOrdinal(u32 number) {
     switch (number % 100) {
         case 11:
         case 12:
         case 13: return "th";
         default:
             switch (number % 10) {
-            case 1: return "st";
-            case 2: return "nd";
-            case 3: return "rd";
-            default: return "th";
-        }
+                case 1: return "st";
+                case 2: return "nd";
+                case 3: return "rd";
+                default: return "th";
+            }
     }
 }
 
-void HexStateUpdateUnitColorsAndName (HexState& hex_state) {
+void HexStateUpdateOOB(HexState& hex_state) {
     f32 hue_next = 0.0F;
     u32 number_army = 1;
     u32 number_corps = 15;
     u32 number_div = 100;
 
-    // generate chain of command. roots are stored as optional
-    UnorderedMap<Handle<Unit>, List<Handle<Unit>>> chain_of_command;
+    // generate oob.
+    hex_state.units_oob.clear();
     for (u32 i = 0; i < hex_state.units.size(); i++) {
         const Handle<Unit> unit_handle = hex_state.units.IndexToHandle(i);
         const Unit& unit = hex_state.units[unit_handle];
-        chain_of_command[unit.parent.GetHandle()].EmplaceBack(unit_handle);
+        hex_state.units_oob[unit.parent.GetHandle()].EmplaceBack(unit_handle);
     }
 
+    // create colors and names
     auto get_unit_color = [&](const Unit& unit) -> Color {
-        if (unit.icon != UnitIcon::ICON_HQ && unit.parent.IsValid()) {
-            return hex_state.units[unit.parent.GetHandle()].color;
-        }
+        if (unit.icon != UnitIcon::ICON_HQ && unit.parent.IsValid()) { return hex_state.units[unit.parent.GetHandle()].color; }
         const Color color = Color::FromHsl(hue_next, 0.5F, 0.5F);
         hue_next = std::fmod(hue_next + 37.0F, 360.0F);
         return color;
     };
     auto get_unit_name = [&](const Unit& unit, u32 i) -> String {
         switch (unit.echelon) {
-            case Echelon::ECHELON_BATTALION:
-                return  std::format("{}/{}", i + 1, unit.parent.IsValid() ? String(hex_state.units[unit.parent.GetHandle()].name) : "dtc");
+            case Echelon::ECHELON_BATTALION: return std::format("{}/{}", i + 1, unit.parent.IsValid() ? String(hex_state.units[unit.parent.GetHandle()].name) : "dtc");
             case Echelon::ECHELON_REGIMENT: {
                 u32 regiment_number = 0;
                 switch (unit.tag) {
@@ -449,24 +472,20 @@ void HexStateUpdateUnitColorsAndName (HexState& hex_state) {
                     case CountryTag::TAG_SOV: regiment_number = Rand(600U, 900U); break;
                     default: regiment_number = Rand(200U, 999U); break;
                 }
-                return std::format("{}{}", regiment_number, NumberToOrdinal(regiment_number));
+                return std::format("{}{} Rgt", regiment_number, NumberToOrdinal(regiment_number));
             }
-            case Echelon::ECHELON_DIVISION:
-                return std::format("{}{} Div", ++number_div, NumberToOrdinal(number_div));
-            case Echelon::ECHELON_CORPS:
-                return std::format("{}{} Corps", ++number_corps, NumberToOrdinal(number_corps));
-            case Echelon::ECHELON_ARMY:
-                return std::format("{}{} Army", ++number_army, NumberToOrdinal(number_army));
-            default:
-                return "fail";
+            case Echelon::ECHELON_DIVISION: return std::format("{}{} Div", ++number_div, NumberToOrdinal(number_div));
+            case Echelon::ECHELON_CORPS: return std::format("{}{} Corps", ++number_corps, NumberToOrdinal(number_corps));
+            case Echelon::ECHELON_ARMY: return std::format("{}{} Army", ++number_army, NumberToOrdinal(number_army));
+            default: return "fail";
         }
     };
 
     Queue<Handle<Unit>> queue;
-    queue.EmplaceBack(HandleOptional<Unit>{ std::nullopt }.GetHandle());
+    queue.EmplaceBack(HandleOptional<Unit> { std::nullopt }.GetHandle());
 
     while (!queue.empty()) {
-        List<Handle<Unit>> unit_handles_children = chain_of_command[queue.Front()];
+        List<Handle<Unit>> unit_handles_children = hex_state.units_oob[queue.Front()];
         queue.Pop();
         for (u32 i = 0; i < unit_handles_children.size(); i++) {
             Handle<Unit> unit_handle_child = unit_handles_children[i];
@@ -517,7 +536,7 @@ void arcade::RunHex() {
     (void)hex_state.units.EmplaceBack(Unit { .parent = usa_kps, .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_REGIMENT, .icon = UnitIcon::ICON_INF, .axial = { 17, 3 }, .dmg = 6, .move = 7, .def = 2 });
     (void)hex_state.units.EmplaceBack(Unit { .parent = usa_kps, .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK, .axial = { 17, 4 }, .dmg = 7, .move = 7, .def = 1 });
 
-    HexStateUpdateUnitColorsAndName(hex_state);
+    HexStateUpdateOOB(hex_state);
 
     for (u32 i = 0; i < hex_state.units.size(); i++) {
         Handle<Unit> unit_handle = hex_state.units.IndexToHandle(i);

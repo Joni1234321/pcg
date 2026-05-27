@@ -167,10 +167,10 @@ template <class T> struct HandleOptional {
     u32 id;
 };
 template <class T> struct std::hash<Handle<T>> {
-    usize operator()(const Handle<T>& handle) const noexcept { return std::hash<u32> {}(handle.id); }
+    usize operator()(const Handle<T>& handle) const noexcept { return std::hash<u32> { }(handle.id); }
 };
 template <class T> struct std::hash<HandleOptional<T>> {
-    usize operator()(const HandleOptional<T>& handle_optional) const noexcept { return std::hash<u32> {}(handle_optional.id); }
+    usize operator()(const HandleOptional<T>& handle_optional) const noexcept { return std::hash<u32> { }(handle_optional.id); }
 };
 
 inline const Entity Entity::NONE = Entity { };

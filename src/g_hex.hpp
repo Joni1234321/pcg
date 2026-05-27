@@ -72,8 +72,11 @@ struct HexState {
     // cache logic
     CountryTag player_tag;
     PlayerAction player_action;
-    UnorderedMap<int2, List<Handle<Unit>>> units_by_axial;
     PseudoStates pseudo_states;
+    UnorderedMap<int2, List<Handle<Unit>>> units_by_axial;
+
+    // cache oob
+    UnorderedMap<Handle<Unit>, List<Handle<Unit>>> units_oob; // roots are stored as optional
 
     // cache drawing
     Pool<CounterStack> counters;
