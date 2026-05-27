@@ -196,7 +196,7 @@ struct HexSystem {
             const int2 axial = hex_state.hex_map.IndexToAxial(i);
             const float2 world = HexAxialToWorld(axial);
             Color color = TerrainToColorScheme(hex.terrain);
-            VertHexAppend(hex_state.verts, camera.scale * 0.90F, camera.WorldToScreen(world), color);
+            VertHexAppend(hex_state.verts, camera.scale * 0.9F, camera.WorldToScreen(world), color);
             if (hex.owner.contested) { VertHexAppend(hex_state.verts, camera.scale * 0.70F, camera.WorldToScreen(world), color.Mul(0.80F)); }
         }
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);

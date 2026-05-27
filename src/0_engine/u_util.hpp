@@ -123,6 +123,9 @@ template <typename T> [[nodiscard]] constexpr Vec4<T> Lerp(Vec4<T> a, Vec4<T> b,
 template <typename T> [[nodiscard]] constexpr f32 Hypot(Vec2<T> v) { return Hypot(v.x, v.y); }
 template <typename T> [[nodiscard]] constexpr f32 Hypot(Vec3<T> v) { return Hypot(v.x, v.y, v.z); }
 template <typename T> [[nodiscard]] constexpr f32 Hypot(Vec4<T> v) { return Hypot(v.x, v.y, v.z, v.w); }
+template <typename T> [[nodiscard]] constexpr f32 LengthSq(Vec2<T> v) { return v.x * v.x + v.y * v.y; }
+template <typename T> [[nodiscard]] constexpr f32 LengthSq(Vec3<T> v) { return v.x * v.x + v.y * v.y + v.z * v.z; }
+template <typename T> [[nodiscard]] constexpr f32 LengthSq(Vec4<T> v) { return v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w; }
 template <typename T> [[nodiscard]] constexpr f32 CMin(Vec2<T> v) { return Min(v.x, v.y); }
 template <typename T> [[nodiscard]] constexpr f32 CMin(Vec3<T> v) { return Min(Min(v.x, v.y), v.z); }
 template <typename T> [[nodiscard]] constexpr f32 CMin(Vec4<T> v) { return Min(Min(v.x, v.y), Min(v.z, v.w)); }

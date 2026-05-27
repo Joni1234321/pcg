@@ -220,10 +220,8 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
         if (hex.owner.tag == CountryTag::TAG_NONE) { continue; }
         const int2 axial = hex_state.hex_map.IndexToAxial(i);
         const float2 own_center_w = HexAxialToWorld(axial);
-        const float2 own_center_screen = camera.WorldToScreen(own_center_w);
+        const float2 center = camera.WorldToScreen(own_center_w);
         const ColorF col = static_cast<ColorF>(CountryTagToColor(hex.owner.tag));
-        const f32 cx = static_cast<f32>(own_center_screen.x);
-        const f32 cy = static_cast<f32>(own_center_screen.y);
         u32 edge_index = 0U;
         for (u32 s = 0; s < HEX_CORNERS; s++) {
             const int2 nax = axial + HEX_AXIAL_NEIGHBOURS[s];
@@ -234,14 +232,10 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
             const u32 j = (side + 1U) % HEX_CORNERS;
             const float2 ang_a = HEX_ANGLE[side];
             const float2 ang_b = HEX_ANGLE[j];
-            // Outer ring at the lattice corner (radius 1.0), inner ring at the
-            // same radial position the tile uses (radius BORDER_INNER_RADIUS).
-            // Same rounding policy as HexAppend -> the strip's inner edge lies
-            // exactly on the tile's outer edge.
-            const float2 outer_a { cx + ang_a.x * sc, cy + ang_a.y * sc };
-            const float2 outer_b { cx + ang_b.x * sc, cy + ang_b.y * sc };
-            const float2 inner_a { cx + ang_a.x * sc * inner_r, cy + ang_a.y * sc * inner_r };
-            const float2 inner_b { cx + ang_b.x * sc * inner_r, cy + ang_b.y * sc * inner_r };
+            const float2 outer_a = center + ang_a * float2(sc);
+            const float2 outer_b = center + ang_b * float2(sc);
+            const float2 inner_a = center + ang_a * float2(sc * inner_r);
+            const float2 inner_b = center + ang_b * float2(sc * inner_r);
             // strip tri 1: inner_a, inner_b, outer_b
             hex_state.verts.EmplaceBack(inner_a, col);
             hex_state.verts.EmplaceBack(inner_b, col);
@@ -252,44 +246,28 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
             hex_state.verts.EmplaceBack(outer_a, col);
 
             if ((edge_index % BORDER_TEETH_EVERY) == 0U) {
-                // Shared anchor: the lattice-edge midpoint rounded once in
-                // world space. Identical for both countries that share this
-                // edge -> red and blue teeth project onto the same screen
-                // point and end up facing each other.
-                const float2 emid_w {
-                    own_center_w.x + (ang_a.x + ang_b.x) * 0.5F,
-                    own_center_w.y + (ang_a.y + ang_b.y) * 0.5F,
-                };
-                const float2 anchor_int = camera.WorldToScreen(emid_w);
-                const SDL_FPoint anchor { static_cast<f32>(anchor_int.x), static_cast<f32>(anchor_int.y) };
-                // Project the shared anchor onto this country's inner edge to
-                // get the tooth base midpoint.
-                const f32 ex = inner_b.x - inner_a.x;
-                const f32 ey = inner_b.y - inner_a.y;
-                const f32 elen2 = ex * ex + ey * ey;
+                // Shared anchor: lattice-edge midpoint in world space -> both countries
+                // project onto the same screen point so their teeth face each other.
+                const float2 anchor = camera.WorldToScreen(own_center_w + (ang_a + ang_b) * float2(0.5F));
+                // Project anchor onto this country's inner edge to get the tooth base midpoint.
+                const float2 edge = inner_b - inner_a;
+                const f32 elen2 = math::LengthSq(edge);
                 if (elen2 > 0.0001F) {
-                    f32 t = ((anchor.x - inner_a.x) * ex + (anchor.y - inner_a.y) * ey) / elen2;
-                    if (t < 0.0F) { t = 0.0F; }
-                    if (t > 1.0F) { t = 1.0F; }
-                    const SDL_FPoint base_mid { inner_a.x + ex * t, inner_a.y + ey * t };
-                    const f32 elen = std::sqrt(elen2);
-                    const f32 ux = ex / elen;
-                    const f32 uy = ey / elen;
+                    const float2 to_anchor = anchor - inner_a;
+                    const f32 t = math::Clamp((to_anchor.x * edge.x + to_anchor.y * edge.y) / elen2, 0.0F, 1.0F);
+                    const float2 base_mid = inner_a + edge * float2(t);
+                    const f32 elen = math::Hypot(edge);
+                    const float2 u = edge * float2(1.0F / elen);
                     f32 half = BORDER_TEETH_HALF * sc;
                     if (half > elen * 0.5F) { half = elen * 0.5F; } // clamp so wide teeth never overshoot the edge
-                    const float2 base_a { base_mid.x - ux * half, base_mid.y - uy * half };
-                    const float2 base_b { base_mid.x + ux * half, base_mid.y + uy * half };
-                    // Inward direction in screen = from edge-midpoint towards
-                    // own centre, derived in the same coord frame as the strip.
-                    float2 inward { -(ang_a.x + ang_b.x) * 0.5F, -(ang_a.y + ang_b.y) * 0.5F };
-                    const f32 ilen = std::sqrt(inward.x * inward.x + inward.y * inward.y);
+                    const float2 base_a = base_mid - u * float2(half);
+                    const float2 base_b = base_mid + u * float2(half);
+                    // Inward: from edge-midpoint towards own centre.
+                    const float2 inward_raw = (ang_a + ang_b) * float2(-0.5F);
+                    const f32 ilen = math::Hypot(inward_raw);
                     if (ilen > 0.0001F) {
-                        inward.x /= ilen;
-                        inward.y /= ilen;
-                        const float2 apex {
-                            base_mid.x + inward.x * BORDER_TEETH_DEPTH * sc,
-                            base_mid.y + inward.y * BORDER_TEETH_DEPTH * sc,
-                        };
+                        const float2 inward = inward_raw * float2(1.0F / ilen);
+                        const float2 apex = base_mid + inward * float2(BORDER_TEETH_DEPTH * sc);
                         hex_state.verts.EmplaceBack(base_a, col);
                         hex_state.verts.EmplaceBack(base_b, col);
                         hex_state.verts.EmplaceBack(apex, col);
