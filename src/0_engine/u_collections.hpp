@@ -63,6 +63,7 @@ struct String {
     constexpr String(const char character, const u32 count) : data(count, character, std::allocator<char>()) { } // ReSharper disable once CppNonExplicitConvertingConstructor
     constexpr String(std::string&& text) : data(std::move(text)) { }                                             // ReSharper disable once CppNonExplicitConvertingConstructor
     constexpr String(const char* text) : data(text, std::allocator<char>()) { }                                  // ReSharper disable once CppNonExplicitConvertingConstructor
+    constexpr explicit String(Span<const char> characters) : data(characters.data(), characters.size()) { }
     template <typename... Args> constexpr String(const char* text, Args... args) : data(std::vformat(text, std::make_format_args(args...))) { }
 
     operator const char*() const { return data.c_str(); }

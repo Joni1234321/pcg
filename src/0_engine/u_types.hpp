@@ -155,15 +155,22 @@ template <class> struct Handle {
     explicit constexpr Handle(const u32 id) : id(id) { }
     b8 operator==(const Handle&) const = default;
 };
-template <class T> struct OptionalHandle {
-    constexpr OptionalHandle() noexcept : id(U32_MAX) { }
-    constexpr OptionalHandle(std::nullopt_t) noexcept : id(U32_MAX) { }
-    constexpr explicit OptionalHandle(const u32 value) noexcept : id(value) { }
-    constexpr OptionalHandle(const Handle<T> handle) noexcept : id(handle.id) { }
+template <class T> struct HandleOptional {
+    constexpr HandleOptional() noexcept : id(U32_MAX) { }
+    constexpr HandleOptional(std::nullopt_t) noexcept : id(U32_MAX) { }
+    constexpr explicit HandleOptional(const u32 value) noexcept : id(value) { }
+    constexpr HandleOptional(const Handle<T> handle) noexcept : id(handle.id) { }
     [[nodiscard]] constexpr bool IsValid() const noexcept { return id != U32_MAX; }
     [[nodiscard]] constexpr Handle<T> GetHandle() const noexcept { return Handle<T> { id }; }
     constexpr void Reset() noexcept { id = U32_MAX; }
+    b8 operator==(const HandleOptional&) const = default;
     u32 id;
+};
+template <class T> struct std::hash<Handle<T>> {
+    usize operator()(const Handle<T>& handle) const noexcept { return std::hash<u32> {}(handle.id); }
+};
+template <class T> struct std::hash<HandleOptional<T>> {
+    usize operator()(const HandleOptional<T>& handle_optional) const noexcept { return std::hash<u32> {}(handle_optional.id); }
 };
 
 inline const Entity Entity::NONE = Entity { };
@@ -195,9 +202,9 @@ struct Archetype {
 };
 
 // clang-format off
-template <class T> constexpr void HashCombine(size_t& seed, const T& v) noexcept { seed ^= std::hash<T>{}(v) + 0x9e3779b9u + (seed << 6) + (seed >> 2); }
+template <class T> constexpr void HashCombine(usize& seed, const T& v) noexcept { seed ^= std::hash<T>{}(v) + 0x9e3779b9u + (seed << 6) + (seed >> 2); }
 
-template <class T> struct std::hash<Vec2<T>> { size_t operator()(const Vec2<T> v) const noexcept { size_t h = std::hash<T>{}(v.x); HashCombine(h, v.y); return h; } };
-template <class T> struct std::hash<Vec3<T>> { size_t operator()(const Vec3<T> v) const noexcept { size_t h = std::hash<T>{}(v.x); HashCombine(h, v.y); HashCombine(h, v.z); return h; } };
-template <class T> struct std::hash<Vec4<T>> { size_t operator()(const Vec4<T> v) const noexcept { size_t h = std::hash<T>{}(v.x); HashCombine(h, v.y); HashCombine(h, v.z); HashCombine(h, v.w); return h; } };
+template <class T> struct std::hash<Vec2<T>> { usize operator()(const Vec2<T> vec) const noexcept { size_t h = std::hash<T>{}(vec.x); HashCombine(h, vec.y); return h; } };
+template <class T> struct std::hash<Vec3<T>> { usize operator()(const Vec3<T> vec) const noexcept { size_t h = std::hash<T>{}(vec.x); HashCombine(h, vec.y); HashCombine(h, vec.z); return h; } };
+template <class T> struct std::hash<Vec4<T>> { usize operator()(const Vec4<T> vec) const noexcept { size_t h = std::hash<T>{}(vec.x); HashCombine(h, vec.y); HashCombine(h, vec.z); HashCombine(h, vec.w); return h; } };
 // clang-format on

@@ -34,8 +34,8 @@ struct Hex {
     HexOwner owner;
 };
 struct Unit {
-    OptionalHandle<Unit> parent;
-    char name[11] { };
+    HandleOptional<Unit> parent;
+    Array<char, 10> name { };
     CountryTag tag;
     Echelon echelon;
     UnitIcon icon;
@@ -148,6 +148,7 @@ struct HexState {
         case CountryTag::TAG_USA: return colors::WG_USA_BG;
         case CountryTag::TAG_NONE: return colors::WHITE;
     }
+    assert(false);
     __builtin_unreachable();
 }
 

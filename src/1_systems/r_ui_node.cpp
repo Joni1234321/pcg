@@ -106,7 +106,7 @@ NodeBuilder& NodeBuilder::Fill(const Color color) {
     return *this;
 }
 NodeBuilder& NodeBuilder::Texture(const Handle<pce::Texture> texture) {
-    style.texture = OptionalHandle { texture };
+    style.texture = HandleOptional { texture };
     return *this;
 }
 NodeBuilder& NodeBuilder::Padding(const u32 padding) {
@@ -179,9 +179,9 @@ Handle<Node> NodeBuilder::Build() const {
     return node_reference.node;
 }
 
-OptionalHandle<Node> NodeAt(const NodeTree& tree, const int2 screen_position) {
+HandleOptional<Node> NodeAt(const NodeTree& tree, const int2 screen_position) {
     const auto position_inside_node = [screen_position, &tree](const Handle<Node> child) -> b8 { return tree.styles[child].IsInside(screen_position); };
-    if (tree.Empty() || !tree.display || !tree.styles[tree.Root()].IsInside(screen_position)) { return OptionalHandle<Node> { }; }
+    if (tree.Empty() || !tree.display || !tree.styles[tree.Root()].IsInside(screen_position)) { return HandleOptional<Node> { }; }
     Handle<Node> node = tree.Root();
     while (true) {
         const List<Handle<Node>>& children = tree.children[node];
@@ -190,14 +190,14 @@ OptionalHandle<Node> NodeAt(const NodeTree& tree, const int2 screen_position) {
         node = *node_iterator;
     }
     while (tree.styles[node].background_color.a == 0U && !tree.styles[node].texture.IsValid()) {
-        if (node == tree.Root()) { return OptionalHandle<Node> { }; }
+        if (node == tree.Root()) { return HandleOptional<Node> { }; }
         node = tree.parents[node];
     }
-    return OptionalHandle<Node> { node.id };
+    return HandleOptional<Node> { node.id };
 }
 HoveredType NodeAt(const int2 mouse_position) {
     for (const auto [i, tree] : std::views::zip(std::views::iota(0u), globalData.Get<NodeTree>())) {
-        const OptionalHandle<Node> node = NodeAt(tree, mouse_position);
+        const HandleOptional<Node> node = NodeAt(tree, mouse_position);
         if (node.IsValid()) { return NodeReference { .tree = Handle { globalData.Get<NodeTree>().IndexToHandle(static_cast<u32>(i)) }, .node = node.GetHandle() }; }
     }
     return std::nullopt;

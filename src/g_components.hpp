@@ -55,7 +55,7 @@ enum class Good : u8 { Wood, Iron, Food, Steel, Coal };
 enum class QualityOfLifeStage : u8 { Dying, Surviving, Struggling, Secure, Comfortable, Lavish, Dictator, Extravagant };
 
 struct Data {
-    std::unordered_map<FarmType, Stats> farm_types;
+    pce::UnorderedMap<FarmType, Stats> farm_types;
 };
 
 struct BuildingUnderConstruction {

@@ -51,8 +51,8 @@ List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start
     List<AxialAndCost> axial_path;
     auto cmp = [](const AxialAndCost& a, const AxialAndCost& b) -> ::b8 { return a.cost > b.cost; };
     std::priority_queue<AxialAndCost, std::vector<AxialAndCost>, decltype(cmp)> frontier(cmp);
-    std::unordered_map<int2, int2> came_from;
-    std::unordered_map<int2, u32> cost_at_axial;
+    UnorderedMap<int2, int2> came_from;
+    UnorderedMap<int2, u32> cost_at_axial;
 
     frontier.push(AxialAndCost { .cost = 0, .axial = axial_start });
     came_from[axial_start] = axial_start;
@@ -135,7 +135,9 @@ void UnitToCounterAppend(HexState& hex_state) {
         counter.label_top.SetText(EchelonToString(unit_largest_echelon.echelon));
         counter.label_center.SetText(UnitIconToString(unit_largest_echelon.icon));
         counter.label_bottom.SetText(std::format("{}-{}-{}", dmg, def, move));
-        counter.label_vertical.SetText(unit_largest_echelon.name);
+        Span span(unit_largest_echelon.name);
+        String unit_name = String(span);
+        counter.label_vertical.SetText(unit_name);
     }
 }
 PlayerAction GetPlayerAction(const HexState& hex_state) {
@@ -397,6 +399,85 @@ struct HexSystem {
         }
     }
 };
+
+
+const char* NumberToOrdinal (u32 number) {
+    switch (number % 100) {
+        case 11:
+        case 12:
+        case 13: return "th";
+        default:
+            switch (number % 10) {
+            case 1: return "st";
+            case 2: return "nd";
+            case 3: return "rd";
+            default: return "th";
+        }
+    }
+}
+
+void HexStateUpdateUnitColorsAndName (HexState& hex_state) {
+    f32 hue_next = 0.0F;
+    u32 number_army = 1;
+    u32 number_corps = 15;
+    u32 number_div = 100;
+
+    // generate chain of command. roots are stored as optional
+    UnorderedMap<Handle<Unit>, List<Handle<Unit>>> chain_of_command;
+    for (u32 i = 0; i < hex_state.units.size(); i++) {
+        const Handle<Unit> unit_handle = hex_state.units.IndexToHandle(i);
+        const Unit& unit = hex_state.units[unit_handle];
+        chain_of_command[unit.parent.GetHandle()].EmplaceBack(unit_handle);
+    }
+
+    auto get_unit_color = [&](const Unit& unit) -> Color {
+        if (unit.icon != UnitIcon::ICON_HQ && unit.parent.IsValid()) {
+            return hex_state.units[unit.parent.GetHandle()].color;
+        }
+        const Color color = Color::FromHsl(hue_next, 0.5F, 0.5F);
+        hue_next = std::fmod(hue_next + 37.0F, 360.0F);
+        return color;
+    };
+    auto get_unit_name = [&](const Unit& unit, u32 i) -> String {
+        switch (unit.echelon) {
+            case Echelon::ECHELON_BATTALION:
+                return  std::format("{}/{}", i + 1, unit.parent.IsValid() ? String(hex_state.units[unit.parent.GetHandle()].name) : "dtc");
+            case Echelon::ECHELON_REGIMENT: {
+                u32 regiment_number = 0;
+                switch (unit.tag) {
+                    case CountryTag::TAG_GER: regiment_number = Rand(200U, 500U); break;
+                    case CountryTag::TAG_SOV: regiment_number = Rand(600U, 900U); break;
+                    default: regiment_number = Rand(200U, 999U); break;
+                }
+                return std::format("{}{}", regiment_number, NumberToOrdinal(regiment_number));
+            }
+            case Echelon::ECHELON_DIVISION:
+                return std::format("{}{} Div", ++number_div, NumberToOrdinal(number_div));
+            case Echelon::ECHELON_CORPS:
+                return std::format("{}{} Corps", ++number_corps, NumberToOrdinal(number_corps));
+            case Echelon::ECHELON_ARMY:
+                return std::format("{}{} Army", ++number_army, NumberToOrdinal(number_army));
+            default:
+                return "fail";
+        }
+    };
+
+    Queue<Handle<Unit>> queue;
+    queue.EmplaceBack(HandleOptional<Unit>{ std::nullopt }.GetHandle());
+
+    while (!queue.empty()) {
+        List<Handle<Unit>> unit_handles_children = chain_of_command[queue.Front()];
+        queue.Pop();
+        for (u32 i = 0; i < unit_handles_children.size(); i++) {
+            Handle<Unit> unit_handle_child = unit_handles_children[i];
+            queue.EmplaceBack(unit_handle_child);
+            Unit& unit_child = hex_state.units[unit_handle_child];
+            const String name = get_unit_name(unit_child, i);
+            std::memcpy(unit_child.name.data(), name.c_str(), math::Min(name.size(), static_cast<u32>(unit_child.name.size())));
+            unit_child.color = get_unit_color(unit_child);
+        }
+    }
+}
 } // namespace
 
 void arcade::RunHex() {
@@ -408,13 +489,6 @@ void arcade::RunHex() {
     CameraState& camera = Singleton::Get<CameraState>();
     camera.map_world_min = { 0.0F, 0.0F };
     camera.map_world_max = HexAxialToWorld(static_cast<int2>(hex_state.hex_map.map_size - uint2 { 1, 1 }));
-
-    f32 hue = 0.0F;
-    auto next_color = [&hue]() -> Color {
-        const Color c = Color::FromHsl(hue, 0.5F, 0.5F);
-        hue = std::fmod(hue + 37.0F, 360.0F);
-        return c;
-    };
 
     // GER: Heeresgruppe → I.Korps → Rgt → Bn
     const Handle<Unit> ger_hgr = hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_ARMY, .icon = UnitIcon::ICON_HQ, .axial = { 0, 2 }, .dmg = 0, .move = 50, .def = 0 });
@@ -443,34 +517,7 @@ void arcade::RunHex() {
     (void)hex_state.units.EmplaceBack(Unit { .parent = usa_kps, .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_REGIMENT, .icon = UnitIcon::ICON_INF, .axial = { 17, 3 }, .dmg = 6, .move = 7, .def = 2 });
     (void)hex_state.units.EmplaceBack(Unit { .parent = usa_kps, .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK, .axial = { 17, 4 }, .dmg = 7, .move = 7, .def = 1 });
 
-    // Assign color and name to all units
-    u32 battalion_number = 1;
-    for (Unit& unit : hex_state.units) {
-        unit.color = unit.icon == UnitIcon::ICON_HQ ? next_color() : hex_state.units[unit.parent.GetHandle()].color;
-        if (unit.icon == UnitIcon::ICON_HQ) { continue; }
-        String name { };
-        switch (unit.echelon) {
-            case Echelon::ECHELON_BATTALION: {
-                name = std::format("{}/{}", battalion_number++, unit.parent.IsValid() ? hex_state.units[unit.parent.GetHandle()].name : "...");
-                break;
-            }
-            case Echelon::ECHELON_REGIMENT: {
-                u32 number = 0;
-                switch (unit.tag) {
-                    case CountryTag::TAG_GER: number = Rand(200U, 500U); break;
-                    case CountryTag::TAG_SOV: number = Rand(600U, 900U); break;
-                    default: number = Rand(1U, 999U); break;
-                }
-                const u32 mod100 = number % 100;
-                const u32 mod10 = number % 10;
-                const char* suffix = mod100 >= 11 && mod100 <= 13 ? "th" : mod10 == 1 ? "st" : mod10 == 2 ? "nd" : mod10 == 3 ? "rd" : "th";
-                name = std::format("{}{}", number, suffix);
-                break;
-            }
-            default: break;
-        }
-        std::copy_n(name.c_str(), name.size(), unit.name);
-    }
+    HexStateUpdateUnitColorsAndName(hex_state);
 
     for (u32 i = 0; i < hex_state.units.size(); i++) {
         Handle<Unit> unit_handle = hex_state.units.IndexToHandle(i);

@@ -72,7 +72,7 @@ using HoveredType = std::optional<NodeReference>;
 struct NodeStyle : LogDestroyWithCount<NodeStyle> {
     SDL_FRect bounding_box { };
     Color background_color { 0, 0, 0, 0 };
-    OptionalHandle<Texture> texture { };
+    HandleOptional<Texture> texture { };
 
     uint2 position { U32_MAX, U32_MAX };
     uint4 padding { 0U, 0U, 0U, 0U };
@@ -118,7 +118,7 @@ struct NodeTree {
 
     b8 display { true };
     b8 dirty_tree { true };
-    OptionalHandle<SubtreeRoot> dirty_subtree { };
+    HandleOptional<SubtreeRoot> dirty_subtree { };
     FrameElements frame_elements { };
 
     NodeTree() = default;
