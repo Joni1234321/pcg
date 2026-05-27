@@ -450,7 +450,7 @@ void InputNodeSystem::operator()() const {
 
     if (hovered.has_value() && !trees[hovered->tree].styles.ValidHandle(hovered->node)) { hovered = std::nullopt; }
     const HoveredType previous_hovered = hovered;
-    hovered = NodeAt(Singleton::Get<InputState>().mouse_position);
+    hovered = NodeAt(int2 { Singleton::Get<InputState>().mouse_position });
 
     if (hovered.has_value() && previous_hovered.has_value() && hovered->tree.id == previous_hovered->tree.id && hovered->node.id == previous_hovered->node.id) { return; }
 

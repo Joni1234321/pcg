@@ -209,10 +209,10 @@ struct HexSystem {
         // render hq
         if (hex_state.pseudo_states.unit_selection) {
             auto draw_line = [&](const Color color, const int2 axial_a, const int2 axial_b) {
-                const int2 screen_a = camera.WorldToScreen(HexAxialToWorld(axial_a));
-                const int2 screen_b = camera.WorldToScreen(HexAxialToWorld(axial_b));
-                VertObbAppend(hex_state.verts, OBB::BetweenPoints(static_cast<float2>(screen_a), static_cast<float2>(screen_b), camera.scale * 0.1F), colors::BLACK.WithAlpha(0.7F));
-                VertObbAppend(hex_state.verts, OBB::BetweenPoints(static_cast<float2>(screen_a), static_cast<float2>(screen_b), camera.scale * 0.1F), color);
+                const float2 screen_a = camera.WorldToScreen(HexAxialToWorld(axial_a));
+                const float2 screen_b = camera.WorldToScreen(HexAxialToWorld(axial_b));
+                VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_a, screen_b, camera.scale * 0.15F), colors::BLACK.WithAlpha(0.7F));
+                VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_a, screen_b, camera.scale * 0.1F), color);
             };
             for (const Handle<Unit>& unit_handle : hex_state.pseudo_states.unit_selection.value().unit_handles) {
                 const int2 axial_unit = hex_state.units[unit_handle].axial;
@@ -306,7 +306,7 @@ struct HexSystem {
                 const u32 units_selected_movement = std::ranges::min(units_selected | std::views::transform(&Unit::move));
                 for (const AxialAndCost cost_and_axial : axial_path) {
                     const float2 world = HexAxialToWorld(cost_and_axial.axial);
-                    const int2 screen = camera.WorldToScreen(world);
+                    const float2 screen = camera.WorldToScreen(world);
 
                     const Color movement_color = cost_and_axial.cost > units_selected_movement ? colors::BLACK : colors::RUBY_RED;
                     VertHexAppend(hex_state.verts, camera.scale * 0.25F, screen, movement_color);
@@ -320,15 +320,14 @@ struct HexSystem {
                 TTF_SetFontWrapAlignment(font_movement, TTF_HORIZONTAL_ALIGN_CENTER);
                 for (AxialAndCost cost_and_axial : axial_path) {
                     const float2 world = HexAxialToWorld(cost_and_axial.axial);
-                    const int2 screen = camera.WorldToScreen(world);
-                    const float2 screen_f = static_cast<float2>(screen);
+                    const float2 screen = camera.WorldToScreen(world);
 
                     const Label& label = hex_state.label_pool.Get();
                     const String string_distance = std::format("{}", cost_and_axial.cost);
                     (void)TTF_SetTextWrapWidth(label, static_cast<i32>(camera.scale));
                     (void)TTF_SetTextFont(label, font_movement);
                     label.SetText(string_distance);
-                    (void)TTF_DrawRendererText(label, screen_f.x - camera.scale * 0.5F, screen_f.y - pt * 0.5F);
+                    (void)TTF_DrawRendererText(label, screen.x - camera.scale * 0.5F, screen.y - pt * 0.5F);
                 }
                 break;
             }
@@ -413,7 +412,7 @@ struct HexSystem {
                 const b8 can_attack = attacker_has_movement && within_range && !attacker_is_hq;
 
                 const float2 world = HexAxialToWorld(hex_state.pseudo_states.axial_hover.value());
-                const int2 screen = camera.WorldToScreen(world);
+                const float2 screen = camera.WorldToScreen(world);
 
                 const Color color_inner = can_attack ? colors::RUBY_RED : colors::BLACK;
                 VertHexAppend(hex_state.verts, camera.scale * 0.25F, screen, colors::GRAY);

@@ -20,7 +20,7 @@ struct InputState {
     b8 right_mouse { false };
     b8 right_mouse_down { false };
     b8 right_mouse_up { false };
-    int2 mouse_position { };
+    float2 mouse_position { };
     f32 mouse_wheel_y { 0.0F };
 };
 struct InputSystem {
@@ -49,9 +49,7 @@ struct InputSystem {
             }
         }
 
-        float2 mouse_position_f { };
-        const SDL_MouseButtonFlags state = SDL_GetMouseState(&mouse_position_f.x, &mouse_position_f.y);
-        input_state.mouse_position = static_cast<int2>(mouse_position_f);
+        const SDL_MouseButtonFlags state = SDL_GetMouseState(&input_state.mouse_position.x, &input_state.mouse_position.y);
         input_state.left_mouse_down = state & SDL_BUTTON_LMASK && !input_state.left_mouse;
         input_state.left_mouse_up = input_state.left_mouse && !(state & SDL_BUTTON_LMASK);
         input_state.left_mouse = state & SDL_BUTTON_LMASK;

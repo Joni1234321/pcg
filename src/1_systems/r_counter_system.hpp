@@ -74,8 +74,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
 
     for (const CounterStack& counter : counters) {
         const float2 world = HexAxialToWorld(counter.axial);
-        const int2 screen = camera.WorldToScreen(world);
-        const float2 counter_center = static_cast<float2>(screen);
+        const float2 counter_center = camera.WorldToScreen(world);
         const float2 counter_point = counter_center - counter_size * float2 { 0.5F };
 
         // draw static counters

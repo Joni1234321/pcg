@@ -220,7 +220,7 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
         if (hex.owner.tag == CountryTag::TAG_NONE) { continue; }
         const int2 axial = hex_state.hex_map.IndexToAxial(i);
         const float2 own_center_w = HexAxialToWorld(axial);
-        const int2 own_center_screen = camera.WorldToScreen(own_center_w);
+        const float2 own_center_screen = camera.WorldToScreen(own_center_w);
         const ColorF col = static_cast<ColorF>(CountryTagToColor(hex.owner.tag));
         const f32 cx = static_cast<f32>(own_center_screen.x);
         const f32 cy = static_cast<f32>(own_center_screen.y);
@@ -260,7 +260,7 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
                     own_center_w.x + (ang_a.x + ang_b.x) * 0.5F,
                     own_center_w.y + (ang_a.y + ang_b.y) * 0.5F,
                 };
-                const int2 anchor_int = camera.WorldToScreen(emid_w);
+                const float2 anchor_int = camera.WorldToScreen(emid_w);
                 const SDL_FPoint anchor { static_cast<f32>(anchor_int.x), static_cast<f32>(anchor_int.y) };
                 // Project the shared anchor onto this country's inner edge to
                 // get the tooth base midpoint.

@@ -95,12 +95,11 @@ template <class T> struct HexList {
     constexpr List<T>::const_iterator cend() const { return data.cend(); }
 };
 
-inline void VertHexAppend(List<Vertex>& vertecies, const f32 hex_size, const int2 hex_screen, const ColorF hex_color, const Optional<ColorF> hex_color_inner = std::nullopt) {
-    float2 center { hex_screen };
+inline void VertHexAppend(List<Vertex>& vertecies, const f32 hex_size, const float2 hex_screen, const ColorF hex_color, const Optional<ColorF> hex_color_inner = std::nullopt) {
     Array<float2, HEX_CORNERS> points { };
-    for (u32 i = 0; i < HEX_CORNERS; i++) { points[i] = center + HEX_ANGLE[i] * float2 { hex_size }; }
+    for (u32 i = 0; i < HEX_CORNERS; i++) { points[i] = hex_screen + HEX_ANGLE[i] * float2 { hex_size }; }
     for (u32 i = 0; i < HEX_CORNERS; i++) {
-        vertecies.EmplaceBack(center, hex_color_inner.value_or(colors::ColorMul(hex_color, 1.2F)));
+        vertecies.EmplaceBack(hex_screen, hex_color_inner.value_or(colors::ColorMul(hex_color, 1.2F)));
         vertecies.EmplaceBack(points[i], hex_color);
         vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color);
     }

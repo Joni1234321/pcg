@@ -13,11 +13,11 @@ struct CameraState {
     f32 scale { 140.0F };
     f32 target_scale { 140.0F };
     float2 zoom_anchor_world { 0.0F, 0.0F };
-    int2 drag_last_pos { 0, 0 };
+    float2 drag_last_pos { 0, 0 };
     float2 map_world_min { 0.0F, 0.0F };
     float2 map_world_max { 0.0F, 0.0F };
-    [[nodiscard]] constexpr float2 ScreenToWorld(const int2 screen) const { return (float2 { screen } + world_position) / float2 { scale }; }
-    [[nodiscard]] constexpr int2 WorldToScreen(const float2 world) const { return int2 { world * float2 { scale } - world_position }; }
+    [[nodiscard]] constexpr float2 ScreenToWorld(const float2 screen) const { return (screen + world_position) / float2 { scale }; }
+    [[nodiscard]] constexpr float2 WorldToScreen(const float2 world) const { return world * float2 { scale } - world_position; }
 };
 
 struct CameraSystem {
@@ -37,7 +37,7 @@ struct CameraSystem {
         if (input_state.keys[SDLK_DOWN]) { camera_state.world_position.y += PAN_SPEED; }
 
         // mouse drag
-        const int2 mouse_delta = input_state.mouse_position - camera_state.drag_last_pos;
+        const float2 mouse_delta = input_state.mouse_position - camera_state.drag_last_pos;
         camera_state.drag_last_pos = input_state.mouse_position;
         if (input_state.left_mouse | input_state.right_mouse) { camera_state.world_position -= float2 { mouse_delta }; }
 
