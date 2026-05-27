@@ -66,6 +66,9 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
 
     const ui::FontSize pt_normal = static_cast<ui::FontSize>(counter_size.y * 0.25F);
     const ui::FontSize pt_small = static_cast<ui::FontSize>(counter_size.y * 0.15F);
+    // Pre-warm the font cache for both sizes before taking any references. Since second get can cause move interannly
+    if (pt_normal >= ui::FONT_MIN_SIZE) { (void)font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_normal)); }
+    if (pt_small >= ui::FONT_MIN_SIZE) { (void)font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_small)); }
     const Optional<std::reference_wrapper<const ui::Font>> font_normal_opt = pt_normal < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_normal));
     const Optional<std::reference_wrapper<const ui::Font>> font_small_opt = pt_small < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_small));
 

@@ -95,7 +95,7 @@ template <class T> struct HexList {
     constexpr List<T>::const_iterator cend() const { return data.cend(); }
 };
 
-inline void HexAppend(List<Vertex>& vertecies, const f32 hex_size, const int2 hex_screen, const ColorF hex_color, const Optional<ColorF> hex_color_inner = std::nullopt) {
+inline void VertHexAppend(List<Vertex>& vertecies, const f32 hex_size, const int2 hex_screen, const ColorF hex_color, const Optional<ColorF> hex_color_inner = std::nullopt) {
     float2 center { hex_screen };
     Array<float2, HEX_CORNERS> points { };
     for (u32 i = 0; i < HEX_CORNERS; i++) { points[i] = center + HEX_ANGLE[i] * float2 { hex_size }; }
@@ -104,5 +104,21 @@ inline void HexAppend(List<Vertex>& vertecies, const f32 hex_size, const int2 he
         vertecies.EmplaceBack(points[i], hex_color);
         vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color);
     }
+}
+inline void VertObbAppend(List<Vertex>& vertecies, const OBB& obb, const ColorF color) {
+    const float2 half_size = obb.size * float2 { 0.5F };
+    const Array<float2, 4> points {
+    {
+       obb.center + math::Rotate(float2 {-half_size.x, half_size.y} , obb.angle),
+       obb.center + math::Rotate(float2 {half_size.x, half_size.y}, obb.angle),
+       obb.center + math::Rotate(float2 {half_size.x, -half_size.y}, obb.angle),
+       obb.center + math::Rotate(float2 {-half_size.x, -half_size.y}, obb.angle),
+    }};
+    vertecies.EmplaceBack(Vertex{ points[0], color });
+    vertecies.EmplaceBack(Vertex{ points[1], color });
+    vertecies.EmplaceBack(Vertex{ points[2], color });
+    vertecies.EmplaceBack(Vertex{ points[0], color });
+    vertecies.EmplaceBack(Vertex{ points[2], color });
+    vertecies.EmplaceBack(Vertex{ points[3], color });
 }
 } // namespace pce

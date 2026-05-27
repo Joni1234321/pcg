@@ -6,6 +6,7 @@
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_logger.hpp"
 
+#include "0_engine/u_util.hpp"
 #include "SDL3/SDL_pixels.h"
 #include "SDL3/SDL_rect.h"
 #include "SDL3_image/SDL_image.h"
@@ -61,6 +62,28 @@ struct AABBF {
     [[nodiscard]] constexpr AABBF WithPadding(const float2 padding) const { return FromPoint(point + padding, size - padding * float2 { 2.0F }); }
     [[nodiscard]] constexpr AABBF WithOffset(const float2 offset) const { return FromPoint(point + offset, size); }
 };
+struct OBB {
+    float2 center;
+    float2 size;
+    float angle;
+
+    [[nodiscard]] static constexpr OBB FromCenter(const float2 center, const float2 size, const float angle) { return OBB { .center = center, .size = size, .angle = angle }; }
+    [[nodiscard]] static constexpr OBB BetweenPoints(const float2 point_a, const float2 point_b, const f32 thickness) {
+        const float2 diff = point_b - point_a;
+        return OBB { .center = point_a + diff * float2 { 0.5F }, .size = float2 { math::Hypot(diff), thickness }, .angle = math::Atan2(diff.y, diff.x) };
+    }
+    // [[nodiscard]] static OBBF BetweenPoints(const float2 a, const float2 b, const f32 thickness) {
+    //     const float2 delta = b - a;
+    //     const f32 length = math::Hypot(delta);
+    //     const f32 angle = math::Atan2(delta.y, delta.x);
+    //     // Shift 'a' by half-thickness in the perpendicular (−y local) direction so that
+    //     // center = point + Rotate({length/2, thickness/2}, angle) lands exactly on the midpoint.
+    //     const float2 perp_offset = math::Rotate(float2 { 0.0F, -thickness * 0.5F }, angle);
+    //     return OBBF { .point = a + perp_offset, .size = { length, thickness }, .angle = angle };
+    // }
+
+};
+
 struct ColorF {
     f32 r;
     f32 g;

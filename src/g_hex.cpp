@@ -187,8 +187,8 @@ struct HexSystem {
         hex_state.player_action = PlayerAction::PLAYER_ACTION_NONE;
 
         // render pseudo states
-        if (hex_state.pseudo_states.axial_hover) { HexAppend(hex_state.verts, camera.scale, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover.value())), colors::HEX_HOVER); }
-        if (hex_state.pseudo_states.axial_select) { HexAppend(hex_state.verts, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select.value())), colors::HEX_SELECT); }
+        if (hex_state.pseudo_states.axial_hover) { VertHexAppend(hex_state.verts, camera.scale, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover.value())), colors::HEX_HOVER); }
+        if (hex_state.pseudo_states.axial_select) { VertHexAppend(hex_state.verts, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select.value())), colors::HEX_SELECT); }
 
         // render map
         for (u32 i = 0; i < hex_state.hex_map.Size(); i++) {
@@ -196,8 +196,8 @@ struct HexSystem {
             const int2 axial = hex_state.hex_map.IndexToAxial(i);
             const float2 world = HexAxialToWorld(axial);
             Color color = TerrainToColorScheme(hex.terrain);
-            HexAppend(hex_state.verts, camera.scale * 0.90F, camera.WorldToScreen(world), color);
-            if (hex.owner.contested) { HexAppend(hex_state.verts, camera.scale * 0.70F, camera.WorldToScreen(world), color.Mul(0.80F)); }
+            VertHexAppend(hex_state.verts, camera.scale * 0.90F, camera.WorldToScreen(world), color);
+            if (hex.owner.contested) { VertHexAppend(hex_state.verts, camera.scale * 0.70F, camera.WorldToScreen(world), color.Mul(0.80F)); }
         }
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
         hex_state.verts.clear();
@@ -211,31 +211,8 @@ struct HexSystem {
             auto draw_line = [&](const Color color, const int2 axial_a, const int2 axial_b) {
                 const int2 screen_a = camera.WorldToScreen(HexAxialToWorld(axial_a));
                 const int2 screen_b = camera.WorldToScreen(HexAxialToWorld(axial_b));
-                const float2 screen_delta = float2(screen_b) - float2(screen_a);
-                const float screen_length = std::hypot(screen_delta.x, screen_delta.y);
-                if (screen_length < 1.0F) { return; }
-                const float2 screen_perpendicular = float2(-screen_delta.y, screen_delta.x) / float2(screen_length);
-                constexpr float oob_line_width_factor = 0.02F;
-                const float half_width = camera.scale * oob_line_width_factor;
-                if (half_width < 0.5F) { return; }
-                const float2 screen_fa = float2(screen_a);
-                const float2 screen_fb = float2(screen_b);
-
-                auto render_quad = [&](const Color color, const float half_w) {
-                    const float2 screen_extrude = screen_perpendicular * float2(half_w);
-                    const ColorF color_f(color);
-                    const Array<Vertex, 4> quad_verts { {
-                        { screen_fa + screen_extrude, color_f },
-                        { screen_fb + screen_extrude, color_f },
-                        { screen_fb - screen_extrude, color_f },
-                        { screen_fa - screen_extrude, color_f },
-                    } };
-                    constexpr Array<i32, 6> QUAD_INDICES = { 0, 1, 2, 0, 2, 3 };
-                    (void)SDL_RenderGeometry(window_state.renderer, nullptr, reinterpret_cast<const SDL_Vertex*>(quad_verts.data()), quad_verts.size(), QUAD_INDICES.data(), QUAD_INDICES.size()); // NOLINT(*-pro-type-reinterpret-cast)
-                };
-
-                render_quad(colors::BLACK.WithAlpha(0.7F), half_width * 3.0F);
-                render_quad(color, half_width);
+                VertObbAppend(hex_state.verts, OBB::BetweenPoints(static_cast<float2>(screen_a), static_cast<float2>(screen_b), camera.scale * 0.3F), colors::BLACK.WithAlpha(0.7F));
+                VertObbAppend(hex_state.verts, OBB::BetweenPoints(static_cast<float2>(screen_a), static_cast<float2>(screen_b), camera.scale * 0.1F), color);
             };
             for (const Handle<Unit>& unit_handle : hex_state.pseudo_states.unit_selection.value().unit_handles) {
                 const int2 axial_unit = hex_state.units[unit_handle].axial;
@@ -257,6 +234,8 @@ struct HexSystem {
                 }
             }
         }
+        (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
+        hex_state.verts.clear();
 
         // render units
         hex_state.counters.Clear();
@@ -334,7 +313,7 @@ struct HexSystem {
                     const int2 screen = camera.WorldToScreen(world);
 
                     const Color movement_color = cost_and_axial.cost > units_selected_movement ? colors::BLACK : colors::RUBY_RED;
-                    HexAppend(hex_state.verts, camera.scale * 0.25F, screen, movement_color);
+                    VertHexAppend(hex_state.verts, camera.scale * 0.25F, screen, movement_color);
                 }
                 (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
                 hex_state.verts.clear();
@@ -441,10 +420,10 @@ struct HexSystem {
                 const int2 screen = camera.WorldToScreen(world);
 
                 const Color color_inner = can_attack ? colors::RUBY_RED : colors::BLACK;
-                HexAppend(hex_state.verts, camera.scale * 0.25F, screen, colors::GRAY);
-                HexAppend(hex_state.verts, camera.scale * 0.20F, screen, color_inner);
+                VertHexAppend(hex_state.verts, camera.scale * 0.25F, screen, colors::GRAY);
+                VertHexAppend(hex_state.verts, camera.scale * 0.20F, screen, color_inner);
 
-                if (can_attack) { HexAppend(hex_state.verts, camera.scale * 0.10F, screen, colors::DARK_GREEN); }
+                if (can_attack) { VertHexAppend(hex_state.verts, camera.scale * 0.10F, screen, colors::DARK_GREEN); }
                 (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
                 hex_state.verts.clear();
 
