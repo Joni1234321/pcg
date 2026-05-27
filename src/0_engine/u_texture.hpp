@@ -76,12 +76,9 @@ struct OBB {
     //     const float2 delta = b - a;
     //     const f32 length = math::Hypot(delta);
     //     const f32 angle = math::Atan2(delta.y, delta.x);
-    //     // Shift 'a' by half-thickness in the perpendicular (−y local) direction so that
-    //     // center = point + Rotate({length/2, thickness/2}, angle) lands exactly on the midpoint.
     //     const float2 perp_offset = math::Rotate(float2 { 0.0F, -thickness * 0.5F }, angle);
     //     return OBBF { .point = a + perp_offset, .size = { length, thickness }, .angle = angle };
     // }
-
 };
 
 struct ColorF {

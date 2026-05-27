@@ -211,7 +211,7 @@ struct HexSystem {
             auto draw_line = [&](const Color color, const int2 axial_a, const int2 axial_b) {
                 const int2 screen_a = camera.WorldToScreen(HexAxialToWorld(axial_a));
                 const int2 screen_b = camera.WorldToScreen(HexAxialToWorld(axial_b));
-                VertObbAppend(hex_state.verts, OBB::BetweenPoints(static_cast<float2>(screen_a), static_cast<float2>(screen_b), camera.scale * 0.3F), colors::BLACK.WithAlpha(0.7F));
+                VertObbAppend(hex_state.verts, OBB::BetweenPoints(static_cast<float2>(screen_a), static_cast<float2>(screen_b), camera.scale * 0.1F), colors::BLACK.WithAlpha(0.7F));
                 VertObbAppend(hex_state.verts, OBB::BetweenPoints(static_cast<float2>(screen_a), static_cast<float2>(screen_b), camera.scale * 0.1F), color);
             };
             for (const Handle<Unit>& unit_handle : hex_state.pseudo_states.unit_selection.value().unit_handles) {
@@ -221,12 +221,11 @@ struct HexSystem {
                     const int2 axial_child = hex_state.units[unit_handle_child].axial;
                     draw_line(colors::LIGHT_SKY_BLUE, axial_unit, axial_child);
                 }
-
-                const HandleOptional<Unit>& parent = hex_state.units[unit_handle].parent;
-                if (parent.IsValid()) {
-                    const int2 axial_parent = hex_state.units[parent.GetHandle()].axial;
+                const HandleOptional<Unit>& unit_handle_parent = hex_state.units[unit_handle].parent;
+                if (unit_handle_parent.IsValid()) {
+                    const int2 axial_parent = hex_state.units[unit_handle_parent.GetHandle()].axial;
                     draw_line(colors::RED, axial_unit, axial_parent);
-                    for (const Handle<Unit>& unit_handle_sibling : hex_state.units_oob[parent.GetHandle()]) {
+                    for (const Handle<Unit>& unit_handle_sibling : hex_state.units_oob[unit_handle_parent.GetHandle()]) {
                         if (unit_handle_sibling == unit_handle) { continue; }
                         const int2 axial_sibling = hex_state.units[unit_handle_sibling].axial;
                         draw_line(colors::YELLOW, axial_parent, axial_sibling);
@@ -272,9 +271,6 @@ struct HexSystem {
                 const int2 axial_start = hex_state.pseudo_states.axial_select.value();
                 const int2 axial_hover = hex_state.pseudo_states.axial_hover.value();
                 auto units_selected = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
-
-                constexpr Color COLOR { colors::RUBY_RED };
-                (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR.r, COLOR.g, COLOR.b, COLOR.a);
 
                 // path finding
                 List<AxialAndCost> axial_path = HexAxialPathAStar(hex_state, axial_start, axial_hover);
