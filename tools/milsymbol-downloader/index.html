@@ -16,6 +16,30 @@
     <section class="panel">
         <h2>1. Symbol codes (SIDC)</h2>
         <p class="hint">One code per line. 15-char (2525C) or 20-char (2525D / APP-6D) SIDCs are supported by milsymbol.</p>
+
+        <div class="lookup">
+            <label class="lookup-search">
+                <span>Search catalog</span>
+                <input id="symbolSearch" type="text" autocomplete="off"
+                       placeholder="Type to search (e.g. infantry, tank, helicopter)…" />
+                <div id="symbolResults" class="results" hidden></div>
+            </label>
+            <label class="lookup-aff">
+                <span>Insert as</span>
+                <select id="affiliation">
+                    <option value="F" selected>Friend (F)</option>
+                    <option value="H">Hostile (H)</option>
+                    <option value="N">Neutral (N)</option>
+                    <option value="U">Unknown (U)</option>
+                    <option value="P">Pending (P)</option>
+                    <option value="A">Assumed Friend (A)</option>
+                    <option value="S">Suspect (S)</option>
+                    <option value="J">Joker (J)</option>
+                    <option value="K">Faker (K)</option>
+                </select>
+            </label>
+        </div>
+
         <textarea id="codes" rows="8" spellcheck="false">SFGPUCI-----E
 SHGPUCI-----E
 SNGPUCI-----E
@@ -93,6 +117,7 @@ SFGPUCRV----E</textarea>
 
 <script src="node_modules/milsymbol/dist/milsymbol.js"></script>
 <script src="node_modules/jszip/dist/jszip.min.js"></script>
+<script src="catalog.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

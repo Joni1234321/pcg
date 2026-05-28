@@ -19,6 +19,9 @@
         status: $("status"),
         loadSamples: $("loadSamples"),
         clearCodes: $("clearCodes"),
+        symbolSearch: $("symbolSearch"),
+        symbolResults: $("symbolResults"),
+        affiliation: $("affiliation"),
     };
 
     const SAMPLES = [
@@ -304,6 +307,134 @@
     els.clearCodes.addEventListener("click", () => {
         els.codes.value = "";
         updatePreview();
+    });
+
+    // ─── Symbol lookup / autocomplete ─────────────────────────────────────
+    const CATALOG = window.MILSYMBOL_CATALOG || [];
+    let activeIndex = -1;
+    let currentMatches = [];
+
+    function applyAffiliation(sidc, aff) {
+        if (!sidc || sidc.length < 2) return sidc;
+        return sidc[0] + aff + sidc.slice(2);
+    }
+
+    function scoreMatch(entry, query) {
+        // simple substring scoring against name + category + sidc
+        const q = query.toLowerCase();
+        const name = entry.n.toLowerCase();
+        const cat = entry.c.toLowerCase();
+        const sidc = entry.s.toLowerCase();
+        if (name.startsWith(q)) return 100;
+        if (name.includes(" " + q)) return 80;
+        if (name.includes(q)) return 60;
+        if (cat.includes(q)) return 40;
+        if (sidc.includes(q)) return 30;
+        return 0;
+    }
+
+    function searchCatalog(query) {
+        if (!query) return CATALOG.slice(0, 50);
+        const q = query.trim().toLowerCase();
+        if (!q) return CATALOG.slice(0, 50);
+        const scored = [];
+        for (const e of CATALOG) {
+            const s = scoreMatch(e, q);
+            if (s > 0) scored.push({ e, s });
+        }
+        scored.sort((a, b) => b.s - a.s);
+        return scored.slice(0, 50).map((x) => x.e);
+    }
+
+    function renderResults(matches) {
+        currentMatches = matches;
+        activeIndex = matches.length ? 0 : -1;
+        if (!matches.length) {
+            els.symbolResults.innerHTML =
+                '<div class="results-empty">No matches in catalog.</div>';
+            els.symbolResults.hidden = false;
+            return;
+        }
+        const aff = els.affiliation.value;
+        const html = matches.map((m, i) => {
+            const sidc = applyAffiliation(m.s, aff);
+            return (
+                '<div class="result-item' + (i === 0 ? " active" : "") +
+                '" data-i="' + i + '">' +
+                    '<div>' +
+                        '<div class="result-name">' + escapeHtml(m.n) + '</div>' +
+                        '<span class="result-cat">' + escapeHtml(m.c) + '</span>' +
+                    '</div>' +
+                    '<div class="result-sidc">' + escapeHtml(sidc) + '</div>' +
+                '</div>'
+            );
+        }).join("");
+        els.symbolResults.innerHTML = html;
+        els.symbolResults.hidden = false;
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, (c) => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+        }[c]));
+    }
+
+    function setActive(idx) {
+        const items = els.symbolResults.querySelectorAll(".result-item");
+        if (!items.length) return;
+        activeIndex = ((idx % items.length) + items.length) % items.length;
+        items.forEach((el, i) => el.classList.toggle("active", i === activeIndex));
+        const el = items[activeIndex];
+        if (el && el.scrollIntoView) {
+            el.scrollIntoView({ block: "nearest" });
+        }
+    }
+
+    function pickResult(idx) {
+        const m = currentMatches[idx];
+        if (!m) return;
+        const aff = els.affiliation.value;
+        const sidc = applyAffiliation(m.s, aff);
+        const current = els.codes.value;
+        const sep = current && !current.endsWith("\n") ? "\n" : "";
+        els.codes.value = current + sep + sidc + "\n";
+        els.symbolSearch.value = "";
+        els.symbolResults.hidden = true;
+        updatePreview();
+    }
+
+    els.symbolSearch.addEventListener("input", () => {
+        renderResults(searchCatalog(els.symbolSearch.value));
+    });
+    els.symbolSearch.addEventListener("focus", () => {
+        renderResults(searchCatalog(els.symbolSearch.value));
+    });
+    els.symbolSearch.addEventListener("keydown", (e) => {
+        if (els.symbolResults.hidden) return;
+        if (e.key === "ArrowDown") { e.preventDefault(); setActive(activeIndex + 1); }
+        else if (e.key === "ArrowUp") { e.preventDefault(); setActive(activeIndex - 1); }
+        else if (e.key === "Enter") {
+            if (activeIndex >= 0) { e.preventDefault(); pickResult(activeIndex); }
+        } else if (e.key === "Escape") {
+            els.symbolResults.hidden = true;
+        }
+    });
+    els.symbolResults.addEventListener("mousedown", (e) => {
+        // mousedown so it fires before blur hides the panel
+        const item = e.target.closest(".result-item");
+        if (!item) return;
+        e.preventDefault();
+        pickResult(parseInt(item.dataset.i, 10));
+    });
+    els.symbolSearch.addEventListener("blur", () => {
+        // Slight delay so click on a result still registers.
+        setTimeout(() => { els.symbolResults.hidden = true; }, 150);
+    });
+    els.affiliation.addEventListener("change", () => {
+        // Re-render with the new affiliation if the dropdown is open.
+        if (!els.symbolResults.hidden) {
+            renderResults(searchCatalog(els.symbolSearch.value));
+        }
     });
 
     function debounce(fn, ms) {
