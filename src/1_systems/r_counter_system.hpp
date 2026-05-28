@@ -67,7 +67,7 @@ struct CounterTextures {
     HandleOptional<Texture> headquarters;
 
     explicit CounterTextures (const RelativePath& dir) {
-        infantry = globalData.Create<Texture>(Asset(dir / "counter-rifle.jpg"));
+        infantry = globalData.Create<Texture>(Asset(dir / "counter-inf.jpg"));
         artillery =  globalData.Create<Texture>(Asset(dir / "counter-art.jpg"));
         armor =  globalData.Create<Texture>(Asset(dir / "counter-armor.jpg"));
         headquarters =  globalData.Create<Texture>(Asset(dir / "counter-hq.jpg"));
@@ -83,16 +83,16 @@ struct CounterTextures {
     }
 };
 struct CounterTextureStack {
-    CounterTextures counter_textures_niehorster { "counter-niehorster" };
-    CounterTextures counter_textures_niehorster_big { "counter-niehorster-big" };
-    CounterTextures counter_textures_real { "counter-real" };
+    CounterTextures counter_textures_niehorster { "counters/counter-niehorster" };
+    CounterTextures counter_textures_niehorster_big { "counters/counter-niehorster-big" };
+    CounterTextures counter_textures_real { "counters/counter-real" };
 };
 
 inline void RenderCounters(const Pool<CounterStack>& counters) {
     const CameraState& camera = Singleton::Get<CameraState>();
     const WindowState& window_state = Singleton::Get<WindowState>();
     const ui::FontCollection& font_collection = Singleton::Get<ui::FontCollection>();
-    const CounterTextures& counter_textures = Singleton::Get<CounterTextureStack>().counter_textures_real;
+    const CounterTextures& counter_textures = Singleton::Get<CounterTextureStack>().counter_textures_niehorster_big;
 
     constexpr f32 COUNTER_SIZE = 1.1F;
     const float2 counter_size = float2 { camera.scale * COUNTER_SIZE } * float2 { 1.0F, 0.8F };
