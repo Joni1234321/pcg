@@ -4,6 +4,7 @@
 #include <array>
 #include <format>
 #include <functional>
+#include <memory>
 #include <ranges>
 #include <set>
 #include <span>
