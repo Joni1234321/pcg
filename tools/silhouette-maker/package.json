@@ -1,0 +1,12 @@
+{
+  "name": "silhouette-maker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Drop any image, get a clean silhouette PNG/JPG at any size and color (pure client-side).",
+  "scripts": {
+    "start": "npx --yes http-server -c-1 -o /index.html ."
+  },
+  "dependencies": {
+    "jszip": "^3.10.1"
+  }
+}

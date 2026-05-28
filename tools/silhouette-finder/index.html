@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>silhouette finder (wargame)</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header>
+    <h1>silhouette finder</h1>
+    <p class="sub">Search realistic military silhouettes (weapons, vehicles, aircraft, ships) from
+        <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>,
+        recolor and export as SVG / PNG / JPG. Free, no API key. Quality varies — preview before adding.</p>
+</header>
+
+<main>
+    <section class="panel">
+        <h2>1. Search</h2>
+        <div class="search-row">
+            <input id="query" type="text" autocomplete="off"
+                   placeholder="e.g. M1 Abrams, AK-47, F-16, destroyer, soldier…" />
+            <select id="preset">
+                <option value="silhouette" selected>+ "silhouette" (recommended)</option>
+                <option value="profile">+ "profile" (vehicles/ships)</option>
+                <option value="outline">+ "outline"</option>
+                <option value="">No suffix (raw search)</option>
+            </select>
+            <button id="searchBtn" type="button">Search</button>
+        </div>
+        <p class="hint">Results are SVG files only, filtered to keep things recolorable. Click a tile to add it to <b>Selected</b>.</p>
+        <div id="results" class="icon-grid"></div>
+        <div class="row">
+            <button id="loadMore" type="button" class="ghost" hidden>Load more</button>
+            <span id="searchStatus" class="status"></span>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>2. Output options</h2>
+        <div class="grid">
+            <label>Format
+                <select id="format">
+                    <option value="svg">SVG (vector)</option>
+                    <option value="png" selected>PNG (transparent)</option>
+                    <option value="jpg">JPG (background color)</option>
+                </select>
+            </label>
+            <label>Width (px)
+                <input id="width" type="number" min="8" max="4096" value="256" />
+            </label>
+            <label>Height (px)
+                <input id="height" type="number" min="8" max="4096" value="256" />
+            </label>
+            <label>Padding (px)
+                <input id="padding" type="number" min="0" max="512" value="0" />
+            </label>
+            <label>Tint color
+                <span class="color-row">
+                    <input id="iconColor" type="color" value="#ffffff" />
+                    <label class="inline-check"><input id="iconKeepColor" type="checkbox" /> Keep original</label>
+                </span>
+            </label>
+            <label>Background color
+                <span class="color-row">
+                    <input id="bgColor" type="color" value="#000000" />
+                    <label class="inline-check"><input id="bgTransparent" type="checkbox" checked /> Transparent</label>
+                </span>
+            </label>
+            <label>Fit mode
+                <select id="fitMode">
+                    <option value="contain" selected>Contain (preserve aspect)</option>
+                    <option value="stretch">Stretch to canvas</option>
+                </select>
+            </label>
+            <label>Filename suffix
+                <input id="suffix" type="text" placeholder="e.g. _256" />
+            </label>
+        </div>
+        <p class="hint">Recoloring replaces every solid fill/stroke in the SVG. Works perfectly on flat silhouettes; complex multi-color SVGs may look odd — check <b>Keep original</b> for those.</p>
+    </section>
+
+    <section class="panel">
+        <h2>3. Selected silhouettes</h2>
+        <div id="selected" class="icon-grid selected-grid"></div>
+        <div class="row">
+            <button id="downloadAll" type="button">Download all</button>
+            <button id="clearSelected" type="button" class="ghost">Clear selection</button>
+            <span id="status" class="status"></span>
+        </div>
+        <p class="hint">Multiple files always download as a zip including <code>ATTRIBUTION.txt</code> with the author / license info from Wikimedia Commons — keep this with your assets to comply with CC-BY.</p>
+    </section>
+</main>
+
+<footer>
+    <p>Files come from <a href="https://commons.wikimedia.org">Wikimedia Commons</a>.
+       Each file has its own license — read the tooltip on each tile and the generated <code>ATTRIBUTION.txt</code>.
+       Many are public domain; many require attribution (CC-BY / CC-BY-SA).</p>
+</footer>
+
+<script src="node_modules/jszip/dist/jszip.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

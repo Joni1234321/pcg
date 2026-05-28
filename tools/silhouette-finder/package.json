@@ -1,0 +1,12 @@
+{
+  "name": "silhouette-finder",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Search realistic military silhouettes on Wikimedia Commons, recolor and export as SVG/PNG/JPG.",
+  "scripts": {
+    "start": "npx --yes http-server -c-1 -o /index.html ."
+  },
+  "dependencies": {
+    "jszip": "^3.10.1"
+  }
+}

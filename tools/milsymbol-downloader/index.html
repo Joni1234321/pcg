@@ -71,8 +71,23 @@ SFGPUCRV----E</textarea>
             <label>Symbol size (milsymbol)
                 <input id="symbolSize" type="number" min="8" max="2048" value="100" />
             </label>
-            <label>Padding (px)
-                <input id="padding" type="number" min="0" max="512" value="8" />
+            <label>Canvas padding (px)
+                <input id="padding" type="number" min="-512" max="512" value="0" />
+            </label>
+            <label>Symbol padding (milsymbol)
+                <input id="msPadding" type="number" min="0" max="64" value="0" />
+            </label>
+            <label>Scale (overflow)
+                <input id="scale" type="number" min="0.1" max="4" step="0.01" value="1" />
+            </label>
+            <label>Frame line width
+                <input id="strokeWidth" type="number" min="0" max="40" step="0.5" value="3" />
+            </label>
+            <label>Outline width (halo)
+                <input id="outlineWidth" type="number" min="0" max="40" step="0.5" value="0" />
+            </label>
+            <label>Outline color
+                <input id="outlineColor" type="color" value="#ffffff" />
             </label>
             <label>Standard
                 <select id="standard">
@@ -85,13 +100,42 @@ SFGPUCRV----E</textarea>
                     <option value="">Color (default)</option>
                     <option value="black">Black</option>
                     <option value="white">White</option>
+                    <option value="custom">Custom (use Foreground)</option>
                 </select>
+            </label>
+            <label>Foreground color
+                <span class="color-row">
+                    <input id="fgColor" type="color" value="#000000" />
+                    <button id="fgReset" type="button" class="ghost mini">Default</button>
+                </span>
+            </label>
+            <label>Background color
+                <span class="color-row">
+                    <input id="bgColor" type="color" value="#ffffff" />
+                    <label class="inline-check"><input id="bgTransparent" type="checkbox" checked /> Transparent</label>
+                </span>
             </label>
             <label>Fit mode
                 <select id="fitMode">
                     <option value="contain" selected>Contain (preserve aspect)</option>
                     <option value="stretch">Stretch to canvas</option>
                 </select>
+            </label>
+        </div>
+
+        <h3 class="sub-h">Text modifiers (applied to every symbol)</h3>
+        <div class="grid">
+            <label>Special HQ text (replaces icon inside frame)
+                <input id="modSpecialHQ" type="text" maxlength="32" placeholder="e.g. HQ, A, 3" />
+            </label>
+            <label>Unique designation (right of symbol)
+                <input id="modUniqueDes" type="text" maxlength="32" placeholder="e.g. 1-7 IN" />
+            </label>
+            <label>Higher formation (right of symbol)
+                <input id="modHigherForm" type="text" maxlength="32" placeholder="e.g. 2 BCT" />
+            </label>
+            <label>Additional info (right of symbol)
+                <input id="modAddInfo" type="text" maxlength="32" placeholder="" />
             </label>
         </div>
     </section>

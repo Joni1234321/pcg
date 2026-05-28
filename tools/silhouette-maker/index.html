@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>silhouette maker</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header>
+    <h1>silhouette maker</h1>
+    <p class="sub">Drop any image (weapon photo, vehicle, anything), and get a clean silhouette PNG/JPG at any size and color.
+        Works best on photos with a plain background.</p>
+</header>
+
+<main>
+    <section class="panel compact">
+        <h2>1. Source images</h2>
+        <div id="dropzone" class="dropzone">
+            <p><b>Drop image files here</b> — or click to pick — or paste with <kbd>Ctrl</kbd>+<kbd>V</kbd> — or paste a URL below.</p>
+            <input id="filePicker" type="file" accept="image/*" multiple hidden />
+            <div class="url-row">
+                <input id="urlInput" type="text" placeholder="Paste an image URL (https://…) and press Enter — note: many sites block cross-origin loads" />
+                <button id="urlAdd" type="button">Add URL</button>
+            </div>
+        </div>
+        <p class="hint">Tip: right-click any image in Google Images → <i>Copy image</i> → click here and press Ctrl+V. Bulk drop is supported.</p>
+    </section>
+
+    <section class="panel">
+        <h2>2. Preview & download</h2>
+        <div class="row">
+            <label class="inline-color">Preview background
+                <input id="pageBg" type="color" value="#2a2e38" />
+            </label>
+            <label class="inline-check"><input id="pageBgCheck" type="checkbox" checked /> Use checkered pattern</label>
+            <button id="downloadAll" type="button">Download all</button>
+            <button id="clearAll" type="button" class="ghost">Clear images</button>
+            <span id="status" class="status"></span>
+        </div>
+        <div id="previews" class="preview-grid"></div>
+        <p class="hint">Single image → direct download. Multiple → zipped.</p>
+    </section>
+
+    <section class="panel">
+        <h2>3. Silhouette options</h2>
+        <div class="grid">
+            <label>Algorithm
+                <select id="algo">
+                    <option value="bg-color" selected>Remove background by color (recommended)</option>
+                    <option value="brightness">Brightness threshold (dark = silhouette)</option>
+                    <option value="alpha">Use existing alpha (PNG with transparency)</option>
+                </select>
+            </label>
+            <label>Background sample
+                <select id="bgSample">
+                    <option value="corners" selected>Auto (4 corners)</option>
+                    <option value="topleft">Top-left pixel</option>
+                    <option value="custom">Custom color →</option>
+                </select>
+            </label>
+            <label>Background color (when "Custom")
+                <input id="bgPick" type="color" value="#ffffff" />
+            </label>
+            <label>Threshold (0–255)
+                <input id="threshold" type="range" min="0" max="255" value="40" />
+                <small id="thresholdVal" class="hint">40</small>
+            </label>
+            <label>Edge softness (0–80)
+                <input id="softness" type="range" min="0" max="80" value="10" />
+                <small id="softnessVal" class="hint">10</small>
+            </label>
+            <label>Brightness threshold (for "Brightness" mode)
+                <input id="brightness" type="range" min="0" max="255" value="160" />
+                <small id="brightnessVal" class="hint">160</small>
+            </label>
+            <label>Silhouette color
+                <input id="silColor" type="color" value="#ffffff" />
+            </label>
+            <label>Output background
+                <span class="color-row">
+                    <input id="outBg" type="color" value="#000000" />
+                    <label class="inline-check"><input id="outBgTransparent" type="checkbox" checked /> Transparent</label>
+                </span>
+            </label>
+            <label>Output width (px)
+                <input id="outWidth" type="number" min="8" max="4096" value="512" />
+            </label>
+            <label>Output height (px)
+                <input id="outHeight" type="number" min="8" max="4096" value="512" />
+            </label>
+            <label>Fit mode
+                <select id="fitMode">
+                    <option value="contain" selected>Contain (preserve aspect)</option>
+                    <option value="stretch">Stretch to canvas</option>
+                    <option value="crop">Trim to silhouette bbox (square pad)</option>
+                </select>
+            </label>
+            <label>Padding (% of side)
+                <input id="padPct" type="number" min="0" max="40" step="0.5" value="4" />
+            </label>
+            <label>Format
+                <select id="format">
+                    <option value="png" selected>PNG (recommended)</option>
+                    <option value="jpg">JPG</option>
+                </select>
+            </label>
+            <label>Filename suffix
+                <input id="suffix" type="text" placeholder="e.g. _sil_512" />
+            </label>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>4. Effects <span class="hint sub-hint">(toggle any card on/off)</span></h2>
+        <div class="effect-row">
+
+            <div class="effect-card" data-fx="transform">
+                <header class="fx-head">
+                    <label class="fx-toggle"><input id="fxTransform" type="checkbox" checked /><span>Transform</span></label>
+                    <button id="resetTransform" type="button" class="mini-reset" title="Reset section">↺</button>
+                </header>
+                <div class="vslider-grid" data-vertical>
+                    <label>Rotation
+                        <input id="rotation" type="range" min="-180" max="180" step="1" value="0" />
+                        <small id="rotationVal" class="hint">0°</small>
+                    </label>
+                    <label>Scale
+                        <input id="scale" type="range" min="10" max="300" step="1" value="100" />
+                        <small id="scaleVal" class="hint">100%</small>
+                    </label>
+                    <label>Offset X
+                        <input id="offsetX" type="range" min="-50" max="50" step="1" value="0" />
+                        <small id="offsetXVal" class="hint">0%</small>
+                    </label>
+                    <label>Offset Y
+                        <input id="offsetY" type="range" min="-50" max="50" step="1" value="0" />
+                        <small id="offsetYVal" class="hint">0%</small>
+                    </label>
+                </div>
+                <div class="fx-extras">
+                    <label class="inline-check-row"><input id="flipH" type="checkbox" /> Flip H</label>
+                    <label class="inline-check-row"><input id="flipV" type="checkbox" /> Flip V</label>
+                </div>
+            </div>
+
+            <div class="effect-card" data-fx="mask">
+                <header class="fx-head">
+                    <label class="fx-toggle"><input id="fxMask" type="checkbox" checked /><span>Mask edit</span></label>
+                    <button id="resetMask" type="button" class="mini-reset" title="Reset section">↺</button>
+                </header>
+                <div class="vslider-grid" data-vertical>
+                    <label>Dilate
+                        <input id="dilate" type="range" min="-20" max="20" step="1" value="0" />
+                        <small id="dilateVal" class="hint">0</small>
+                    </label>
+                    <label>Feather
+                        <input id="feather" type="range" min="0" max="20" step="0.5" value="0" />
+                        <small id="featherVal" class="hint">0</small>
+                    </label>
+                </div>
+                <div class="fx-extras">
+                    <label class="inline-check-row"><input id="invertMask" type="checkbox" /> Invert mask</label>
+                </div>
+            </div>
+
+            <div class="effect-card" data-fx="outline">
+                <header class="fx-head">
+                    <label class="fx-toggle"><input id="fxOutline" type="checkbox" /><span>Outline</span></label>
+                    <button id="resetOutline" type="button" class="mini-reset" title="Reset section">↺</button>
+                </header>
+                <div class="vslider-grid" data-vertical>
+                    <label>Width
+                        <input id="outlineW" type="range" min="0" max="20" step="0.5" value="3" />
+                        <small id="outlineWVal" class="hint">3</small>
+                    </label>
+                </div>
+                <div class="fx-extras">
+                    <label class="inline-color">Color
+                        <input id="outlineColor" type="color" value="#000000" />
+                    </label>
+                </div>
+            </div>
+
+            <div class="effect-card" data-fx="shadow">
+                <header class="fx-head">
+                    <label class="fx-toggle"><input id="fxShadow" type="checkbox" /><span>Drop shadow</span></label>
+                    <button id="resetShadow" type="button" class="mini-reset" title="Reset section">↺</button>
+                </header>
+                <div class="vslider-grid" data-vertical>
+                    <label>Blur
+                        <input id="shadowBlur" type="range" min="0" max="40" step="0.5" value="8" />
+                        <small id="shadowBlurVal" class="hint">8</small>
+                    </label>
+                    <label>X
+                        <input id="shadowX" type="range" min="-40" max="40" step="1" value="4" />
+                        <small id="shadowXVal" class="hint">4</small>
+                    </label>
+                    <label>Y
+                        <input id="shadowY" type="range" min="-40" max="40" step="1" value="4" />
+                        <small id="shadowYVal" class="hint">4</small>
+                    </label>
+                    <label>Alpha
+                        <input id="shadowAlpha" type="range" min="0" max="100" step="1" value="60" />
+                        <small id="shadowAlphaVal" class="hint">60%</small>
+                    </label>
+                </div>
+                <div class="fx-extras">
+                    <label class="inline-color">Color
+                        <input id="shadowColor" type="color" value="#000000" />
+                    </label>
+                </div>
+            </div>
+
+        </div>
+        <div class="row">
+            <button id="resetAll" type="button" class="ghost">Reset all controls</button>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>5. Presets <span class="hint sub-hint">(save/load all settings as JSON)</span></h2>
+        <div class="row">
+            <button id="presetSave" type="button">Download preset…</button>
+            <button id="presetLoadBtn" type="button" class="ghost">Load preset file…</button>
+            <input id="presetFile" type="file" accept="application/json,.json" hidden />
+            <button id="presetCopy" type="button" class="ghost">Copy current → JSON box</button>
+            <button id="presetApply" type="button" class="ghost">Apply JSON from box</button>
+            <span id="presetStatus" class="status"></span>
+        </div>
+        <textarea id="presetText" rows="6" spellcheck="false"
+            placeholder="Settings JSON appears here when you click 'Copy current → JSON box'. Paste a previously-saved JSON in here and click 'Apply JSON from box' to restore."></textarea>
+    </section>
+</main>
+
+<footer>
+    <p>Pure client-side — your images never leave your browser.</p>
+</footer>
+
+<script src="node_modules/jszip/dist/jszip.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

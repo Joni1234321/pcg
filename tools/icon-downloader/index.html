@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>icon downloader</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header>
+    <h1>icon downloader</h1>
+    <p class="sub">Search thousands of free SVG icons via the <a href="https://iconify.design" target="_blank" rel="noopener">Iconify</a> API
+        (game-icons, Lucide, Phosphor, Material, etc.) and export as SVG / PNG / JPG in any color and size — perfect for game textures you want to tint.</p>
+</header>
+
+<main>
+    <section class="panel">
+        <h2>1. Search</h2>
+        <div class="search-row">
+            <input id="query" type="text" autocomplete="off"
+                   placeholder="e.g. sword, rifle, helmet, soldier, tank, magic…" />
+            <select id="collection">
+                <option value="">All collections</option>
+                <option value="game-icons" selected>game-icons (4k+ game icons, CC-BY 3.0)</option>
+                <option value="lucide">Lucide (clean line icons, ISC)</option>
+                <option value="ph">Phosphor (MIT)</option>
+                <option value="mdi">Material Design Icons (Apache 2.0)</option>
+                <option value="tabler">Tabler (MIT)</option>
+                <option value="fa6-solid">Font Awesome 6 Solid (CC-BY 4.0)</option>
+                <option value="material-symbols">Material Symbols (Apache 2.0)</option>
+            </select>
+            <button id="searchBtn" type="button">Search</button>
+        </div>
+        <p class="hint">Tip: most game-style silhouettes live in <code>game-icons</code>. Click a result to add it to the selection at the bottom.</p>
+        <div id="results" class="icon-grid"></div>
+        <div class="row">
+            <button id="loadMore" type="button" class="ghost" hidden>Load more</button>
+            <span id="searchStatus" class="status"></span>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>2. Output options</h2>
+        <div class="grid">
+            <label>Format
+                <select id="format">
+                    <option value="svg">SVG (vector)</option>
+                    <option value="png" selected>PNG (transparent)</option>
+                    <option value="jpg">JPG (white background)</option>
+                </select>
+            </label>
+            <label>Width (px)
+                <input id="width" type="number" min="8" max="4096" value="256" />
+            </label>
+            <label>Height (px)
+                <input id="height" type="number" min="8" max="4096" value="256" />
+            </label>
+            <label>Padding (px)
+                <input id="padding" type="number" min="0" max="512" value="0" />
+            </label>
+            <label>Icon color
+                <span class="color-row">
+                    <input id="iconColor" type="color" value="#ffffff" />
+                    <label class="inline-check"><input id="iconKeepColor" type="checkbox" /> Keep original</label>
+                </span>
+            </label>
+            <label>Background color
+                <span class="color-row">
+                    <input id="bgColor" type="color" value="#000000" />
+                    <label class="inline-check"><input id="bgTransparent" type="checkbox" checked /> Transparent</label>
+                </span>
+            </label>
+            <label>Fit mode
+                <select id="fitMode">
+                    <option value="contain" selected>Contain (preserve aspect)</option>
+                    <option value="stretch">Stretch to canvas</option>
+                </select>
+            </label>
+            <label>Filename suffix (optional)
+                <input id="suffix" type="text" placeholder="e.g. _256" />
+            </label>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>3. Selected icons</h2>
+        <div id="selected" class="icon-grid selected"></div>
+        <div class="row">
+            <button id="downloadAll" type="button">Download all</button>
+            <button id="clearSelected" type="button" class="ghost">Clear selection</button>
+            <span id="status" class="status"></span>
+        </div>
+        <p class="hint">Single icon → direct file. Multiple → a .zip including an <code>ATTRIBUTION.txt</code> when icons require it (e.g. game-icons CC-BY 3.0).</p>
+    </section>
+</main>
+
+<footer>
+    <p>Icons via the free <a href="https://iconify.design" target="_blank" rel="noopener">Iconify API</a>.
+       Respect each icon set's license (shown on hover). <a href="https://stuk.github.io/jszip/">JSZip</a> bundled locally.</p>
+</footer>
+
+<script src="node_modules/jszip/dist/jszip.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

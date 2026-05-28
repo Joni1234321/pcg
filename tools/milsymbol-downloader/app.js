@@ -11,8 +11,17 @@
         height: $("height"),
         symbolSize: $("symbolSize"),
         padding: $("padding"),
+        msPadding: $("msPadding"),
+        scale: $("scale"),
+        strokeWidth: $("strokeWidth"),
+        outlineWidth: $("outlineWidth"),
+        outlineColor: $("outlineColor"),
         standard: $("standard"),
         monoColor: $("monoColor"),
+        fgColor: $("fgColor"),
+        fgReset: $("fgReset"),
+        bgColor: $("bgColor"),
+        bgTransparent: $("bgTransparent"),
         fitMode: $("fitMode"),
         preview: $("preview"),
         downloadAll: $("downloadAll"),
@@ -22,6 +31,10 @@
         symbolSearch: $("symbolSearch"),
         symbolResults: $("symbolResults"),
         affiliation: $("affiliation"),
+        modSpecialHQ: $("modSpecialHQ"),
+        modUniqueDes: $("modUniqueDes"),
+        modHigherForm: $("modHigherForm"),
+        modAddInfo: $("modAddInfo"),
     };
 
     const SAMPLES = [
@@ -43,16 +56,48 @@
         const opts = {
             size: clampInt(els.symbolSize.value, 8, 2048, 100),
             standard: els.standard.value,
+            padding: clampInt(els.msPadding.value, 0, 64, 0),
+            strokeWidth: clampFloat(els.strokeWidth.value, 0, 40, 3),
         };
-        if (els.monoColor.value) {
-            opts.monoColor = els.monoColor.value;
+
+        // Optional halo / outer outline
+        const ow = clampFloat(els.outlineWidth.value, 0, 40, 0);
+        if (ow > 0) {
+            opts.outlineWidth = ow;
+            opts.outlineColor = els.outlineColor.value;
+        }
+
+        // Monochrome / foreground color handling.
+        const mono = els.monoColor.value;
+        if (mono === "custom") {
+            opts.monoColor = els.fgColor.value;
+            opts.fill = false;
+        } else if (mono) {
+            opts.monoColor = mono;
             opts.fill = false;
         }
+
+        // Text modifiers (only set when non-empty).
+        const sp = els.modSpecialHQ.value.trim();
+        const ud = els.modUniqueDes.value.trim();
+        const hf = els.modHigherForm.value.trim();
+        const ai = els.modAddInfo.value.trim();
+        if (sp) opts.specialHeadquarters = sp;
+        if (ud) opts.uniqueDesignation = ud;
+        if (hf) opts.higherFormation = hf;
+        if (ai) opts.additionalInformation = ai;
+
         return opts;
     }
 
     function clampInt(v, lo, hi, def) {
         const n = parseInt(v, 10);
+        if (!Number.isFinite(n)) return def;
+        return Math.min(hi, Math.max(lo, n));
+    }
+
+    function clampFloat(v, lo, hi, def) {
+        const n = parseFloat(v);
         if (!Number.isFinite(n)) return def;
         return Math.min(hi, Math.max(lo, n));
     }
@@ -65,8 +110,14 @@
     /**
      * Render an SVG string into a target-sized SVG (with viewBox math so it
      * fits inside width x height with padding).
+     *
+     * If bgColor is provided (non-null), a solid background <rect> is added.
+     * scaleMul (default 1) multiplies the computed fit scale; values > 1 let
+     * the symbol bleed past the canvas edges (useful to defeat milsymbol's
+     * built-in viewBox margin).
      */
-    function fitSvg(rawSvg, targetW, targetH, padding, fitMode) {
+    function fitSvg(rawSvg, targetW, targetH, padding, fitMode, bgColor, scaleMul) {
+        scaleMul = scaleMul || 1;
         const parser = new DOMParser();
         const doc = parser.parseFromString(rawSvg, "image/svg+xml");
         const src = doc.documentElement;
@@ -86,22 +137,36 @@
 
         let scale, drawW, drawH;
         if (fitMode === "stretch") {
-            drawW = innerW; drawH = innerH;
+            drawW = innerW * scaleMul;
+            drawH = innerH * scaleMul;
         } else {
-            scale = Math.min(innerW / vw, innerH / vh);
+            scale = Math.min(innerW / vw, innerH / vh) * scaleMul;
             drawW = vw * scale;
             drawH = vh * scale;
         }
         const offX = (targetW - drawW) / 2;
         const offY = (targetH - drawH) / 2;
 
-        // Build a new SVG that wraps the original content.
+        // Build a new SVG that wraps the original content and clips overflow.
         const NS = "http://www.w3.org/2000/svg";
         const out = document.createElementNS(NS, "svg");
         out.setAttribute("xmlns", NS);
         out.setAttribute("width", String(targetW));
         out.setAttribute("height", String(targetH));
         out.setAttribute("viewBox", `0 0 ${targetW} ${targetH}`);
+        // Clip anything that overflows when scaleMul > 1 or padding < 0.
+        out.setAttribute("overflow", "hidden");
+        out.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+        if (bgColor) {
+            const bg = document.createElementNS(NS, "rect");
+            bg.setAttribute("x", "0");
+            bg.setAttribute("y", "0");
+            bg.setAttribute("width", String(targetW));
+            bg.setAttribute("height", String(targetH));
+            bg.setAttribute("fill", bgColor);
+            out.appendChild(bg);
+        }
 
         const g = document.createElementNS(NS, "g");
         if (fitMode === "stretch") {
@@ -170,13 +235,15 @@
     async function renderOne(sidc) {
         const w = clampInt(els.width.value, 8, 4096, 256);
         const h = clampInt(els.height.value, 8, 4096, 256);
-        const padding = clampInt(els.padding.value, 0, 512, 8);
+        const padding = clampInt(els.padding.value, -512, 512, 0);
         const fitMode = els.fitMode.value;
         const format = els.format.value;
+        const bg = currentBg(format);
+        const scaleMul = clampFloat(els.scale.value, 0.1, 4, 1);
 
         const sym = buildSymbol(sidc);
         const rawSvg = sym.asSVG();
-        const finalSvg = fitSvg(rawSvg, w, h, padding, fitMode);
+        const finalSvg = fitSvg(rawSvg, w, h, padding, fitMode, bg, scaleMul);
 
         let blob, ext, mime;
         if (format === "svg") {
@@ -184,15 +251,26 @@
             ext = "svg";
             mime = "image/svg+xml";
         } else if (format === "png") {
+            // SVG already has the bg rect baked in for PNG.
             blob = await svgToRaster(finalSvg, w, h, "image/png", null);
             ext = "png";
             mime = "image/png";
         } else {
-            blob = await svgToRaster(finalSvg, w, h, "image/jpeg", "#ffffff");
+            // For JPG, always fall back to white if user picked transparent.
+            blob = await svgToRaster(finalSvg, w, h, "image/jpeg", bg || "#ffffff");
             ext = "jpg";
             mime = "image/jpeg";
         }
         return { sidc, blob, ext, mime, svg: finalSvg };
+    }
+
+    /** Resolve the effective background color for this format ('' = none/transparent). */
+    function currentBg(format) {
+        if (format === "jpg") {
+            // JPG can't be transparent; if user wants transparent, treat as white.
+            return els.bgTransparent.checked ? "" : els.bgColor.value;
+        }
+        return els.bgTransparent.checked ? "" : els.bgColor.value;
     }
 
     async function updatePreview() {
@@ -204,8 +282,10 @@
         }
         const w = clampInt(els.width.value, 8, 4096, 256);
         const h = clampInt(els.height.value, 8, 4096, 256);
-        const padding = clampInt(els.padding.value, 0, 512, 8);
+        const padding = clampInt(els.padding.value, -512, 512, 0);
         const fitMode = els.fitMode.value;
+        const bg = currentBg(els.format.value);
+        const scaleMul = clampFloat(els.scale.value, 0.1, 4, 1);
 
         for (const sidc of codes) {
             const tile = document.createElement("div");
@@ -221,7 +301,7 @@
 
             try {
                 const sym = buildSymbol(sidc);
-                const svgStr = fitSvg(sym.asSVG(), w, h, padding, fitMode);
+                const svgStr = fitSvg(sym.asSVG(), w, h, padding, fitMode, bg, scaleMul);
                 // Display preview inline via blob URL so we see exactly what gets exported.
                 const url = URL.createObjectURL(svgToBlob(svgStr));
                 const img = new Image();
@@ -293,10 +373,19 @@
     const previewDebounced = debounce(updatePreview, 150);
     [
         "codes", "format", "width", "height",
-        "symbolSize", "padding", "standard", "monoColor", "fitMode",
+        "symbolSize", "padding", "msPadding", "scale", "strokeWidth",
+        "outlineWidth", "outlineColor", "standard",
+        "monoColor", "fgColor", "bgColor", "bgTransparent", "fitMode",
+        "modSpecialHQ", "modUniqueDes", "modHigherForm", "modAddInfo",
     ].forEach((id) => {
         els[id].addEventListener("input", previewDebounced);
         els[id].addEventListener("change", previewDebounced);
+    });
+
+    els.fgReset.addEventListener("click", () => {
+        els.monoColor.value = "";
+        els.fgColor.value = "#000000";
+        updatePreview();
     });
 
     els.downloadAll.addEventListener("click", onDownloadAll);

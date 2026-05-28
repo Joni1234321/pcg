@@ -1,0 +1,12 @@
+{
+  "name": "icon-downloader",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Search and download free game/UI icons (game-icons, Lucide, Phosphor, etc.) via the Iconify API as SVG/PNG/JPG.",
+  "scripts": {
+    "start": "npx --yes http-server -c-1 -o /index.html ."
+  },
+  "dependencies": {
+    "jszip": "^3.10.1"
+  }
+}
