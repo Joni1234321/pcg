@@ -1,41 +1,46 @@
 {
-  "version": 3,
-  "configurePresets": [
-    {
-      "name": "msys-base",
-      "hidden": true,
-      "inherits": "base",
-
-      "environment": {
-        "PATH": "D:/tools/msys64/clang64/bin;D:/tools/msys64/usr/bin;$penv{PATH}"
-      },
-
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "D:/tools/msys64/clang64/bin/clang.exe",
-        "CMAKE_CXX_COMPILER": "D:/tools/msys64/clang64/bin/clang++.exe",
-        "CMAKE_PREFIX_PATH": "D:/tools/msys64/clang64"
-      }
-    },
-
-    {
-      "name": "xd-msys",
-      "inherits": ["xd", "msys-base"]
-    },
-
-    {
-      "name": "xdc-msys",
-      "inherits": ["xdc", "msys-base"]
-    },
-
-    {
-      "name": "xd-msys-vscode",
-      "inherits": ["xd-msys"],
-      "binaryDir": "${sourceDir}/build/code-xd-msys"
-    },
-    {
-      "name": "xdc-msys-vscode",
-      "inherits": ["xdc-msys"],
-      "binaryDir": "${sourceDir}/build/code-xdc-msys"
-    }
-  ]
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "msys-base",
+            "hidden": true,
+            "inherits": "base",
+            "environment": {
+                "PATH": "D:/tools/msys64/clang64/bin;D:/tools/msys64/usr/bin;$penv{PATH}"
+            },
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "D:/tools/msys64/clang64/bin/clang.exe",
+                "CMAKE_CXX_COMPILER": "D:/tools/msys64/clang64/bin/clang++.exe",
+                "CMAKE_PREFIX_PATH": "D:/tools/msys64/clang64"
+            }
+        },
+        {
+            "name": "xd-msys",
+            "inherits": [
+                "xd",
+                "msys-base"
+            ]
+        },
+        {
+            "name": "xdc-msys",
+            "inherits": [
+                "xdc",
+                "msys-base"
+            ]
+        },
+        {
+            "name": "xd-msys-vscode",
+            "inherits": [
+                "xd-msys"
+            ],
+            "binaryDir": "${sourceDir}/build/code-xd-msys"
+        },
+        {
+            "name": "xdc-msys-vscode",
+            "inherits": [
+                "xdc-msys"
+            ],
+            "binaryDir": "${sourceDir}/build/code-xdc-msys"
+        }
+    ]
 }
