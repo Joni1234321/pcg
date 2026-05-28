@@ -3,9 +3,11 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <functional>
 #include <optional>
+#include <utility>
 
 #include "0_engine/g_globals.hpp"
 #include "0_engine/r_window_state.hpp"
+#include "0_engine/u_assets.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
 #include "0_engine/u_fonts.hpp"
@@ -49,6 +51,7 @@ struct Counter {
 };
 struct CounterStack {
     int2 axial { };
+    UnitIcon icon { };
     Array<Counter, 12> stack { };
     Label label_top;
     Label label_center;
@@ -56,10 +59,40 @@ struct CounterStack {
     SurfaceLabel label_vertical;
 };
 
+
+struct CounterTextures {
+    HandleOptional<Texture> infantry;
+    HandleOptional<Texture> artillery;
+    HandleOptional<Texture> armor;
+    HandleOptional<Texture> headquarters;
+
+    explicit CounterTextures (const RelativePath& dir) {
+        infantry = globalData.Create<Texture>(Asset(dir / "counter-rifle.jpg"));
+        artillery =  globalData.Create<Texture>(Asset(dir / "counter-art.jpg"));
+        armor =  globalData.Create<Texture>(Asset(dir / "counter-armor.jpg"));
+        headquarters =  globalData.Create<Texture>(Asset(dir / "counter-hq.jpg"));
+    }
+    [[nodiscard]] HandleOptional<Texture> ForIcon(const UnitIcon icon) const {
+        switch (icon) {
+            case UnitIcon::ICON_INF: return infantry;
+            case UnitIcon::ICON_ART: return artillery;
+            case UnitIcon::ICON_TANK: return armor;
+            case UnitIcon::ICON_HQ: return headquarters;
+        }
+        std::unreachable();
+    }
+};
+struct CounterTextureStack {
+    CounterTextures counter_textures_niehorster { "counter-niehorster" };
+    CounterTextures counter_textures_niehorster_big { "counter-niehorster-big" };
+    CounterTextures counter_textures_real { "counter-real" };
+};
+
 inline void RenderCounters(const Pool<CounterStack>& counters) {
     const CameraState& camera = Singleton::Get<CameraState>();
     const WindowState& window_state = Singleton::Get<WindowState>();
     const ui::FontCollection& font_collection = Singleton::Get<ui::FontCollection>();
+    const CounterTextures& counter_textures = Singleton::Get<CounterTextureStack>().counter_textures_real;
 
     constexpr f32 COUNTER_SIZE = 1.1F;
     const float2 counter_size = float2 { camera.scale * COUNTER_SIZE } * float2 { 1.0F, 0.8F };
@@ -105,15 +138,30 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         }
 
         // area
-        const AABBF area_icon_border = AABBF::FromPoint(counter_point + counter_size * float2 { 0.20F, 0.25F }, counter_size * float2 { 0.6F, 0.4F });
+        const AABBF area_icon_border = AABBF::FromCenter(counter_center, counter_size * float2 { 0.6F, 0.4F }).WithOffset(counter_size * float2 { 0.0F, -0.05F });
         constexpr Color COLOR_ICON_BORDER { colors::BLACK };
         (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_ICON_BORDER.r, COLOR_ICON_BORDER.g, COLOR_ICON_BORDER.b, COLOR_ICON_BORDER.a);
         (void)SDL_RenderFillRect(window_state.renderer, area_icon_border);
 
         const AABBF area_icon = area_icon_border.WithPadding(float2 { camera.scale / 40.0F });
         const Color color_icon = counter.stack[0].color_icon;
-        (void)SDL_SetRenderDrawColor(window_state.renderer, color_icon.r, color_icon.g, color_icon.b, color_icon.a);
-        (void)SDL_RenderFillRect(window_state.renderer, area_icon);
+        const HandleOptional<Texture> texture_handle = counter_textures.ForIcon(counter.icon);
+        SDL_Texture* icon_texture = texture_handle.IsValid() ? globalData[texture_handle.GetHandle()].ToSDL() : nullptr;
+        if (icon_texture) {
+            (void)SDL_SetTextureColorMod(icon_texture, color_icon.r, color_icon.g, color_icon.b);
+            (void)SDL_SetTextureAlphaMod(icon_texture, color_icon.a);
+            (void)SDL_RenderTexture(window_state.renderer, icon_texture, nullptr, area_icon);
+        } else {
+            (void)SDL_SetRenderDrawColor(window_state.renderer, color_icon.r, color_icon.g, color_icon.b, color_icon.a);
+            (void)SDL_RenderFillRect(window_state.renderer, area_icon);
+            if (font_normal_opt.has_value()) {
+                const ui::Font& font_normal = font_normal_opt.value();
+                (void)TTF_SetTextFont(counter.label_center, font_normal);
+                (void)TTF_SetTextColorFloat(counter.label_center, 0.0F, 0.0F, 0.0F, 1.0F);
+                (void)TTF_SetTextWrapWidth(counter.label_center, static_cast<i32>(counter_size.x));
+                (void)TTF_DrawRendererText(counter.label_center, counter_point.x, counter_point.y + counter_size.y * 0.4F - static_cast<f32>(pt_normal) * 0.3F);
+            }
+        }
 
         //labels
         if (font_normal_opt.has_value()) {
@@ -124,11 +172,6 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             // (void)TTF_SetTextColorFloat(counter.label_bottom, 0.0F, 0.0F, 0.0F, 1.0F);
             (void)TTF_SetTextWrapWidth(counter.label_bottom, static_cast<i32>(counter_size.x));
             (void)TTF_DrawRendererText(counter.label_bottom, counter_point.x, counter_point.y + counter_size.y - static_cast<f32>(pt_normal));
-
-            (void)TTF_SetTextFont(counter.label_center, font_normal);
-            (void)TTF_SetTextColorFloat(counter.label_center, 0.0F, 0.0F, 0.0F, 1.0F);
-            (void)TTF_SetTextWrapWidth(counter.label_center, static_cast<i32>(counter_size.x));
-            (void)TTF_DrawRendererText(counter.label_center, counter_point.x, counter_point.y + counter_size.y * 0.4F - static_cast<f32>(pt_normal) * 0.3F);
 
             (void)TTF_SetTextFont(counter.label_top, font_normal);
             // (void)TTF_SetTextColorFloat(counter.label_top, 0.0F, 0.0F, 0.0F, 1.0F);

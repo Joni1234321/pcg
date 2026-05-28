@@ -132,9 +132,10 @@ void UnitToCounterAppend(HexState& hex_state) {
 
         const Unit& unit_largest_echelon = hex_state.units[unit_handle_largest_echelon];
 
+        counter.icon = unit_largest_echelon.icon;
         counter.label_top.SetText(EchelonToString(unit_largest_echelon.echelon));
         counter.label_center.SetText(UnitIconToString(unit_largest_echelon.icon));
-        counter.label_bottom.SetText(std::format("{}-{}-{}", dmg, def, move));
+        counter.label_bottom.SetText(std::format("{}-{}-{}", dmg / 10, def / 10,  move));
         Span span(unit_largest_echelon.name);
         String unit_name = String(span);
         counter.label_vertical.SetText(unit_name);
