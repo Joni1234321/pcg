@@ -39,9 +39,13 @@ struct Unit {
     UnitIcon icon;
     Color color;
     int2 axial;
-    u32 dmg;
     u32 move;
-    u32 def;
+    u32 squad_inf;
+    u32 squad_tank;
+    u32 squad_art;
+
+    [[nodiscard]] constexpr u32 dmg () const { return squad_inf / 3 + squad_art * 2 + squad_tank / 5 * 8; }
+    [[nodiscard]] constexpr u32 def () const { return squad_inf / 3 * 2 + squad_art + squad_tank / 5; }
 };
 struct UnitGroup {
     List<Handle<Unit>> unit_handles;
@@ -100,7 +104,7 @@ struct HexState {
         case TerrainType::TERRAIN_MOUNTAIN: return colors::GRAY;
         case TerrainType::TERRAIN_SNOW: return colors::WHITE;
     }
-    __builtin_unreachable();
+    std::unreachable();;
 }
 
 [[nodiscard]] constexpr Color TerrainToColorScheme(const TerrainType terrain) {
@@ -128,7 +132,7 @@ struct HexState {
             case TerrainType::TERRAIN_SNOW: return Color { 232U, 226U, 210U };
         }
     }
-    __builtin_unreachable();
+    std::unreachable();;
 }
 [[nodiscard]] constexpr u32 TerrainToMovementCost(const TerrainType terrain) {
     switch (terrain) {
@@ -140,7 +144,7 @@ struct HexState {
         case TerrainType::TERRAIN_MOUNTAIN: return 5U;
         case TerrainType::TERRAIN_SNOW: return 4U;
     }
-    __builtin_unreachable();
+    std::unreachable();;
 }
 [[nodiscard]] constexpr Color CountryTagToColor(const CountryTag tag) {
     switch (tag) {
@@ -150,7 +154,7 @@ struct HexState {
         case CountryTag::TAG_NONE: return colors::WHITE;
     }
     assert(false);
-    __builtin_unreachable();
+    std::unreachable();;
 }
 
 constexpr HexList<Hex> GenerateTerrain(const uint2 map_size, const u32 seed) {

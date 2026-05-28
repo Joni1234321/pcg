@@ -86,6 +86,8 @@ static constexpr f32 DEG_2_RAD = PI / 180.0F;
 [[nodiscard]] inline f32 Sin(const f32 t) { return std::sinf(t); }
 [[nodiscard]] inline f32 Cos(const f32 t) { return std::cosf(t); }
 [[nodiscard]] inline f32 Atan2(const f32 x, const f32 y) { return std::atan2f(x, y); }
+[[nodiscard]] constexpr f32 Pow (const f32 x, const f32 y) { return std::powf(x, y); }
+[[nodiscard]] constexpr u32 Pow (const u32 x, const u32 y) { return static_cast<u32>(std::powf(static_cast<f32>(x), static_cast<f32>(y))); }
 constexpr std::pair<u32, u32> Div(const u32 value, const u32 divisor) { return { value / divisor, value % divisor }; }
 template <typename T = void> T Sub(const T& left, const T& right) { return left - right; }
 template <typename T = void> struct Minus {

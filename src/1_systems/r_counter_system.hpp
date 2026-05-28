@@ -28,7 +28,7 @@ enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHEL
         case Echelon::ECHELON_CORPS: return "xxx";
         case Echelon::ECHELON_ARMY: return "xxxx";
     }
-    __builtin_unreachable();
+    std::unreachable();;
 }
 
 enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK };
@@ -40,7 +40,7 @@ enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK };
         case UnitIcon::ICON_HQ: return "hq";
         case UnitIcon::ICON_TANK: return "tnk";
     }
-    __builtin_unreachable();
+    std::unreachable();;
 }
 struct Counter {
     Color color_background;

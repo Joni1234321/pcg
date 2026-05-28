@@ -122,8 +122,8 @@ void UnitToCounterAppend(HexState& hex_state) {
                 const Handle<Unit> unit_handle = unit_handles[i];
                 const Unit& unit = hex_state.units[unit_handle];
                 counter.stack[i] = Counter { .color_background = CountryTagToColor(unit.tag), .color_icon = unit.color, .color_border = colors::BLACK };
-                dmg += unit.dmg;
-                def += unit.def;
+                dmg += unit.dmg();
+                def += unit.def();
                 move = math::Max(unit.move, move);
             }
         }
@@ -364,13 +364,15 @@ struct HexSystem {
                 const b8 attacker_won = battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_RETREAT || battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_ROUT || battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_SURRENDER;
 
                 for (Unit& attacker : units_attacker) {
-                    attacker.dmg = math::SaturatingSub(attacker.dmg, battle_outcome.dmg_attacker);
-                    attacker.def = math::SaturatingSub(attacker.def, battle_outcome.dmg_attacker / 2);
+                    attacker.squad_inf = math::SaturatingSub(attacker.squad_inf, battle_outcome.dmg_attacker);
+                    attacker.squad_art = math::SaturatingSub(attacker.squad_art, battle_outcome.dmg_attacker / 8);
+                    attacker.squad_tank = math::SaturatingSub(attacker.squad_art, battle_outcome.dmg_attacker / 64);
                     attacker.move = math::SaturatingSub(attacker.move, MOVE_COST_ATTACK);
                 }
                 for (Unit& defender : units_defender) {
-                    defender.dmg = math::SaturatingSub(defender.dmg, battle_outcome.dmg_defender);
-                    defender.def = math::SaturatingSub(defender.def, battle_outcome.dmg_defender / 2);
+                    defender.squad_inf = math::SaturatingSub(defender.squad_inf, battle_outcome.dmg_defender);
+                    defender.squad_art = math::SaturatingSub(defender.squad_art, battle_outcome.dmg_defender / 8);
+                    defender.squad_tank = math::SaturatingSub(defender.squad_art, battle_outcome.dmg_defender / 64);
                 }
                 switch (battle_outcome.post_battle_outcome) {
                     case PostBattleOutcome::DEFENDER_COUNTER_ATTACKED:
@@ -466,6 +468,31 @@ const char* NumberToOrdinal(u32 number) {
     }
 }
 
+struct UnitPreset {
+    u32 move;
+    u32 squad_inf;
+    u32 squad_art;
+    u32 squad_tank;
+};
+UnitPreset GetUnitPreset(UnitIcon icon) {
+    switch (icon) {
+        case UnitIcon::ICON_INF: return UnitPreset { .move = 16, .squad_inf = 3 * 3 * 3, .squad_art = 3, .squad_tank = 0 };
+        case UnitIcon::ICON_ART:return UnitPreset { .move = 16, .squad_inf = 3, .squad_art = 4 * 3, .squad_tank = 0 };
+        case UnitIcon::ICON_HQ: return UnitPreset { .move = 64, .squad_inf = 3, .squad_art = 0, .squad_tank = 0 };
+        case UnitIcon::ICON_TANK:return UnitPreset { .move = 32, .squad_inf = 3 * 3, .squad_art = 6 * 3, .squad_tank =  5 * 3 };
+        default: assert(false); std::unreachable();
+    }
+}
+void HexStateUpdateUnitStats (HexState& hex_state) {
+    for (Unit& unit : hex_state.units) {
+        UnitPreset unit_preset = GetUnitPreset(unit.icon);
+        unit.move = unit_preset.move;
+        unit.squad_inf = unit_preset.squad_inf;
+        unit.squad_art = unit_preset.squad_art;
+        unit.squad_tank = unit_preset.squad_tank;
+    }
+}
+
 void HexStateUpdateOOB(HexState& hex_state) {
     f32 hue_next = 0.0F;
     u32 number_army = 1;
@@ -535,33 +562,34 @@ void arcade::RunHex() {
     camera.map_world_max = HexAxialToWorld(static_cast<int2>(hex_state.hex_map.map_size - uint2 { 1, 1 }));
 
     // GER: Heeresgruppe → I.Korps → Rgt → Bn
-    const Handle<Unit> ger_hgr = hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_ARMY, .icon = UnitIcon::ICON_HQ, .axial = { 0, 2 }, .dmg = 0, .move = 50, .def = 0 });
-    const Handle<Unit> ger_kps = hex_state.units.EmplaceBack(Unit { .parent = ger_hgr, .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_CORPS, .icon = UnitIcon::ICON_HQ, .axial = { 2, 2 }, .dmg = 0, .move = 50, .def = 0 });
-    const Handle<Unit> ger_r7 = hex_state.units.EmplaceBack(Unit { .parent = ger_kps, .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_REGIMENT, .icon = UnitIcon::ICON_INF, .axial = { 4, 1 }, .dmg = 6, .move = 7, .def = 2 });
-    const Handle<Unit> ger_r8 = hex_state.units.EmplaceBack(Unit { .parent = ger_kps, .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_REGIMENT, .icon = UnitIcon::ICON_INF, .axial = { 4, 3 }, .dmg = 6, .move = 7, .def = 2 });
-    (void)hex_state.units.EmplaceBack(Unit { .parent = ger_kps, .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK, .axial = { 5, 2 }, .dmg = 7, .move = 7, .def = 1 });
-    (void)hex_state.units.EmplaceBack(Unit { .parent = ger_kps, .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_ART, .axial = { 3, 2 }, .dmg = 5, .move = 7, .def = 0 });
-    (void)hex_state.units.EmplaceBack(Unit { .parent = ger_r7, .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .axial = { 6, 1 }, .dmg = 5, .move = 7, .def = 1 });
-    (void)hex_state.units.EmplaceBack(Unit { .parent = ger_r8, .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .axial = { 6, 3 }, .dmg = 5, .move = 7, .def = 1 });
+    const Handle<Unit> ger_hgr = hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_ARMY, .icon = UnitIcon::ICON_HQ, .axial = { 0, 2 }});
+    const Handle<Unit> ger_kps = hex_state.units.EmplaceBack(Unit { .parent = ger_hgr, .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_CORPS, .icon = UnitIcon::ICON_HQ, .axial = { 2, 2 }});
+    const Handle<Unit> ger_r7 = hex_state.units.EmplaceBack(Unit { .parent = ger_kps, .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_REGIMENT, .icon = UnitIcon::ICON_INF, .axial = { 4, 1 }});
+    const Handle<Unit> ger_r8 = hex_state.units.EmplaceBack(Unit { .parent = ger_kps, .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_REGIMENT, .icon = UnitIcon::ICON_INF, .axial = { 4, 3 }});
+    (void)hex_state.units.EmplaceBack(Unit { .parent = ger_kps, .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK, .axial = { 5, 2 }});
+    (void)hex_state.units.EmplaceBack(Unit { .parent = ger_kps, .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_ART, .axial = { 3, 2 }});
+    (void)hex_state.units.EmplaceBack(Unit { .parent = ger_r7, .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .axial = { 6, 1 }});
+    (void)hex_state.units.EmplaceBack(Unit { .parent = ger_r8, .tag = CountryTag::TAG_GER, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .axial = { 6, 3 }});
 
     // SOV: Front → I Gds Corps → Rifle Rgts → Bns
-    const Handle<Unit> sov_frt = hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_ARMY, .icon = UnitIcon::ICON_HQ, .axial = { 14, 3 }, .dmg = 0, .move = 50, .def = 0 });
-    const Handle<Unit> sov_kps = hex_state.units.EmplaceBack(Unit { .parent = sov_frt, .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_CORPS, .icon = UnitIcon::ICON_HQ, .axial = { 13, 3 }, .dmg = 0, .move = 50, .def = 0 });
-    const Handle<Unit> sov_r16 = hex_state.units.EmplaceBack(Unit { .parent = sov_kps, .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_REGIMENT, .icon = UnitIcon::ICON_INF, .axial = { 11, 2 }, .dmg = 5, .move = 7, .def = 3 });
-    const Handle<Unit> sov_r18 = hex_state.units.EmplaceBack(Unit { .parent = sov_kps, .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_REGIMENT, .icon = UnitIcon::ICON_INF, .axial = { 11, 4 }, .dmg = 5, .move = 7, .def = 3 });
-    (void)hex_state.units.EmplaceBack(Unit { .parent = sov_kps, .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK, .axial = { 10, 3 }, .dmg = 6, .move = 7, .def = 1 });
-    (void)hex_state.units.EmplaceBack(Unit { .parent = sov_kps, .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_ART, .axial = { 12, 3 }, .dmg = 5, .move = 7, .def = 0 });
-    (void)hex_state.units.EmplaceBack(Unit { .parent = sov_r16, .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .axial = { 9, 2 }, .dmg = 4, .move = 7, .def = 2 });
-    (void)hex_state.units.EmplaceBack(Unit { .parent = sov_r18, .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .axial = { 9, 4 }, .dmg = 4, .move = 7, .def = 2 });
-    (void)hex_state.units.EmplaceBack(Unit { .parent = sov_frt, .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_REGIMENT, .icon = UnitIcon::ICON_INF, .axial = { 4, 2 }, .dmg = 4, .move = 7, .def = 2 }); // encircled
+    const Handle<Unit> sov_frt = hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_ARMY, .icon = UnitIcon::ICON_HQ, .axial = { 14, 3 }});
+    const Handle<Unit> sov_kps = hex_state.units.EmplaceBack(Unit { .parent = sov_frt, .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_CORPS, .icon = UnitIcon::ICON_HQ, .axial = { 13, 3 }});
+    const Handle<Unit> sov_r16 = hex_state.units.EmplaceBack(Unit { .parent = sov_kps, .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_REGIMENT, .icon = UnitIcon::ICON_INF, .axial = { 11, 2 }});
+    const Handle<Unit> sov_r18 = hex_state.units.EmplaceBack(Unit { .parent = sov_kps, .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_REGIMENT, .icon = UnitIcon::ICON_INF, .axial = { 11, 4 }});
+    (void)hex_state.units.EmplaceBack(Unit { .parent = sov_kps, .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK, .axial = { 10, 3 }});
+    (void)hex_state.units.EmplaceBack(Unit { .parent = sov_kps, .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_ART, .axial = { 12, 3 }});
+    (void)hex_state.units.EmplaceBack(Unit { .parent = sov_r16, .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .axial = { 9, 2 }});
+    (void)hex_state.units.EmplaceBack(Unit { .parent = sov_r18, .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_INF, .axial = { 9, 4 }});
+    (void)hex_state.units.EmplaceBack(Unit { .parent = sov_frt, .tag = CountryTag::TAG_SOV, .echelon = Echelon::ECHELON_REGIMENT, .icon = UnitIcon::ICON_INF, .axial = { 4, 2 }}); // encircled
 
     // USA: 12th Army Group → V Corps → units
-    const Handle<Unit> usa_hgr = hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_ARMY, .icon = UnitIcon::ICON_HQ, .axial = { 17, 1 }, .dmg = 0, .move = 50, .def = 0 });
-    const Handle<Unit> usa_kps = hex_state.units.EmplaceBack(Unit { .parent = usa_hgr, .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_CORPS, .icon = UnitIcon::ICON_HQ, .axial = { 17, 2 }, .dmg = 0, .move = 50, .def = 0 });
-    (void)hex_state.units.EmplaceBack(Unit { .parent = usa_kps, .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_REGIMENT, .icon = UnitIcon::ICON_INF, .axial = { 17, 3 }, .dmg = 6, .move = 7, .def = 2 });
-    (void)hex_state.units.EmplaceBack(Unit { .parent = usa_kps, .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK, .axial = { 17, 4 }, .dmg = 7, .move = 7, .def = 1 });
+    const Handle<Unit> usa_hgr = hex_state.units.EmplaceBack(Unit { .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_ARMY, .icon = UnitIcon::ICON_HQ, .axial = { 17, 1 }});
+    const Handle<Unit> usa_kps = hex_state.units.EmplaceBack(Unit { .parent = usa_hgr, .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_CORPS, .icon = UnitIcon::ICON_HQ, .axial = { 17, 2 }});
+    (void)hex_state.units.EmplaceBack(Unit { .parent = usa_kps, .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_REGIMENT, .icon = UnitIcon::ICON_INF, .axial = { 17, 3 }});
+    (void)hex_state.units.EmplaceBack(Unit { .parent = usa_kps, .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK, .axial = { 17, 4 }});
 
     HexStateUpdateOOB(hex_state);
+    HexStateUpdateUnitStats(hex_state);
 
     for (u32 i = 0; i < hex_state.units.size(); i++) {
         Handle<Unit> unit_handle = hex_state.units.IndexToHandle(i);
