@@ -17,8 +17,8 @@
     <section class="panel compact">
         <h2>1. Source images</h2>
         <div id="dropzone" class="dropzone">
-            <p><b>Drop image files here</b> — or click to pick — or paste with <kbd>Ctrl</kbd>+<kbd>V</kbd> — or paste a URL below.</p>
-            <input id="filePicker" type="file" accept="image/*" multiple hidden />
+            <p><b>Drop image files here</b> — or click to pick — or paste with <kbd>Ctrl</kbd>+<kbd>V</kbd> — or paste a URL below. You can also drop a previously-saved <b>.zip bundle</b> to restore originals + settings.</p>
+            <input id="filePicker" type="file" accept="image/*,.zip,application/zip" multiple hidden />
             <div class="url-row">
                 <input id="urlInput" type="text" placeholder="Paste an image URL (https://…) and press Enter — note: many sites block cross-origin loads" />
                 <button id="urlAdd" type="button">Add URL</button>
@@ -39,7 +39,7 @@
             <span id="status" class="status"></span>
         </div>
         <div id="previews" class="preview-grid"></div>
-        <p class="hint">Single image → direct download. Multiple → zipped.</p>
+        <p class="hint">Every download is a .zip containing the rendered images and a <code>preset.json</code> with all current settings.</p>
     </section>
 
     <section class="panel">
@@ -222,8 +222,8 @@
         <h2>5. Presets <span class="hint sub-hint">(save/load all settings as JSON)</span></h2>
         <div class="row">
             <button id="presetSave" type="button">Download preset…</button>
-            <button id="presetLoadBtn" type="button" class="ghost">Load preset file…</button>
-            <input id="presetFile" type="file" accept="application/json,.json" hidden />
+            <button id="presetLoadBtn" type="button" class="ghost">Load preset or .zip bundle…</button>
+            <input id="presetFile" type="file" accept="application/json,.json,application/zip,.zip" hidden />
             <button id="presetCopy" type="button" class="ghost">Copy current → JSON box</button>
             <button id="presetApply" type="button" class="ghost">Apply JSON from box</button>
             <span id="presetStatus" class="status"></span>

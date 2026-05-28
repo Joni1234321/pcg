@@ -118,7 +118,7 @@
             const reader = new FileReader();
             reader.onload = () => {
                 const img = new Image();
-                img.onload = () => resolve({ img, name: file.name });
+                img.onload = () => resolve({ img, name: file.name, blob: file });
                 img.onerror = () => reject(new Error("Image decode failed"));
                 img.src = reader.result;
             };
@@ -131,9 +131,14 @@
         return new Promise((resolve, reject) => {
             const img = new Image();
             img.crossOrigin = "anonymous";
-            img.onload = () => {
+            img.onload = async () => {
                 const name = (url.split("/").pop() || "image").split("?")[0] || "image";
-                resolve({ img, name });
+                let blob = null;
+                try {
+                    const r = await fetch(url, { mode: "cors" });
+                    if (r.ok) blob = await r.blob();
+                } catch { /* ignore — we still have the decoded image */ }
+                resolve({ img, name, blob });
             };
             img.onerror = () => reject(new Error(
                 "Failed to load. The site likely blocks cross-origin loads. " +
@@ -143,7 +148,7 @@
         });
     }
 
-    function addImage(img, name) {
+    function addImage(img, name, originalBlob) {
         const id = nextId++;
         const srcCanvas = document.createElement("canvas");
         srcCanvas.width = img.naturalWidth;
@@ -151,10 +156,73 @@
         const sctx = srcCanvas.getContext("2d");
         sctx.drawImage(img, 0, 0);
 
-        const item = { id, name, sourceImg: img, srcCanvas, outCanvas: null, tile: null };
+        const item = { id, name, sourceImg: img, srcCanvas, outCanvas: null, tile: null,
+                       originalBlob: originalBlob || null };
         items.push(item);
         renderTile(item);
         rebuild(item);
+    }
+
+    // Decode a Blob into an <img> element.
+    function blobToImage(blob) {
+        return new Promise((resolve, reject) => {
+            const url = URL.createObjectURL(blob);
+            const img = new Image();
+            img.onload = () => { resolve(img); };
+            img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Decode failed")); };
+            img.src = url;
+        });
+    }
+
+    // Load a previously-exported bundle: applies preset.json and re-adds originals/*.
+    async function loadBundleZip(file) {
+        if (typeof JSZip === "undefined") throw new Error("JSZip not loaded");
+        const zip = await JSZip.loadAsync(file);
+
+        // 1) Apply preset.json if present.
+        const presetEntry = zip.file(/^preset\.json$/i)[0];
+        let appliedCount = 0;
+        if (presetEntry) {
+            try {
+                const text = await presetEntry.async("string");
+                const obj = JSON.parse(text);
+                appliedCount = applySettings(obj);
+                if (els.presetText) els.presetText.value = JSON.stringify(obj, null, 2);
+            } catch (e) {
+                setStatus("Bundle preset.json parse error: " + (e.message || e));
+            }
+        }
+
+        // 2) Re-add every file under originals/ as a source image.
+        const originals = zip.file(/^originals\//i);
+        let imgCount = 0;
+        for (const entry of originals) {
+            if (entry.dir) continue;
+            try {
+                const blob = await entry.async("blob");
+                const name = entry.name.replace(/^originals\//i, "");
+                // JSZip blobs may not have a useful mime; sniff by extension.
+                const typed = new Blob([blob], { type: mimeFromName(name) || blob.type || "image/png" });
+                const img = await blobToImage(typed);
+                addImage(img, name, typed);
+                imgCount++;
+            } catch (e) {
+                console.warn("Failed to load original", entry.name, e);
+            }
+        }
+
+        const parts = [];
+        if (imgCount) parts.push(`${imgCount} original image(s)`);
+        if (appliedCount) parts.push(`${appliedCount} settings`);
+        setStatus(parts.length ? `Bundle loaded: ${parts.join(" + ")}.` : "Bundle loaded (no usable content).");
+    }
+
+    function mimeFromName(name) {
+        const ext = (name.split(".").pop() || "").toLowerCase();
+        return {
+            png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg",
+            webp: "image/webp", gif: "image/gif", bmp: "image/bmp", svg: "image/svg+xml",
+        }[ext] || "";
     }
 
     // ─── Silhouette algorithms ───────────────────────────────────────────
@@ -554,7 +622,8 @@
             });
         });
         els.dropzone.addEventListener("drop", async (e) => {
-            const files = Array.from(e.dataTransfer.files || []).filter((f) => f.type.startsWith("image/"));
+            const files = Array.from(e.dataTransfer.files || [])
+                .filter((f) => f.type.startsWith("image/") || isZipFile(f));
             if (files.length) await handleFiles(files);
         });
 
@@ -576,8 +645,8 @@
             const url = els.urlInput.value.trim();
             if (!url) return;
             try {
-                const { img, name } = await loadUrl(url);
-                addImage(img, name);
+                const { img, name, blob } = await loadUrl(url);
+                addImage(img, name, blob);
                 els.urlInput.value = "";
                 setStatus(`Added "${name}"`);
             } catch (e) {
@@ -593,12 +662,22 @@
     async function handleFiles(files) {
         for (const f of files) {
             try {
-                const { img, name } = await loadFile(f);
-                addImage(img, name);
+                if (isZipFile(f)) {
+                    await loadBundleZip(f);
+                } else {
+                    const { img, name, blob } = await loadFile(f);
+                    addImage(img, name, blob);
+                }
             } catch (e) {
                 setStatus(`Failed to load ${f.name}: ${e.message || e}`);
             }
         }
+    }
+
+    function isZipFile(f) {
+        if (!f) return false;
+        if (f.type === "application/zip" || f.type === "application/x-zip-compressed") return true;
+        return /\.zip$/i.test(f.name || "");
     }
 
     function setStatus(s) { els.status.textContent = s || ""; }
@@ -797,19 +876,36 @@
                 if (!it.outCanvas) buildSilhouette(it);
                 const blob = await canvasToBlob(it.outCanvas, format, jpgBg);
                 const name = sanitizeFileName(baseName(it.name)) + suffix + "." + format;
-                out.push({ name, blob });
+                out.push({ name, blob, item: it });
             }
 
-            if (out.length === 1) {
-                downloadBlob(out[0].blob, out[0].name);
-            } else {
-                const zip = new JSZip();
-                for (const f of out) zip.file(f.name, f.blob);
-                const zipBlob = await zip.generateAsync({ type: "blob" });
-                const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-                downloadBlob(zipBlob, `silhouettes_${stamp}.zip`);
+            const zip = new JSZip();
+            const imgsDir = zip.folder("images");
+            const origDir = zip.folder("originals");
+            for (const f of out) {
+                imgsDir.file(f.name, f.blob);
+                // Original: prefer stored blob; fall back to re-encoding srcCanvas as PNG.
+                const origName = sanitizeFileName(f.item.name) || (sanitizeFileName(baseName(f.item.name)) + ".png");
+                if (f.item.originalBlob) {
+                    origDir.file(origName, f.item.originalBlob);
+                } else {
+                    const pngBlob = await new Promise((res) =>
+                        f.item.srcCanvas.toBlob((b) => res(b), "image/png"));
+                    if (pngBlob) {
+                        const fallback = sanitizeFileName(baseName(f.item.name)) + ".png";
+                        origDir.file(fallback, pngBlob);
+                    }
+                }
             }
-            setStatus(`Exported ${out.length}`);
+            // Always bundle the current settings as a preset JSON next to the images.
+            const presetJson = JSON.stringify(serializeSettings(), null, 2);
+            zip.file("preset.json", presetJson);
+
+            const zipBlob = await zip.generateAsync({ type: "blob" });
+            const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+            downloadBlob(zipBlob, `silhouettes_${stamp}.zip`);
+
+            setStatus(`Exported ${out.length} image(s) + originals + preset.json`);
         } catch (e) {
             setStatus("Error: " + (e.message || e));
         } finally {
@@ -875,6 +971,11 @@
         els.presetFile.value = "";
         if (!f) return;
         try {
+            if (isZipFile(f)) {
+                await loadBundleZip(f);
+                setPresetStatus(`Loaded bundle "${f.name}".`);
+                return;
+            }
             const text = await f.text();
             const obj = JSON.parse(text);
             const n = applySettings(obj);
