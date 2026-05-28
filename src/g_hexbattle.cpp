@@ -1,5 +1,5 @@
 ﻿// =================================================================
-//  HEX BATTLE -- C++ port of assets/battlesim/tilesim.ts
+//  HEX BATTLE -- C++ port of tools/battlesim/tilesim.ts
 //  Regiment combat on a 4x8 hex grid (rendered as a counter grid).
 //  Replays a deterministic simulation step-by-step.
 // =================================================================

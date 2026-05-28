@@ -1,0 +1,13 @@
+{
+  "name": "milsymbol-downloader",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Render NATO APP-6 / MIL-STD-2525 symbols from SIDC codes and export as SVG/PNG/JPG.",
+  "scripts": {
+    "start": "npx --yes http-server -c-1 -o /index.html ."
+  },
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "milsymbol": "^3.0.4"
+  }
+}
