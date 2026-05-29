@@ -28,6 +28,17 @@ constexpr f32 RIVER_WIDTH = 0.13F;
 constexpr f32 RIVER_CASING_EXTRA = 0.05F;
 constexpr f32 RIVER_HIGHLIGHT_WIDTH = RIVER_WIDTH * 0.35F;
 
+struct HexBitset {
+    u8 value;
+    [[nodiscard]] constexpr b8 None() const { return !value; }
+    [[nodiscard]] constexpr b8 Any() const { return value; }
+    [[nodiscard]] constexpr b8 Test(const u8 pos) const { assert(pos < HEX_CORNERS); return value & (0x1 << pos); }
+    constexpr void Clear() { value = 0U; }
+    constexpr void Clear(const u8 pos) { assert(pos < HEX_CORNERS); value &= ~(0x1 << pos); }
+    constexpr void Set() { value = 0x3F; }
+    constexpr void Set(const u8 pos) { assert(pos < HEX_CORNERS); value |= 0x1 << pos; }
+};
+
 struct HexOwner {
     CountryTag tag { CountryTag::TAG_NONE };
     b8 contested { false };
@@ -35,8 +46,8 @@ struct HexOwner {
 struct Hex {
     TerrainType terrain;
     HexOwner owner;
-    u8 road_edges { 0 };  // bitmask over HEX_AXIAL_NEIGHBOURS sides
-    u8 river_edges { 0 }; // bitmask over HEX_AXIAL_NEIGHBOURS sides
+    HexBitset road_edges { };
+    HexBitset river_edges { };
 };
 struct Unit {
     HandleOptional<Unit> parent;
@@ -228,8 +239,6 @@ inline b8 SDL_RenderGeometry(SDL_Renderer* renderer, SDL_Texture* texture, const
 //   countries end up with base midpoints on the same perpendicular line
 //   through the shared anchor, so their tooth tips face each other.
 inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera) {
-    const f32 sc = camera.scale;
-    const f32 inner_r = BORDER_INNER_RADIUS;
     for (u32 i = 0; i < hex_state.hex_map.Size(); i++) {
         const Hex& hex = hex_state.hex_map.data[i];
         if (hex.owner.tag == CountryTag::TAG_NONE) { continue; }
@@ -247,10 +256,10 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
             const u32 j = (side + 1U) % HEX_CORNERS;
             const float2 ang_a = HEX_ANGLE[side];
             const float2 ang_b = HEX_ANGLE[j];
-            const float2 outer_a = center + ang_a * float2(sc);
-            const float2 outer_b = center + ang_b * float2(sc);
-            const float2 inner_a = center + ang_a * float2(sc * inner_r);
-            const float2 inner_b = center + ang_b * float2(sc * inner_r);
+            const float2 outer_a = center + ang_a * float2(camera.scale);
+            const float2 outer_b = center + ang_b * float2(camera.scale);
+            const float2 inner_a = center + ang_a * float2(camera.scale * BORDER_INNER_RADIUS);
+            const float2 inner_b = center + ang_b * float2(camera.scale * BORDER_INNER_RADIUS);
             // strip tri 1: inner_a, inner_b, outer_b
             hex_state.verts.EmplaceBack(inner_a, col);
             hex_state.verts.EmplaceBack(inner_b, col);
@@ -272,7 +281,7 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
                 const float2 base_mid = inner_a + edge * float2(t);
                 const f32 elen = math::Hypot(edge);
                 const float2 u = edge * float2(1.0F / elen);
-                f32 half = BORDER_TEETH_HALF * sc;
+                f32 half = BORDER_TEETH_HALF * camera.scale;
                 if (half > elen * 0.5F) { half = elen * 0.5F; } // clamp so wide teeth never overshoot the edge
                 const float2 base_a = base_mid - u * float2(half);
                 const float2 base_b = base_mid + u * float2(half);
@@ -281,7 +290,7 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
                 const f32 ilen = math::Hypot(inward_raw);
                 if (ilen > 0.0001F) {
                     const float2 inward = inward_raw * float2(1.0F / ilen);
-                    const float2 apex = base_mid + inward * float2(BORDER_TEETH_DEPTH * sc);
+                    const float2 apex = base_mid + inward * float2(BORDER_TEETH_DEPTH * camera.scale);
                     hex_state.verts.EmplaceBack(base_a, col);
                     hex_state.verts.EmplaceBack(base_b, col);
                     hex_state.verts.EmplaceBack(apex, col);
@@ -294,15 +303,17 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
 // Edge topology helpers --------------------------------------------------
 inline void HexSetRoadEdge(HexState& hex_state, const int2 axial, const u32 side) {
     const int2 neighbour = axial + HEX_AXIAL_NEIGHBOURS[side];
-    if (!hex_state.hex_map.Contains(axial) || !hex_state.hex_map.Contains(neighbour)) { return; }
-    hex_state.hex_map[axial].road_edges |= static_cast<u8>(1U << side);
-    hex_state.hex_map[neighbour].road_edges |= static_cast<u8>(1U << ((side + 3U) % HEX_CORNERS));
+    if (hex_state.hex_map.Contains(axial) && hex_state.hex_map.Contains(neighbour)) {
+        hex_state.hex_map[axial].road_edges.Set(side);
+        hex_state.hex_map[neighbour].road_edges.Set((side + 3) % HEX_CORNERS);
+    }
 }
 inline void HexSetRiverEdge(HexState& hex_state, const int2 axial, const u32 side) {
     const int2 neighbour = axial + HEX_AXIAL_NEIGHBOURS[side];
-    if (!hex_state.hex_map.Contains(axial) || !hex_state.hex_map.Contains(neighbour)) { return; }
-    hex_state.hex_map[axial].river_edges |= static_cast<u8>(1U << side);
-    hex_state.hex_map[neighbour].river_edges |= static_cast<u8>(1U << ((side + 3U) % HEX_CORNERS));
+    if (hex_state.hex_map.Contains(axial) && hex_state.hex_map.Contains(neighbour)) {
+        hex_state.hex_map[axial].river_edges.Set(side);
+        hex_state.hex_map[neighbour].river_edges.Set((side + 3) % HEX_CORNERS);
+    }
 }
 
 [[nodiscard]] constexpr b8 TerrainIsWater(const TerrainType terrain) { return terrain == TerrainType::TERRAIN_DEEP_OCEAN || terrain == TerrainType::TERRAIN_OCEAN; }
@@ -399,51 +410,51 @@ inline void GenerateRivers(HexState& hex_state, const u32 seed) {
 // Render roads as thin quads from hex center to each marked edge midpoint, forming auto-junctions.
 // Two passes: dark casing first, then lighter body on top.
 inline void AppendRoadMesh(HexState& hex_state, const CameraState& camera) {
-    const f32 sc = camera.scale;
-
     auto append_pass = [&](const f32 width, const ColorF color) {
         for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
             const Hex& hex = hex_state.hex_map.data[i];
-            if (hex.road_edges == 0U) { continue; }
-            const float2 own_center_w = HexAxialToWorld(hex_state.hex_map.IndexToAxial(i));
-            const float2 center = camera.WorldToScreen(own_center_w);
-            for (u32 s = 0U; s < HEX_CORNERS; s++) {
-                if ((hex.road_edges & static_cast<u8>(1U << s)) == 0U) { continue; }
-                const float2 mid = camera.WorldToScreen(own_center_w + HexAxialToWorld(HEX_AXIAL_NEIGHBOURS[s]) * float2 { 0.5F });
-                VertObbAppend(hex_state.verts, OBB::BetweenPoints(center, mid, width), color);
+            if (hex.road_edges.Any()) {
+                const float2 own_center_w = HexAxialToWorld(hex_state.hex_map.IndexToAxial(i));
+                const float2 center = camera.WorldToScreen(own_center_w);
+                for (u32 side = 0U; side < HEX_CORNERS; side++) {
+                    if (hex.road_edges.Test(side)) {
+                        const float2 mid = camera.WorldToScreen(own_center_w + HexAxialToWorld(HEX_AXIAL_NEIGHBOURS[side]) * float2 { 0.5F });
+                        VertObbAppend(hex_state.verts, OBB::BetweenPoints(center, mid, width), color);
+                    }
+                }
             }
         }
     };
 
-    append_pass((ROAD_WIDTH + ROAD_CASING_EXTRA) * sc, static_cast<ColorF>(colors::ROAD_CASING_BROWN));
-    append_pass(ROAD_WIDTH * sc, static_cast<ColorF>(colors::ROAD_TAN));
+    append_pass((ROAD_WIDTH + ROAD_CASING_EXTRA) * camera.scale, colors::ROAD_CASING_BROWN);
+    append_pass(ROAD_WIDTH * camera.scale, colors::ROAD_TAN);
 }
 
 // Render rivers as thin strips along marked edges. Iterate only sides 0..2 to dedupe shared edges.
 // Three passes: dark casing, body, then narrow light highlight stripe down the middle.
 inline void AppendRiverMesh(HexState& hex_state, const CameraState& camera) {
-    const f32 sc = camera.scale;
-
     auto append_pass = [&](const f32 width, const ColorF color) {
         for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
             const Hex& hex = hex_state.hex_map.data[i];
-            if (hex.river_edges == 0U) { continue; }
-            const float2 center = camera.WorldToScreen(HexAxialToWorld(hex_state.hex_map.IndexToAxial(i)));
-            for (u32 s = 0U; s < 3U; s++) {
-                if ((hex.river_edges & static_cast<u8>(1U << s)) == 0U) { continue; }
-                // mirror screen-y vs math-y convention used by AppendCountryBorders
-                const u32 side = (HEX_CORNERS - s) % HEX_CORNERS;
-                const u32 j = (side + 1U) % HEX_CORNERS;
-                const float2 outer_a = center + HEX_ANGLE[side] * float2(sc);
-                const float2 outer_b = center + HEX_ANGLE[j] * float2(sc);
-                VertObbAppend(hex_state.verts, OBB::BetweenPoints(outer_a, outer_b, width), color);
+            if (hex.river_edges.Any()) {
+                const float2 center = camera.WorldToScreen(HexAxialToWorld(hex_state.hex_map.IndexToAxial(i)));
+                for (u32 s = 0U; s < 3U; s++) {
+                    if (hex.river_edges.Test(s)) {
+                        // mirror screen-y vs math-y convention used by AppendCountryBorders
+                        const u32 side = (HEX_CORNERS - s) % HEX_CORNERS;
+                        const u32 j = (side + 1U) % HEX_CORNERS;
+                        const float2 outer_a = center + HEX_ANGLE[side] * float2(camera.scale);
+                        const float2 outer_b = center + HEX_ANGLE[j] * float2(camera.scale);
+                        VertObbAppend(hex_state.verts, OBB::BetweenPoints(outer_a, outer_b, width), color);
+                    }
+                }
             }
         }
     };
 
-    append_pass((RIVER_WIDTH + RIVER_CASING_EXTRA) * sc, static_cast<ColorF>(colors::RIVER_DEEP_BLUE));
-    append_pass(RIVER_WIDTH * sc, static_cast<ColorF>(colors::RIVER_BLUE));
-    append_pass(RIVER_HIGHLIGHT_WIDTH * sc, static_cast<ColorF>(colors::RIVER_HIGHLIGHT_BLUE));
+    append_pass((RIVER_WIDTH + RIVER_CASING_EXTRA) * camera.scale, colors::RIVER_DEEP_BLUE);
+    append_pass(RIVER_WIDTH * camera.scale, colors::RIVER_BLUE);
+    append_pass(RIVER_HIGHLIGHT_WIDTH * camera.scale, colors::RIVER_HIGHLIGHT_BLUE);
 }
 
 } // namespace pcg
