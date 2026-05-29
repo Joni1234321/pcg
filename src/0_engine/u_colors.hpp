@@ -113,6 +113,13 @@ constexpr Color MAP_BACKGROUND = Color::FromHsl(40.0F, 0.50F, 0.2F);
 constexpr Color HEX_HOVER { 190U, 205U, 175U }; // muted sage-green hover ring
 constexpr Color HEX_SELECT { 210U, 165U, 30U }; // warm amber-gold selection ring
 
+// Roads & rivers
+constexpr Color ROAD_TAN { 196U, 168U, 120U };             // warm dirt-road body
+constexpr Color ROAD_CASING_BROWN { 48U, 32U, 18U };       // dark brown outline
+constexpr Color RIVER_BLUE { 78U, 138U, 196U };            // mid river body
+constexpr Color RIVER_DEEP_BLUE { 22U, 52U, 92U };         // dark river outline
+constexpr Color RIVER_HIGHLIGHT_BLUE { 168U, 206U, 236U }; // light center highlight
+
 constexpr f32 COUNTRY_LUMINANCE = 0.3F;
 constexpr Color WG_GER_BG = Color::FromHsl(90.0F, 0.20F, COUNTRY_LUMINANCE);
 constexpr Color WG_SOV_BG = Color::FromHsl(2.0F, 0.60F, COUNTRY_LUMINANCE);

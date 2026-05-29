@@ -30,7 +30,8 @@ enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHEL
         case Echelon::ECHELON_CORPS: return "xxx";
         case Echelon::ECHELON_ARMY: return "xxxx";
     }
-    std::unreachable();;
+    std::unreachable();
+    ;
 }
 
 enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK };
@@ -42,7 +43,8 @@ enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK };
         case UnitIcon::ICON_HQ: return "hq";
         case UnitIcon::ICON_TANK: return "tnk";
     }
-    std::unreachable();;
+    std::unreachable();
+    ;
 }
 struct Counter {
     Color color_background;
@@ -59,18 +61,17 @@ struct CounterStack {
     SurfaceLabel label_vertical;
 };
 
-
 struct CounterTextures {
     HandleOptional<Texture> infantry;
     HandleOptional<Texture> artillery;
     HandleOptional<Texture> armor;
     HandleOptional<Texture> headquarters;
 
-    explicit CounterTextures (const RelativePath& dir) {
+    explicit CounterTextures(const RelativePath& dir) {
         infantry = globalData.Create<Texture>(Asset(dir / "counter-inf.jpg"));
-        artillery =  globalData.Create<Texture>(Asset(dir / "counter-art.jpg"));
-        armor =  globalData.Create<Texture>(Asset(dir / "counter-armor.jpg"));
-        headquarters =  globalData.Create<Texture>(Asset(dir / "counter-hq.jpg"));
+        artillery = globalData.Create<Texture>(Asset(dir / "counter-art.jpg"));
+        armor = globalData.Create<Texture>(Asset(dir / "counter-armor.jpg"));
+        headquarters = globalData.Create<Texture>(Asset(dir / "counter-hq.jpg"));
     }
     [[nodiscard]] HandleOptional<Texture> ForIcon(const UnitIcon icon) const {
         switch (icon) {

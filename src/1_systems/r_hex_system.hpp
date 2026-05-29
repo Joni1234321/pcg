@@ -106,18 +106,17 @@ inline void VertHexAppend(List<Vertex>& vertecies, const f32 hex_size, const flo
 }
 inline void VertObbAppend(List<Vertex>& vertecies, const OBB& obb, const ColorF color) {
     const float2 half_size = obb.size * float2 { 0.5F };
-    const Array<float2, 4> points {
-    {
-       obb.center + math::Rotate(float2 {-half_size.x, half_size.y} , obb.angle),
-       obb.center + math::Rotate(float2 {half_size.x, half_size.y}, obb.angle),
-       obb.center + math::Rotate(float2 {half_size.x, -half_size.y}, obb.angle),
-       obb.center + math::Rotate(float2 {-half_size.x, -half_size.y}, obb.angle),
-    }};
-    vertecies.EmplaceBack(Vertex{ points[0], color });
-    vertecies.EmplaceBack(Vertex{ points[1], color });
-    vertecies.EmplaceBack(Vertex{ points[2], color });
-    vertecies.EmplaceBack(Vertex{ points[0], color });
-    vertecies.EmplaceBack(Vertex{ points[2], color });
-    vertecies.EmplaceBack(Vertex{ points[3], color });
+    const Array<float2, 4> points { {
+        obb.center + math::Rotate(float2 { -half_size.x, half_size.y }, obb.angle),
+        obb.center + math::Rotate(float2 { half_size.x, half_size.y }, obb.angle),
+        obb.center + math::Rotate(float2 { half_size.x, -half_size.y }, obb.angle),
+        obb.center + math::Rotate(float2 { -half_size.x, -half_size.y }, obb.angle),
+    } };
+    vertecies.EmplaceBack(Vertex { points[0], color });
+    vertecies.EmplaceBack(Vertex { points[1], color });
+    vertecies.EmplaceBack(Vertex { points[2], color });
+    vertecies.EmplaceBack(Vertex { points[0], color });
+    vertecies.EmplaceBack(Vertex { points[2], color });
+    vertecies.EmplaceBack(Vertex { points[3], color });
 }
 } // namespace pce

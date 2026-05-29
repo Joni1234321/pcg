@@ -86,8 +86,8 @@ static constexpr f32 DEG_2_RAD = PI / 180.0F;
 [[nodiscard]] inline f32 Sin(const f32 t) { return std::sinf(t); }
 [[nodiscard]] inline f32 Cos(const f32 t) { return std::cosf(t); }
 [[nodiscard]] inline f32 Atan2(const f32 x, const f32 y) { return std::atan2f(x, y); }
-[[nodiscard]] constexpr f32 Pow (const f32 x, const f32 y) { return std::powf(x, y); }
-[[nodiscard]] constexpr u32 Pow (const u32 x, const u32 y) { return static_cast<u32>(std::powf(static_cast<f32>(x), static_cast<f32>(y))); }
+[[nodiscard]] constexpr f32 Pow(const f32 x, const f32 y) { return std::powf(x, y); }
+[[nodiscard]] constexpr u32 Pow(const u32 x, const u32 y) { return static_cast<u32>(std::powf(static_cast<f32>(x), static_cast<f32>(y))); }
 constexpr std::pair<u32, u32> Div(const u32 value, const u32 divisor) { return { value / divisor, value % divisor }; }
 template <typename T = void> T Sub(const T& left, const T& right) { return left - right; }
 template <typename T = void> struct Minus {
@@ -133,16 +133,15 @@ template <typename T> [[nodiscard]] constexpr f32 CMin(Vec3<T> v) { return Min(M
 template <typename T> [[nodiscard]] constexpr f32 CMin(Vec4<T> v) { return Min(Min(v.x, v.y), Min(v.z, v.w)); }
 template <typename T> [[nodiscard]] constexpr f32 Min(Vec2<T> a, Vec2<T> b) { return { Min(a.x, b.x), Min(a.y, b.y) }; }
 template <typename T> [[nodiscard]] constexpr f32 Min(Vec3<T> a, Vec3<T> b) { return { Min(a.x, b.x), Min(a.y, b.y), Min(a.z, b.z) }; }
-template <typename T> [[nodiscard]] constexpr f32 Min(Vec4<T> a, Vec4<T> b) { return {Min(a.x, b.x), Min(a.y, b.y), Min(a.z, b.z), Min(a.w, b.w) }; }
-
+template <typename T> [[nodiscard]] constexpr f32 Min(Vec4<T> a, Vec4<T> b) { return { Min(a.x, b.x), Min(a.y, b.y), Min(a.z, b.z), Min(a.w, b.w) }; }
 
 template <typename T> [[nodiscard]] constexpr T SaturatingSub(const T val, const T sub) { return val > sub ? val - sub : T { 0 }; }
 
-inline float2 Rotate (float2 point, f32 theta) {
+inline float2 Rotate(float2 point, f32 theta) {
     const f32 cos = Cos(theta);
     const f32 sin = Sin(theta);
     const f32 x = point.x * cos - point.y * sin;
     const f32 y = point.x * sin + point.y * cos;
-    return float2{x, y};
+    return float2 { x, y };
 }
 } // namespace pce::math
