@@ -71,7 +71,7 @@ List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start
 
             const Hex& hex = hex_state.hex_map[axial_next];
             const u32 cost_conquer = (hex.owner.tag != hex_state.player_tag) + hex.owner.contested + AxialIsEnemyOrZoc(hex_state, axial_next) + (AxialAdjecentEnemyControl(hex_state, axial_next) > 0) * 1U;
-            u32 cost_terrain = TerrainToMovementCost(hex.terrain);
+            u32 cost_terrain = TerrainToMovementCost(hex.terrain_type);
             const b8 has_road = hex_state.hex_map.Contains(current.axial) && hex_state.hex_map[current.axial].road_edges.Test(side);
             if (has_road) { cost_terrain = cost_terrain > MOVE_COST_ROAD_REDUCTION ? cost_terrain - MOVE_COST_ROAD_REDUCTION : 1U; }
             const u32 cost_new = cost_at_axial[current.axial] + cost_terrain + cost_conquer;
@@ -139,8 +139,7 @@ void UnitToCounterAppend(HexState& hex_state) {
         counter.label_top.SetText(EchelonToString(unit_largest_echelon.echelon));
         counter.label_center.SetText(UnitIconToString(unit_largest_echelon.icon));
         counter.label_bottom.SetText(std::format("{}-{}-{}", dmg / 10, def / 10, move));
-        Span span(unit_largest_echelon.name);
-        String unit_name = String(span);
+        String unit_name = String(Span(unit_largest_echelon.name));
         counter.label_vertical.SetText(unit_name);
     }
 }
@@ -199,7 +198,7 @@ struct HexSystem {
             const Hex& hex = hex_state.hex_map.data[i];
             const int2 axial = hex_state.hex_map.IndexToAxial(i);
             const float2 world = HexAxialToWorld(axial);
-            Color color = TerrainToColorScheme(hex.terrain);
+            Color color = TerrainToColorScheme(hex.terrain_type);
             VertHexAppend(hex_state.verts, camera.scale * 0.9F, camera.WorldToScreen(world), color);
             if (hex.owner.contested) { VertHexAppend(hex_state.verts, camera.scale * 0.70F, camera.WorldToScreen(world), color.Mul(0.80F)); }
         }

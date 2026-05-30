@@ -12,7 +12,9 @@
 namespace pcg {
 using namespace pce;
 enum class CountryTag : u8 { TAG_NONE, TAG_GER, TAG_SOV, TAG_USA };
-enum class TerrainType : u8 { TERRAIN_DEEP_OCEAN, TERRAIN_OCEAN, TERRAIN_BEACH, TERRAIN_GRASS, TERRAIN_FOREST, TERRAIN_MOUNTAIN, TERRAIN_SNOW };
+enum class TerrainType : u8 { TERRAIN_TYPE_DEEP_OCEAN, TERRAIN_TYPE_OCEAN, TERRAIN_TYPE_HILL, TERRAIN_TYPE_BEACH, TERRAIN_TYPE_GRASS, TERRAIN_TYPE_MOUNTAIN, TERRAIN_TYPE_SNOW };
+enum class TerrainFeature : u8 { TERRAIN_FEATURE_GRASSLAND, TERRAIN_FEATURE_FIELD, TERRAIN_FEATURE_HEDGEROWS, TERRAIN_FEATURE_CITY, TERRAIN_FEATURE_VILLAGE, TERRAIN_FEATURE_WOODED_LIGHTLY, TERRAIN_FEATURE_WOODED_HEAVY, TERRAIN_FEATURE_SWAMP};
+
 enum class PlayerAction { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_ACTION_DESELECT, PLAYER_ACTION_MOVE_CLICK, PLAYER_ACTION_MOVE_HOVER, PLAYER_ACTION_ATTACK_CLICK, PLAYER_ACTION_ATTACK_HOVER };
 enum class TerrainScheme : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER }; // colorschema.md
 
@@ -45,7 +47,8 @@ struct HexOwner {
     b8 contested { false };
 };
 struct Hex {
-    TerrainType terrain;
+    TerrainType terrain_type;
+    TerrainFeature terrain_feature;
     HexOwner owner;
     HexBitset road_edges { };
     HexBitset river_edges { };
@@ -105,23 +108,23 @@ struct HexState {
     List<Vertex> verts { };
 };
 [[nodiscard]] constexpr TerrainType FloatToTerrain(const f32 terrain) {
-    if (terrain < 0.25F) { return TerrainType::TERRAIN_DEEP_OCEAN; }
-    if (terrain < 0.38F) { return TerrainType::TERRAIN_OCEAN; }
-    if (terrain < 0.43F) { return TerrainType::TERRAIN_BEACH; }
-    if (terrain < 0.60F) { return TerrainType::TERRAIN_GRASS; }
-    if (terrain < 0.72F) { return TerrainType::TERRAIN_FOREST; }
-    if (terrain < 0.85F) { return TerrainType::TERRAIN_MOUNTAIN; }
-    return TerrainType::TERRAIN_SNOW;
+    if (terrain < 0.25F) { return TerrainType::TERRAIN_TYPE_DEEP_OCEAN; }
+    if (terrain < 0.38F) { return TerrainType::TERRAIN_TYPE_OCEAN; }
+    if (terrain < 0.43F) { return TerrainType::TERRAIN_TYPE_BEACH; }
+    if (terrain < 0.60F) { return TerrainType::TERRAIN_TYPE_GRASS; }
+    if (terrain < 0.72F) { return TerrainType::TERRAIN_TYPE_HILL; }
+    if (terrain < 0.85F) { return TerrainType::TERRAIN_TYPE_MOUNTAIN; }
+    return TerrainType::TERRAIN_TYPE_SNOW;
 }
 [[nodiscard]] constexpr Color TerrainToColor(const TerrainType terrain) {
     switch (terrain) {
-        case TerrainType::TERRAIN_DEEP_OCEAN: return Color { 20U, 60U, 120U };
-        case TerrainType::TERRAIN_OCEAN: return Color { 50U, 100U, 180U };
-        case TerrainType::TERRAIN_BEACH: return colors::KHAKI;
-        case TerrainType::TERRAIN_GRASS: return Color { 100U, 190U, 80U };
-        case TerrainType::TERRAIN_FOREST: return colors::FOREST_GREEN;
-        case TerrainType::TERRAIN_MOUNTAIN: return colors::GRAY;
-        case TerrainType::TERRAIN_SNOW: return colors::WHITE;
+        case TerrainType::TERRAIN_TYPE_DEEP_OCEAN: return Color { 20U, 60U, 120U };
+        case TerrainType::TERRAIN_TYPE_OCEAN: return Color { 50U, 100U, 180U };
+        case TerrainType::TERRAIN_TYPE_BEACH: return colors::KHAKI;
+        case TerrainType::TERRAIN_TYPE_GRASS: return Color { 100U, 190U, 80U };
+        case TerrainType::TERRAIN_TYPE_HILL: return colors::FOREST_GREEN;
+        case TerrainType::TERRAIN_TYPE_MOUNTAIN: return colors::GRAY;
+        case TerrainType::TERRAIN_TYPE_SNOW: return colors::WHITE;
     }
     std::unreachable();
     ;
@@ -133,23 +136,23 @@ struct HexState {
     } else if constexpr (TERRAIN_SCHEME == TerrainScheme::SLATE_TABLE) {
         // cool, desaturated - like a board game printed on slate.
         switch (terrain) {
-            case TerrainType::TERRAIN_DEEP_OCEAN: return Color { 28U, 38U, 55U };
-            case TerrainType::TERRAIN_OCEAN: return Color { 52U, 72U, 96U };
-            case TerrainType::TERRAIN_BEACH: return Color { 156U, 144U, 110U };
-            case TerrainType::TERRAIN_GRASS: return Color { 102U, 122U, 86U };
-            case TerrainType::TERRAIN_FOREST: return Color { 62U, 84U, 60U };
-            case TerrainType::TERRAIN_MOUNTAIN: return Color { 92U, 92U, 100U };
-            case TerrainType::TERRAIN_SNOW: return Color { 198U, 204U, 212U };
+            case TerrainType::TERRAIN_TYPE_DEEP_OCEAN: return Color { 28U, 38U, 55U };
+            case TerrainType::TERRAIN_TYPE_OCEAN: return Color { 52U, 72U, 96U };
+            case TerrainType::TERRAIN_TYPE_BEACH: return Color { 156U, 144U, 110U };
+            case TerrainType::TERRAIN_TYPE_GRASS: return Color { 102U, 122U, 86U };
+            case TerrainType::TERRAIN_TYPE_HILL: return Color { 62U, 84U, 60U };
+            case TerrainType::TERRAIN_TYPE_MOUNTAIN: return Color { 92U, 92U, 100U };
+            case TerrainType::TERRAIN_TYPE_SNOW: return Color { 198U, 204U, 212U };
         }
     } else { // HOI4_PAPER - warm parchment / political-map feel.
         switch (terrain) {
-            case TerrainType::TERRAIN_DEEP_OCEAN: return Color { 88U, 112U, 142U };
-            case TerrainType::TERRAIN_OCEAN: return Color { 130U, 158U, 184U };
-            case TerrainType::TERRAIN_BEACH: return Color { 220U, 200U, 158U };
-            case TerrainType::TERRAIN_GRASS: return Color { 178U, 184U, 132U };
-            case TerrainType::TERRAIN_FOREST: return Color { 128U, 144U, 96U };
-            case TerrainType::TERRAIN_MOUNTAIN: return Color { 152U, 138U, 116U };
-            case TerrainType::TERRAIN_SNOW: return Color { 232U, 226U, 210U };
+            case TerrainType::TERRAIN_TYPE_DEEP_OCEAN: return Color { 88U, 112U, 142U };
+            case TerrainType::TERRAIN_TYPE_OCEAN: return Color { 130U, 158U, 184U };
+            case TerrainType::TERRAIN_TYPE_BEACH: return Color { 220U, 200U, 158U };
+            case TerrainType::TERRAIN_TYPE_GRASS: return Color { 178U, 184U, 132U };
+            case TerrainType::TERRAIN_TYPE_HILL: return Color { 128U, 144U, 96U };
+            case TerrainType::TERRAIN_TYPE_MOUNTAIN: return Color { 152U, 138U, 116U };
+            case TerrainType::TERRAIN_TYPE_SNOW: return Color { 232U, 226U, 210U };
         }
     }
     std::unreachable();
@@ -157,13 +160,13 @@ struct HexState {
 }
 [[nodiscard]] constexpr u32 TerrainToMovementCost(const TerrainType terrain) {
     switch (terrain) {
-        case TerrainType::TERRAIN_DEEP_OCEAN: return 255U;
-        case TerrainType::TERRAIN_OCEAN: return 255U;
-        case TerrainType::TERRAIN_BEACH: return 2U;
-        case TerrainType::TERRAIN_GRASS: return 1U;
-        case TerrainType::TERRAIN_FOREST: return 3U;
-        case TerrainType::TERRAIN_MOUNTAIN: return 5U;
-        case TerrainType::TERRAIN_SNOW: return 4U;
+        case TerrainType::TERRAIN_TYPE_DEEP_OCEAN: return 255U;
+        case TerrainType::TERRAIN_TYPE_OCEAN: return 255U;
+        case TerrainType::TERRAIN_TYPE_BEACH: return 2U;
+        case TerrainType::TERRAIN_TYPE_GRASS: return 1U;
+        case TerrainType::TERRAIN_TYPE_HILL: return 3U;
+        case TerrainType::TERRAIN_TYPE_MOUNTAIN: return 5U;
+        case TerrainType::TERRAIN_TYPE_SNOW: return 4U;
     }
     std::unreachable();
     ;
@@ -188,7 +191,7 @@ constexpr HexList<Hex> GenerateTerrain(const uint2 map_size, const u32 seed) {
     for (u32 i = 0; i < hexes.Size(); i++) {
         const int2 axial = hexes.IndexToAxial(i);
         const float2 world = HexAxialToWorld(axial);
-        hexes[axial].terrain = FloatToTerrain((noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f) + 1.0F) * 0.5F);
+        hexes[axial].terrain_type = FloatToTerrain((noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f) + 1.0F) * 0.5F);
     }
     return hexes;
 }
@@ -312,7 +315,7 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
 }
 
 
-[[nodiscard]] constexpr b8 TerrainIsWater(const TerrainType terrain) { return terrain == TerrainType::TERRAIN_DEEP_OCEAN || terrain == TerrainType::TERRAIN_OCEAN; }
+[[nodiscard]] constexpr b8 TerrainIsWater(const TerrainType terrain) { return terrain == TerrainType::TERRAIN_TYPE_DEEP_OCEAN || terrain == TerrainType::TERRAIN_TYPE_OCEAN; }
 
 // Carve a road from axial_a to axial_b along the hex line, skipping water tiles.
 inline void CarveRoad(HexState& hex_state, const int2 axial_a, const int2 axial_b) {
@@ -325,7 +328,7 @@ inline void CarveRoad(HexState& hex_state, const int2 axial_a, const int2 axial_
         const f32 t = static_cast<f32>(i) / static_cast<f32>(dist);
         const int2 axial_current = HexCubeToAxial(HexCubeRound(HexCubeLerp(cube_a, cube_b, t)));
         if (axial_current == prev) { continue; }
-        if (hex_state.hex_map.Contains(axial_current) && TerrainIsWater(hex_state.hex_map[axial_current].terrain)) {
+        if (hex_state.hex_map.Contains(axial_current) && TerrainIsWater(hex_state.hex_map[axial_current].terrain_type)) {
             prev = axial_current;
             continue;
         }
@@ -375,14 +378,14 @@ inline void GenerateRivers(HexState& hex_state, const u32 seed) {
     UnorderedMap<int2, u8> visited;
     for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
         const Hex& hex = hex_state.hex_map.data[i];
-        if (hex.terrain != TerrainType::TERRAIN_MOUNTAIN && hex.terrain != TerrainType::TERRAIN_SNOW) { continue; }
+        if (hex.terrain_type != TerrainType::TERRAIN_TYPE_MOUNTAIN && hex.terrain_type != TerrainType::TERRAIN_TYPE_SNOW) { continue; }
         const int2 axial = hex_state.hex_map.IndexToAxial(i);
         if (visited.contains(axial)) { continue; }
         int2 cur = axial;
         for (u32 step = 0U; step < 64U; step++) {
             visited[cur] = 1U;
             if (!hex_state.hex_map.Contains(cur)) { break; }
-            if (TerrainIsWater(hex_state.hex_map[cur].terrain)) { break; }
+            if (TerrainIsWater(hex_state.hex_map[cur].terrain_type)) { break; }
             // pick lowest unvisited neighbour
             u32 best_side = HEX_CORNERS;
             f32 best_elev = elevation_at(cur);

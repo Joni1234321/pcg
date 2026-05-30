@@ -17,6 +17,7 @@
 
 namespace pce {
 enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHELON_BATTALION, ECHELON_REGIMENT, ECHELON_BRIGADE, ECHELON_DIVISION, ECHELON_CORPS, ECHELON_ARMY };
+enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK };
 
 [[nodiscard]] constexpr String EchelonToString(const Echelon echelon) {
     switch (echelon) {
@@ -34,7 +35,6 @@ enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHEL
     ;
 }
 
-enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK };
 
 [[nodiscard]] constexpr String UnitIconToString(const UnitIcon icon) {
     switch (icon) {
@@ -93,7 +93,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
     const CameraState& camera = Singleton::Get<CameraState>();
     const WindowState& window_state = Singleton::Get<WindowState>();
     const ui::FontCollection& font_collection = Singleton::Get<ui::FontCollection>();
-    const CounterTextures& counter_textures = Singleton::Get<CounterTextureStack>().counter_textures_niehorster_big;
+    const CounterTextures& counter_textures = Singleton::Get<CounterTextureStack>().counter_textures_real;
 
     constexpr f32 COUNTER_SIZE = 1.1F;
     const float2 counter_size = float2 { camera.scale * COUNTER_SIZE } * float2 { 1.0F, 0.8F };
