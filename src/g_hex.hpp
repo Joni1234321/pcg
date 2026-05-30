@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include <cassert>
 #include <ranges>
 
 #include "0_engine/u_collections.hpp"
@@ -197,10 +198,10 @@ inline void GenerateTerritory(HexState& hex_state) {
 
     Queue<int2> frontier;
     for (const auto& [axial, unit_handles] : hex_state.units_by_axial) {
-        if (!hex_state.hex_map.Contains(axial)) { continue; }
-        if (unit_handles.empty()) { continue; }
-        hex_state.hex_map[axial].owner = HexOwner { .tag = hex_state.units[unit_handles[0]].tag, .contested = false };
-        frontier.EmplaceBack(axial);
+        if (hex_state.hex_map.Contains(axial) && !unit_handles.empty()) {
+            hex_state.hex_map[axial].owner = HexOwner { .tag = hex_state.units[unit_handles[0]].tag, .contested = false };
+            frontier.EmplaceBack(axial);
+        }
     }
     while (!frontier.empty()) {
         const int2 current = frontier.front();
@@ -208,11 +209,26 @@ inline void GenerateTerritory(HexState& hex_state) {
         const HexOwner hex_owner = hex_state.hex_map[current].owner;
         for (const int2 offset : HEX_AXIAL_NEIGHBOURS) {
             const int2 next = current + offset;
-            if (!hex_state.hex_map.Contains(next)) { continue; }
-            if (hex_state.hex_map[next].owner.tag != CountryTag::TAG_NONE) { continue; }
-            hex_state.hex_map[next].owner = HexOwner { .tag = hex_owner.tag, .contested = false };
-            frontier.EmplaceBack(next);
+            if (hex_state.hex_map.Contains(next) && hex_state.hex_map[next].owner.tag == CountryTag::TAG_NONE) {
+                hex_state.hex_map[next].owner = HexOwner { .tag = hex_owner.tag, .contested = false };
+                frontier.EmplaceBack(next);
+            }
         }
+    }
+}
+
+inline void HexSetRoadEdge(HexState& hex_state, const int2 axial, const u32 side) {
+    const int2 axial_side = axial + HEX_AXIAL_NEIGHBOURS[side];
+    if (hex_state.hex_map.Contains(axial) && hex_state.hex_map.Contains(axial_side)) {
+        hex_state.hex_map[axial].road_edges.Set(side);
+        hex_state.hex_map[axial_side].road_edges.Set((side + 3) % HEX_CORNERS);
+    }
+}
+inline void HexSetRiverEdge(HexState& hex_state, const int2 axial, const u32 side) {
+    const int2 axial_side = axial + HEX_AXIAL_NEIGHBOURS[side];
+    if (hex_state.hex_map.Contains(axial) && hex_state.hex_map.Contains(axial_side)) {
+        hex_state.hex_map[axial].river_edges.Set(side);
+        hex_state.hex_map[axial_side].river_edges.Set((side + 3) % HEX_CORNERS);
     }
 }
 
@@ -243,78 +259,58 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
         const Hex& hex = hex_state.hex_map.data[i];
         if (hex.owner.tag == CountryTag::TAG_NONE) { continue; }
         const int2 axial = hex_state.hex_map.IndexToAxial(i);
-        const float2 own_center_w = HexAxialToWorld(axial);
-        const float2 center = camera.WorldToScreen(own_center_w);
-        const ColorF col = static_cast<ColorF>(CountryTagToColor(hex.owner.tag));
+        const float2 world_center = HexAxialToWorld(axial);
+        const float2 screen_center = camera.WorldToScreen(world_center);
+        const ColorF color = static_cast<ColorF>(CountryTagToColor(hex.owner.tag));
         u32 edge_index = 0U;
         for (u32 s = 0; s < HEX_CORNERS; s++) {
-            const int2 nax = axial + HEX_AXIAL_NEIGHBOURS[s];
-            const CountryTag ntag = hex_state.hex_map.Contains(nax) ? hex_state.hex_map[nax].owner.tag : CountryTag::TAG_NONE;
-            if (ntag == hex.owner.tag) { continue; }
-            // visual side index from neighbour index (screen y is down vs math y-up)
-            const u32 side = (HEX_CORNERS - s) % HEX_CORNERS;
-            const u32 j = (side + 1U) % HEX_CORNERS;
-            const float2 ang_a = HEX_ANGLE[side];
-            const float2 ang_b = HEX_ANGLE[j];
-            const float2 outer_a = center + ang_a * float2(camera.scale);
-            const float2 outer_b = center + ang_b * float2(camera.scale);
-            const float2 inner_a = center + ang_a * float2(camera.scale * BORDER_INNER_RADIUS);
-            const float2 inner_b = center + ang_b * float2(camera.scale * BORDER_INNER_RADIUS);
-            // strip tri 1: inner_a, inner_b, outer_b
-            hex_state.verts.EmplaceBack(inner_a, col);
-            hex_state.verts.EmplaceBack(inner_b, col);
-            hex_state.verts.EmplaceBack(outer_b, col);
-            // strip tri 2: inner_a, outer_b, outer_a
-            hex_state.verts.EmplaceBack(inner_a, col);
-            hex_state.verts.EmplaceBack(outer_b, col);
-            hex_state.verts.EmplaceBack(outer_a, col);
+            const int2 axial_neighbour = axial + HEX_AXIAL_NEIGHBOURS[s];
+            if (!hex_state.hex_map.Contains(axial_neighbour) || hex_state.hex_map[axial_neighbour].owner.tag != hex.owner.tag) {
+                const u32 side = (HEX_CORNERS - s) % HEX_CORNERS;
+                const float2 local_angle_a = HEX_ANGLE[side];
+                const float2 local_angle_b = HEX_ANGLE[(side + 1U) % HEX_CORNERS];
+                const float2 screen_outer_a = screen_center + local_angle_a * float2(camera.scale);
+                const float2 screen_outer_b = screen_center + local_angle_b * float2(camera.scale);
+                const float2 screen_inner_a = screen_center + local_angle_a * float2(camera.scale * BORDER_INNER_RADIUS);
+                const float2 screen_inner_b = screen_center + local_angle_b * float2(camera.scale * BORDER_INNER_RADIUS);
+                hex_state.verts.EmplaceBack(screen_inner_a, color);
+                hex_state.verts.EmplaceBack(screen_inner_b, color);
+                hex_state.verts.EmplaceBack(screen_outer_b, color);
+                hex_state.verts.EmplaceBack(screen_inner_a, color);
+                hex_state.verts.EmplaceBack(screen_outer_b, color);
+                hex_state.verts.EmplaceBack(screen_outer_a, color);
 
-            // Shared anchor: lattice-edge midpoint in world space -> both countries
-            // project onto the same screen point so their teeth face each other.
-            const float2 anchor = camera.WorldToScreen(own_center_w + (ang_a + ang_b) * float2(0.5F));
-            // Project anchor onto this country's inner edge to get the tooth base midpoint.
-            const float2 edge = inner_b - inner_a;
-            const f32 elen2 = math::LengthSq(edge);
-            if (elen2 > 0.0001F) {
-                const float2 to_anchor = anchor - inner_a;
-                const f32 t = math::Clamp((to_anchor.x * edge.x + to_anchor.y * edge.y) / elen2, 0.0F, 1.0F);
-                const float2 base_mid = inner_a + edge * float2(t);
-                const f32 elen = math::Hypot(edge);
-                const float2 u = edge * float2(1.0F / elen);
-                f32 half = BORDER_TEETH_HALF * camera.scale;
-                if (half > elen * 0.5F) { half = elen * 0.5F; } // clamp so wide teeth never overshoot the edge
-                const float2 base_a = base_mid - u * float2(half);
-                const float2 base_b = base_mid + u * float2(half);
-                // Inward: from edge-midpoint towards own centre.
-                const float2 inward_raw = (ang_a + ang_b) * float2(-0.5F);
-                const f32 ilen = math::Hypot(inward_raw);
-                if (ilen > 0.0001F) {
-                    const float2 inward = inward_raw * float2(1.0F / ilen);
-                    const float2 apex = base_mid + inward * float2(BORDER_TEETH_DEPTH * camera.scale);
-                    hex_state.verts.EmplaceBack(base_a, col);
-                    hex_state.verts.EmplaceBack(base_b, col);
-                    hex_state.verts.EmplaceBack(apex, col);
+                // tooth
+                const float2 screen_anchor = camera.WorldToScreen(world_center + (local_angle_a + local_angle_b) * float2(0.5F));
+                const float2 local_edge = screen_inner_b - screen_inner_a;
+                const f32 length_edge_squared = math::LengthSq(local_edge);
+                if (length_edge_squared > 0.0001F) {
+                    const float2 local_anchor = screen_anchor - screen_inner_a;
+                    const f32 t = math::Clamp((local_anchor.x * local_edge.x + local_anchor.y * local_edge.y) / length_edge_squared, 0.0F, 1.0F);
+                    const float2 screen_base_mid = screen_inner_a + local_edge * float2(t);
+                    const f32 length_edge = math::Sqrt(length_edge_squared);
+                    const float2 u = local_edge * float2(1.0F / length_edge);
+                    f32 half = BORDER_TEETH_HALF * camera.scale;
+                    if (half > length_edge * 0.5F) { half = length_edge * 0.5F; }
+                    const float2 screen_base_a = screen_base_mid - u * float2(half);
+                    const float2 screen_base_b = screen_base_mid + u * float2(half);
+                    // Inward: from edge-midpoint towards own centre.
+                    const float2 local_inward_raw = (local_angle_a + local_angle_b) * float2(-0.5F);
+                    const f32 local_inward_raw_length = math::Hypot(local_inward_raw);
+                    if (local_inward_raw_length > 0.0001F) {
+                        const float2 local_inward = local_inward_raw * float2(1.0F / local_inward_raw_length);
+                        const float2 screen_apex = screen_base_mid + local_inward * float2(BORDER_TEETH_DEPTH * camera.scale);
+                        hex_state.verts.EmplaceBack(screen_base_a, color);
+                        hex_state.verts.EmplaceBack(screen_base_b, color);
+                        hex_state.verts.EmplaceBack(screen_apex, color);
+                    }
                 }
+                edge_index++;
             }
-            edge_index++;
         }
     }
 }
-// Edge topology helpers --------------------------------------------------
-inline void HexSetRoadEdge(HexState& hex_state, const int2 axial, const u32 side) {
-    const int2 neighbour = axial + HEX_AXIAL_NEIGHBOURS[side];
-    if (hex_state.hex_map.Contains(axial) && hex_state.hex_map.Contains(neighbour)) {
-        hex_state.hex_map[axial].road_edges.Set(side);
-        hex_state.hex_map[neighbour].road_edges.Set((side + 3) % HEX_CORNERS);
-    }
-}
-inline void HexSetRiverEdge(HexState& hex_state, const int2 axial, const u32 side) {
-    const int2 neighbour = axial + HEX_AXIAL_NEIGHBOURS[side];
-    if (hex_state.hex_map.Contains(axial) && hex_state.hex_map.Contains(neighbour)) {
-        hex_state.hex_map[axial].river_edges.Set(side);
-        hex_state.hex_map[neighbour].river_edges.Set((side + 3) % HEX_CORNERS);
-    }
-}
+
 
 [[nodiscard]] constexpr b8 TerrainIsWater(const TerrainType terrain) { return terrain == TerrainType::TERRAIN_DEEP_OCEAN || terrain == TerrainType::TERRAIN_OCEAN; }
 
@@ -407,8 +403,6 @@ inline void GenerateRivers(HexState& hex_state, const u32 seed) {
     }
 }
 
-// Render roads as thin quads from hex center to each marked edge midpoint, forming auto-junctions.
-// Two passes: dark casing first, then lighter body on top.
 inline void AppendRoadMesh(HexState& hex_state, const CameraState& camera) {
     auto append_pass = [&](const f32 width, const ColorF color) {
         for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
@@ -430,8 +424,6 @@ inline void AppendRoadMesh(HexState& hex_state, const CameraState& camera) {
     append_pass(ROAD_WIDTH * camera.scale, colors::ROAD_TAN);
 }
 
-// Render rivers as thin strips along marked edges. Iterate only sides 0..2 to dedupe shared edges.
-// Three passes: dark casing, body, then narrow light highlight stripe down the middle.
 inline void AppendRiverMesh(HexState& hex_state, const CameraState& camera) {
     auto append_pass = [&](const f32 width, const ColorF color) {
         for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
