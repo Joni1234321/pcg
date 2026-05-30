@@ -8,6 +8,7 @@
 #include <optional>
 #include <queue>
 #include <ranges>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -469,6 +470,19 @@ const char* NumberToOrdinal(u32 number) {
             }
     }
 }
+constexpr std::array<std::pair<u32, const char*>, 13> ROMAN_NUMERALS { { { 1000, "M" }, { 900, "CM" }, { 500, "D" }, { 400, "CD" }, { 100, "C" }, { 90, "XC" }, { 50, "L" }, { 40, "XL" }, { 10, "X" }, { 9, "IX" }, { 5, "V" }, { 4, "IV" }, { 1, "I" } } };
+
+String NumberToRomanNumerals(u32 num) {
+    if (num < 1 || num > 3999) { return std::to_string(num); }
+    String romans;
+    for (const auto& [value, symbol] : ROMAN_NUMERALS) {
+        while (num >= value) {
+            romans += symbol;
+            num -= value;
+        }
+    }
+    return romans;
+}
 
 struct UnitPreset {
     u32 move;
@@ -494,6 +508,15 @@ void HexStateUpdateUnitStats(HexState& hex_state) {
         unit.squad_tank = unit_preset.squad_tank;
     }
 }
+HandleOptional<Unit> UnitGetParentWithEchelon(HexState& hex_state, Handle<Unit> unit_handle, Echelon echelon) {
+    while (hex_state.units[unit_handle].parent.IsValid()) {
+        Handle<Unit> unit_handle_parent = hex_state.units[unit_handle].parent.GetHandle();
+        Unit& unit_parent = hex_state.units[unit_handle_parent];
+        if (unit_parent.echelon >= echelon) { return hex_state.units[unit_handle].parent; }
+        unit_handle = unit_handle_parent;
+    }
+    return std::nullopt;
+}
 
 void HexStateUpdateOOB(HexState& hex_state) {
     f32 hue_next = 0.0F;
@@ -516,9 +539,14 @@ void HexStateUpdateOOB(HexState& hex_state) {
         hue_next = std::fmod(hue_next + 37.0F, 360.0F);
         return color;
     };
+
+    const std::array letters = {
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'P',
+    };
     auto get_unit_name = [&](const Unit& unit, u32 i) -> String {
         switch (unit.echelon) {
-            case Echelon::ECHELON_BATTALION: return std::format("{}/{}", i + 1, unit.parent.IsValid() ? String(hex_state.units[unit.parent.GetHandle()].name) : "dtc");
+            case Echelon::ECHELON_COMPANY: return std::format("{}", letters[i % letters.size()]);
+            case Echelon::ECHELON_BATTALION: return std::format("{}/{}", NumberToRomanNumerals(i + 1), unit.parent.IsValid() ? String(hex_state.units[unit.parent.GetHandle()].name) : "dtc");
             case Echelon::ECHELON_REGIMENT: {
                 u32 regiment_number = 0;
                 switch (unit.tag) {

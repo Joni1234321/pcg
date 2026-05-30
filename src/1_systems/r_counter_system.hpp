@@ -35,7 +35,6 @@ enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK };
     ;
 }
 
-
 [[nodiscard]] constexpr String UnitIconToString(const UnitIcon icon) {
     switch (icon) {
         case UnitIcon::ICON_INF: return "inf";

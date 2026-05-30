@@ -13,7 +13,7 @@ namespace pcg {
 using namespace pce;
 enum class CountryTag : u8 { TAG_NONE, TAG_GER, TAG_SOV, TAG_USA };
 enum class TerrainType : u8 { TERRAIN_TYPE_DEEP_OCEAN, TERRAIN_TYPE_OCEAN, TERRAIN_TYPE_HILL, TERRAIN_TYPE_BEACH, TERRAIN_TYPE_GRASS, TERRAIN_TYPE_MOUNTAIN, TERRAIN_TYPE_SNOW };
-enum class TerrainFeature : u8 { TERRAIN_FEATURE_GRASSLAND, TERRAIN_FEATURE_FIELD, TERRAIN_FEATURE_HEDGEROWS, TERRAIN_FEATURE_CITY, TERRAIN_FEATURE_VILLAGE, TERRAIN_FEATURE_WOODED_LIGHTLY, TERRAIN_FEATURE_WOODED_HEAVY, TERRAIN_FEATURE_SWAMP};
+enum class TerrainFeature : u8 { TERRAIN_FEATURE_GRASSLAND, TERRAIN_FEATURE_FIELD, TERRAIN_FEATURE_HEDGEROWS, TERRAIN_FEATURE_CITY, TERRAIN_FEATURE_VILLAGE, TERRAIN_FEATURE_WOODED_LIGHTLY, TERRAIN_FEATURE_WOODED_HEAVY, TERRAIN_FEATURE_SWAMP };
 
 enum class PlayerAction { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_ACTION_DESELECT, PLAYER_ACTION_MOVE_CLICK, PLAYER_ACTION_MOVE_HOVER, PLAYER_ACTION_ATTACK_CLICK, PLAYER_ACTION_ATTACK_HOVER };
 enum class TerrainScheme : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER }; // colorschema.md
@@ -35,11 +35,20 @@ struct HexBitset {
     u8 value;
     [[nodiscard]] constexpr b8 None() const { return !value; }
     [[nodiscard]] constexpr b8 Any() const { return value; }
-    [[nodiscard]] constexpr b8 Test(const u8 pos) const { assert(pos < HEX_CORNERS); return value & (0x1 << pos); }
+    [[nodiscard]] constexpr b8 Test(const u8 pos) const {
+        assert(pos < HEX_CORNERS);
+        return value & (0x1 << pos);
+    }
     constexpr void Clear() { value = 0U; }
-    constexpr void Clear(const u8 pos) { assert(pos < HEX_CORNERS); value &= ~(0x1 << pos); }
+    constexpr void Clear(const u8 pos) {
+        assert(pos < HEX_CORNERS);
+        value &= ~(0x1 << pos);
+    }
     constexpr void Set() { value = 0x3F; }
-    constexpr void Set(const u8 pos) { assert(pos < HEX_CORNERS); value |= 0x1 << pos; }
+    constexpr void Set(const u8 pos) {
+        assert(pos < HEX_CORNERS);
+        value |= 0x1 << pos;
+    }
 };
 
 struct HexOwner {
@@ -313,7 +322,6 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
         }
     }
 }
-
 
 [[nodiscard]] constexpr b8 TerrainIsWater(const TerrainType terrain) { return terrain == TerrainType::TERRAIN_TYPE_DEEP_OCEAN || terrain == TerrainType::TERRAIN_TYPE_OCEAN; }
 
