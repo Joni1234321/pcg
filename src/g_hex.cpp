@@ -203,6 +203,10 @@ struct HexSystem {
             VertHexAppend(hex_state.verts, camera.scale * 0.9F, camera.WorldToScreen(world), color);
             if (hex.owner.contested) { VertHexAppend(hex_state.verts, camera.scale * 0.70F, camera.WorldToScreen(world), color.Mul(0.80F)); }
         }
+        (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
+        hex_state.verts.clear();
+
+        AppendTerrainFeatures(hex_state, camera);
         AppendCountryBorders(hex_state, camera);
         AppendRiverMesh(hex_state, camera);
         AppendRoadMesh(hex_state, camera);
@@ -585,7 +589,7 @@ void arcade::RunHex() {
     Singleton::Get<WindowState>().clear_color = Color::FromHsl(180.0F, 0.5F, 0.20F);
 
     HexState& hex_state = Singleton::Get<HexState>();
-    hex_state.hex_map = GenerateTerrain({ 20, 6 }, 3489);
+    hex_state.hex_map = GenerateTerrainType({ 20, 6 }, 3489);
 
     CameraState& camera = Singleton::Get<CameraState>();
     camera.map_world_min = { 0.0F, 0.0F };
@@ -628,6 +632,7 @@ void arcade::RunHex() {
     GenerateTerritory(hex_state);
     GenerateRoads(hex_state);
     GenerateRivers(hex_state, 3489);
+    GenerateTerrainFeatures(hex_state, 3489);
     hex_state.units_by_axial.clear();
 
     // Systems

@@ -18,6 +18,9 @@
 namespace pce {
 enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHELON_BATTALION, ECHELON_REGIMENT, ECHELON_BRIGADE, ECHELON_DIVISION, ECHELON_CORPS, ECHELON_ARMY };
 enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK };
+enum class CounterStyle : u8 { COUNTER_STYLE_NIEHORSTER, COUNTER_STYLE_NIEHORSTER_BIG, COUNTER_STYLE_REAL };
+
+constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_REAL;
 
 [[nodiscard]] constexpr String EchelonToString(const Echelon echelon) {
     switch (echelon) {
@@ -88,11 +91,21 @@ struct CounterTextureStack {
     CounterTextures counter_textures_real { "counters/counter-real" };
 };
 
+[[nodiscard]] inline const CounterTextures& CounterStyleToTextures(const CounterStyle style) {
+    const CounterTextureStack& stack = Singleton::Get<CounterTextureStack>();
+    switch (style) {
+        case CounterStyle::COUNTER_STYLE_NIEHORSTER: return stack.counter_textures_niehorster;
+        case CounterStyle::COUNTER_STYLE_NIEHORSTER_BIG: return stack.counter_textures_niehorster_big;
+        case CounterStyle::COUNTER_STYLE_REAL: return stack.counter_textures_real;
+    }
+    std::unreachable();
+}
+
 inline void RenderCounters(const Pool<CounterStack>& counters) {
     const CameraState& camera = Singleton::Get<CameraState>();
     const WindowState& window_state = Singleton::Get<WindowState>();
     const ui::FontCollection& font_collection = Singleton::Get<ui::FontCollection>();
-    const CounterTextures& counter_textures = Singleton::Get<CounterTextureStack>().counter_textures_real;
+    const CounterTextures& counter_textures = CounterStyleToTextures(COUNTER_THEME);
 
     constexpr f32 COUNTER_SIZE = 1.1F;
     const float2 counter_size = float2 { camera.scale * COUNTER_SIZE } * float2 { 1.0F, 0.8F };
@@ -146,7 +159,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         const AABBF area_icon = area_icon_border.WithPadding(float2 { camera.scale / 40.0F });
         const Color color_icon = counter.stack[0].color_icon;
         const HandleOptional<Texture> texture_handle = counter_textures.ForIcon(counter.icon);
-        SDL_Texture* icon_texture = texture_handle.IsValid() ? globalData[texture_handle.GetHandle()].ToSDL() : nullptr;
+        SDL_Texture* icon_texture = texture_handle.IsValid() ? globalData[texture_handle.GetHandle()] : nullptr;
         if (icon_texture) {
             (void)SDL_SetTextureColorMod(icon_texture, color_icon.r, color_icon.g, color_icon.b);
             (void)SDL_SetTextureAlphaMod(icon_texture, color_icon.a);

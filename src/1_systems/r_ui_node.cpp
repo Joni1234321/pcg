@@ -389,7 +389,7 @@ void AddNodeToFrameElement(NodeTree& tree, const Handle<Node> node) {
         tree.frame_elements.texts.push_back(TextElement { .text = tree.node_ttf_texts[node].Get(), .position = { static_cast<f32>(style.InnerBoxPosition().x), static_cast<f32>(style.InnerBoxPosition().y) } });
     } else if (style.texture.IsValid()) {
         add_type(ElementType::texture);
-        tree.frame_elements.textures.push_back(TextureElement { .rect = style.OuterRect(), .texture = globalData[style.texture.GetHandle()].ToSDL() });
+        tree.frame_elements.textures.push_back(TextureElement { .rect = style.OuterRect(), .texture = globalData[style.texture.GetHandle()] });
     } else if (style.background_color.a != 0U) {
         add_type(ElementType::rectangle);
         tree.frame_elements.rectangles.push_back(RectangleElement { .color = style.background_color, .rect = style.OuterRect() });

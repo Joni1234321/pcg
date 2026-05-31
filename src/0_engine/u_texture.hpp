@@ -22,7 +22,7 @@ struct Texture : LogLifetimeWithCount<Texture> {
         }
     }
     [[nodiscard]] b8 FailedLoading() const { return texture.Get() == nullptr; }
-    [[nodiscard]] constexpr SDL_Texture* ToSDL() const { return texture.Get(); }
+    operator SDL_Texture*() const { return texture.Get(); }
 
 private:
     struct CloseTexture {

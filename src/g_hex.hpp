@@ -13,15 +13,20 @@ namespace pcg {
 using namespace pce;
 enum class CountryTag : u8 { TAG_NONE, TAG_GER, TAG_SOV, TAG_USA };
 enum class TerrainType : u8 { TERRAIN_TYPE_DEEP_OCEAN, TERRAIN_TYPE_OCEAN, TERRAIN_TYPE_HILL, TERRAIN_TYPE_BEACH, TERRAIN_TYPE_GRASS, TERRAIN_TYPE_MOUNTAIN, TERRAIN_TYPE_SNOW };
-enum class TerrainFeature : u8 { TERRAIN_FEATURE_GRASSLAND, TERRAIN_FEATURE_FIELD, TERRAIN_FEATURE_HEDGEROWS, TERRAIN_FEATURE_CITY, TERRAIN_FEATURE_VILLAGE, TERRAIN_FEATURE_WOODED_LIGHTLY, TERRAIN_FEATURE_WOODED_HEAVY, TERRAIN_FEATURE_SWAMP };
+enum class TerrainFeature : u8 { TERRAIN_FEATURE_GRASSLAND, TERRAIN_FEATURE_FIELD, TERRAIN_FEATURE_CITY, TERRAIN_FEATURE_VILLAGE, TERRAIN_FEATURE_WOODED_LIGHTLY, TERRAIN_FEATURE_WOODED_HEAVY, TERRAIN_FEATURE_MARSH };
 
-enum class PlayerAction { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_ACTION_DESELECT, PLAYER_ACTION_MOVE_CLICK, PLAYER_ACTION_MOVE_HOVER, PLAYER_ACTION_ATTACK_CLICK, PLAYER_ACTION_ATTACK_HOVER };
-enum class TerrainScheme : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER }; // colorschema.md
+enum class PlayerAction : u8 { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_ACTION_DESELECT, PLAYER_ACTION_MOVE_CLICK, PLAYER_ACTION_MOVE_HOVER, PLAYER_ACTION_ATTACK_CLICK, PLAYER_ACTION_ATTACK_HOVER };
+
+enum class MapStyle : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER }; // colorschema.md
+enum class TerrainStyle : u8 { TERRAIN_STYLE_SILHOUETTES, TERRAIN_STYLE_ICONS };
+
+constexpr MapStyle TERRAIN_SCHEME = MapStyle::SLATE_TABLE;
+constexpr TerrainStyle TERRAIN_FEATURE_THEME = TerrainStyle::TERRAIN_STYLE_ICONS;
+
 
 constexpr u32 MOVE_COST_ATTACK = 2U;
 constexpr u32 MOVE_COST_ATTACK_PLANNED = 6U;
 constexpr u32 MOVE_COST_ROAD_REDUCTION = 2U;
-constexpr TerrainScheme TERRAIN_SCHEME = TerrainScheme::SLATE_TABLE;
 constexpr f32 BORDER_INNER_RADIUS = 0.90F;
 constexpr f32 BORDER_TEETH_DEPTH = 0.12F;
 constexpr f32 BORDER_TEETH_HALF = 0.18F;
@@ -116,7 +121,7 @@ struct HexState {
     Pool<Label> label_pool;
     List<Vertex> verts { };
 };
-[[nodiscard]] constexpr TerrainType FloatToTerrain(const f32 terrain) {
+[[nodiscard]] constexpr TerrainType FloatToTerrainType(const f32 terrain) {
     if (terrain < 0.25F) { return TerrainType::TERRAIN_TYPE_DEEP_OCEAN; }
     if (terrain < 0.38F) { return TerrainType::TERRAIN_TYPE_OCEAN; }
     if (terrain < 0.43F) { return TerrainType::TERRAIN_TYPE_BEACH; }
@@ -136,13 +141,12 @@ struct HexState {
         case TerrainType::TERRAIN_TYPE_SNOW: return colors::WHITE;
     }
     std::unreachable();
-    ;
 }
 
 [[nodiscard]] constexpr Color TerrainToColorScheme(const TerrainType terrain) {
-    if constexpr (TERRAIN_SCHEME == TerrainScheme::CIV_VIBRANT) {
+    if constexpr (TERRAIN_SCHEME == MapStyle::CIV_VIBRANT) {
         return TerrainToColor(terrain); // saturated default (existing palette)
-    } else if constexpr (TERRAIN_SCHEME == TerrainScheme::SLATE_TABLE) {
+    } else if constexpr (TERRAIN_SCHEME == MapStyle::SLATE_TABLE) {
         // cool, desaturated - like a board game printed on slate.
         switch (terrain) {
             case TerrainType::TERRAIN_TYPE_DEEP_OCEAN: return Color { 28U, 38U, 55U };
@@ -165,7 +169,6 @@ struct HexState {
         }
     }
     std::unreachable();
-    ;
 }
 [[nodiscard]] constexpr u32 TerrainToMovementCost(const TerrainType terrain) {
     switch (terrain) {
@@ -178,7 +181,6 @@ struct HexState {
         case TerrainType::TERRAIN_TYPE_SNOW: return 4U;
     }
     std::unreachable();
-    ;
 }
 [[nodiscard]] constexpr Color CountryTagToColor(const CountryTag tag) {
     switch (tag) {
@@ -189,10 +191,45 @@ struct HexState {
     }
     assert(false);
     std::unreachable();
-    ;
 }
 
-constexpr HexList<Hex> GenerateTerrain(const uint2 map_size, const u32 seed) {
+struct TerrainFeatureTextures {
+    HandleOptional<Texture> grassland;
+    HandleOptional<Texture> field;
+    HandleOptional<Texture> city;
+    HandleOptional<Texture> village;
+    HandleOptional<Texture> wooded_lightly;
+    HandleOptional<Texture> wooded_heavy;
+    HandleOptional<Texture> marsh;
+
+    explicit TerrainFeatureTextures(const RelativePath& dir) {
+        grassland = globalData.Create<Texture>(Asset(dir / "grassland.png"));
+        field = globalData.Create<Texture>(Asset(dir / "field.png"));
+        city = globalData.Create<Texture>(Asset(dir / "city.png"));
+        village = globalData.Create<Texture>(Asset(dir / "village.png"));
+        wooded_lightly = globalData.Create<Texture>(Asset(dir / "wooded-lightly.png"));
+        wooded_heavy = globalData.Create<Texture>(Asset(dir / "wooded-heavy.png"));
+        marsh = globalData.Create<Texture>(Asset(dir / "marsh.png"));
+    }
+    [[nodiscard]] HandleOptional<Texture> ForFeature(const TerrainFeature feature) const {
+        switch (feature) {
+            case TerrainFeature::TERRAIN_FEATURE_GRASSLAND: return grassland;
+            case TerrainFeature::TERRAIN_FEATURE_FIELD: return field;
+            case TerrainFeature::TERRAIN_FEATURE_CITY: return city;
+            case TerrainFeature::TERRAIN_FEATURE_VILLAGE: return village;
+            case TerrainFeature::TERRAIN_FEATURE_WOODED_LIGHTLY: return wooded_lightly;
+            case TerrainFeature::TERRAIN_FEATURE_WOODED_HEAVY: return wooded_heavy;
+            case TerrainFeature::TERRAIN_FEATURE_MARSH: return marsh;
+        }
+        std::unreachable();
+    }
+};
+struct TerrainFeatureTextureStack {
+    TerrainFeatureTextures terrain_features_silhouettes { "terrain/terrain-silhouettes" };
+    TerrainFeatureTextures terrain_features_icons { "terrain/terrain-icons" };
+};
+
+constexpr HexList<Hex> GenerateTerrainType(const uint2 map_size, const u32 seed) {
     HexList<Hex> hexes;
     hexes.Resize(map_size);
     constexpr f32 SCALE = 0.04F;
@@ -200,7 +237,7 @@ constexpr HexList<Hex> GenerateTerrain(const uint2 map_size, const u32 seed) {
     for (u32 i = 0; i < hexes.Size(); i++) {
         const int2 axial = hexes.IndexToAxial(i);
         const float2 world = HexAxialToWorld(axial);
-        hexes[axial].terrain_type = FloatToTerrain((noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f) + 1.0F) * 0.5F);
+        hexes[axial].terrain_type = FloatToTerrainType((noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f) + 1.0F) * 0.5F);
     }
     return hexes;
 }
@@ -410,6 +447,59 @@ inline void GenerateRivers(HexState& hex_state, const u32 seed) {
             if (best_side == HEX_CORNERS) { break; }
             HexSetRiverEdge(hex_state, cur, best_side);
             cur = cur + HEX_AXIAL_NEIGHBOURS[best_side];
+        }
+    }
+}
+
+inline void GenerateTerrainFeatures(HexState& hex_state, const u32 seed) {
+    constexpr f32 SCALE = 0.12F;
+    const f32 seed_f = static_cast<f32>(seed) + 1000.0F;
+    for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
+        Hex& hex = hex_state.hex_map.data[i];
+        const int2 axial = hex_state.hex_map.IndexToAxial(i);
+        const float2 world = HexAxialToWorld(axial);
+        const f32 n = (noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f) + 1.0F) * 0.5F;
+        const u32 h = noise::Hash(axial.x + static_cast<i32>(seed), axial.y - static_cast<i32>(seed));
+        hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_GRASSLAND;
+        switch (hex.terrain_type) {
+            case TerrainType::TERRAIN_TYPE_BEACH:
+                if (hex.river_edges.Any() || n < 0.42F) { hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_MARSH; }
+                break;
+            case TerrainType::TERRAIN_TYPE_GRASS:
+                if ((h % 64U) == 0U) {
+                    hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_CITY;
+                } else if ((h % 13U) == 0U) {
+                    hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_VILLAGE;
+                } else if (n > 0.50F) {
+                    hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_FIELD;
+                }
+                break;
+            case TerrainType::TERRAIN_TYPE_HILL:
+                if (n > 0.62F) {
+                    hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_WOODED_HEAVY;
+                } else if (n > 0.42F) {
+                    hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_WOODED_LIGHTLY;
+                }
+                break;
+            default: break;
+        }
+    }
+}
+
+inline void AppendTerrainFeatures(HexState& hex_state, const CameraState& camera) {
+    SDL_Renderer* renderer = Singleton::Get<WindowState>().renderer;
+    const TerrainFeatureTextureStack& stack = Singleton::Get<TerrainFeatureTextureStack>();
+    const TerrainFeatureTextures& textures = TERRAIN_FEATURE_THEME == TerrainStyle::TERRAIN_STYLE_ICONS ? stack.terrain_features_icons : stack.terrain_features_silhouettes;
+    for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
+        const Hex& hex = hex_state.hex_map.data[i];
+        if (hex.terrain_feature != TerrainFeature::TERRAIN_FEATURE_GRASSLAND) {
+            const HandleOptional<Texture> texture_handle = textures.ForFeature(hex.terrain_feature);
+            if (texture_handle.IsValid()) {
+                SDL_Texture* texture = globalData[texture_handle.GetHandle()];
+                const float2 screen = camera.WorldToScreen(HexAxialToWorld(hex_state.hex_map.IndexToAxial(i)));
+                const AABBF area = AABBF::FromCenter(screen, float2 { camera.scale * 1.1F });
+                (void)SDL_RenderTexture(renderer, texture, nullptr, area);
+            }
         }
     }
 }
