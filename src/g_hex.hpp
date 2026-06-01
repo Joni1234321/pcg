@@ -75,17 +75,21 @@ struct HexBitset2 {
     [[nodiscard]] constexpr b8 Any() const { return value; }
     [[nodiscard]] constexpr u8 Test(const u8 pos) const {
         assert(pos < HEX_CORNERS);
-        return (value >> (pos * BITS_PER_HEX)) & MASK;
+        const u16 shift = pos * BITS_PER_HEX;
+        return value >> shift & MASK;
     }
     constexpr void Clear() { value = 0U; }
     constexpr void Clear(const u8 pos) {
         assert(pos < HEX_CORNERS);
-        value &= ~(MASK << (pos * BITS_PER_HEX));
+        const u16 shift = pos * BITS_PER_HEX;
+        value &= ~(MASK << shift);
     }
     constexpr void Set(const u8 pos, const u8 val) {
         assert(pos < HEX_CORNERS);
         assert(val <= MASK);
-        value |= val << (pos * BITS_PER_HEX);
+        const u16 shift = pos * BITS_PER_HEX;
+        value &= ~(MASK << shift);
+        value |= val << shift;
     }
 };
 
@@ -98,17 +102,21 @@ struct HexBitset5 {
     [[nodiscard]] constexpr b8 Any() const { return value; }
     [[nodiscard]] constexpr u8 Test(const u8 pos) const {
         assert(pos < HEX_CORNERS);
-        return (value >> (pos * BITS_PER_HEX)) & MASK;
+        const u32 shift = pos * BITS_PER_HEX;
+        return value >> shift & MASK;
     }
     constexpr void Clear() { value = 0U; }
     constexpr void Clear(const u8 pos) {
         assert(pos < HEX_CORNERS);
-        value &= ~(MASK << (pos * BITS_PER_HEX));
+        const u32 shift = pos * BITS_PER_HEX;
+        value &= ~(MASK << shift);
     }
     constexpr void Set(const u8 pos, const u8 val) {
         assert(pos < HEX_CORNERS);
         assert(val <= MASK);
-        value |= val << (pos * BITS_PER_HEX);
+        const u32 shift = pos * BITS_PER_HEX;
+        value &= ~(MASK << shift);
+        value |= val << shift;
     }
 };
 
@@ -323,7 +331,7 @@ inline void GenerateTerritory(HexState& hex_state) {
     }
 }
 
-inline void HexSetRoadEdge(HexState& hex_state, const int2 axial, const u32 side, const b8 big) {
+inline void HexSetRoad(HexState& hex_state, const int2 axial, const u32 side, const b8 big) {
     const int2 axial_side = axial + HEX_AXIAL_NEIGHBOURS[side];
     if (hex_state.hex_map.Contains(axial) && hex_state.hex_map.Contains(axial_side)) {
         const u32 mirror = (side + 3) % HEX_CORNERS;
@@ -332,7 +340,7 @@ inline void HexSetRoadEdge(HexState& hex_state, const int2 axial, const u32 side
         if (hex_state.hex_map[axial_side].roads.Test(mirror) < val) { hex_state.hex_map[axial_side].roads.Set(mirror, val); }
     }
 }
-inline void HexSetRiverEdge(HexState& hex_state, const int2 axial, const u32 side) {
+inline void HexSetRiver(HexState& hex_state, const int2 axial, const u32 side) {
     const int2 axial_side = axial + HEX_AXIAL_NEIGHBOURS[side];
     if (hex_state.hex_map.Contains(axial) && hex_state.hex_map.Contains(axial_side)) {
         hex_state.hex_map[axial].river_edges.Set(side);
@@ -378,18 +386,18 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
                     const float2 local_anchor = screen_anchor - screen_inner_a;
                     const f32 t = math::Clamp((local_anchor.x * local_edge.x + local_anchor.y * local_edge.y) / length_edge_squared, 0.0F, 1.0F);
                     const float2 screen_base_mid = screen_inner_a + local_edge * float2(t);
-                    const f32 length_edge = math::Sqrt(length_edge_squared);
-                    const float2 u = local_edge * float2(1.0F / length_edge);
-                    f32 half = BORDER_TEETH_HALF * camera.scale;
-                    if (half > length_edge * 0.5F) { half = length_edge * 0.5F; }
-                    const float2 screen_base_a = screen_base_mid - u * float2(half);
-                    const float2 screen_base_b = screen_base_mid + u * float2(half);
-                    // Inward: from edge-midpoint towards own centre.
-                    const float2 local_inward_raw = (local_angle_a + local_angle_b) * float2(-0.5F);
-                    const f32 local_inward_raw_length = math::Hypot(local_inward_raw);
-                    if (local_inward_raw_length > 0.0001F) {
-                        const float2 local_inward = local_inward_raw * float2(1.0F / local_inward_raw_length);
-                        const float2 screen_apex = screen_base_mid + local_inward * float2(BORDER_TEETH_DEPTH * camera.scale);
+                    const float2 local_inward = (local_angle_a + local_angle_b) * float2(-0.5F);
+                    const f32 local_inward_length = math::Hypot(local_inward);
+                    if (local_inward_length > 0.0001F) {
+                        const f32 length_edge = math::Sqrt(length_edge_squared);
+                        const float2 local_edge_normalized = local_edge * float2(1.0F / length_edge);
+                        const f32 width_teeth = std::min(BORDER_TEETH_HALF * camera.scale, length_edge * 0.5F);
+                        const float2 screen_base_a = screen_base_mid - local_edge_normalized * float2(width_teeth);
+                        const float2 screen_base_b = screen_base_mid + local_edge_normalized * float2(width_teeth);
+
+                        const float2 local_inward_normalized = local_inward * float2(1.0F / local_inward_length);
+                        const f32 height_teeth = BORDER_TEETH_DEPTH * camera.scale;
+                        const float2 screen_apex = screen_base_mid + local_inward_normalized * float2(height_teeth);
                         hex_state.verts.EmplaceBack(screen_base_a, color);
                         hex_state.verts.EmplaceBack(screen_base_b, color);
                         hex_state.verts.EmplaceBack(screen_apex, color);
@@ -420,7 +428,7 @@ inline void CarveRoad(HexState& hex_state, const int2 axial_a, const int2 axial_
         }
         for (u32 s = 0U; s < HEX_CORNERS; s++) {
             if (prev + HEX_AXIAL_NEIGHBOURS[s] == axial_current) {
-                HexSetRoadEdge(hex_state, prev, s, big);
+                HexSetRoad(hex_state, prev, s, big);
                 break;
             }
         }
@@ -549,7 +557,7 @@ inline void GenerateRivers(HexState& hex_state, const u32 seed) {
                     }
                 }
                 if (side_best == HEX_CORNERS) { break; } // if we didnt find any
-                HexSetRiverEdge(hex_state, axial_current, side_best);
+                HexSetRiver(hex_state, axial_current, side_best);
                 axial_current = axial_current + HEX_AXIAL_NEIGHBOURS[side_best];
             }
         }
