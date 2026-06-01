@@ -10,6 +10,7 @@
 #include <span>
 #include <stack>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -24,6 +25,7 @@ template <typename T, u32 N> using Array = std::array<T, N>;
 template <typename T> using Span = std::span<T>;
 template <typename T> using Stack = std::stack<T>;
 template <class K, class V> using UnorderedMap = std::unordered_map<K, V>;
+template <class K> using UnorderedSet = std::unordered_set<K>;
 template <class T, class C = std::less<T>> using Set = std::set<T, C>;
 template <class T, class C = std::less<T>> using Multiset = std::multiset<T, C>;
 template <typename T, typename D = std::default_delete<T>> class UniquePointer {

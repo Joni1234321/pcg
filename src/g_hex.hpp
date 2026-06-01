@@ -82,9 +82,10 @@ struct HexBitset2 {
         assert(pos < HEX_CORNERS);
         value &= ~(MASK << (pos * BITS_PER_HEX));
     }
-    constexpr void Set(const u8 pos) {
+    constexpr void Set(const u8 pos, const u8 val) {
         assert(pos < HEX_CORNERS);
-        value |= MASK << (pos * BITS_PER_HEX);
+        assert(val <= MASK);
+        value |= val << (pos * BITS_PER_HEX);
     }
 };
 
@@ -104,9 +105,10 @@ struct HexBitset5 {
         assert(pos < HEX_CORNERS);
         value &= ~(MASK << (pos * BITS_PER_HEX));
     }
-    constexpr void Set(const u8 pos) {
+    constexpr void Set(const u8 pos, const u8 val) {
         assert(pos < HEX_CORNERS);
-        value |= MASK << (pos * BITS_PER_HEX);
+        assert(val <= MASK);
+        value |= val << (pos * BITS_PER_HEX);
     }
 };
 
@@ -342,24 +344,6 @@ inline b8 SDL_RenderGeometry(SDL_Renderer* renderer, SDL_Texture* texture, const
 inline b8 SDL_RenderGeometry(SDL_Renderer* renderer, SDL_Texture* texture, const Span<const Vertex> vertices) { return SDL_RenderGeometry(renderer, texture, reinterpret_cast<const SDL_Vertex*>(vertices.data()), vertices.size(), nullptr, 0); }
 
 // ai genrated border
-//
-// Pixel-perfect rationale:
-//   HexAppend draws each tile as `center_int + HEX_ANGLE[i] * scale` -- the
-//   centre is rounded to a pixel once and the corners are sub-pixel floats.
-//   We mirror that exact convention here so the strip's geometry shares the
-//   same `center_int` and the same `scale` factor as the tile it sits on,
-//   which keeps the strip's inner edge pixel-perfectly aligned with the
-//   tile's outer edge (when BORDER_INNER_RADIUS == the tile's draw radius,
-//   currently 0.90).
-//
-//   For teeth across a country border we want red and blue to face each
-//   other. Each country's inner edge endpoints are anchored on its own
-//   centre, so the inner midpoints differ slightly between red and blue.
-//   We therefore anchor every tooth's base midpoint to a *single shared*
-//   screen point -- the lattice-edge midpoint rounded once in world space
-//   -- and project that anchor onto each country's inner edge. Both
-//   countries end up with base midpoints on the same perpendicular line
-//   through the shared anchor, so their tooth tips face each other.
 inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera) {
     for (u32 i = 0; i < hex_state.hex_map.Size(); i++) {
         const Hex& hex = hex_state.hex_map.data[i];
@@ -543,33 +527,31 @@ inline void GenerateRivers(HexState& hex_state, const u32 seed) {
         return noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f);
     };
 
-    UnorderedMap<int2, u8> visited;
+    UnorderedSet<int2> visited;
     for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
         const Hex& hex = hex_state.hex_map.data[i];
-        if (hex.terrain_type != TerrainType::TERRAIN_TYPE_MOUNTAIN && hex.terrain_type != TerrainType::TERRAIN_TYPE_SNOW) { continue; }
         const int2 axial = hex_state.hex_map.IndexToAxial(i);
-        if (visited.contains(axial)) { continue; }
-        int2 cur = axial;
-        for (u32 step = 0U; step < 64U; step++) {
-            visited[cur] = 1U;
-            if (!hex_state.hex_map.Contains(cur)) { break; }
-            if (TerrainIsWater(hex_state.hex_map[cur].terrain_type)) { break; }
-            constexpr Array<u32, 4> SLANTED_SIDES { 1U, 2U, 4U, 5U };
-            u32 best_side = HEX_CORNERS;
-            f32 best_elev = elevation_at(cur);
-            for (const u32 s : SLANTED_SIDES) {
-                const int2 n = cur + HEX_AXIAL_NEIGHBOURS[s];
-                if (!hex_state.hex_map.Contains(n)) { continue; }
-                if (visited.contains(n)) { continue; }
-                const f32 e = elevation_at(n);
-                if (e < best_elev) {
-                    best_elev = e;
-                    best_side = s;
+        if (hex.terrain_type == TerrainType::TERRAIN_TYPE_MOUNTAIN || hex.terrain_type == TerrainType::TERRAIN_TYPE_SNOW && !visited.contains(axial)) {
+            int2 axial_current = axial;
+            for (u32 step = 0U; step < 64U; step++) {
+                visited.emplace(axial_current);
+                if (!hex_state.hex_map.Contains(axial_current) || TerrainIsWater(hex_state.hex_map[axial_current].terrain_type)) { break; }
+                constexpr Array SLANTED_SIDES { 0U, 1U, 2U, 3U, 4U, 5U };
+                u8 side_best = HEX_CORNERS;
+                f32 elevation_min = elevation_at(axial_current);
+                for (const u32 side : SLANTED_SIDES) {
+                    const int2 axial_neighbour = axial_current + HEX_AXIAL_NEIGHBOURS[side];
+                    if (!hex_state.hex_map.Contains(axial_neighbour) || visited.contains(axial_neighbour)) { continue; }
+                    const f32 elevation = elevation_at(axial_neighbour);
+                    if (elevation < elevation_min) {
+                        elevation_min = elevation;
+                        side_best = side;
+                    }
                 }
+                if (side_best == HEX_CORNERS) { break; } // if we didnt find any
+                HexSetRiverEdge(hex_state, axial_current, side_best);
+                axial_current = axial_current + HEX_AXIAL_NEIGHBOURS[side_best];
             }
-            if (best_side == HEX_CORNERS) { break; }
-            HexSetRiverEdge(hex_state, cur, best_side);
-            cur = cur + HEX_AXIAL_NEIGHBOURS[best_side];
         }
     }
 }

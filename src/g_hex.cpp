@@ -590,7 +590,7 @@ void arcade::RunHex() {
     Singleton::Get<WindowState>().clear_color = Color::FromHsl(180.0F, 0.5F, 0.20F);
 
     HexState& hex_state = Singleton::Get<HexState>();
-    hex_state.hex_map = GenerateTerrainType({ 100, 100 }, 3489);
+    hex_state.hex_map = GenerateTerrainType({ 40, 40 }, 3489);
 
     CameraState& camera = Singleton::Get<CameraState>();
     camera.map_world_min = { 0.0F, 0.0F };
