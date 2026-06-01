@@ -30,8 +30,20 @@ constexpr u32 MOVE_COST_ROAD_REDUCTION = 2U;
 constexpr f32 BORDER_INNER_RADIUS = 0.90F;
 constexpr f32 BORDER_TEETH_DEPTH = 0.12F;
 constexpr f32 BORDER_TEETH_HALF = 0.18F;
-constexpr f32 ROAD_WIDTH = 0.09F;
-constexpr f32 ROAD_CASING_EXTRA = 0.04F;
+constexpr f32 ROAD_WIDTH = 0.035F;
+constexpr f32 ROAD_BIG_WIDTH = 0.075F;
+constexpr f32 ROAD_CENTER_JITTER = 0.2F;
+constexpr f32 FEATURE_POSITION_JITTER = 0.2F;
+constexpr u8 ROAD_NONE = 0U;
+constexpr u8 ROAD_SMALL = 1U;
+constexpr u8 ROAD_BIG = 2U;
+
+[[nodiscard]] inline float2 HexTileJitter(const int2 axial, const f32 amount) {
+    const u32 h = noise::Hash(axial.x, axial.y);
+    const f32 fx = (static_cast<f32>(h & 0xFFFFU) / 65535.0F) * 2.0F - 1.0F;
+    const f32 fy = (static_cast<f32>((h >> 16) & 0xFFFFU) / 65535.0F) * 2.0F - 1.0F;
+    return float2 { fx * amount, fy * amount };
+}
 constexpr f32 RIVER_WIDTH = 0.13F;
 constexpr f32 RIVER_CASING_EXTRA = 0.05F;
 constexpr f32 RIVER_HIGHLIGHT_WIDTH = RIVER_WIDTH * 0.35F;
@@ -42,7 +54,7 @@ struct HexBitset {
     [[nodiscard]] constexpr b8 Any() const { return value; }
     [[nodiscard]] constexpr b8 Test(const u8 pos) const {
         assert(pos < HEX_CORNERS);
-        return value & (0x1 << pos);
+        return value & 0x1 << pos;
     }
     constexpr void Clear() { value = 0U; }
     constexpr void Clear(const u8 pos) {
@@ -55,6 +67,49 @@ struct HexBitset {
         value |= 0x1 << pos;
     }
 };
+struct HexBitset2 {
+    static constexpr u8 BITS_PER_HEX = 2;
+    static constexpr u16 MASK = 0b11;
+    u16 value;
+    [[nodiscard]] constexpr b8 None() const { return !value; }
+    [[nodiscard]] constexpr b8 Any() const { return value; }
+    [[nodiscard]] constexpr u8 Test(const u8 pos) const {
+        assert(pos < HEX_CORNERS);
+        return (value >> (pos * BITS_PER_HEX)) & MASK;
+    }
+    constexpr void Clear() { value = 0U; }
+    constexpr void Clear(const u8 pos) {
+        assert(pos < HEX_CORNERS);
+        value &= ~(MASK << (pos * BITS_PER_HEX));
+    }
+    constexpr void Set(const u8 pos) {
+        assert(pos < HEX_CORNERS);
+        value |= MASK << (pos * BITS_PER_HEX);
+    }
+};
+
+// efficient 30 bits used. 2 unused. 2^5 = 32 values per side
+struct HexBitset5 {
+    static constexpr u8 BITS_PER_HEX = 5;
+    static constexpr u32 MASK = 0b11111;
+    u32 value;
+    [[nodiscard]] constexpr b8 None() const { return !value; }
+    [[nodiscard]] constexpr b8 Any() const { return value; }
+    [[nodiscard]] constexpr u8 Test(const u8 pos) const {
+        assert(pos < HEX_CORNERS);
+        return (value >> (pos * BITS_PER_HEX)) & MASK;
+    }
+    constexpr void Clear() { value = 0U; }
+    constexpr void Clear(const u8 pos) {
+        assert(pos < HEX_CORNERS);
+        value &= ~(MASK << (pos * BITS_PER_HEX));
+    }
+    constexpr void Set(const u8 pos) {
+        assert(pos < HEX_CORNERS);
+        value |= MASK << (pos * BITS_PER_HEX);
+    }
+};
+
 
 struct HexOwner {
     CountryTag tag { CountryTag::TAG_NONE };
@@ -64,7 +119,7 @@ struct Hex {
     TerrainType terrain_type;
     TerrainFeature terrain_feature;
     HexOwner owner;
-    HexBitset road_edges { };
+    HexBitset2 roads { };
     HexBitset river_edges { };
 };
 struct Unit {
@@ -266,11 +321,13 @@ inline void GenerateTerritory(HexState& hex_state) {
     }
 }
 
-inline void HexSetRoadEdge(HexState& hex_state, const int2 axial, const u32 side) {
+inline void HexSetRoadEdge(HexState& hex_state, const int2 axial, const u32 side, const b8 big) {
     const int2 axial_side = axial + HEX_AXIAL_NEIGHBOURS[side];
     if (hex_state.hex_map.Contains(axial) && hex_state.hex_map.Contains(axial_side)) {
-        hex_state.hex_map[axial].road_edges.Set(side);
-        hex_state.hex_map[axial_side].road_edges.Set((side + 3) % HEX_CORNERS);
+        const u32 mirror = (side + 3) % HEX_CORNERS;
+        const u8 val = big ? ROAD_BIG : ROAD_SMALL;
+        if (hex_state.hex_map[axial].roads.Test(side) < val) { hex_state.hex_map[axial].roads.Set(side, val); }
+        if (hex_state.hex_map[axial_side].roads.Test(mirror) < val) { hex_state.hex_map[axial_side].roads.Set(mirror, val); }
     }
 }
 inline void HexSetRiverEdge(HexState& hex_state, const int2 axial, const u32 side) {
@@ -363,7 +420,7 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
 [[nodiscard]] constexpr b8 TerrainIsWater(const TerrainType terrain) { return terrain == TerrainType::TERRAIN_TYPE_DEEP_OCEAN || terrain == TerrainType::TERRAIN_TYPE_OCEAN; }
 
 // Carve a road from axial_a to axial_b along the hex line, skipping water tiles.
-inline void CarveRoad(HexState& hex_state, const int2 axial_a, const int2 axial_b) {
+inline void CarveRoad(HexState& hex_state, const int2 axial_a, const int2 axial_b, const b8 big) {
     const u32 dist = HexAxialDistance(axial_a, axial_b);
     if (dist == 0U) { return; }
     const int3 cube_a = HexAxialToCube(axial_a);
@@ -379,7 +436,7 @@ inline void CarveRoad(HexState& hex_state, const int2 axial_a, const int2 axial_
         }
         for (u32 s = 0U; s < HEX_CORNERS; s++) {
             if (prev + HEX_AXIAL_NEIGHBOURS[s] == axial_current) {
-                HexSetRoadEdge(hex_state, prev, s);
+                HexSetRoadEdge(hex_state, prev, s, big);
                 break;
             }
         }
@@ -387,18 +444,97 @@ inline void CarveRoad(HexState& hex_state, const int2 axial_a, const int2 axial_
     }
 }
 
-// Roads connect each unit to its parent in the OOB hierarchy.
 inline void GenerateRoads(HexState& hex_state) {
-    for (u32 i = 0U; i < hex_state.units.size(); i++) {
-        const Handle<Unit> unit_handle = hex_state.units.IndexToHandle(i);
-        const Unit& unit = hex_state.units[unit_handle];
-        if (!unit.parent.IsValid()) { continue; }
-        const Unit& parent = hex_state.units[unit.parent.GetHandle()];
-        CarveRoad(hex_state, unit.axial, parent.axial);
+    List<int2> cities;
+    List<int2> villages;
+    for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
+        const Hex& hex = hex_state.hex_map.data[i];
+        const int2 axial = hex_state.hex_map.IndexToAxial(i);
+        if (hex.terrain_feature == TerrainFeature::TERRAIN_FEATURE_CITY) { cities.EmplaceBack(axial); }
+        else if (hex.terrain_feature == TerrainFeature::TERRAIN_FEATURE_VILLAGE) { villages.EmplaceBack(axial); }
+    }
+
+    if (cities.size() >= 2U) {
+        const u32 n = cities.size();
+        List<u8> in_tree;
+        in_tree.resize(n);
+        std::ranges::fill(in_tree, u8 { 0U });
+        List<u32> best_cost;
+        best_cost.resize(n);
+        std::ranges::fill(best_cost, std::numeric_limits<u32>::max());
+        List<u32> best_parent;
+        best_parent.resize(n);
+        std::ranges::fill(best_parent, u32 { 0U });
+        best_cost[0] = 0U;
+        for (u32 step = 0U; step < n; step++) {
+            u32 next = n;
+            u32 next_cost = std::numeric_limits<u32>::max();
+            for (u32 i = 0U; i < n; i++) {
+                if (in_tree[i] == 0U && best_cost[i] < next_cost) {
+                    next_cost = best_cost[i];
+                    next = i;
+                }
+            }
+            if (next == n) { break; }
+            in_tree[next] = 1U;
+            if (step > 0U) { CarveRoad(hex_state, cities[best_parent[next]], cities[next], true); }
+            for (u32 i = 0U; i < n; i++) {
+                if (in_tree[i] == 0U) {
+                    const u32 d = HexAxialDistance(cities[next], cities[i]);
+                    if (d < best_cost[i]) {
+                        best_cost[i] = d;
+                        best_parent[i] = next;
+                    }
+                }
+            }
+        }
+    }
+
+    // K-nearest neighbour redundancy: each city gains 1 extra big road and 2 small roads.
+    auto connect_k_nearest = [&](const List<int2>& sources, const List<int2>& targets,
+                                  const u32 big_count, const u32 small_count) {
+        for (u32 i = 0U; i < sources.size(); i++) {
+            List<u32> dist;
+            List<u32> idx;
+            dist.resize(targets.size());
+            idx.resize(targets.size());
+            u32 valid = 0U;
+            for (u32 j = 0U; j < targets.size(); j++) {
+                if (sources[i] == targets[j]) { continue; }
+                dist[valid] = HexAxialDistance(sources[i], targets[j]);
+                idx[valid] = j;
+                valid++;
+            }
+            const u32 want = big_count + small_count;
+            const u32 take = valid < want ? valid : want;
+            for (u32 k = 0U; k < take; k++) {
+                u32 best = k;
+                for (u32 m = k + 1U; m < valid; m++) {
+                    if (dist[m] < dist[best]) { best = m; }
+                }
+                std::swap(dist[k], dist[best]);
+                std::swap(idx[k], idx[best]);
+            }
+            for (u32 k = 0U; k < take; k++) {
+                const b8 big = k < big_count;
+                CarveRoad(hex_state, sources[i], targets[idx[k]], big);
+            }
+        }
+    };
+
+    if (cities.size() >= 2U) {
+        connect_k_nearest(cities, cities, 1U, 2U);
+    }
+
+    if (villages.size() >= 2U) {
+        connect_k_nearest(villages, villages, 0U, 2U);
+    }
+
+    if (!cities.empty() && !villages.empty()) {
+        connect_k_nearest(villages, cities, 0U, 1U);
     }
 }
 
-// Rivers: pick high-elevation seeds and flow downhill to ocean, marking edges along the way.
 inline void GenerateRivers(HexState& hex_state, const u32 seed) {
     constexpr f32 SCALE = 0.04F;
     const f32 seed_f = static_cast<f32>(seed);
@@ -406,19 +542,6 @@ inline void GenerateRivers(HexState& hex_state, const u32 seed) {
         const float2 world = HexAxialToWorld(axial);
         return noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f);
     };
-
-    // Guaranteed river from top to bottom along the middle, following shared hex-edge corners.
-    // Pointy-top grids have no straight vertical edge column, so the river is a continuous
-    // slant-then-vertical zig-zag that drifts slightly left as it descends.
-    const i32 mid_x = static_cast<i32>(hex_state.hex_map.map_size.x) / 2;
-    const i32 height = static_cast<i32>(hex_state.hex_map.map_size.y);
-    if (height >= 1) { HexSetRiverEdge(hex_state, int2 { mid_x, 0 }, 5U); } // slant down-left
-    if (height >= 2) { HexSetRiverEdge(hex_state, int2 { mid_x, 1 }, 3U); } // vertical
-    for (i32 y = 2; y < height; y++) {
-        const int2 axial { mid_x - (y - 1), y };
-        HexSetRiverEdge(hex_state, axial, 2U); // slant down-left into row
-        HexSetRiverEdge(hex_state, axial, 3U); // vertical down
-    }
 
     UnorderedMap<int2, u8> visited;
     for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
@@ -431,10 +554,10 @@ inline void GenerateRivers(HexState& hex_state, const u32 seed) {
             visited[cur] = 1U;
             if (!hex_state.hex_map.Contains(cur)) { break; }
             if (TerrainIsWater(hex_state.hex_map[cur].terrain_type)) { break; }
-            // pick lowest unvisited neighbour
+            constexpr Array<u32, 4> SLANTED_SIDES { 1U, 2U, 4U, 5U };
             u32 best_side = HEX_CORNERS;
             f32 best_elev = elevation_at(cur);
-            for (u32 s = 0U; s < HEX_CORNERS; s++) {
+            for (const u32 s : SLANTED_SIDES) {
                 const int2 n = cur + HEX_AXIAL_NEIGHBOURS[s];
                 if (!hex_state.hex_map.Contains(n)) { continue; }
                 if (visited.contains(n)) { continue; }
@@ -453,36 +576,54 @@ inline void GenerateRivers(HexState& hex_state, const u32 seed) {
 
 inline void GenerateTerrainFeatures(HexState& hex_state, const u32 seed) {
     constexpr f32 SCALE = 0.12F;
-    const f32 seed_f = static_cast<f32>(seed) + 1000.0F;
+    const f32 forest_seed = static_cast<f32>(seed) + 1000.0F;
+    const f32 field_seed = static_cast<f32>(seed) + 4717.0F;
     for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
         Hex& hex = hex_state.hex_map.data[i];
         const int2 axial = hex_state.hex_map.IndexToAxial(i);
         const float2 world = HexAxialToWorld(axial);
-        const f32 n = (noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f) + 1.0F) * 0.5F;
+        const f32 forest_n = (noise::Fbm(world.x * SCALE + forest_seed, world.y * SCALE + forest_seed) + 1.0F) * 0.5F;
+        const f32 field_n = (noise::Fbm(world.x * SCALE + field_seed, world.y * SCALE + field_seed) + 1.0F) * 0.5F;
         const u32 h = noise::Hash(axial.x + static_cast<i32>(seed), axial.y - static_cast<i32>(seed));
         hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_GRASSLAND;
         switch (hex.terrain_type) {
             case TerrainType::TERRAIN_TYPE_BEACH:
-                if (hex.river_edges.Any() || n < 0.42F) { hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_MARSH; }
+                if (hex.river_edges.Any() || forest_n < 0.42F) { hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_MARSH; }
                 break;
             case TerrainType::TERRAIN_TYPE_GRASS:
                 if ((h % 64U) == 0U) {
                     hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_CITY;
                 } else if ((h % 13U) == 0U) {
                     hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_VILLAGE;
-                } else if (n > 0.50F) {
+                } else if (forest_n > 0.68F) {
+                    hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_WOODED_HEAVY;
+                } else if (forest_n > 0.52F) {
+                    hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_WOODED_LIGHTLY;
+                } else if (field_n > 0.55F) {
                     hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_FIELD;
                 }
                 break;
             case TerrainType::TERRAIN_TYPE_HILL:
-                if (n > 0.62F) {
+                if (forest_n > 0.58F) {
                     hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_WOODED_HEAVY;
-                } else if (n > 0.42F) {
+                } else if (forest_n > 0.40F) {
                     hex.terrain_feature = TerrainFeature::TERRAIN_FEATURE_WOODED_LIGHTLY;
                 }
                 break;
             default: break;
         }
+    }
+}
+
+[[nodiscard]] constexpr Color TerrainFeatureToTint(const TerrainFeature feature) {
+    switch (feature) {
+        case TerrainFeature::TERRAIN_FEATURE_CITY:           return colors::FEATURE_CITY;
+        case TerrainFeature::TERRAIN_FEATURE_VILLAGE:        return colors::FEATURE_VILLAGE;
+        case TerrainFeature::TERRAIN_FEATURE_WOODED_LIGHTLY: return colors::FEATURE_WOODED_LIGHT;
+        case TerrainFeature::TERRAIN_FEATURE_WOODED_HEAVY:   return colors::FEATURE_WOODED_HEAVY;
+        case TerrainFeature::TERRAIN_FEATURE_FIELD:          return colors::FEATURE_FIELD;
+        case TerrainFeature::TERRAIN_FEATURE_MARSH:          return colors::FEATURE_MARSH;
+        default:                                             return Color { 255U, 255U, 255U };
     }
 }
 
@@ -496,7 +637,11 @@ inline void AppendTerrainFeatures(HexState& hex_state, const CameraState& camera
             const HandleOptional<Texture> texture_handle = textures.ForFeature(hex.terrain_feature);
             if (texture_handle.IsValid()) {
                 SDL_Texture* texture = globalData[texture_handle.GetHandle()];
-                const float2 screen = camera.WorldToScreen(HexAxialToWorld(hex_state.hex_map.IndexToAxial(i)));
+                const Color tint = TerrainFeatureToTint(hex.terrain_feature);
+                (void)SDL_SetTextureColorMod(texture, tint.r, tint.g, tint.b);
+                const int2 axial = hex_state.hex_map.IndexToAxial(i);
+                const float2 jitter = HexTileJitter(axial, FEATURE_POSITION_JITTER * camera.scale);
+                const float2 screen = camera.WorldToScreen(HexAxialToWorld(axial)) + jitter;
                 const AABBF area = AABBF::FromCenter(screen, float2 { camera.scale * 1.1F });
                 (void)SDL_RenderTexture(renderer, texture, nullptr, area);
             }
@@ -505,42 +650,39 @@ inline void AppendTerrainFeatures(HexState& hex_state, const CameraState& camera
 }
 
 inline void AppendRoadMesh(HexState& hex_state, const CameraState& camera) {
-    auto append_pass = [&](const f32 width, const ColorF color) {
-        for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
-            const Hex& hex = hex_state.hex_map.data[i];
-            if (hex.road_edges.Any()) {
-                const float2 own_center_w = HexAxialToWorld(hex_state.hex_map.IndexToAxial(i));
-                const float2 center = camera.WorldToScreen(own_center_w);
-                for (u32 side = 0U; side < HEX_CORNERS; side++) {
-                    if (hex.road_edges.Test(side)) {
-                        const float2 mid = camera.WorldToScreen(own_center_w + HexAxialToWorld(HEX_AXIAL_NEIGHBOURS[side]) * float2 { 0.5F });
-                        VertObbAppend(hex_state.verts, OBB::BetweenPoints(center, mid, width), color);
-                    }
-                }
-            }
+    constexpr ColorF color = static_cast<ColorF>(colors::ROAD_GREY);
+    const f32 small_w = ROAD_WIDTH * camera.scale;
+    const f32 big_w = ROAD_BIG_WIDTH * camera.scale;
+    for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
+        const Hex& hex = hex_state.hex_map.data[i];
+        if (!hex.roads.Any()) { continue; }
+        const int2 axial = hex_state.hex_map.IndexToAxial(i);
+        const float2 own_center_w = HexAxialToWorld(axial);
+        const float2 center_unjittered = camera.WorldToScreen(own_center_w);
+        const float2 center = center_unjittered + HexTileJitter(axial, ROAD_CENTER_JITTER * camera.scale);
+        for (u32 side = 0U; side < HEX_CORNERS; side++) {
+            const u8 v = hex.roads.Test(side);
+            if (v == ROAD_NONE) { continue; }
+            const float2 mid = camera.WorldToScreen(own_center_w + HexAxialToWorld(HEX_AXIAL_NEIGHBOURS[side]) * float2 { 0.5F });
+            const f32 width = (v == ROAD_BIG) ? big_w : small_w;
+            const float2 bend = mid + (center_unjittered - mid) * float2 { 0.5F };
+            VertObbAppend(hex_state.verts, OBB::BetweenPoints(mid, bend, width), color);
+            VertObbAppend(hex_state.verts, OBB::BetweenPoints(bend, center, width), color);
         }
-    };
-
-    append_pass((ROAD_WIDTH + ROAD_CASING_EXTRA) * camera.scale, colors::ROAD_CASING_BROWN);
-    append_pass(ROAD_WIDTH * camera.scale, colors::ROAD_TAN);
+    }
 }
 
 inline void AppendRiverMesh(HexState& hex_state, const CameraState& camera) {
     auto append_pass = [&](const f32 width, const ColorF color) {
         for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
             const Hex& hex = hex_state.hex_map.data[i];
-            if (hex.river_edges.Any()) {
-                const float2 center = camera.WorldToScreen(HexAxialToWorld(hex_state.hex_map.IndexToAxial(i)));
-                for (u32 s = 0U; s < 3U; s++) {
-                    if (hex.river_edges.Test(s)) {
-                        // mirror screen-y vs math-y convention used by AppendCountryBorders
-                        const u32 side = (HEX_CORNERS - s) % HEX_CORNERS;
-                        const u32 j = (side + 1U) % HEX_CORNERS;
-                        const float2 outer_a = center + HEX_ANGLE[side] * float2(camera.scale);
-                        const float2 outer_b = center + HEX_ANGLE[j] * float2(camera.scale);
-                        VertObbAppend(hex_state.verts, OBB::BetweenPoints(outer_a, outer_b, width), color);
-                    }
-                }
+            if (!hex.river_edges.Any()) { continue; }
+            const float2 center = camera.WorldToScreen(HexAxialToWorld(hex_state.hex_map.IndexToAxial(i)));
+            for (u32 side = 0U; side < 3U; side++) {
+                if (!hex.river_edges.Test(side)) { continue; }
+                const float2 corner_a = center + HEX_ANGLE[(HEX_CORNERS - side) % HEX_CORNERS] * float2 { camera.scale };
+                const float2 corner_b = center + HEX_ANGLE[(HEX_CORNERS + 1U - side) % HEX_CORNERS] * float2 { camera.scale };
+                VertObbAppend(hex_state.verts, OBB::BetweenPoints(corner_a, corner_b, width), color);
             }
         }
     };

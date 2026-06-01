@@ -116,9 +116,17 @@ constexpr Color HEX_SELECT { 210U, 165U, 30U }; // warm amber-gold selection rin
 // Roads & rivers
 constexpr Color ROAD_TAN { 196U, 168U, 120U };             // warm dirt-road body
 constexpr Color ROAD_CASING_BROWN { 48U, 32U, 18U };       // dark brown outline
+constexpr Color ROAD_GREY { 70U, 65U, 58U };
 constexpr Color RIVER_BLUE { 78U, 138U, 196U };            // mid river body
 constexpr Color RIVER_DEEP_BLUE { 22U, 52U, 92U };         // dark river outline
 constexpr Color RIVER_HIGHLIGHT_BLUE { 168U, 206U, 236U }; // light center highlight
+
+constexpr Color FEATURE_CITY { 140U, 25U, 25U };
+constexpr Color FEATURE_VILLAGE { 120U, 75U, 45U };
+constexpr Color FEATURE_WOODED_LIGHT { 150U, 180U, 70U };
+constexpr Color FEATURE_WOODED_HEAVY { 20U, 70U, 30U };
+constexpr Color FEATURE_FIELD { 205U, 175U, 95U };
+constexpr Color FEATURE_MARSH { 95U, 115U, 85U };
 
 constexpr f32 COUNTRY_LUMINANCE = 0.3F;
 constexpr Color WG_GER_BG = Color::FromHsl(90.0F, 0.20F, COUNTRY_LUMINANCE);

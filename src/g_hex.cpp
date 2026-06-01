@@ -73,7 +73,7 @@ List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start
             const Hex& hex = hex_state.hex_map[axial_next];
             const u32 cost_conquer = (hex.owner.tag != hex_state.player_tag) + hex.owner.contested + AxialIsEnemyOrZoc(hex_state, axial_next) + (AxialAdjecentEnemyControl(hex_state, axial_next) > 0) * 1U;
             u32 cost_terrain = TerrainToMovementCost(hex.terrain_type);
-            const b8 has_road = hex_state.hex_map.Contains(current.axial) && hex_state.hex_map[current.axial].road_edges.Test(side);
+            const b8 has_road = hex_state.hex_map.Contains(current.axial) && hex_state.hex_map[current.axial].roads.Test(side) != ROAD_NONE;
             if (has_road) { cost_terrain = cost_terrain > MOVE_COST_ROAD_REDUCTION ? cost_terrain - MOVE_COST_ROAD_REDUCTION : 1U; }
             const u32 cost_new = cost_at_axial[current.axial] + cost_terrain + cost_conquer;
             if (!cost_at_axial.contains(axial_next) || cost_new < cost_at_axial[axial_next]) {
@@ -206,12 +206,13 @@ struct HexSystem {
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
         hex_state.verts.clear();
 
-        AppendTerrainFeatures(hex_state, camera);
         AppendCountryBorders(hex_state, camera);
         AppendRiverMesh(hex_state, camera);
         AppendRoadMesh(hex_state, camera);
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
         hex_state.verts.clear();
+
+        AppendTerrainFeatures(hex_state, camera);
 
         // render hq
         if (hex_state.pseudo_states.unit_selection) {
@@ -589,7 +590,7 @@ void arcade::RunHex() {
     Singleton::Get<WindowState>().clear_color = Color::FromHsl(180.0F, 0.5F, 0.20F);
 
     HexState& hex_state = Singleton::Get<HexState>();
-    hex_state.hex_map = GenerateTerrainType({ 20, 6 }, 3489);
+    hex_state.hex_map = GenerateTerrainType({ 100, 100 }, 3489);
 
     CameraState& camera = Singleton::Get<CameraState>();
     camera.map_world_min = { 0.0F, 0.0F };
@@ -630,9 +631,9 @@ void arcade::RunHex() {
         hex_state.units_by_axial[hex_state.units[unit_handle].axial].EmplaceBack(unit_handle);
     }
     GenerateTerritory(hex_state);
-    GenerateRoads(hex_state);
     GenerateRivers(hex_state, 3489);
     GenerateTerrainFeatures(hex_state, 3489);
+    GenerateRoads(hex_state);
     hex_state.units_by_axial.clear();
 
     // Systems
