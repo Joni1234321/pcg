@@ -58,6 +58,7 @@ constexpr int3 HexCubeRound(const float3 cube_frac) {
 }
 [[nodiscard]] constexpr float3 HexCubeLerp(const int3 cube_a, const int3 cube_b, float t) { return math::Lerp(static_cast<float3>(cube_a), static_cast<float3>(cube_b), t); }
 [[nodiscard]] constexpr float2 HexAxialToWorld(const int2 axial) { return HEX_SPACING * float2 { axial.x + axial.y * 0.5F, static_cast<f32>(axial.y) }; }
+[[nodiscard]] constexpr float2 HexAxialFloatToWorld(const float2 axial_float) { return HEX_SPACING * float2 { axial_float.x + axial_float.y * 0.5F, static_cast<f32>(axial_float.y) }; }
 [[nodiscard]] constexpr int2 HexWorldToAxial(const float2 world) {
     const float2 coord = float2 { 1.0F / 3.0F, 2.0F / 3.0F } * float2 { HEX_SPACING.x * world.x - world.y, world.y };
     return HexAxialRound(coord);

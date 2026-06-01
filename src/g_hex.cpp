@@ -73,7 +73,7 @@ List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start
             const Hex& hex = hex_state.hex_map[axial_next];
             const u32 cost_conquer = (hex.owner.tag != hex_state.player_tag) + hex.owner.contested + AxialIsEnemyOrZoc(hex_state, axial_next) + (AxialAdjecentEnemyControl(hex_state, axial_next) > 0) * 1U;
             u32 cost_terrain = TerrainToMovementCost(hex.terrain_type);
-            const b8 has_road = hex_state.hex_map.Contains(current.axial) && hex_state.hex_map[current.axial].roads.Test(side) != ROAD_NONE;
+            const b8 has_road = hex_state.hex_map.Contains(current.axial) && static_cast<RoadLevel>(hex_state.hex_map[current.axial].roads.Test(side)) != RoadLevel::ROAD_LEVEL_NONE;
             if (has_road) { cost_terrain = cost_terrain > MOVE_COST_ROAD_REDUCTION ? cost_terrain - MOVE_COST_ROAD_REDUCTION : 1U; }
             const u32 cost_new = cost_at_axial[current.axial] + cost_terrain + cost_conquer;
             if (!cost_at_axial.contains(axial_next) || cost_new < cost_at_axial[axial_next]) {

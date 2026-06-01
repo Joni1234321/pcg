@@ -6,6 +6,7 @@
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_texture.hpp"
 #include "0_engine/u_types.hpp"
+#include "0_engine/u_util.hpp"
 #include "1_systems/r_counter_system.hpp"
 #include "1_systems/r_hex_system.hpp"
 
@@ -14,12 +15,10 @@ using namespace pce;
 enum class CountryTag : u8 { TAG_NONE, TAG_GER, TAG_SOV, TAG_USA };
 enum class TerrainType : u8 { TERRAIN_TYPE_DEEP_OCEAN, TERRAIN_TYPE_OCEAN, TERRAIN_TYPE_HILL, TERRAIN_TYPE_BEACH, TERRAIN_TYPE_GRASS, TERRAIN_TYPE_MOUNTAIN, TERRAIN_TYPE_SNOW };
 enum class TerrainFeature : u8 { TERRAIN_FEATURE_GRASSLAND, TERRAIN_FEATURE_FIELD, TERRAIN_FEATURE_CITY, TERRAIN_FEATURE_VILLAGE, TERRAIN_FEATURE_WOODED_LIGHTLY, TERRAIN_FEATURE_WOODED_HEAVY, TERRAIN_FEATURE_MARSH };
-
 enum class PlayerAction : u8 { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_ACTION_DESELECT, PLAYER_ACTION_MOVE_CLICK, PLAYER_ACTION_MOVE_HOVER, PLAYER_ACTION_ATTACK_CLICK, PLAYER_ACTION_ATTACK_HOVER };
-
 enum class MapStyle : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER }; // colorschema.md
 enum class TerrainStyle : u8 { TERRAIN_STYLE_SILHOUETTES, TERRAIN_STYLE_ICONS };
-
+enum class RoadLevel : u8 { ROAD_LEVEL_NONE, ROAD_LEVEL_SMALL, ROAD_LEVEL_MEDIUM, ROAD_LEVEL_LARGE };
 constexpr MapStyle TERRAIN_SCHEME = MapStyle::SLATE_TABLE;
 constexpr TerrainStyle TERRAIN_FEATURE_THEME = TerrainStyle::TERRAIN_STYLE_ICONS;
 
@@ -34,15 +33,12 @@ constexpr f32 ROAD_WIDTH = 0.035F;
 constexpr f32 ROAD_BIG_WIDTH = 0.075F;
 constexpr f32 ROAD_CENTER_JITTER = 0.2F;
 constexpr f32 FEATURE_POSITION_JITTER = 0.2F;
-constexpr u8 ROAD_NONE = 0U;
-constexpr u8 ROAD_SMALL = 1U;
-constexpr u8 ROAD_BIG = 2U;
 
-[[nodiscard]] inline float2 HexTileJitter(const int2 axial, const f32 amount) {
+[[nodiscard]] inline float2 HexTileJitter(const int2 axial) {
     const u32 h = noise::Hash(axial.x, axial.y);
     const f32 fx = (static_cast<f32>(h & 0xFFFFU) / 65535.0F) * 2.0F - 1.0F;
     const f32 fy = (static_cast<f32>((h >> 16) & 0xFFFFU) / 65535.0F) * 2.0F - 1.0F;
-    return float2 { fx * amount, fy * amount };
+    return float2 { fx, fy };
 }
 constexpr f32 RIVER_WIDTH = 0.13F;
 constexpr f32 RIVER_CASING_EXTRA = 0.05F;
@@ -331,13 +327,13 @@ inline void GenerateTerritory(HexState& hex_state) {
     }
 }
 
-inline void HexSetRoad(HexState& hex_state, const int2 axial, const u32 side, const b8 big) {
+inline void HexSetRoad(HexState& hex_state, const int2 axial, const u32 side, const RoadLevel road_level) {
     const int2 axial_side = axial + HEX_AXIAL_NEIGHBOURS[side];
     if (hex_state.hex_map.Contains(axial) && hex_state.hex_map.Contains(axial_side)) {
         const u32 mirror = (side + 3) % HEX_CORNERS;
-        const u8 val = big ? ROAD_BIG : ROAD_SMALL;
-        if (hex_state.hex_map[axial].roads.Test(side) < val) { hex_state.hex_map[axial].roads.Set(side, val); }
-        if (hex_state.hex_map[axial_side].roads.Test(mirror) < val) { hex_state.hex_map[axial_side].roads.Set(mirror, val); }
+        const u8 road_level_u8 = static_cast<u8>(road_level);
+        if (hex_state.hex_map[axial].roads.Test(side) < road_level_u8) { hex_state.hex_map[axial].roads.Set(side, road_level_u8); }
+        if (hex_state.hex_map[axial_side].roads.Test(mirror) < road_level_u8) { hex_state.hex_map[axial_side].roads.Set(mirror, road_level_u8); }
     }
 }
 inline void HexSetRiver(HexState& hex_state, const int2 axial, const u32 side) {
@@ -413,26 +409,27 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
 
 // Carve a road from axial_a to axial_b along the hex line, skipping water tiles.
 inline void CarveRoad(HexState& hex_state, const int2 axial_a, const int2 axial_b, const b8 big) {
-    const u32 dist = HexAxialDistance(axial_a, axial_b);
-    if (dist == 0U) { return; }
-    const int3 cube_a = HexAxialToCube(axial_a);
-    const int3 cube_b = HexAxialToCube(axial_b);
-    int2 prev = axial_a;
-    for (u32 i = 1U; i <= dist; i++) {
-        const f32 t = static_cast<f32>(i) / static_cast<f32>(dist);
-        const int2 axial_current = HexCubeToAxial(HexCubeRound(HexCubeLerp(cube_a, cube_b, t)));
-        if (axial_current == prev) { continue; }
-        if (hex_state.hex_map.Contains(axial_current) && TerrainIsWater(hex_state.hex_map[axial_current].terrain_type)) {
-            prev = axial_current;
-            continue;
-        }
-        for (u32 s = 0U; s < HEX_CORNERS; s++) {
-            if (prev + HEX_AXIAL_NEIGHBOURS[s] == axial_current) {
-                HexSetRoad(hex_state, prev, s, big);
-                break;
+    const u32 distance = HexAxialDistance(axial_a, axial_b);
+    if (distance) {
+        const int3 cube_a = HexAxialToCube(axial_a);
+        const int3 cube_b = HexAxialToCube(axial_b);
+        int2 axial_previous = axial_a;
+        for (u32 i = 1U; i <= distance; i++) {
+            const f32 t = static_cast<f32>(i) / static_cast<f32>(distance);
+            const int2 axial_current = HexCubeToAxial(HexCubeRound(HexCubeLerp(cube_a, cube_b, t)));
+            if (axial_current == axial_previous) { continue; }
+            if (hex_state.hex_map.Contains(axial_current) && TerrainIsWater(hex_state.hex_map[axial_current].terrain_type)) {
+                axial_previous = axial_current;
+                continue;
             }
+            for (u32 side = 0U; side < HEX_CORNERS; side++) {
+                if (axial_previous + HEX_AXIAL_NEIGHBOURS[side] == axial_current) {
+                    HexSetRoad(hex_state, axial_previous, side, RoadLevel::ROAD_LEVEL_MEDIUM);
+                    break;
+                }
+            }
+            axial_previous = axial_current;
         }
-        prev = axial_current;
     }
 }
 
@@ -627,37 +624,36 @@ inline void AppendTerrainFeatures(HexState& hex_state, const CameraState& camera
             const HandleOptional<Texture> texture_handle = textures.ForFeature(hex.terrain_feature);
             if (texture_handle.IsValid()) {
                 SDL_Texture* texture = globalData[texture_handle.GetHandle()];
-                const Color tint = TerrainFeatureToTint(hex.terrain_feature);
-                (void)SDL_SetTextureColorMod(texture, tint.r, tint.g, tint.b);
+                const Color color = TerrainFeatureToTint(hex.terrain_feature);
+                (void)SDL_SetTextureColorMod(texture, color.r, color.g, color.b);
                 const int2 axial = hex_state.hex_map.IndexToAxial(i);
-                const float2 jitter = HexTileJitter(axial, FEATURE_POSITION_JITTER * camera.scale);
-                const float2 screen = camera.WorldToScreen(HexAxialToWorld(axial)) + jitter;
-                const AABBF area = AABBF::FromCenter(screen, float2 { camera.scale * 1.1F });
-                (void)SDL_RenderTexture(renderer, texture, nullptr, area);
+                const float2 screen_local_jitter = HexTileJitter(axial) * float2 { FEATURE_POSITION_JITTER * camera.scale };
+                const float2 screen = camera.WorldToScreen(HexAxialToWorld(axial)) + screen_local_jitter;
+                const AABBF screen_area = AABBF::FromCenter(screen, float2 { camera.scale * 1.1F });
+                (void)SDL_RenderTexture(renderer, texture, nullptr, screen_area);
             }
         }
     }
 }
 
 inline void AppendRoadMesh(HexState& hex_state, const CameraState& camera) {
-    constexpr ColorF color = static_cast<ColorF>(colors::ROAD_GREY);
-    const f32 small_w = ROAD_WIDTH * camera.scale;
-    const f32 big_w = ROAD_BIG_WIDTH * camera.scale;
     for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
         const Hex& hex = hex_state.hex_map.data[i];
-        if (!hex.roads.Any()) { continue; }
-        const int2 axial = hex_state.hex_map.IndexToAxial(i);
-        const float2 own_center_w = HexAxialToWorld(axial);
-        const float2 center_unjittered = camera.WorldToScreen(own_center_w);
-        const float2 center = center_unjittered + HexTileJitter(axial, ROAD_CENTER_JITTER * camera.scale);
-        for (u32 side = 0U; side < HEX_CORNERS; side++) {
-            const u8 v = hex.roads.Test(side);
-            if (v == ROAD_NONE) { continue; }
-            const float2 mid = camera.WorldToScreen(own_center_w + HexAxialToWorld(HEX_AXIAL_NEIGHBOURS[side]) * float2 { 0.5F });
-            const f32 width = (v == ROAD_BIG) ? big_w : small_w;
-            const float2 bend = mid + (center_unjittered - mid) * float2 { 0.5F };
-            VertObbAppend(hex_state.verts, OBB::BetweenPoints(mid, bend, width), color);
-            VertObbAppend(hex_state.verts, OBB::BetweenPoints(bend, center, width), color);
+        if (hex.roads.Any()) {
+            const int2 axial = hex_state.hex_map.IndexToAxial(i);
+            const float2 world = HexAxialToWorld(axial);
+            const float2 screen = camera.WorldToScreen(world);
+            const float2 screen_feature = screen + HexTileJitter(axial) * float2 { ROAD_CENTER_JITTER * camera.scale };
+            for (u32 side = 0U; side < HEX_CORNERS; side++) {
+                const RoadLevel road_level = static_cast<RoadLevel>(hex.roads.Test(side));
+                if (road_level != RoadLevel::ROAD_LEVEL_NONE) {
+                    const int2 axial_neighbour = axial + HEX_AXIAL_NEIGHBOURS[side];
+                    const float2 world_neighbour = HexAxialToWorld(axial_neighbour);
+                    const float2 screen_neighbour = camera.WorldToScreen(world_neighbour) + HexTileJitter(axial_neighbour) * float2 { ROAD_CENTER_JITTER * camera.scale };
+                    const f32 screen_width = (road_level == RoadLevel::ROAD_LEVEL_MEDIUM ? ROAD_BIG_WIDTH : ROAD_WIDTH) * camera.scale;
+                    VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_feature, screen_neighbour, screen_width), colors::ROAD_GREY.WithAlpha(0.5F));
+                }
+            }
         }
     }
 }
