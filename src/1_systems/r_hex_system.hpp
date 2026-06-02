@@ -105,7 +105,22 @@ inline void VertHexAppend(List<Vertex>& vertecies, const f32 hex_size, const flo
         vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color);
     }
 }
-inline void VertObbAppend(List<Vertex>& vertecies, const OBB& obb, const ColorF color) {
+inline void VertAABBAppend(List<Vertex>& vertices, const AABB& aabb, const ColorF color) {
+    const Array<float2, 4> points { {
+        aabb.point + float2 { -aabb.size.x, aabb.size.y },
+        aabb.point + float2 { aabb.size.x, aabb.size.y },
+        aabb.point + float2 { aabb.size.x, -aabb.size.y },
+        aabb.point + float2 { -aabb.size.x, -aabb.size.y },
+    } };
+
+    vertices.EmplaceBack(Vertex { points[0], color });
+    vertices.EmplaceBack(Vertex { points[1], color });
+    vertices.EmplaceBack(Vertex { points[2], color });
+    vertices.EmplaceBack(Vertex { points[0], color });
+    vertices.EmplaceBack(Vertex { points[2], color });
+    vertices.EmplaceBack(Vertex { points[3], color });
+}
+inline void VertObbAppend(List<Vertex>& vertices, const OBB& obb, const ColorF color) {
     const float2 half_size = obb.size * float2 { 0.5F };
     const Array<float2, 4> points { {
         obb.center + math::Rotate(float2 { -half_size.x, half_size.y }, obb.angle),
@@ -113,11 +128,11 @@ inline void VertObbAppend(List<Vertex>& vertecies, const OBB& obb, const ColorF 
         obb.center + math::Rotate(float2 { half_size.x, -half_size.y }, obb.angle),
         obb.center + math::Rotate(float2 { -half_size.x, -half_size.y }, obb.angle),
     } };
-    vertecies.EmplaceBack(Vertex { points[0], color });
-    vertecies.EmplaceBack(Vertex { points[1], color });
-    vertecies.EmplaceBack(Vertex { points[2], color });
-    vertecies.EmplaceBack(Vertex { points[0], color });
-    vertecies.EmplaceBack(Vertex { points[2], color });
-    vertecies.EmplaceBack(Vertex { points[3], color });
+    vertices.EmplaceBack(Vertex { points[0], color });
+    vertices.EmplaceBack(Vertex { points[1], color });
+    vertices.EmplaceBack(Vertex { points[2], color });
+    vertices.EmplaceBack(Vertex { points[0], color });
+    vertices.EmplaceBack(Vertex { points[2], color });
+    vertices.EmplaceBack(Vertex { points[3], color });
 }
 } // namespace pce

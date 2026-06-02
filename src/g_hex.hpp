@@ -629,7 +629,7 @@ inline void AppendTerrainFeatures(HexState& hex_state, const CameraState& camera
                 const int2 axial = hex_state.hex_map.IndexToAxial(i);
                 const float2 screen_local_jitter = HexTileJitter(axial) * float2 { FEATURE_POSITION_JITTER * camera.scale };
                 const float2 screen = camera.WorldToScreen(HexAxialToWorld(axial)) + screen_local_jitter;
-                const AABBF screen_area = AABBF::FromCenter(screen, float2 { camera.scale * 1.1F });
+                const AABB screen_area = AABB::FromCenter(screen, float2 { camera.scale * 1.1F });
                 (void)SDL_RenderTexture(renderer, texture, nullptr, screen_area);
             }
         }
@@ -662,13 +662,18 @@ inline void AppendRiverMesh(HexState& hex_state, const CameraState& camera) {
     auto append_pass = [&](const f32 width, const ColorF color) {
         for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
             const Hex& hex = hex_state.hex_map.data[i];
-            if (!hex.river_edges.Any()) { continue; }
-            const float2 center = camera.WorldToScreen(HexAxialToWorld(hex_state.hex_map.IndexToAxial(i)));
-            for (u32 side = 0U; side < 3U; side++) {
-                if (!hex.river_edges.Test(side)) { continue; }
-                const float2 corner_a = center + HEX_ANGLE[(HEX_CORNERS - side) % HEX_CORNERS] * float2 { camera.scale };
-                const float2 corner_b = center + HEX_ANGLE[(HEX_CORNERS + 1U - side) % HEX_CORNERS] * float2 { camera.scale };
-                VertObbAppend(hex_state.verts, OBB::BetweenPoints(corner_a, corner_b, width), color);
+            if (hex.river_edges.Any()) {
+                const int2 axial = hex_state.hex_map.IndexToAxial(i);
+                const float2 world = HexAxialToWorld(axial);
+                const float2 screen = camera.WorldToScreen(world);
+                for (u32 side = 0U; side < 3U; side++) {
+                    if (hex.river_edges.Test(side)) {
+                        const float2 screen_corner_a = screen + HEX_ANGLE[(HEX_CORNERS - side) % HEX_CORNERS] * float2 { camera.scale };
+                        const float2 screen_corner_b = screen + HEX_ANGLE[(HEX_CORNERS + 1U - side) % HEX_CORNERS] * float2 { camera.scale };
+                        VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_corner_a, screen_corner_b, width), color);
+                        // VertAABBAppend(hex_state.verts, )
+                    }
+                }
             }
         }
     };

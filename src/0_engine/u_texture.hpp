@@ -51,16 +51,16 @@ struct SurfaceLabel {
     operator TTF_Text*() const { return ttf_text.Get(); }
     void SetText(const String& string) const { TTF_SetTextString(ttf_text.Get(), string.c_str(), string.size()); }
 };
-struct AABBF {
+struct AABB {
     float2 point;
     float2 size;
 
-    [[nodiscard]] static constexpr AABBF FromPoint(const float2 point, const float2 size) { return AABBF { .point = point, .size = size }; }
-    [[nodiscard]] static constexpr AABBF FromCenter(const float2 center, const float2 size) { return AABBF { .point = center - size * float2 { 0.5F }, .size = size }; }
+    [[nodiscard]] static constexpr AABB FromPoint(const float2 point, const float2 size) { return AABB { .point = point, .size = size }; }
+    [[nodiscard]] static constexpr AABB FromCenter(const float2 center, const float2 size) { return AABB { .point = center - size * float2 { 0.5F }, .size = size }; }
     [[nodiscard]] constexpr operator const SDL_FRect*() const { return reinterpret_cast<const SDL_FRect*>(this); }
 
-    [[nodiscard]] constexpr AABBF WithPadding(const float2 padding) const { return FromPoint(point + padding, size - padding * float2 { 2.0F }); }
-    [[nodiscard]] constexpr AABBF WithOffset(const float2 offset) const { return FromPoint(point + offset, size); }
+    [[nodiscard]] constexpr AABB WithPadding(const float2 padding) const { return FromPoint(point + padding, size - padding * float2 { 2.0F }); }
+    [[nodiscard]] constexpr AABB WithOffset(const float2 offset) const { return FromPoint(point + offset, size); }
 };
 struct OBB {
     float2 center;

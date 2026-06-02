@@ -132,10 +132,10 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             constexpr f32 OFFSET_SHADOW = OFFSET_STACK * 0.15F;
             constexpr f32 BORDER_THICKNESS = OFFSET_STACK * 0.30F;
 
-            const AABBF area_counter = AABBF::FromCenter(counter_center + float2 { OFFSET_STACK * counter_size.x * static_cast<f32>(i) }, counter_size);
+            const AABB area_counter = AABB::FromCenter(counter_center + float2 { OFFSET_STACK * counter_size.x * static_cast<f32>(i) }, counter_size);
 
             // shadow
-            const AABBF area_shadow = area_counter.WithOffset(float2 { OFFSET_SHADOW * counter_size.x });
+            const AABB area_shadow = area_counter.WithOffset(float2 { OFFSET_SHADOW * counter_size.x });
             constexpr Color COLOR_SHADOW = colors::ColorWithAlpha(colors::BLACK, 0.5F);
             (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_SHADOW.r, COLOR_SHADOW.g, COLOR_SHADOW.b, COLOR_SHADOW.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_shadow);
@@ -145,18 +145,18 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             (void)SDL_RenderFillRect(window_state.renderer, area_counter);
 
             // background
-            const AABBF area_background = area_counter.WithPadding(float2 { BORDER_THICKNESS * counter_size.x });
+            const AABB area_background = area_counter.WithPadding(float2 { BORDER_THICKNESS * counter_size.x });
             (void)SDL_SetRenderDrawColor(window_state.renderer, counter_stack.color_background.r, counter_stack.color_background.g, counter_stack.color_background.b, counter_stack.color_background.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_background);
         }
 
         // area
-        const AABBF area_icon_border = AABBF::FromCenter(counter_center, counter_size * float2 { 0.6F, 0.4F }).WithOffset(counter_size * float2 { 0.0F, -0.05F });
+        const AABB area_icon_border = AABB::FromCenter(counter_center, counter_size * float2 { 0.6F, 0.4F }).WithOffset(counter_size * float2 { 0.0F, -0.05F });
         constexpr Color COLOR_ICON_BORDER { colors::BLACK };
         (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_ICON_BORDER.r, COLOR_ICON_BORDER.g, COLOR_ICON_BORDER.b, COLOR_ICON_BORDER.a);
         (void)SDL_RenderFillRect(window_state.renderer, area_icon_border);
 
-        const AABBF area_icon = area_icon_border.WithPadding(float2 { camera.scale / 40.0F });
+        const AABB area_icon = area_icon_border.WithPadding(float2 { camera.scale / 40.0F });
         const Color color_icon = counter.stack[0].color_icon;
         const HandleOptional<Texture> texture_handle = counter_textures.ForIcon(counter.icon);
         SDL_Texture* icon_texture = texture_handle.IsValid() ? globalData[texture_handle.GetHandle()] : nullptr;
@@ -203,7 +203,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
                 SDL_Texture* tex = SDL_CreateTextureFromSurface(window_state.renderer, surface);
                 SDL_DestroySurface(surface);
                 if (tex) {
-                    const AABBF dst = AABBF::FromCenter(float2 { counter_point.x + counter_size.x - static_cast<f32>(pt_small) * 0.5F, counter_center.y }, float2 { counter_size.y, static_cast<f32>(pt_small) });
+                    const AABB dst = AABB::FromCenter(float2 { counter_point.x + counter_size.x - static_cast<f32>(pt_small) * 0.5F, counter_center.y }, float2 { counter_size.y, static_cast<f32>(pt_small) });
                     constexpr f32 ANGLE_DEGREES = 90.0;
                     SDL_RenderTextureRotated(window_state.renderer, tex, nullptr, dst, ANGLE_DEGREES, nullptr, SDL_FLIP_NONE);
                     SDL_DestroyTexture(tex);
