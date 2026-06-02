@@ -337,10 +337,10 @@ inline void HexSetRoad(HexState& hex_state, const int2 axial, const u32 side, co
     }
 }
 inline void HexSetRiver(HexState& hex_state, const int2 axial, const u32 side) {
-    const int2 axial_side = axial + HEX_AXIAL_NEIGHBOURS[side];
-    if (hex_state.hex_map.Contains(axial) && hex_state.hex_map.Contains(axial_side)) {
+    const int2 axial_neighbour = axial + HEX_AXIAL_NEIGHBOURS[side];
+    if (hex_state.hex_map.Contains(axial) && hex_state.hex_map.Contains(axial_neighbour)) {
         hex_state.hex_map[axial].river_edges.Set(side);
-        hex_state.hex_map[axial_side].river_edges.Set((side + 3) % HEX_CORNERS);
+        hex_state.hex_map[axial_neighbour].river_edges.Set((side + 3) % HEX_CORNERS);
     }
 }
 
@@ -540,20 +540,21 @@ inline void GenerateRivers(HexState& hex_state, const u32 seed) {
             for (u32 step = 0U; step < 64U; step++) {
                 visited.emplace(axial_current);
                 if (!hex_state.hex_map.Contains(axial_current) || TerrainIsWater(hex_state.hex_map[axial_current].terrain_type)) { break; }
-                constexpr Array SLANTED_SIDES { 0U, 1U, 2U, 3U, 4U, 5U };
                 u8 side_best = HEX_CORNERS;
                 f32 elevation_min = elevation_at(axial_current);
-                for (const u32 side : SLANTED_SIDES) {
+                for (u32 side = 0; side < HEX_CORNERS; side++) {
                     const int2 axial_neighbour = axial_current + HEX_AXIAL_NEIGHBOURS[side];
-                    if (!hex_state.hex_map.Contains(axial_neighbour) || visited.contains(axial_neighbour)) { continue; }
-                    const f32 elevation = elevation_at(axial_neighbour);
-                    if (elevation < elevation_min) {
-                        elevation_min = elevation;
-                        side_best = side;
+                    if (hex_state.hex_map.Contains(axial_neighbour) && !visited.contains(axial_neighbour)) {
+                        const f32 elevation = elevation_at(axial_neighbour);
+                        if (elevation < elevation_min) {
+                            elevation_min = elevation;
+                            side_best = side;
+                        }
                     }
                 }
                 if (side_best == HEX_CORNERS) { break; } // if we didnt find any
-                HexSetRiver(hex_state, axial_current, side_best);
+                HexSetRiver(hex_state, axial_current, (side_best + 1) % HEX_CORNERS);
+                HexSetRiver(hex_state, axial_current, (side_best + 2) % HEX_CORNERS);
                 axial_current = axial_current + HEX_AXIAL_NEIGHBOURS[side_best];
             }
         }
@@ -672,6 +673,9 @@ inline void AppendRiverMesh(HexState& hex_state, const CameraState& camera) {
                         VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_corner_a, screen_corner_b, width), color);
                         VertAABBAppend(hex_state.verts, AABB::FromCenter(screen_corner_a, float2 { 10.0F }), colors::BLUE);
                         VertAABBAppend(hex_state.verts, AABB::FromCenter(screen_corner_b, float2 { 10.0F }), colors::RED);
+                        int2 axial_neighbour = axial + HEX_AXIAL_NEIGHBOURS[side];
+                        float2 screen_neighbour = camera.WorldToScreen(HexAxialToWorld(axial_neighbour));
+                        VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_neighbour, screen, 10.0f), colors::BROWN);
                     }
                 }
             }
