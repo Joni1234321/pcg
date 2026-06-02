@@ -360,9 +360,8 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
         for (u32 s = 0; s < HEX_CORNERS; s++) {
             const int2 axial_neighbour = axial + HEX_AXIAL_NEIGHBOURS[s];
             if (!hex_state.hex_map.Contains(axial_neighbour) || hex_state.hex_map[axial_neighbour].owner.tag != hex.owner.tag) {
-                const u32 side = (HEX_CORNERS - s) % HEX_CORNERS;
-                const float2 local_angle_a = HEX_ANGLE[side];
-                const float2 local_angle_b = HEX_ANGLE[(side + 1U) % HEX_CORNERS];
+                const float2 local_angle_a = HEX_ANGLE[s];
+                const float2 local_angle_b = HEX_ANGLE[(s + 1U) % HEX_CORNERS];
                 const float2 screen_outer_a = screen_center + local_angle_a * float2(camera.scale);
                 const float2 screen_outer_b = screen_center + local_angle_b * float2(camera.scale);
                 const float2 screen_inner_a = screen_center + local_angle_a * float2(camera.scale * BORDER_INNER_RADIUS);
@@ -666,12 +665,13 @@ inline void AppendRiverMesh(HexState& hex_state, const CameraState& camera) {
                 const int2 axial = hex_state.hex_map.IndexToAxial(i);
                 const float2 world = HexAxialToWorld(axial);
                 const float2 screen = camera.WorldToScreen(world);
-                for (u32 side = 0U; side < 3U; side++) {
+                for (u32 side = 0U; side < HEX_CORNERS; side++) { // efficient only cover half of sides.
                     if (hex.river_edges.Test(side)) {
-                        const float2 screen_corner_a = screen + HEX_ANGLE[(HEX_CORNERS - side) % HEX_CORNERS] * float2 { camera.scale };
-                        const float2 screen_corner_b = screen + HEX_ANGLE[(HEX_CORNERS + 1U - side) % HEX_CORNERS] * float2 { camera.scale };
+                        const float2 screen_corner_a = screen + HEX_ANGLE[side % HEX_CORNERS] * float2 { camera.scale };
+                        const float2 screen_corner_b = screen + HEX_ANGLE[(side + 1U) % HEX_CORNERS] * float2 { camera.scale };
                         VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_corner_a, screen_corner_b, width), color);
-                        // VertAABBAppend(hex_state.verts, )
+                        VertAABBAppend(hex_state.verts, AABB::FromCenter(screen_corner_a, float2 { 10.0F }), colors::BLUE);
+                        VertAABBAppend(hex_state.verts, AABB::FromCenter(screen_corner_b, float2 { 10.0F }), colors::RED);
                     }
                 }
             }
