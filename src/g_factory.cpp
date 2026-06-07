@@ -1,4 +1,8 @@
-#include "g_components.hpp"
+module;
+
+export module pcg.g_factory;
+
+import pcg.g_components;
 
 import pce.std;
 

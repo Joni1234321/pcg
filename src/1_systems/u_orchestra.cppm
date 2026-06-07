@@ -1,16 +1,17 @@
-#pragma once
+module;
 
 #include <functional>
 #include <memory>
 #include <ranges>
+export module pce.systems.u_orchestra;
 
-#include "0_engine/g_globals.hpp"
-#include "0_engine/u_ecs.hpp"
-#include "0_engine/u_logger.hpp"
+import pce.g_globals;
+import pce.u_ecs;
+import pce.u_logger;
 
 import pce.collections;
 
-namespace pce {
+export namespace pce {
 struct OrchestraState {
     List<std::function<void()>> systems;
     List<std::unique_ptr<void, void (*)(void*)>> system_storage;
@@ -37,3 +38,4 @@ struct Orchestra {
     ~Orchestra() { Singleton::Get<OrchestraState>() = { }; }
 };
 } // namespace pce
+

@@ -1,13 +1,15 @@
-#pragma once
+module;
 
 #include <unordered_map>
-#include "0_engine/u_ecs.hpp"
-#include "1_systems/t_tick_system.hpp"
+export module pcg.g_components;
 
+import pce.math;
+import pce.u_ecs;
+import pce.systems.t_tick_system;
 import pce.collections;
 import pce.std;
 
-namespace pcg {
+export namespace pcg {
 using Percentage = pce::StrongType<f32, struct PercentageTag, pce::Arithmetic>;
 
 using Money = pce::StrongType<f32, struct MoneyTag, pce::Arithmetic, pce::FormatLongNumber>;
@@ -80,7 +82,7 @@ struct Market {
     }
 };
 constexpr QualityOfLife QUALITY_OF_LIFE_LEVELS_PER_STAGE = QualityOfLife { 5.0F };
-static QualityOfLifeStage GetQualityOfLifeStage(const QualityOfLife quality_of_life) { return static_cast<QualityOfLifeStage>(pce::math::Min((quality_of_life / QUALITY_OF_LIFE_LEVELS_PER_STAGE).value, static_cast<f32>(QualityOfLifeStage::Extravagant))); }
+QualityOfLifeStage GetQualityOfLifeStage(const QualityOfLife quality_of_life) { return static_cast<QualityOfLifeStage>(pce::math::Min((quality_of_life / QUALITY_OF_LIFE_LEVELS_PER_STAGE).value, static_cast<f32>(QualityOfLifeStage::Extravagant))); }
 struct StateArchetype final : Archetype {
     pce::Parent planets;
     pce::Component<Market> markets;

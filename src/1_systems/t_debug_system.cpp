@@ -1,12 +1,13 @@
-﻿module;
+module;
 
-#include "t_debug_system.hpp"
 
-#include "1_systems/i_input_system.hpp"
-#include "1_systems/t_tick_system.hpp"
-#include "1_systems/u_orchestra.hpp"
 
 export module pce.systems.debug;
+import pce.systems.i_input_system;
+import pce.systems.t_debug_system;
+import pce.systems.t_tick_system;
+import pce.systems.u_orchestra;
+
 
 import pce.colors;
 import pce.std;

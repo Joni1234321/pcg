@@ -1,9 +1,10 @@
 module;
 
-#include "0_engine/u_texture.hpp"
+#include <cassert>
+#include <unordered_map>
 
 export module pcg.hex.types;
-
+import pce.u_texture;
 import pce.collections;
 import pce.std;
 import pcg.hex.core;

@@ -1,18 +1,21 @@
-#pragma once
+module;
 
-#include "0_engine/g_globals.hpp"
-#include "0_engine/r_window_state.hpp"
-#include "0_engine/u_assets.hpp"
-import pce.collections;
-#include "0_engine/u_logger.hpp"
-
-#include "0_engine/u_util.hpp"
 #include "SDL3/SDL_pixels.h"
 #include "SDL3/SDL_rect.h"
 #include "SDL3_image/SDL_image.h"
 #include "SDL3_ttf/SDL_ttf.h"
+export module pce.u_texture;
 
-namespace pce {
+import pce.g_globals;
+import pce.r_window_state;
+import pce.u_assets;
+import pce.collections;
+import pce.u_logger;
+import pce.u_util;
+import pce.std;
+import pce.math;
+
+export namespace pce {
 struct Texture : LogLifetimeWithCount<Texture> {
     explicit Texture(const AbsolutePath& path) : texture(IMG_LoadTexture(Singleton::Get<WindowState>().renderer, path.string().c_str())) {
         if (texture.Get()) {
@@ -155,3 +158,4 @@ struct Vertex {
 };
 static_assert(sizeof(Vertex) == sizeof(SDL_Vertex));
 } // namespace pce
+

@@ -1,12 +1,15 @@
-#pragma once
+module;
 
 #include <SDL3_ttf/SDL_ttf.h>
+export module pce.u_fonts;
 
-#include "0_engine/u_assets.hpp"
+import pce.std;
+import pce.math;
+import pce.u_assets;
 import pce.collections;
-#include "0_engine/u_logger.hpp"
+import pce.u_logger;
 
-namespace pce::ui {
+export namespace pce::ui {
 using FontSize = u16;
 enum class FontSizes : FontSize { body = 16U, h1 = 34U, h2 = 30U, h3 = 24U, h4 = 20U, h5 = 18U, small = 14U, tiny = 12U, title = 52U, massive = 72U };
 constexpr FontSize FONT_MIN_SIZE = 5;

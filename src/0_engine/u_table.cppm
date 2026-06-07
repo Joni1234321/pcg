@@ -1,17 +1,20 @@
-#pragma once
+module;
 
 #include <algorithm>
 #include <any>
+#include <cassert>
 #include <functional>
 #include <initializer_list>
 #include <numeric>
+#include <format>
 #include <variant>
+export module pce.u_table;
 
 import pce.collections;
-#include "0_engine/u_logger.hpp"
+import pce.u_logger;
 import pce.std;
 
-namespace pce {
+export namespace pce {
 struct Table {
     using Cell = String;
     using Column = List<Cell>;
@@ -20,7 +23,7 @@ struct Table {
     List<Column> columns { };
     explicit Table(String&& name) : name(std::move(name)) { }
     void AddColumn(String&& title, const List<String>& values) {
-        ASSERT_DBG_RETURN(ColumnCount() == 0 || values.size() == RowCount(), "Received different amount of values", );
+        assert(ColumnCount() == 0 || values.size() == RowCount()); //, "Received different amount of values", );
         headers.EmplaceBack(std::move(title));
         columns.EmplaceBack(values);
     }
@@ -44,7 +47,7 @@ struct TableU32 {
     List<Column> columns { };
     explicit TableU32(String&& name) : name(std::move(name)) { }
     void AddColumn(String&& title, const List<u32>& values) {
-        ASSERT_DBG_RETURN(ColumnCount() == 0 || values.size() == RowCount(), "Received different amount of values", );
+        assert(ColumnCount() == 0 || values.size() == RowCount()); // , "Received different amount of values", );
         headers.EmplaceBack(std::move(title));
         columns.EmplaceBack(values);
     }
@@ -80,7 +83,7 @@ public:
         AddColumn(name, idx);
     }
     template <typename T> void AddColumnFixed(const String& title, const List<T>& values, const u32 width) {
-        ASSERT_DBG_RETURN(values.size() < rows.size(), "Received more values than rows in table", );
+        assert(values.size() < rows.size()); // , "Received more values than rows in table", );
         rows[0U] += std::format("{:>{}} |", title, width);
         for (u32 i = 0U; i < values.size(); i++) { rows[i + 1U] += std::format("{:>{}} |", FormatValue(values[i]), width); }
         for (u32 i = static_cast<u32>(values.size()) + 1U; i < rows.size(); ++i) { rows[i] += std::format("{:>{}} |", "XXXX", width); }

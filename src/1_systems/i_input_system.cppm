@@ -1,14 +1,16 @@
-#pragma once
+module;
 
+#include "SDL3/SDL_mouse.h"
 #include <SDL3/SDL.h>
 #include <ranges>
+export module pce.systems.i_input_system;
 
-#include "0_engine/g_globals.hpp"
+import pce.g_globals;
 import pce.collections;
-#include "0_engine/u_logger.hpp"
-#include "SDL3/SDL_mouse.h"
+import pce.std;
+import pce.u_logger;
 
-namespace pce {
+export namespace pce {
 struct InputState {
     UnorderedMap<SDL_Keycode, b8> keys { };
     UnorderedMap<SDL_Keycode, b8> keys_down { };

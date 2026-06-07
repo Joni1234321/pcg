@@ -68,39 +68,59 @@ fetchcontent_declare(SDL3_image
                      GIT_TAG "release-3.4.4" EXCLUDE_FROM_ALL)
 fetchcontent_makeavailable(SDL3 SDL3_ttf SDL3_image)
 
-add_executable(pcg
-               src/pcg.cpp
-              # src/g_clickcore.cpp
-              # src/g_cosmoclick.cpp
-               #src/g_commandstrike.cpp
-              # src/g_battlesim.cpp
-               src/8_hex/g_hex.cpp
-              # src/g_hexbattle.cpp
-              # src/g_factory.cpp
-               #src/g_game.cpp
-               src/1_systems/t_debug_system.cpp
-               src/1_systems/r_ui_node.cpp
-)
-
-        set_source_files_properties(
-            src/8_hex/g_hex.cpp
-            src/1_systems/t_debug_system.cpp
-            src/1_systems/r_ui_node.cpp
-            PROPERTIES CXX_SCAN_FOR_MODULES OFF
-        )
+add_executable(pcg src/pcg.cpp)
 
 target_sources(pcg
                PRIVATE
                FILE_SET cxx_modules TYPE CXX_MODULES FILES
-               src/0_engine/u_colors.cppm
+               # engine modules
+               src/0_engine/g_globals.cppm
+               src/0_engine/r_window.cppm
+               src/0_engine/r_window_state.cppm
+               src/0_engine/u_algorithm.cppm
+               src/0_engine/u_assets.cppm
                src/0_engine/u_collections.cppm
+               src/0_engine/u_colors.cppm
+               src/0_engine/u_ecs.cppm
+               src/0_engine/u_fonts.cppm
+               src/0_engine/u_logger.cppm
                src/0_engine/u_math.cppm
+               src/0_engine/u_numerics.cppm
+               src/0_engine/u_table.cppm
+               src/0_engine/u_texture.cppm
                src/0_engine/u_types.cppm
-               src/8_hex/g_hex_types.cppm
+               src/0_engine/u_util.cppm
+
+               # systems
+               src/1_systems/i_input_system.cppm
+               src/1_systems/r_camera_system.cppm
+               src/1_systems/r_render.cppm
+               src/1_systems/r_ui_node.cppm
+               src/1_systems/r_ui_node_data.cppm
+               src/1_systems/t_debug_system.cppm
+               src/1_systems/t_tick_system.cppm
+               src/1_systems/u_animation_system.cppm
+               src/1_systems/u_orchestra.cppm
+
+               # hex
+               src/8_hex/g_hex.cpp
                src/8_hex/g_hex_terrain.cppm
+               src/8_hex/g_hex_types.cppm
                src/8_hex/r_hex.cppm
-               src/8_hex/u_hex.cppm
                src/8_hex/u_counter.cppm
+               src/8_hex/u_hex.cppm
+
+               # app modules
+               src/g_arcade.cppm
+#               src/g_battlesim.cpp
+#               src/g_clickcore.cpp
+#               src/g_commandstrike.cpp
+#               src/g_components.cppm
+#               src/g_cosmoclick.cpp
+#               src/g_factory.cpp
+#               src/g_game.cppm
+#               src/g_hexbattle.cpp
+#               src/g_minimal.cpp
 )
 
 target_link_libraries(pcg
@@ -192,4 +212,26 @@ add_executable(meshdemo src/g_meshdemo.cpp)
 target_link_libraries(meshdemo
                       PRIVATE SDL3::SDL3
                       PRIVATE SDL3_ttf::SDL3_ttf)
-target_include_directories(meshdemo PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_sources(meshdemo
+               PRIVATE
+               FILE_SET cxx_modules TYPE CXX_MODULES BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src
+               FILES
+               src/0_engine/g_globals.cppm
+               src/0_engine/r_window.cppm
+               src/0_engine/r_window_state.cppm
+               src/0_engine/u_algorithm.cppm
+               src/0_engine/u_assets.cppm
+               src/0_engine/u_collections.cppm
+               src/0_engine/u_colors.cppm
+               src/0_engine/u_ecs.cppm
+               src/0_engine/u_fonts.cppm
+               src/0_engine/u_logger.cppm
+               src/0_engine/u_math.cppm
+               src/0_engine/u_numerics.cppm
+               src/0_engine/u_table.cppm
+               src/0_engine/u_texture.cppm
+               src/0_engine/u_types.cppm
+               src/0_engine/u_util.cppm
+               src/1_systems/r_camera_system.cppm
+               src/1_systems/r_render.cppm
+)

@@ -2,6 +2,7 @@ module;
 
 
 #include <array>
+#include <cassert>
 #include <ranges>
 #include <format>
 #include <set>

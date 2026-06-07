@@ -1,5 +1,8 @@
-﻿#pragma once
-#include "r_ui_node.hpp"
+module;
+
+export module pce.systems.t_debug_system;
+
+import pce.systems.r_ui_node;
 
 import pce.colors;
 

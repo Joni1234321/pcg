@@ -1,21 +1,23 @@
-#pragma once
+module;
 
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_log.h>
+#include <SDL3_ttf/SDL_ttf.h>
+export module pce.r_window;
 
-#include "0_engine/g_globals.hpp"
-#include "0_engine/r_window_state.hpp"
-#include "0_engine/u_assets.hpp"
-#include "0_engine/u_fonts.hpp"
-#include "0_engine/u_texture.hpp"
+import pce.g_globals;
+import pce.r_window_state;
+import pce.u_assets;
+import pce.u_fonts;
+import pce.u_texture;
 
 import pce.std;
 
-namespace pce {
-static const RelativePath PATH_FONT_NORMAL { "Titillium_Web/TitilliumWeb-Regular.ttf" };
-static const RelativePath PATH_FONT_TITILIUM_BOLD { "Titillium_Web/TitilliumWeb-Bold.ttf" };
-static const RelativePath PATH_FONT_COURIER_REGULAR { "Courier_Prime/CourierPrime-Regular.ttf" };
-static const RelativePath PATH_FONT_COURIER_BOLD { "Courier_Prime/CourierPrime-Bold.ttf" };
+export namespace pce {
+ const RelativePath PATH_FONT_NORMAL { "Titillium_Web/TitilliumWeb-Regular.ttf" };
+ const RelativePath PATH_FONT_TITILIUM_BOLD { "Titillium_Web/TitilliumWeb-Bold.ttf" };
+ const RelativePath PATH_FONT_COURIER_REGULAR { "Courier_Prime/CourierPrime-Regular.ttf" };
+ const RelativePath PATH_FONT_COURIER_BOLD { "Courier_Prime/CourierPrime-Bold.ttf" };
 struct Window {
     explicit Window(const uint2 size) {
         constexpr u32 window_flags = SDL_WINDOW_RESIZABLE;
@@ -51,3 +53,4 @@ struct Window {
     }
 };
 } // namespace pce
+

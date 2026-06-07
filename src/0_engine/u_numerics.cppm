@@ -1,6 +1,11 @@
-#pragma once
+module;
 
-namespace pce {
+#include <concepts>
+#include <numeric>
+
+export module pce.u_numerics;
+
+export namespace pce {
 template <std::integral T> constexpr T saturating_sub(T a, T b) noexcept {
     T result;
     if (!__builtin_sub_overflow(a, b, &result)) { return result; }

@@ -1,14 +1,18 @@
-﻿#include <algorithm>
-#include "0_engine/u_util.hpp"
-#include "g_arcade.hpp"
+module;
+
+#include <algorithm>
+export module pcg.g_battlesim;
+
+import pce.u_util;
+import pcg.g_arcade;
 
 import pce.collections;
-#include "1_systems/i_input_system.hpp"
-#include "1_systems/r_render.hpp"
-#include "1_systems/r_ui_node.hpp"
-#include "1_systems/t_debug_system.hpp"
-#include "1_systems/t_tick_system.hpp"
-#include "1_systems/u_animation_system.hpp"
+import pce.systems.i_input_system;
+import pce.systems.r_render;
+import pce.systems.r_ui_node;
+import pce.systems.t_debug_system;
+import pce.systems.t_tick_system;
+import pce.systems.u_animation_system;
 
 import pce.colors;
 import pce.std;

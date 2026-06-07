@@ -1,7 +1,12 @@
-#pragma once
-#include "u_collections.cppm"
+module;
 
-namespace pce {
+#include<ranges>
+
+export module pce.u_algorithm;
+import pce.collections;
+import pce.std;
+
+export namespace pce {
 template <typename Iterator, typename OutputIterator, typename UnaryOperation> constexpr OutputIterator TransformLocal(Iterator first, Iterator last, OutputIterator result, UnaryOperation unary_operation) {
     while (first != last) {
         *result = unary_operation(*first);
@@ -60,3 +65,4 @@ public:
 inline constexpr _Find_Index_Of_fn find_index_of;
 inline constexpr _Find_Handle_Of_fn find_handle_of;
 } // namespace pce
+

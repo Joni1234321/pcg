@@ -1,14 +1,18 @@
-#pragma once
-#include <SDL3/SDL_keycode.h>
+module;
 
-#include "0_engine/g_globals.hpp"
-#include "0_engine/r_window_state.hpp"
-#include "0_engine/u_util.hpp"
-#include "i_input_system.hpp"
+#include <SDL3/SDL_keycode.h>
+export module pce.systems.r_camera_system;
+
+import pce.std;
+import pce.math;
+import pce.g_globals;
+import pce.r_window_state;
+import pce.u_util;
+import pce.systems.i_input_system;
 
 import pce.std;
 
-namespace pce {
+export namespace pce {
 struct CameraState {
     float2 world_position { -100.0F, -100.0F };
     f32 scale { 140.0F };

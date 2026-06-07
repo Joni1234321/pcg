@@ -1,4 +1,4 @@
-#pragma once
+module;
 
 #include <algorithm>
 #include <cassert>
@@ -8,10 +8,10 @@
 #include <random>
 #include <stdexcept>
 #include <utility>
-
+export module pce.u_util;
 import pce.std;
 
-namespace pce {
+export namespace pce {
 template <typename T, template <typename> class Skill> concept HasASkill = std::derived_from<T, Skill<T>>;
 template <typename To, typename From> constexpr To& Reinterpret(From& from) { return *reinterpret_cast<To*>(&from); } // NOLINT(*-pro-type-reinterpret-cast)
 [[nodiscard]] inline u32 Rand() {
@@ -40,7 +40,7 @@ template <typename Collection> const Collection::value_type& RandomValue(const C
 }
 } // namespace pce
 
-namespace pce::noise {
+export namespace pce::noise {
 [[nodiscard]] inline u32 Hash(i32 x, i32 y) {
     u32 h = static_cast<u32>(x * 374761393 + y * 668265263);
     h ^= h >> 13;
@@ -77,5 +77,3 @@ namespace pce::noise {
     return value;
 }
 } // namespace pce::noise
-
-

@@ -1,8 +1,9 @@
 module;
 
-#include "0_engine/u_util.hpp"
 
 export module pcg.hex.terrain;
+import pce.u_util;
+
 
 import pce.collections;
 import pce.std;

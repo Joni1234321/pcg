@@ -1,11 +1,13 @@
-#pragma once
+module;
 
 #include <SDL3_ttf/SDL_ttf.h>
+export module pce.r_window_state;
 
-#include "u_fonts.hpp"
+import pce.std;
+import pce.u_fonts;
 
-namespace pce {
-struct WindowState {
+export namespace pce {
+ struct WindowState {
     SDL_Window* window;
     SDL_Renderer* renderer;
     TTF_TextEngine* text_engine;

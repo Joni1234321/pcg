@@ -1,17 +1,24 @@
 module;
-#include "0_engine/g_globals.hpp"
-#include "0_engine/r_window_state.hpp"
-#include "0_engine/u_assets.hpp"
-#include "0_engine/u_texture.hpp"
-#include "0_engine/u_util.hpp"
-#include "1_systems/r_camera_system.hpp"
+
+#include <cassert>
+#include <optional>
+#include <utility>
+
+#include "SDL3/SDL.h"
 
 export module pcg.hex.render;
-
+import pce.g_globals;
+import pce.r_window_state;
+import pce.u_assets;
+import pce.u_texture;
+import pce.u_util;
+import pce.systems.r_camera_system;
 import pce.colors;
 import pce.std;
 import pcg.hex.core;
 import pcg.hex.types;
+import pce.collections;
+import pce.math;
 
 export namespace pcg {
 inline void VertHexAppend(List<Vertex>& vertecies, const f32 hex_size, const float2 hex_screen, const ColorF hex_color, const Optional<ColorF> hex_color_inner = std::nullopt) {
@@ -194,7 +201,7 @@ void AppendCountryBorders(HexState& hex_state, const CameraState& camera) {
                     if (local_inward_length > 0.0001F) {
                         const f32 length_edge = math::Sqrt(length_edge_squared);
                         const float2 local_edge_normalized = local_edge * float2(1.0F / length_edge);
-                        const f32 width_teeth = std::min(BORDER_TEETH_HALF * camera.scale, length_edge * 0.5F);
+                        const f32 width_teeth = math::Min(BORDER_TEETH_HALF * camera.scale, length_edge * 0.5F);
                         const float2 screen_base_a = screen_base_mid - local_edge_normalized * float2(width_teeth);
                         const float2 screen_base_b = screen_base_mid + local_edge_normalized * float2(width_teeth);
 

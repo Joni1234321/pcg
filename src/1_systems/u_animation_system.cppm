@@ -1,11 +1,22 @@
-﻿#pragma once
+module;
+
+#include <cassert>
 #include <functional>
+#include <SDL3_ttf/SDL_ttf.h>
+#include <ranges>
+export module pce.systems.u_animation_system;
 
 import pce.collections;
-#include "0_engine/u_ecs.hpp"
+import pce.u_ecs;
 import pce.std;
+import pce.math;
+import pce.u_texture;
+import pce.g_globals;
+import pce.r_window_state;
+import pce.systems.t_tick_system;
+import pce.colors;
 
-namespace pce {
+export namespace pce {
 enum class AnimationState : u8 { once, recycle, repeat, persistent, persistent_stopped };
 struct AnimationDesc {
     std::function<void(f32)> action;
@@ -48,7 +59,7 @@ struct ParticleSystem {
         const miliseconds32 current_ms { TimeNowMS() };
         (void)SDL_SetRenderDrawColor(Singleton::Get<WindowState>().renderer, color.r, color.g, color.b, color.a);
         for (ParticleEmitter& emitter : globalData.Get<ParticleEmitter>()) {
-            for (Particle& particle : emitter.particles.items | std::views::reverse) {
+            for (Particle& particle : emitter.particles.items | std::ranges::views::reverse) {
                 TTF_DrawRendererText(particle.text.get(), particle.position.x, particle.position.y);
                 particle.position += emitter.velocity * float2 { delta_time };
                 if (current_ms - particle.start > particle.duration) { emitter.particles.SwapBackErase(particle); }
@@ -116,3 +127,4 @@ inline void AnimationSystem::operator()() const {
     }
 }
 } // namespace pce
+

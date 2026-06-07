@@ -1,10 +1,12 @@
-#pragma once
+module;
 
-#include "0_engine/g_globals.hpp"
-#include "0_engine/u_ecs.hpp"
+export module pce.systems.t_tick_system;
+
+import pce.g_globals;
+import pce.u_ecs;
 import pce.std;
 
-namespace pce {
+export namespace pce {
 using Tick = StrongType<u32, struct TickTag, Arithmetic>;
 
 struct TickState {
@@ -22,3 +24,4 @@ struct TickSystem {
     }
 };
 } // namespace pce
+

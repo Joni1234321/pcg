@@ -1,14 +1,18 @@
+module;
+
+#include <SDL3/SDL_timer.h>
+#include <format>
+
+export module pce.u_ecs;
+
 // ReSharper disable CppNonExplicitConversionOperator
 // ReSharper disable CppNonExplicitConversionOperator
 // ReSharper disable CppNonExplicitConvertingConstructor
-#pragma once
 
-#include <SDL3/SDL_timer.h>
-
-import pce.collections;
 import pce.std;
+import pce.collections;
 
-namespace pce {
+export namespace pce {
 template <typename T, typename TagType, template <typename> class... InheritList> struct StrongType : InheritList<StrongType<T, TagType, InheritList...>>... {
     T value;
     constexpr explicit StrongType(const T& value) : value(value) { }
@@ -71,14 +75,13 @@ using nanoseconds64 = StrongType<u64, struct Nanoseconds64Tag, Arithmetic>;
 inline miliseconds32 TimeNowMS() noexcept { return miliseconds32 { static_cast<u32>(SDL_GetTicks()) }; }
 inline nanoseconds64 TimeNowNS() noexcept { return nanoseconds64 { SDL_GetTicksNS() }; }
 
-static constexpr f32 SECONDS_TO_MS = 1'000.0F;
-static constexpr f32 MS_TO_SECONDS = 1.0F / 1'000.0F;
-static constexpr f32 SECONDS_TO_NS = 1'000'000'000.0F;
-static constexpr f32 NS_TO_SECONDS = 1.0F / 1'000'000'000.0F;
+ constexpr f32 SECONDS_TO_MS = 1'000.0F;
+ constexpr f32 MS_TO_SECONDS = 1.0F / 1'000.0F;
+ constexpr f32 SECONDS_TO_NS = 1'000'000'000.0F;
+ constexpr f32 NS_TO_SECONDS = 1.0F / 1'000'000'000.0F;
 
 } // namespace pce
 
-#include "format"
 template <typename T, typename Parameter, template <typename> class... Skills> struct std::formatter<pce::StrongType<T, Parameter, Skills...>> : std::formatter<T> {
     auto format(const pce::StrongType<T, Parameter, Skills...>& data, std::format_context& ctx) const { return std::formatter<T>::format(data.value, ctx); }
 };
@@ -91,3 +94,4 @@ template <> struct std::formatter<pce::String> : std::formatter<const char*> {
 template <> struct std::formatter<Entity> : std::formatter<u32> {
     auto format(const Entity& data, std::format_context& ctx) const { return formatter<u32>::format(static_cast<u32>(data), ctx); }
 };
+

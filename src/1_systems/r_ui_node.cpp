@@ -1,16 +1,17 @@
-﻿module;
+module;
 
-#include "r_ui_node.hpp"
 
 #include <optional>
 #include <ranges>
 #include <span>
 
-#include "0_engine/r_window.hpp"
 
-#include "1_systems/i_input_system.hpp"
 
 export module pce.systems.ui_node;
+import pce.r_window;
+import pce.systems.i_input_system;
+import pce.systems.r_ui_node;
+
 
 import pce.colors;
 import pce.std;

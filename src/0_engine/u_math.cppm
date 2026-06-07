@@ -8,10 +8,10 @@ export module pce.math;
 
 import pce.std;
 
-namespace pce::math {
-static constexpr f32 PI = std::numbers::pi_v<f32>;
-static constexpr f32 SQRT_3 = std::numbers::sqrt3_v<float>;
-static constexpr f32 DEG_2_RAD = PI / 180.0F;
+export namespace pce::math {
+ constexpr f32 PI = std::numbers::pi_v<f32>;
+ constexpr f32 SQRT_3 = std::numbers::sqrt3_v<float>;
+ constexpr f32 DEG_2_RAD = PI / 180.0F;
 [[nodiscard]] constexpr f32 Sqrt(const f32 val) { return std::sqrtf(val); }
 [[nodiscard]] constexpr f32 Square(const f32 val) { return val * val; }
 [[nodiscard]] inline f32 Sin(const f32 t) { return std::sinf(t); }

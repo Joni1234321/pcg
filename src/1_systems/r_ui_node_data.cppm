@@ -1,16 +1,21 @@
-#pragma once
+module;
 
 #include <functional>
-
 #include <SDL3_ttf/SDL_ttf.h>
+#include <ranges>
 
-#include "0_engine/u_algorithm.hpp"
+export module pce.systems.r_ui_node_data;
+
+import pce.u_algorithm;
 import pce.collections;
-#include "0_engine/u_fonts.hpp"
-#include "0_engine/u_logger.hpp"
+import pce.u_fonts;
+import pce.u_logger;
 import pce.std;
+import pce.g_globals;
+import pce.colors;
+import pce.u_texture;
 
-namespace pce::ui {
+export namespace pce::ui {
 enum class ElementType : u8 { rectangle, texture, text };
 enum class TextAlign { left, center, right };
 enum RelativeConstraint : u8 { hug, fill };
@@ -193,3 +198,4 @@ private:
 };
 
 } // namespace pce::ui
+

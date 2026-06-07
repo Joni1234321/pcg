@@ -1,24 +1,25 @@
 module;
 
+#include <optional>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_surface.h>
 #include <SDL3_ttf/SDL_ttf.h>
-
-#include "0_engine/g_globals.hpp"
-#include "0_engine/r_window_state.hpp"
-#include "0_engine/u_assets.hpp"
-#include "0_engine/u_fonts.hpp"
-#include "0_engine/u_texture.hpp"
-#include "1_systems/r_camera_system.hpp"
+#include <utility>
 
 export module pcg.hex.counter;
-
+import pce.g_globals;
+import pce.r_window_state;
+import pce.u_assets;
+import pce.u_fonts;
+import pce.u_texture;
+import pce.systems.r_camera_system;
+import pce.std;
 import pce.collections;
 import pce.colors;
 import pcg.hex.core;
 import pcg.hex.types;
 
-export namespace pce {
+export namespace pcg {
 enum class CounterStyle : u8 { COUNTER_STYLE_NIEHORSTER, COUNTER_STYLE_NIEHORSTER_BIG, COUNTER_STYLE_REAL };
 
 constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_REAL;

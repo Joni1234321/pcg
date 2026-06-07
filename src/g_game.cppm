@@ -1,14 +1,15 @@
-#pragma once
+module;
 
-#include "0_engine/u_logger.hpp"
-#include "1_systems/t_tick_system.hpp"
+export module pcg.g_game;
+import pce.systems.t_tick_system;
+import pce.u_logger;
 import pce.std;
 
-namespace pce::ui {
+export namespace pce::ui {
 struct RenderNodeSystem;
 }
 
-namespace pcg {
+export namespace pcg {
 struct Data;
 
 struct NewGameSettings {
@@ -69,3 +70,4 @@ extern Game game; // NOLINT(*-avoid-non-const-global-variables)
 
 // Resource list
 } // namespace pcg
+

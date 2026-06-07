@@ -1,4 +1,4 @@
-#pragma once
+module;
 
 #include <array>
 #include <cstdio>
@@ -7,18 +7,15 @@
 #include <ranges>
 #include <string>
 #include <typeinfo>
-#include "0_engine/u_ecs.hpp"
+export module pce.u_logger;
 
-#include "u_util.hpp"
-#if __has_include(<stacktrace>)
-    #include <stacktrace>
-#endif
-
+import pce.math;
+import pce.u_ecs;
+import pce.u_util;
 import pce.collections;
-
 import pce.std;
 
-namespace pce {
+export namespace pce {
 // Demangle a type name. GCC/Clang return the Itanium-mangled form from
 // typeid(T).name() (e.g. "N3pce7TextureE"); MSVC already returns a readable
 // name. This helper produces a readable name on both.
@@ -58,14 +55,14 @@ constexpr auto LOGGER_PREFIX_ERROR = "[ERROR    ] ";
         return RETURN;                                                                    \
     }
 
-static auto LoggerColorSet(const u32 color) { return "\033[38;5;" + std::to_string(color) + "m"; }
-static constexpr auto LOGGER_COLOR_CLEAR = "\033[m";
+ auto LoggerColorSet(const u32 color) { return "\033[38;5;" + std::to_string(color) + "m"; }
+ constexpr auto LOGGER_COLOR_CLEAR = "\033[m";
 
 constexpr auto LOG_LINE_STRING = "=======================================\n";        // NOLINT(*-err58-cpp)
 constexpr auto LOG_SIMPLE_LINE_STRING = "---------------------------------------\n"; // NOLINT(*-err58-cpp)
 
-static constexpr u8 START_COLOR = 172U;
-static constexpr u32 DEFAULT_COLUMN_WIDTH = 12U;
+ constexpr u8 START_COLOR = 172U;
+ constexpr u32 DEFAULT_COLUMN_WIDTH = 12U;
 
 struct Logger {
     // NOLINT(*-struct-pack-align)

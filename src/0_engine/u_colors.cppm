@@ -1,11 +1,10 @@
 module;
 
-#include "0_engine/u_texture.hpp"
-#include "0_engine/u_util.hpp"
-
 export module pce.colors;
 
 import pce.std;
+import pce.math;
+import pce.u_texture;
 
 export namespace pce::colors {
 constexpr Color ColorLighten(const Color color, const f32 factor) {
@@ -129,17 +128,17 @@ constexpr Color COLOR_WG_SOV_BG = Color::FromHsl(2.0F, 0.60F, COUNTRY_LUMINANCE)
 constexpr Color COLOR_WG_USA_BG = Color::FromHsl(218.0F, 0.60F, COUNTRY_LUMINANCE);
 
 inline Color AnimateFast(const f32 t) {
-    const u8 red = static_cast<u8>((std::sin(t * 0.5F + 0.0F) * 0.5F + 0.5F) * 255U);
-    const u8 green = static_cast<u8>((std::sin(t * 0.7F + 2.0F) * 0.5F + 0.5F) * 255U);
-    const u8 blue = static_cast<u8>((std::sin(t * 1.1F + 4.0F) * 0.5F + 0.5F) * 255U);
+    const u8 red = static_cast<u8>((math::Sin(t * 0.5F + 0.0F) * 0.5F + 0.5F) * 255U);
+    const u8 green = static_cast<u8>((math::Sin(t * 0.7F + 2.0F) * 0.5F + 0.5F) * 255U);
+    const u8 blue = static_cast<u8>((math::Sin(t * 1.1F + 4.0F) * 0.5F + 0.5F) * 255U);
     return Color { red, green, blue };
 }
 inline Color AnimateDamp(const f32 t) {
     constexpr float base = 127.0F;
     constexpr float amp = 64.0F;
-    const u8 red = static_cast<u8>(base + amp * std::sin(t * 0.5F + 0.0F));
-    const u8 green = static_cast<u8>(base + amp * std::sin(t * 0.7F + 2.0F));
-    const u8 blue = static_cast<u8>(base + amp * std::sin(t * 1.1F + 4.0F));
+    const u8 red = static_cast<u8>(base + amp * math::Sin(t * 0.5F + 0.0F));
+    const u8 green = static_cast<u8>(base + amp * math::Sin(t * 0.7F + 2.0F));
+    const u8 blue = static_cast<u8>(base + amp * math::Sin(t * 1.1F + 4.0F));
     return Color { red, green, blue };
 }
 } // namespace pce::colors

@@ -1,24 +1,25 @@
-﻿module;
+module;
 
-#include "0_engine/g_globals.hpp"
-#include "0_engine/r_window_state.hpp"
-#include "0_engine/u_fonts.hpp"
-#include "0_engine/u_texture.hpp"
-#include "0_engine/u_util.hpp"
-#include "1_systems/i_input_system.hpp"
-#include "1_systems/r_camera_system.hpp"
-#include "1_systems/r_render.hpp"
-#include "1_systems/r_ui_node.hpp"
-#include "1_systems/r_ui_node_data.hpp"
-#include "1_systems/t_debug_system.hpp"
-#include "1_systems/t_tick_system.hpp"
-#include "1_systems/u_animation_system.hpp"
-#include "1_systems/u_orchestra.hpp"
 #include "SDL3/SDL_keycode.h"
 #include "SDL3_ttf/SDL_ttf.h"
-#include "g_arcade.hpp"
 
 export module pcg.hex.game;
+import pce.g_globals;
+import pce.r_window_state;
+import pce.u_fonts;
+import pce.u_texture;
+import pce.u_util;
+import pce.systems.i_input_system;
+import pce.systems.r_camera_system;
+import pce.systems.r_render;
+import pce.systems.r_ui_node;
+import pce.systems.r_ui_node_data;
+import pce.systems.t_debug_system;
+import pce.systems.t_tick_system;
+import pce.systems.u_animation_system;
+import pce.systems.u_orchestra;
+import pcg.g_arcade;
+
 
 import pce.collections;
 import pcg.hex.core;

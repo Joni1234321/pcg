@@ -1,13 +1,15 @@
-#pragma once
+module;
 
-#include "0_engine/g_globals.hpp"
-#include "0_engine/u_texture.hpp"
-#include "1_systems/r_ui_node_data.hpp"
+export module pce.systems.r_ui_node;
+
+import pce.g_globals;
+import pce.u_texture;
+import pce.systems.r_ui_node_data;
 
 import pce.collections;
 import pce.std;
 
-namespace pce::ui {
+export namespace pce::ui {
 struct InputNodeSystem {
     void operator()() const;
     ~InputNodeSystem() { Singleton::Get<HoveredType>() = { }; }

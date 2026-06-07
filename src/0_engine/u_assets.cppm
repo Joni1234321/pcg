@@ -1,8 +1,9 @@
-#pragma once
+module;
 
 #include <filesystem>
+export module pce.u_assets;
 
-namespace pce {
+export namespace pce {
 using AbsolutePath = std::filesystem::path;
 using RelativePath = std::filesystem::path;
 using AssetPath = std::filesystem::path;

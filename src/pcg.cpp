@@ -1,10 +1,9 @@
+#include <SDL3/SDL_log.h>
 #include <SDL3/SDL_main.h>
 
-#include "g_arcade.hpp"
-
-#include "0_engine/r_window.hpp"
-#include "0_engine/u_logger.hpp"
-
+import pcg.g_arcade;
+import pce.r_window;
+import pce.u_logger;
 import pce.collections;
 import pce.std;
 

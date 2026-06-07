@@ -1,24 +1,28 @@
-﻿// =================================================================
+module;
+
+#include <algorithm>
+#include <array>
+#include <ranges>
+export module pcg.g_hexbattle;
+
+// =================================================================
 //  HEX BATTLE -- C++ port of tools/battlesim/tilesim.ts
 //  Regiment combat on a 4x8 hex grid (rendered as a counter grid).
 //  Replays a deterministic simulation step-by-step.
 // =================================================================
 
-#include <algorithm>
-#include <array>
-#include <ranges>
 
-#include "g_arcade.hpp"
+import pcg.g_arcade;
 
 import pce.collections;
-#include "0_engine/u_logger.hpp"
-#include "0_engine/u_util.hpp"
+import pce.u_logger;
+import pce.u_util;
 
-#include "1_systems/i_input_system.hpp"
-#include "1_systems/r_render.hpp"
-#include "1_systems/r_ui_node.hpp"
-#include "1_systems/t_debug_system.hpp"
-#include "1_systems/t_tick_system.hpp"
+import pce.systems.i_input_system;
+import pce.systems.r_render;
+import pce.systems.r_ui_node;
+import pce.systems.t_debug_system;
+import pce.systems.t_tick_system;
 
 import pce.colors;
 import pce.std;

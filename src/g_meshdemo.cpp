@@ -1,3 +1,15 @@
+module;
+
+#include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
+#include <array>
+#include <cmath>
+#include <cstdio>
+#include <string>
+#include <string_view>
+#include <vector>
+export module pcg.g_meshdemo;
+
 // ============================================================================
 //  g_meshdemo.cpp  --  Mesh batching demo with mixed quads + hex + text.
 //
@@ -15,15 +27,7 @@
 //      g++ g_meshdemo.cpp -lSDL3 -lSDL3_ttf -o meshdemo
 // ============================================================================
 
-#include <SDL3/SDL.h>
-#include <SDL3_ttf/SDL_ttf.h>
 
-#include <array>
-#include <cmath>
-#include <cstdio>
-#include <string>
-#include <string_view>
-#include <vector>
 
 namespace meshdemo {
 
