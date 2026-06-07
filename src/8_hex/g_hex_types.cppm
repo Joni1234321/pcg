@@ -1,13 +1,12 @@
 module;
 
-#include "0_engine/u_collections.hpp"
 #include "0_engine/u_texture.hpp"
 
 export module pcg.hex.types;
 
-import pce.engine.types;
+import pce.collections;
+import pce.std;
 import pcg.hex.core;
-import pcg.hex.counter;
 
 export namespace pcg {
 using namespace pce;
@@ -15,6 +14,8 @@ enum class CountryTag : u8 { TAG_NONE, TAG_GER, TAG_SOV, TAG_USA };
 enum class TerrainType : u8 { TERRAIN_TYPE_DEEP_OCEAN, TERRAIN_TYPE_OCEAN, TERRAIN_TYPE_HILL, TERRAIN_TYPE_BEACH, TERRAIN_TYPE_GRASS, TERRAIN_TYPE_MOUNTAIN, TERRAIN_TYPE_SNOW };
 enum class TerrainFeature : u8 { TERRAIN_FEATURE_GRASSLAND, TERRAIN_FEATURE_FIELD, TERRAIN_FEATURE_CITY, TERRAIN_FEATURE_VILLAGE, TERRAIN_FEATURE_WOODED_LIGHTLY, TERRAIN_FEATURE_WOODED_HEAVY, TERRAIN_FEATURE_MARSH };
 enum class PlayerAction : u8 { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_ACTION_DESELECT, PLAYER_ACTION_MOVE_CLICK, PLAYER_ACTION_MOVE_HOVER, PLAYER_ACTION_ATTACK_CLICK, PLAYER_ACTION_ATTACK_HOVER };
+enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHELON_BATTALION, ECHELON_REGIMENT, ECHELON_BRIGADE, ECHELON_DIVISION, ECHELON_CORPS, ECHELON_ARMY };
+enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK };
 enum class MapStyle : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER };
 enum class TerrainStyle : u8 { TERRAIN_STYLE_SILHOUETTES, TERRAIN_STYLE_ICONS };
 enum class RoadLevel : u8 { ROAD_LEVEL_NONE, ROAD_LEVEL_SMALL, ROAD_LEVEL_MEDIUM, ROAD_LEVEL_LARGE };
@@ -35,6 +36,21 @@ constexpr f32 FEATURE_POSITION_JITTER = 0.2F;
 constexpr f32 RIVER_WIDTH = 0.13F;
 constexpr f32 RIVER_CASING_EXTRA = 0.05F;
 constexpr f32 RIVER_HIGHLIGHT_WIDTH = RIVER_WIDTH * 0.35F;
+
+struct Counter {
+    Color color_background;
+    Color color_icon;
+    Color color_border;
+};
+struct CounterStack {
+    int2 axial { };
+    UnitIcon icon { };
+    Array<Counter, 12> stack { };
+    Label label_top;
+    Label label_center;
+    Label label_bottom;
+    SurfaceLabel label_vertical;
+};
 
 struct HexBitset {
     u8 value;

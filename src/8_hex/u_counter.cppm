@@ -7,19 +7,18 @@ module;
 #include "0_engine/g_globals.hpp"
 #include "0_engine/r_window_state.hpp"
 #include "0_engine/u_assets.hpp"
-#include "0_engine/u_collections.hpp"
 #include "0_engine/u_fonts.hpp"
 #include "0_engine/u_texture.hpp"
 #include "1_systems/r_camera_system.hpp"
 
 export module pcg.hex.counter;
 
-import pce.engine.colors;
+import pce.collections;
+import pce.colors;
 import pcg.hex.core;
+import pcg.hex.types;
 
 export namespace pce {
-enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHELON_BATTALION, ECHELON_REGIMENT, ECHELON_BRIGADE, ECHELON_DIVISION, ECHELON_CORPS, ECHELON_ARMY };
-enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK };
 enum class CounterStyle : u8 { COUNTER_STYLE_NIEHORSTER, COUNTER_STYLE_NIEHORSTER_BIG, COUNTER_STYLE_REAL };
 
 constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_REAL;
@@ -48,20 +47,6 @@ constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_REAL;
     }
     std::unreachable();
 }
-struct Counter {
-    Color color_background;
-    Color color_icon;
-    Color color_border;
-};
-struct CounterStack {
-    int2 axial { };
-    UnitIcon icon { };
-    Array<Counter, 12> stack { };
-    Label label_top;
-    Label label_center;
-    Label label_bottom;
-    SurfaceLabel label_vertical;
-};
 
 struct CounterTextures {
     HandleOptional<Texture> infantry;

@@ -1,4 +1,6 @@
-﻿#include "r_ui_node.hpp"
+﻿module;
+
+#include "r_ui_node.hpp"
 
 #include <optional>
 #include <ranges>
@@ -8,8 +10,10 @@
 
 #include "1_systems/i_input_system.hpp"
 
-import pce.engine.colors;
-import pce.engine.types;
+export module pce.systems.ui_node;
+
+import pce.colors;
+import pce.std;
 
 namespace pce::ui {
 const Font& FontCollection::GetFontNormal(FontSizes size) const {

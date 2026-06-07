@@ -1,13 +1,16 @@
 #pragma once
 
-#include "g_components.hpp"
-
 #include "0_engine/u_logger.hpp"
-import pce.engine.types;
+#include "1_systems/t_tick_system.hpp"
+import pce.std;
 
-#include "1_systems/r_ui_node.hpp"
+namespace pce::ui {
+struct RenderNodeSystem;
+}
 
 namespace pcg {
+struct Data;
+
 struct NewGameSettings {
     u32 players;
     u32 planets;
@@ -21,8 +24,8 @@ struct Game {
 constexpr NewGameSettings GAME_SETTINGS_CHALLENGE = { .players = 2U, .planets = 4U };
 constexpr NewGameSettings GAME_SETTINGS_UTOPIA = { .players = 1U, .planets = 1U };
 
-inline Data data;                       // NOLINT(*-err58-cpp, *-avoid-non-const-global-variables)
-inline Game game(GAME_SETTINGS_UTOPIA); // NOLINT(*-err58-cpp, *-avoid-non-const-global-variables)
+extern Data data; // NOLINT(*-avoid-non-const-global-variables)
+extern Game game; // NOLINT(*-avoid-non-const-global-variables)
 
 // map power
 // isolated small island homogen culture

@@ -1,9 +1,9 @@
 ﻿#pragma once
 #include <functional>
 
-#include "0_engine/u_collections.hpp"
+import pce.collections;
 #include "0_engine/u_ecs.hpp"
-import pce.engine.types;
+import pce.std;
 
 namespace pce {
 enum class AnimationState : u8 { once, recycle, repeat, persistent, persistent_stopped };

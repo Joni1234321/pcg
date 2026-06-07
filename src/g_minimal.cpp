@@ -1,5 +1,5 @@
 ﻿#include "0_engine/g_globals.hpp"
-#include "0_engine/u_collections.hpp"
+import pce.collections;
 #include "1_systems/i_input_system.hpp"
 #include "1_systems/r_render.hpp"
 #include "1_systems/r_ui_node.hpp"
@@ -10,7 +10,7 @@
 #include "SDL3/SDL_keycode.h"
 #include "g_arcade.hpp"
 
-import pce.engine.colors;
+import pce.colors;
 
 namespace pcg {
 using namespace pce;

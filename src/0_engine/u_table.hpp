@@ -7,9 +7,9 @@
 #include <numeric>
 #include <variant>
 
-#include "0_engine/u_collections.hpp"
+import pce.collections;
 #include "0_engine/u_logger.hpp"
-import pce.engine.types;
+import pce.std;
 
 namespace pce {
 struct Table {

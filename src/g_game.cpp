@@ -8,7 +8,7 @@
 #include "0_engine/u_table.hpp"
 #include "0_engine/u_util.hpp"
 
-import pce.engine.types;
+import pce.std;
 
 namespace pcg {
 using pce::Component;
@@ -22,6 +22,9 @@ using pce::String;
 using pce::Table;
 using pce::TableU32;
 namespace math = pce::math;
+
+Data data;                       // NOLINT(*-avoid-non-const-global-variables)
+Game game(GAME_SETTINGS_UTOPIA); // NOLINT(*-avoid-non-const-global-variables)
 
 struct Player : Entity {
     constexpr Player(const Entity entity) : Entity(entity) { } // NOLINT(*-explicit-constructor, *-explicit-conversions)

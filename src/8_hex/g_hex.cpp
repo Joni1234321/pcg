@@ -1,6 +1,7 @@
-﻿#include "0_engine/g_globals.hpp"
+﻿module;
+
+#include "0_engine/g_globals.hpp"
 #include "0_engine/r_window_state.hpp"
-#include "0_engine/u_collections.hpp"
 #include "0_engine/u_fonts.hpp"
 #include "0_engine/u_texture.hpp"
 #include "0_engine/u_util.hpp"
@@ -17,12 +18,15 @@
 #include "SDL3_ttf/SDL_ttf.h"
 #include "g_arcade.hpp"
 
+export module pcg.hex.game;
+
+import pce.collections;
 import pcg.hex.core;
 import pcg.hex.counter;
 import pcg.hex.types;
 import pcg.hex.terrain;
 import pcg.hex.render;
-import pce.engine.colors;
+import pce.colors;
 
 namespace pcg {
 using namespace pce;

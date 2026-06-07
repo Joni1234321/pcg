@@ -1,9 +1,8 @@
 #pragma once
 #include <typeindex>
 
-#include "0_engine/u_collections.hpp"
-
-import pce.engine.types;
+import pce.collections;
+import pce.std;
 
 namespace pce {
 // Stored somewhere and deletable

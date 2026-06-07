@@ -1,11 +1,9 @@
 module;
-
-#include "0_engine/u_collections.hpp"
 #include "0_engine/u_util.hpp"
 
 export module pcg.hex.core;
 
-import pce.engine.colors;
+import pce.collections;
 
 export namespace pce {
 // https://www.redblobgames.com/grids/hexagons/

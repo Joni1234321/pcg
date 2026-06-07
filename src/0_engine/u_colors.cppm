@@ -3,9 +3,9 @@ module;
 #include "0_engine/u_texture.hpp"
 #include "0_engine/u_util.hpp"
 
-export module pce.engine.colors;
+export module pce.colors;
 
-import pce.engine.types;
+import pce.std;
 
 export namespace pce::colors {
 constexpr Color ColorLighten(const Color color, const f32 factor) {

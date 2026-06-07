@@ -31,6 +31,30 @@ endif ()
 set(FETCHCONTENT_BASE_DIR "${CMAKE_SOURCE_DIR}/3rdparty" CACHE PATH "" FORCE)
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL "" FORCE)
 include(FetchContent)
+
+# Prefer pre-populated cached sources over fetching from git.
+set(PCG_3RDPARTY_CACHE_DIR "${CMAKE_SOURCE_DIR}/3rdparty-cache")
+function(pcg_seed_fetchcontent_from_cache fetch_name cache_subdir)
+    set(cache_src "${PCG_3RDPARTY_CACHE_DIR}/${cache_subdir}")
+    set(local_src "${FETCHCONTENT_BASE_DIR}/${cache_subdir}")
+
+    if (EXISTS "${cache_src}/CMakeLists.txt")
+        if (NOT EXISTS "${local_src}/CMakeLists.txt")
+            message(STATUS "Seeding ${fetch_name} from cache: ${cache_src} -> ${local_src}")
+            file(MAKE_DIRECTORY "${FETCHCONTENT_BASE_DIR}")
+            file(COPY "${cache_src}/" DESTINATION "${local_src}")
+        endif ()
+
+        string(TOUPPER "${fetch_name}" fetch_name_upper)
+        string(REGEX REPLACE "[^A-Z0-9_]" "_" fetch_name_upper "${fetch_name_upper}")
+        set("FETCHCONTENT_SOURCE_DIR_${fetch_name_upper}" "${local_src}" CACHE PATH "" FORCE)
+    endif ()
+endfunction()
+
+pcg_seed_fetchcontent_from_cache(SDL3 sdl3-src)
+pcg_seed_fetchcontent_from_cache(SDL3_ttf sdl3_ttf-src)
+pcg_seed_fetchcontent_from_cache(SDL3_image sdl3_image-src)
+
 fetchcontent_declare(SDL3
                      GIT_REPOSITORY "https://github.com/libsdl-org/SDL.git"
                      GIT_TAG "release-3.4.8" EXCLUDE_FROM_ALL)
@@ -58,16 +82,25 @@ add_executable(pcg
                src/1_systems/r_ui_node.cpp
 )
 
+        set_source_files_properties(
+            src/8_hex/g_hex.cpp
+            src/1_systems/t_debug_system.cpp
+            src/1_systems/r_ui_node.cpp
+            PROPERTIES CXX_SCAN_FOR_MODULES OFF
+        )
+
 target_sources(pcg
                PRIVATE
                FILE_SET cxx_modules TYPE CXX_MODULES FILES
-               src/0_engine/u_types.cppm
                src/0_engine/u_colors.cppm
-               src/8_hex/u_hex.cppm
-               src/8_hex/u_counter.cppm
+               src/0_engine/u_collections.cppm
+               src/0_engine/u_math.cppm
+               src/0_engine/u_types.cppm
                src/8_hex/g_hex_types.cppm
                src/8_hex/g_hex_terrain.cppm
                src/8_hex/r_hex.cppm
+               src/8_hex/u_hex.cppm
+               src/8_hex/u_counter.cppm
 )
 
 target_link_libraries(pcg

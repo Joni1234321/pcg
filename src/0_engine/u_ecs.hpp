@@ -5,9 +5,8 @@
 
 #include <SDL3/SDL_timer.h>
 
-#include "0_engine/u_collections.hpp"
-
-import pce.engine.types;
+import pce.collections;
+import pce.std;
 
 namespace pce {
 template <typename T, typename TagType, template <typename> class... InheritList> struct StrongType : InheritList<StrongType<T, TagType, InheritList...>>... {

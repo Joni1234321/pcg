@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "r_ui_node.hpp"
 
-import pce.engine.colors;
+import pce.colors;
 
 namespace pce::ui {
 struct TickComponent : NodeComponentBase {

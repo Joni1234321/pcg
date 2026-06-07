@@ -1,24 +1,20 @@
-#pragma once
+module;
 
-#include <algorithm>
+
 #include <array>
-#include <format>
-#include <functional>
-#include <memory>
 #include <ranges>
+#include <format>
 #include <set>
 #include <span>
 #include <stack>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
-#include <utility>
-#include <vector>
 
-#include "0_engine/u_util.hpp"
-
-import pce.engine.types;
-
-namespace pce {
+export module pce.collections;
+import pce.std;
+import pce.math;
+export namespace pce {
 template <typename T> concept TriviallyConstructible = std::is_trivially_constructible_v<T>;
 template <typename T> concept DefaultConstructible = std::is_default_constructible_v<T>;
 

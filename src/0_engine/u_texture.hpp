@@ -3,7 +3,7 @@
 #include "0_engine/g_globals.hpp"
 #include "0_engine/r_window_state.hpp"
 #include "0_engine/u_assets.hpp"
-#include "0_engine/u_collections.hpp"
+import pce.collections;
 #include "0_engine/u_logger.hpp"
 
 #include "0_engine/u_util.hpp"

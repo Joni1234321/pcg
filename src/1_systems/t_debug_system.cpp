@@ -1,11 +1,15 @@
-﻿#include "t_debug_system.hpp"
+﻿module;
+
+#include "t_debug_system.hpp"
 
 #include "1_systems/i_input_system.hpp"
 #include "1_systems/t_tick_system.hpp"
 #include "1_systems/u_orchestra.hpp"
 
-import pce.engine.colors;
-import pce.engine.types;
+export module pce.systems.debug;
+
+import pce.colors;
+import pce.std;
 
 namespace pce::ui {
 namespace colors = colors;

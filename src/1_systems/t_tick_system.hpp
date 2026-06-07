@@ -2,7 +2,7 @@
 
 #include "0_engine/g_globals.hpp"
 #include "0_engine/u_ecs.hpp"
-import pce.engine.types;
+import pce.std;
 
 namespace pce {
 using Tick = StrongType<u32, struct TickTag, Arithmetic>;

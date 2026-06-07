@@ -8,8 +8,8 @@ module;
 
 export module pcg.hex.render;
 
-import pce.engine.colors;
-import pce.engine.types;
+import pce.colors;
+import pce.std;
 import pcg.hex.core;
 import pcg.hex.types;
 

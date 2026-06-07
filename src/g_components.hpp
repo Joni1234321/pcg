@@ -1,11 +1,11 @@
 #pragma once
 
 #include <unordered_map>
-#include "0_engine/u_collections.hpp"
 #include "0_engine/u_ecs.hpp"
-import pce.engine.types;
-
 #include "1_systems/t_tick_system.hpp"
+
+import pce.collections;
+import pce.std;
 
 namespace pcg {
 using Percentage = pce::StrongType<f32, struct PercentageTag, pce::Arithmetic>;

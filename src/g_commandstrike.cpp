@@ -1,7 +1,6 @@
 ﻿#include "g_arcade.hpp"
 
-#include "0_engine/u_collections.hpp"
-
+import pce.collections;
 #include "1_systems/i_input_system.hpp"
 #include "1_systems/r_render.hpp"
 #include "1_systems/r_ui_node.hpp"
@@ -10,8 +9,8 @@
 #include "1_systems/u_animation_system.hpp"
 #include "1_systems/u_orchestra.hpp"
 
-import pce.engine.colors;
-import pce.engine.types;
+import pce.colors;
+import pce.std;
 
 namespace pcg::commandstrike {
 using namespace pce;
