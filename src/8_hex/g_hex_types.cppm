@@ -1,7 +1,5 @@
 module;
 
-#include <assert.h>
-
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_texture.hpp"
 

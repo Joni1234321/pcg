@@ -1,10 +1,8 @@
 module;
 
 #include <SDL3/SDL_render.h>
+#include <SDL3/SDL_surface.h>
 #include <SDL3_ttf/SDL_ttf.h>
-#include <functional>
-#include <optional>
-#include <utility>
 
 #include "0_engine/g_globals.hpp"
 #include "0_engine/r_window_state.hpp"
@@ -13,7 +11,6 @@ module;
 #include "0_engine/u_fonts.hpp"
 #include "0_engine/u_texture.hpp"
 #include "1_systems/r_camera_system.hpp"
-#include "SDL3/SDL_surface.h"
 
 export module pcg.hex.counter;
 

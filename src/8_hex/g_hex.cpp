@@ -1,13 +1,4 @@
-﻿#include <algorithm>
-#include <cmath>
-#include <format>
-#include <iterator>
-#include <optional>
-#include <ranges>
-#include <string>
-#include <queue>
-
-#include "0_engine/g_globals.hpp"
+﻿#include "0_engine/g_globals.hpp"
 #include "0_engine/r_window_state.hpp"
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_fonts.hpp"
@@ -54,6 +45,8 @@ List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start
     frontier.push(AxialAndCost { .axial = axial_start, .cost = 0 });
     came_from[axial_start] = axial_start;
     cost_at_axial[axial_start] = 0;
+
+    //
 
     while (!frontier.empty()) {
         const AxialAndCost current = frontier.top();

@@ -1,9 +1,20 @@
 module;
-
+// NOLINTBEGIN(*-include-cleaner)
+#include <array>
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
+#include <format>
 #include <functional>
+#include <iterator>
+#include <limits>
 #include <optional>
+#include <queue>
+#include <ranges>
+#include <string>
 #include <type_traits>
+#include <utility>
+// NOLINTEND(*-include-cleaner)
 
 #if defined(_DEBUG) || defined(NDEBUG)
     #define DEBUG
