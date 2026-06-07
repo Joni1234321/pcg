@@ -1,13 +1,10 @@
 module;
 
-
-
 export module pce.systems.debug;
 import pce.systems.i_input_system;
 import pce.systems.t_debug_system;
 import pce.systems.t_tick_system;
 import pce.systems.u_orchestra;
-
 
 import pce.colors;
 import pce.std;

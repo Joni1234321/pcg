@@ -208,30 +208,30 @@ set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)
 include(CPack)
 
 
-add_executable(meshdemo src/g_meshdemo.cpp)
-target_link_libraries(meshdemo
-                      PRIVATE SDL3::SDL3
-                      PRIVATE SDL3_ttf::SDL3_ttf)
-target_sources(meshdemo
-               PRIVATE
-               FILE_SET cxx_modules TYPE CXX_MODULES BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src
-               FILES
-               src/0_engine/g_globals.cppm
-               src/0_engine/r_window.cppm
-               src/0_engine/r_window_state.cppm
-               src/0_engine/u_algorithm.cppm
-               src/0_engine/u_assets.cppm
-               src/0_engine/u_collections.cppm
-               src/0_engine/u_colors.cppm
-               src/0_engine/u_ecs.cppm
-               src/0_engine/u_fonts.cppm
-               src/0_engine/u_logger.cppm
-               src/0_engine/u_math.cppm
-               src/0_engine/u_numerics.cppm
-               src/0_engine/u_table.cppm
-               src/0_engine/u_texture.cppm
-               src/0_engine/u_types.cppm
-               src/0_engine/u_util.cppm
-               src/1_systems/r_camera_system.cppm
-               src/1_systems/r_render.cppm
-)
+#add_executable(meshdemo src/g_meshdemo.cpp)
+#target_link_libraries(meshdemo
+#                      PRIVATE SDL3::SDL3
+#                      PRIVATE SDL3_ttf::SDL3_ttf)
+#target_sources(meshdemo
+#               PRIVATE
+#               FILE_SET cxx_modules TYPE CXX_MODULES BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src
+#               FILES
+#               src/0_engine/g_globals.cppm
+#               src/0_engine/r_window.cppm
+#               src/0_engine/r_window_state.cppm
+#               src/0_engine/u_algorithm.cppm
+#               src/0_engine/u_assets.cppm
+#               src/0_engine/u_collections.cppm
+#               src/0_engine/u_colors.cppm
+#               src/0_engine/u_ecs.cppm
+#               src/0_engine/u_fonts.cppm
+#               src/0_engine/u_logger.cppm
+#               src/0_engine/u_math.cppm
+#               src/0_engine/u_numerics.cppm
+#               src/0_engine/u_table.cppm
+#               src/0_engine/u_texture.cppm
+#               src/0_engine/u_types.cppm
+#               src/0_engine/u_util.cppm
+#               src/1_systems/r_camera_system.cppm
+#               src/1_systems/r_render.cppm
+#)

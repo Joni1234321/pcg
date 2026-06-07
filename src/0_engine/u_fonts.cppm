@@ -1,5 +1,8 @@
 module;
 
+#include <cassert>
+#include <SDL3/SDL_error.h>
+#include <SDL3/SDL_log.h>
 #include <SDL3_ttf/SDL_ttf.h>
 export module pce.u_fonts;
 
@@ -50,4 +53,28 @@ public:
     }
     ~FontCollection() { Clear(); }
 };
+} // namespace pce::ui
+
+namespace pce::ui {
+const Font& FontCollection::GetFontNormal(FontSizes size) const {
+    assert(static_cast<FontSize>(size) >= FONT_MIN_SIZE);
+    size = math::Max(size, static_cast<FontSizes>(FONT_MIN_SIZE));
+    if (!fonts_normal.HasKey(size)) {
+        fonts_normal.EmplaceBack(size, font_path_normal, static_cast<FontSize>(size));
+        if (fonts_normal[size].FailedLoading()) {
+            SDL_Log("ERROR Failed Font not loaded (%s)", SDL_GetError());
+            fonts_normal.Erase(size);
+        }
+    }
+    return fonts_normal[size];
+}
+const Font& FontCollection::GetFontBold(FontSizes size) const {
+    assert(static_cast<FontSize>(size) >= FONT_MIN_SIZE);
+    size = math::Max(size, static_cast<FontSizes>(FONT_MIN_SIZE));
+    if (!fonts_bold.HasKey(size)) {
+        fonts_bold.EmplaceBack(size, font_path_bold, static_cast<FontSize>(size));
+        assert(!fonts_bold[size].FailedLoading()); // Font failed to load — GetFontBold will return invalid font
+    }
+    return fonts_bold[size];
+}
 } // namespace pce::ui

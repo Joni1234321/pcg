@@ -110,7 +110,7 @@ public:
     }
 };
 
-template <typename T> static void PrintListStats(Logger& logger, const List<T>& list) {
+template <typename T> void PrintListStats(Logger& logger, const List<T>& list) {
     const u32 len = list.size();
     if (len == 0U) { return; }
     const T max = *std::ranges::max_element(list, std::less(), { });

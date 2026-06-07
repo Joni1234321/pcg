@@ -19,6 +19,7 @@ module;
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
+#include <new>
 #include <utility>
 #include <vector>
 #include <limits>

@@ -1,5 +1,6 @@
 module;
 
+#include <cassert>
 #include <functional>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <ranges>
@@ -197,5 +198,54 @@ private:
     }
 };
 
+} // namespace pce::ui
+
+namespace pce::ui {
+Handle<Node> NodeTree::AddRoot() {
+    assert(styles.empty()); // Setting root non empty tree
+    (void)styles.EmplaceBack();
+    (void)node_properties.EmplaceBack();
+    (void)node_ttf_texts.EmplaceBack(nullptr);
+    (void)parents.EmplaceBack(Root());
+    (void)children.EmplaceBack();
+    (void)subtree_roots.EmplaceBack(Root().id);
+    return Root();
+}
+Handle<Node> NodeTree::AddNode(const Handle<Node> parent) {
+    assert(!styles.empty()); // Adding node before root
+    const Handle<Node> node = styles.EmplaceBack();
+    (void)node_properties.EmplaceBack();
+    (void)node_ttf_texts.EmplaceBack(nullptr);
+    (void)children[parent].EmplaceBack(node);
+    (void)parents.PushBack(parent);
+    (void)children.EmplaceBack();
+    (void)subtree_roots.EmplaceBack(Root().id);
+    assert(node.id != parent.id); // Assigning node to itself. Recursion!
+    return node;
+}
+Handle<Node> NodeTree::CloneNode(const Handle<Node> clone) {
+    const Handle<Node> node = AddNode(parents[clone]);
+    styles[node] = styles[clone];
+    node_properties[node] = node_properties[clone];
+    return node;
+}
+void NodeTree::DetachNode(const Handle<Node> node) {
+    assert(node.id != Root().id); // trying to detach root
+    const Handle parent = parents[node];
+    children[parent].erase_value(node);
+}
+void NodeTree::AttachNode(const Handle<Node> node, const Handle<Node> parent) {
+    assert(node.id != Root().id);
+    children[parent].push_back(node);
+    parents[node] = parent;
+}
+void NodeTree::Clear() {
+    styles.clear();
+    node_properties.clear();
+    node_ttf_texts.clear();
+    parents.clear();
+    children.clear();
+    subtree_roots.clear();
+}
 } // namespace pce::ui
 
