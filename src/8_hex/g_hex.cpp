@@ -1,16 +1,10 @@
-﻿#include "g_hex_terrain.hpp"
-
-#include <algorithm>
+﻿#include <algorithm>
 #include <cmath>
 #include <format>
-#include <functional>
 #include <iterator>
 #include <optional>
-#include <queue>
 #include <ranges>
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 #include "0_engine/g_globals.hpp"
 #include "0_engine/r_window_state.hpp"
@@ -28,13 +22,14 @@
 #include "1_systems/t_tick_system.hpp"
 #include "1_systems/u_animation_system.hpp"
 #include "1_systems/u_orchestra.hpp"
-#include "8_hex/u_counter.hpp"
-#include "8_hex/u_hex.hpp"
 #include "SDL3/SDL_keycode.h"
-#include "SDL3/SDL_pixels.h"
 #include "SDL3_ttf/SDL_ttf.h"
 #include "g_arcade.hpp"
 
+import pcg.hex.core;
+import pcg.hex.counter;
+import pcg.hex.types;
+import pcg.hex.terrain;
 import pcg.hex.render;
 
 namespace pcg {

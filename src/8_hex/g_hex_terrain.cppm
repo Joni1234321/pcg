@@ -1,16 +1,20 @@
-#pragma once
+module;
+
 #include <algorithm>
+#include <limits>
 #include <ranges>
 
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_types.hpp"
 #include "0_engine/u_util.hpp"
-#include "8_hex/g_hex_types.hpp"
-#include "8_hex/u_hex.hpp"
 
+export module pcg.hex.terrain;
+
+import pcg.hex.core;
+import pcg.hex.types;
 import pcg.hex.render;
 
-namespace pcg {
+export namespace pcg {
 [[nodiscard]] constexpr u32 TerrainToMovementCost(const TerrainType terrain) {
     switch (terrain) {
         case TerrainType::TERRAIN_TYPE_DEEP_OCEAN: return 255U;
@@ -79,7 +83,6 @@ inline void HexSetRiver(HexState& hex_state, const int2 axial, const u32 side) {
 
 [[nodiscard]] constexpr b8 TerrainIsWater(const TerrainType terrain) { return terrain == TerrainType::TERRAIN_TYPE_DEEP_OCEAN || terrain == TerrainType::TERRAIN_TYPE_OCEAN; }
 
-// Carve a road from axial_a to axial_b along the hex line, skipping water tiles.
 inline void CarveRoad(HexState& hex_state, const int2 axial_a, const int2 axial_b, const b8 big) {
     const u32 distance = HexAxialDistance(axial_a, axial_b);
     if (distance) {
@@ -154,7 +157,6 @@ inline void GenerateRoads(HexState& hex_state) {
         }
     }
 
-    // K-nearest neighbour redundancy: each city gains 1 extra big road and 2 small roads.
     auto connect_k_nearest = [&](const List<int2>& sources, const List<int2>& targets, const u32 big_count, const u32 small_count) {
         for (u32 i = 0U; i < sources.size(); i++) {
             List<u32> dist;
@@ -186,9 +188,7 @@ inline void GenerateRoads(HexState& hex_state) {
     };
 
     if (cities.size() >= 2U) { connect_k_nearest(cities, cities, 1U, 2U); }
-
     if (villages.size() >= 2U) { connect_k_nearest(villages, villages, 0U, 2U); }
-
     if (!cities.empty() && !villages.empty()) { connect_k_nearest(villages, cities, 0U, 1U); }
 }
 
@@ -196,10 +196,6 @@ inline void GenerateRivers(HexState& hex_state, const u32 seed) {
     constexpr f32 SCALE = 0.04F;
     const f32 seed_f = static_cast<f32>(seed);
     auto elevation_at_axial = [&](const int2 axial) -> f32 {
-        const float2 world = HexAxialToWorld(axial);
-        return noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f);
-    };
-    auto elevation_at = [&](const int2 axial) -> f32 {
         const float2 world = HexAxialToWorld(axial);
         return noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f);
     };
@@ -224,7 +220,7 @@ inline void GenerateRivers(HexState& hex_state, const u32 seed) {
                         }
                     }
                 }
-                if (side_best == HEX_CORNERS) { break; } // if we didnt find any
+                if (side_best == HEX_CORNERS) { break; }
                 HexSetRiver(hex_state, axial_and_side_current.axial, (side_best + 1) % HEX_CORNERS);
                 HexSetRiver(hex_state, axial_and_side_current.axial, (side_best + 2) % HEX_CORNERS);
                 axial_and_side_current.axial = axial_and_side_current.axial + HEX_AXIAL_NEIGHBOURS[side_best];
@@ -273,5 +269,4 @@ inline void GenerateTerrainFeatures(HexState& hex_state, const u32 seed) {
         }
     }
 }
-
 } // namespace pcg

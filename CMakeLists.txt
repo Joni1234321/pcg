@@ -61,7 +61,11 @@ add_executable(pcg
 target_sources(pcg
                PRIVATE
                FILE_SET cxx_modules TYPE CXX_MODULES FILES
-               src/8_hex/r_hex.ixx
+               src/8_hex/u_hex.cppm
+               src/8_hex/u_counter.cppm
+               src/8_hex/g_hex_types.cppm
+               src/8_hex/g_hex_terrain.cppm
+               src/8_hex/r_hex.cppm
 )
 
 target_link_libraries(pcg

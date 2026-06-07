@@ -1,7 +1,7 @@
-﻿#pragma once
+module;
+
 #include <SDL3/SDL_render.h>
 #include <array>
-#include <optional>
 
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_colors.hpp"
@@ -9,7 +9,9 @@
 #include "0_engine/u_util.hpp"
 #include "SDL3/SDL_rect.h"
 
-namespace pce {
+export module pcg.hex.core;
+
+export namespace pce {
 // https://www.redblobgames.com/grids/hexagons/
 constexpr u32 HEX_CORNERS = 6;
 constexpr float2 HEX_SPACING { math::SQRT_3, 1.5F };
@@ -56,11 +58,11 @@ constexpr int3 HexCubeRound(const float3 cube_frac) {
 }
 [[nodiscard]] constexpr u32 HexCubeDistance(const int3 cube_a, const int3 cube_b) {
     const int3 diff = cube_a - cube_b;
-    return (math::Abs(diff.x) + math::Abs(diff.y) + math::Abs(diff.z)) / 2; // or max(diff.x, diff.y, diff.z)
+    return (math::Abs(diff.x) + math::Abs(diff.y) + math::Abs(diff.z)) / 2;
 }
 [[nodiscard]] constexpr u32 HexAxialDistance(const int2 axial_a, const int2 axial_b) {
     const int2 diff = axial_a - axial_b;
-    return (math::Abs(diff.x) + math::Abs(diff.y) + math::Abs(diff.x + diff.y)) / 2; // derived from cube distance
+    return (math::Abs(diff.x) + math::Abs(diff.y) + math::Abs(diff.x + diff.y)) / 2;
 }
 [[nodiscard]] constexpr float3 HexCubeLerp(const int3 cube_a, const int3 cube_b, float t) { return math::Lerp(static_cast<float3>(cube_a), static_cast<float3>(cube_b), t); }
 [[nodiscard]] constexpr float2 HexAxialToWorld(const int2 axial) { return HEX_SPACING * float2 { axial.x + axial.y * 0.5F, static_cast<f32>(axial.y) }; }
@@ -70,7 +72,6 @@ constexpr int3 HexCubeRound(const float3 cube_frac) {
     return HexAxialRound(coord);
 }
 
-// indexable with axial coordiantes
 template <class T> struct HexList {
     uint2 map_size { 0, 0 };
     List<T> data { 0 };
@@ -101,44 +102,4 @@ template <class T> struct HexList {
     constexpr List<T>::const_iterator cbegin() const { return data.cbegin(); }
     constexpr List<T>::const_iterator cend() const { return data.cend(); }
 };
-
-inline void VertHexAppend(List<Vertex>& vertecies, const f32 hex_size, const float2 hex_screen, const ColorF hex_color, const Optional<ColorF> hex_color_inner = std::nullopt) {
-    Array<float2, HEX_CORNERS> points { };
-    for (u32 i = 0; i < HEX_CORNERS; i++) { points[i] = hex_screen + HEX_ANGLE[i] * float2 { hex_size }; }
-    for (u32 i = 0; i < HEX_CORNERS; i++) {
-        vertecies.EmplaceBack(hex_screen, hex_color_inner.value_or(colors::ColorMul(hex_color, 1.2F)));
-        vertecies.EmplaceBack(points[i], hex_color);
-        vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color);
-    }
-}
-inline void VertAABBAppend(List<Vertex>& vertices, const AABB& aabb, const ColorF color) {
-    const Array<float2, 4> points { {
-        aabb.point + float2 { -aabb.size.x, aabb.size.y },
-        aabb.point + float2 { aabb.size.x, aabb.size.y },
-        aabb.point + float2 { aabb.size.x, -aabb.size.y },
-        aabb.point + float2 { -aabb.size.x, -aabb.size.y },
-    } };
-
-    vertices.EmplaceBack(Vertex { points[0], color });
-    vertices.EmplaceBack(Vertex { points[1], color });
-    vertices.EmplaceBack(Vertex { points[2], color });
-    vertices.EmplaceBack(Vertex { points[0], color });
-    vertices.EmplaceBack(Vertex { points[2], color });
-    vertices.EmplaceBack(Vertex { points[3], color });
-}
-inline void VertObbAppend(List<Vertex>& vertices, const OBB& obb, const ColorF color) {
-    const float2 half_size = obb.size * float2 { 0.5F };
-    const Array<float2, 4> points { {
-        obb.center + math::Rotate(float2 { -half_size.x, half_size.y }, obb.angle),
-        obb.center + math::Rotate(float2 { half_size.x, half_size.y }, obb.angle),
-        obb.center + math::Rotate(float2 { half_size.x, -half_size.y }, obb.angle),
-        obb.center + math::Rotate(float2 { -half_size.x, -half_size.y }, obb.angle),
-    } };
-    vertices.EmplaceBack(Vertex { points[0], color });
-    vertices.EmplaceBack(Vertex { points[1], color });
-    vertices.EmplaceBack(Vertex { points[2], color });
-    vertices.EmplaceBack(Vertex { points[0], color });
-    vertices.EmplaceBack(Vertex { points[2], color });
-    vertices.EmplaceBack(Vertex { points[3], color });
-}
 } // namespace pce

@@ -1,4 +1,5 @@
-﻿#pragma once
+module;
+
 #include <SDL3/SDL_render.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <functional>
@@ -14,9 +15,12 @@
 #include "0_engine/u_texture.hpp"
 #include "1_systems/r_camera_system.hpp"
 #include "SDL3/SDL_surface.h"
-#include "u_hex.hpp"
 
-namespace pce {
+export module pcg.hex.counter;
+
+import pcg.hex.core;
+
+export namespace pce {
 enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHELON_BATTALION, ECHELON_REGIMENT, ECHELON_BRIGADE, ECHELON_DIVISION, ECHELON_CORPS, ECHELON_ARMY };
 enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK };
 enum class CounterStyle : u8 { COUNTER_STYLE_NIEHORSTER, COUNTER_STYLE_NIEHORSTER_BIG, COUNTER_STYLE_REAL };
@@ -36,7 +40,6 @@ constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_REAL;
         case Echelon::ECHELON_ARMY: return "xxxx";
     }
     std::unreachable();
-    ;
 }
 
 [[nodiscard]] constexpr String UnitIconToString(const UnitIcon icon) {
@@ -47,7 +50,6 @@ constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_REAL;
         case UnitIcon::ICON_TANK: return "tnk";
     }
     std::unreachable();
-    ;
 }
 struct Counter {
     Color color_background;
@@ -113,7 +115,6 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
 
     const ui::FontSize pt_normal = static_cast<ui::FontSize>(counter_size.y * 0.25F);
     const ui::FontSize pt_small = static_cast<ui::FontSize>(counter_size.y * 0.15F);
-    // Pre-warm the font cache for both sizes before taking any references. Since second get can cause move interannly
     if (pt_normal >= ui::FONT_MIN_SIZE) { (void)font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_normal)); }
     if (pt_small >= ui::FONT_MIN_SIZE) { (void)font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_small)); }
     const Optional<std::reference_wrapper<const ui::Font>> font_normal_opt = pt_normal < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_normal));
@@ -124,7 +125,6 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         const float2 counter_center = camera.WorldToScreen(world);
         const float2 counter_point = counter_center - counter_size * float2 { 0.5F };
 
-        // draw static counters
         for (i32 i = static_cast<i32>(counter.stack.size()) - 1; i >= 0; i--) {
             const Counter& counter_stack = counter.stack[static_cast<u32>(i)];
             if (counter_stack.color_icon.a == 0) { continue; }
@@ -135,23 +135,19 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
 
             const AABB area_counter = AABB::FromCenter(counter_center + float2 { OFFSET_STACK * counter_size.x * static_cast<f32>(i) }, counter_size);
 
-            // shadow
             const AABB area_shadow = area_counter.WithOffset(float2 { OFFSET_SHADOW * counter_size.x });
             constexpr Color COLOR_SHADOW = colors::ColorWithAlpha(colors::BLACK, 0.5F);
             (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_SHADOW.r, COLOR_SHADOW.g, COLOR_SHADOW.b, COLOR_SHADOW.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_shadow);
 
-            // border
             (void)SDL_SetRenderDrawColor(window_state.renderer, counter_stack.color_border.r, counter_stack.color_border.g, counter_stack.color_border.b, counter_stack.color_border.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_counter);
 
-            // background
             const AABB area_background = area_counter.WithPadding(float2 { BORDER_THICKNESS * counter_size.x });
             (void)SDL_SetRenderDrawColor(window_state.renderer, counter_stack.color_background.r, counter_stack.color_background.g, counter_stack.color_background.b, counter_stack.color_background.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_background);
         }
 
-        // area
         const AABB area_icon_border = AABB::FromCenter(counter_center, counter_size * float2 { 0.6F, 0.4F }).WithOffset(counter_size * float2 { 0.0F, -0.05F });
         constexpr Color COLOR_ICON_BORDER { colors::BLACK };
         (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_ICON_BORDER.r, COLOR_ICON_BORDER.g, COLOR_ICON_BORDER.b, COLOR_ICON_BORDER.a);
@@ -177,25 +173,21 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             }
         }
 
-        //labels
         if (font_normal_opt.has_value()) {
             const ui::Font& font_normal = font_normal_opt.value();
             TTF_SetFontWrapAlignment(font_normal, TTF_HORIZONTAL_ALIGN_CENTER);
 
             (void)TTF_SetTextFont(counter.label_bottom, font_normal);
-            // (void)TTF_SetTextColorFloat(counter.label_bottom, 0.0F, 0.0F, 0.0F, 1.0F);
             (void)TTF_SetTextWrapWidth(counter.label_bottom, static_cast<i32>(counter_size.x));
             (void)TTF_DrawRendererText(counter.label_bottom, counter_point.x, counter_point.y + counter_size.y - static_cast<f32>(pt_normal));
 
             (void)TTF_SetTextFont(counter.label_top, font_normal);
-            // (void)TTF_SetTextColorFloat(counter.label_top, 0.0F, 0.0F, 0.0F, 1.0F);
             (void)TTF_SetTextWrapWidth(counter.label_top, static_cast<i32>(counter_size.x));
             (void)TTF_DrawRendererText(counter.label_top, counter_point.x, counter_point.y);
         }
 
         if (font_small_opt.has_value()) {
             const ui::Font& font_small = font_small_opt.value();
-            // surface bc then i draw vertically
             (void)TTF_SetTextFont(counter.label_vertical, font_small);
             (void)TTF_SetTextWrapWidth(counter.label_vertical, static_cast<i32>(counter_size.y));
             SDL_Surface* surface = SDL_CreateSurface(static_cast<i32>(counter_size.y), pt_small, SDL_PIXELFORMAT_ARGB8888);

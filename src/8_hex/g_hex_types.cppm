@@ -1,18 +1,23 @@
-#pragma once
+module;
+
 #include <assert.h>
 
 #include "0_engine/u_collections.hpp"
+#include "0_engine/u_texture.hpp"
 #include "0_engine/u_types.hpp"
-#include "8_hex/u_counter.hpp"
-#include "8_hex/u_hex.hpp"
 
-namespace pcg {
+export module pcg.hex.types;
+
+import pcg.hex.core;
+import pcg.hex.counter;
+
+export namespace pcg {
 using namespace pce;
 enum class CountryTag : u8 { TAG_NONE, TAG_GER, TAG_SOV, TAG_USA };
 enum class TerrainType : u8 { TERRAIN_TYPE_DEEP_OCEAN, TERRAIN_TYPE_OCEAN, TERRAIN_TYPE_HILL, TERRAIN_TYPE_BEACH, TERRAIN_TYPE_GRASS, TERRAIN_TYPE_MOUNTAIN, TERRAIN_TYPE_SNOW };
 enum class TerrainFeature : u8 { TERRAIN_FEATURE_GRASSLAND, TERRAIN_FEATURE_FIELD, TERRAIN_FEATURE_CITY, TERRAIN_FEATURE_VILLAGE, TERRAIN_FEATURE_WOODED_LIGHTLY, TERRAIN_FEATURE_WOODED_HEAVY, TERRAIN_FEATURE_MARSH };
 enum class PlayerAction : u8 { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_ACTION_DESELECT, PLAYER_ACTION_MOVE_CLICK, PLAYER_ACTION_MOVE_HOVER, PLAYER_ACTION_ATTACK_CLICK, PLAYER_ACTION_ATTACK_HOVER };
-enum class MapStyle : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER }; // colorschema.md
+enum class MapStyle : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER };
 enum class TerrainStyle : u8 { TERRAIN_STYLE_SILHOUETTES, TERRAIN_STYLE_ICONS };
 enum class RoadLevel : u8 { ROAD_LEVEL_NONE, ROAD_LEVEL_SMALL, ROAD_LEVEL_MEDIUM, ROAD_LEVEL_LARGE };
 constexpr MapStyle TERRAIN_SCHEME = MapStyle::SLATE_TABLE;
@@ -78,7 +83,6 @@ struct HexBitset2 {
     }
 };
 
-// efficient 30 bits used. 2 unused. 2^5 = 32 values per side
 struct HexBitset5 {
     static constexpr u8 BITS_PER_HEX = 5;
     static constexpr u32 MASK = 0b11111;
@@ -119,60 +123,65 @@ struct Hex {
 struct Unit {
     HandleOptional<Unit> parent;
     Array<char, 10> name { };
-    CountryTag tag;
-    Echelon echelon;
-    UnitIcon icon;
-    Color color;
+    CountryTag tag { };
+    Echelon echelon{};
+    UnitIcon icon{};
+    Color color{};
     int2 axial;
-    u32 move;
-    u32 squad_inf;
-    u32 squad_tank;
-    u32 squad_art;
+    u32 move{};
+    u32 squad_inf{};
+    u32 squad_tank{};
+    u32 squad_art{};
 
     [[nodiscard]] constexpr u32 dmg() const { return squad_inf / 3 + squad_art * 2 + squad_tank / 5 * 8; }
     [[nodiscard]] constexpr u32 def() const { return squad_inf / 3 * 2 + squad_art + squad_tank / 5; }
 };
 struct UnitGroup {
     List<Handle<Unit>> unit_handles;
-    u32 dmg_sum;
-    u32 def_sum;
-    u32 move_min;
-    u32 move_max;
+    u32 dmg_sum{};
+    u32 def_sum{};
+    u32 move_min{};
+    u32 move_max{};
 };
 struct PseudoTarget {
     int2 axial { };
     List<Handle<Unit>> units;
 };
 struct PseudoStates {
-    Optional<int2> axial_hover;
-    Optional<int2> axial_select;
-    Optional<UnitGroup> unit_selection;
+    Optional<int2> axial_hover{};
+    Optional<int2> axial_select{};
+    Optional<UnitGroup> unit_selection{};
 };
 struct AxialAndCost {
-    int2 axial;
-    u32 cost;
+    int2 axial{};
+    u32 cost{};
 };
 struct AxialAndEdge {
-    int2 axial;
-    u8 edge;
+    int2 axial{};
+    u8 edge {};
     b8 operator==(const AxialAndEdge& other) const = default;
 };
 struct HexState {
     HexList<Hex> hex_map;
     HandleList<Unit> units;
 
-    // cache logic
     CountryTag player_tag;
     PlayerAction player_action;
     PseudoStates pseudo_states;
     UnorderedMap<int2, List<Handle<Unit>>> units_by_axial;
 
-    // cache oob
-    UnorderedMap<Handle<Unit>, List<Handle<Unit>>> units_oob; // roots are stored as optional
+    UnorderedMap<Handle<Unit>, List<Handle<Unit>>> units_oob;
 
-    // cache drawing
     Pool<CounterStack> counters;
     Pool<Label> label_pool;
     List<Vertex> verts { };
 };
 } // namespace pcg
+
+export template <> struct std::hash<pcg::AxialAndEdge> {
+    usize operator()(const pcg::AxialAndEdge& axial_and_edge) const noexcept {
+        usize seed = std::hash<int2> { }(axial_and_edge.axial);
+        HashCombine(seed, axial_and_edge.edge);
+        return seed;
+    }
+};

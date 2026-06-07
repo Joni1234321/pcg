@@ -11,12 +11,53 @@ module;
 #include "0_engine/u_types.hpp"
 #include "0_engine/u_util.hpp"
 #include "1_systems/r_camera_system.hpp"
-#include "8_hex/g_hex_types.hpp"
-#include "8_hex/u_hex.hpp"
 
 export module pcg.hex.render;
 
+import pcg.hex.core;
+import pcg.hex.types;
+
 export namespace pcg {
+inline void VertHexAppend(List<Vertex>& vertecies, const f32 hex_size, const float2 hex_screen, const ColorF hex_color, const Optional<ColorF> hex_color_inner = std::nullopt) {
+    Array<float2, HEX_CORNERS> points { };
+    for (u32 i = 0; i < HEX_CORNERS; i++) { points[i] = hex_screen + HEX_ANGLE[i] * float2 { hex_size }; }
+    for (u32 i = 0; i < HEX_CORNERS; i++) {
+        vertecies.EmplaceBack(hex_screen, hex_color_inner.value_or(colors::ColorMul(hex_color, 1.2F)));
+        vertecies.EmplaceBack(points[i], hex_color);
+        vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color);
+    }
+}
+inline void VertAabbAppend(List<Vertex>& vertices, const AABB& aabb, const ColorF color) {
+    const Array<float2, 4> points { {
+        aabb.point + float2 { -aabb.size.x, aabb.size.y },
+        aabb.point + float2 { aabb.size.x, aabb.size.y },
+        aabb.point + float2 { aabb.size.x, -aabb.size.y },
+        aabb.point + float2 { -aabb.size.x, -aabb.size.y },
+    } };
+
+    vertices.EmplaceBack(Vertex { points[0], color });
+    vertices.EmplaceBack(Vertex { points[1], color });
+    vertices.EmplaceBack(Vertex { points[2], color });
+    vertices.EmplaceBack(Vertex { points[0], color });
+    vertices.EmplaceBack(Vertex { points[2], color });
+    vertices.EmplaceBack(Vertex { points[3], color });
+}
+inline void VertObbAppend(List<Vertex>& vertices, const OBB& obb, const ColorF color) {
+    const float2 half_size = obb.size * float2 { 0.5F };
+    const Array<float2, 4> points { {
+        obb.center + math::Rotate(float2 { -half_size.x, half_size.y }, obb.angle),
+        obb.center + math::Rotate(float2 { half_size.x, half_size.y }, obb.angle),
+        obb.center + math::Rotate(float2 { half_size.x, -half_size.y }, obb.angle),
+        obb.center + math::Rotate(float2 { -half_size.x, -half_size.y }, obb.angle),
+    } };
+    vertices.EmplaceBack(Vertex { points[0], color });
+    vertices.EmplaceBack(Vertex { points[1], color });
+    vertices.EmplaceBack(Vertex { points[2], color });
+    vertices.EmplaceBack(Vertex { points[0], color });
+    vertices.EmplaceBack(Vertex { points[2], color });
+    vertices.EmplaceBack(Vertex { points[3], color });
+}
+
 [[nodiscard]] float2 HexTileJitter(const int2 axial) {
     const u32 h = pce::noise::Hash(axial.x, axial.y);
     const f32 fx = (static_cast<f32>(h & 0xFFFFU) / 65535.0F) * 2.0F - 1.0F;
@@ -242,8 +283,8 @@ void AppendRiverMesh(HexState& hex_state, const CameraState& camera) {
                         const float2 screen_corner_a = screen + HEX_ANGLE[side % HEX_CORNERS] * float2 { camera.scale };
                         const float2 screen_corner_b = screen + HEX_ANGLE[(side + 1U) % HEX_CORNERS] * float2 { camera.scale };
                         VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_corner_a, screen_corner_b, width), color);
-                        VertAABBAppend(hex_state.verts, AABB::FromCenter(screen_corner_a, float2 { 10.0F }), colors::BLUE);
-                        VertAABBAppend(hex_state.verts, AABB::FromCenter(screen_corner_b, float2 { 10.0F }), colors::RED);
+                        VertAabbAppend(hex_state.verts, AABB::FromCenter(screen_corner_a, float2 { 10.0F }), colors::BLUE);
+                        VertAabbAppend(hex_state.verts, AABB::FromCenter(screen_corner_b, float2 { 10.0F }), colors::RED);
                         int2 axial_neighbour = axial + HEX_AXIAL_NEIGHBOURS[side];
                         float2 screen_neighbour = camera.WorldToScreen(HexAxialToWorld(axial_neighbour));
                         VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_neighbour, screen, 10.0f), colors::BROWN);
@@ -258,11 +299,3 @@ void AppendRiverMesh(HexState& hex_state, const CameraState& camera) {
     append_pass(RIVER_HIGHLIGHT_WIDTH * camera.scale, colors::RIVER_HIGHLIGHT_BLUE);
 }
 }
-
-export template <> struct std::hash<pcg::AxialAndEdge> {
-    usize operator()(const pcg::AxialAndEdge& axial_and_side) const noexcept {
-        usize seed = std::hash<int2> { }(axial_and_side.axial);
-        HashCombine(seed, axial_and_side.edge);
-        return seed;
-    }
-};
