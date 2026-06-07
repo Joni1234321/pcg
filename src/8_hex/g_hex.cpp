@@ -1,4 +1,4 @@
-﻿#include "g_hex.hpp"
+﻿#include "g_hex_terrain.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -21,8 +21,6 @@
 #include "0_engine/u_util.hpp"
 #include "1_systems/i_input_system.hpp"
 #include "1_systems/r_camera_system.hpp"
-#include "1_systems/r_counter_system.hpp"
-#include "1_systems/r_hex_system.hpp"
 #include "1_systems/r_render.hpp"
 #include "1_systems/r_ui_node.hpp"
 #include "1_systems/r_ui_node_data.hpp"
@@ -30,12 +28,13 @@
 #include "1_systems/t_tick_system.hpp"
 #include "1_systems/u_animation_system.hpp"
 #include "1_systems/u_orchestra.hpp"
-#include "SDL3_ttf/SDL_ttf.h"
-#include "g_arcade.hpp"
-
+#include "8_hex/r_hex.hpp"
+#include "8_hex/u_counter.hpp"
+#include "8_hex/u_hex.hpp"
 #include "SDL3/SDL_keycode.h"
 #include "SDL3/SDL_pixels.h"
-#include "SDL3/SDL_render.h"
+#include "SDL3_ttf/SDL_ttf.h"
+#include "g_arcade.hpp"
 
 namespace pcg {
 using namespace pce;
@@ -55,7 +54,7 @@ List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start
     UnorderedMap<int2, int2> came_from;
     UnorderedMap<int2, u32> cost_at_axial;
 
-    frontier.push(AxialAndCost { .cost = 0, .axial = axial_start });
+    frontier.push(AxialAndCost { .axial = axial_start, .cost = 0 });
     came_from[axial_start] = axial_start;
     cost_at_axial[axial_start] = 0;
 
@@ -79,13 +78,13 @@ List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start
             if (!cost_at_axial.contains(axial_next) || cost_new < cost_at_axial[axial_next]) {
                 const u32 heuristic_distance = HexAxialDistance(axial_next, axial_end);
                 cost_at_axial[axial_next] = cost_new;
-                frontier.push({ .cost = cost_new + heuristic_distance, .axial = axial_next });
+                frontier.push({ .axial = axial_next, .cost = cost_new + heuristic_distance });
                 came_from[axial_next] = current.axial;
             }
         }
     }
     if (came_from.contains(axial_end)) {
-        for (int2 axial = axial_end; axial != axial_start; axial = came_from[axial]) { axial_path.EmplaceBack(AxialAndCost { .cost = cost_at_axial[axial], .axial = axial }); }
+        for (int2 axial = axial_end; axial != axial_start; axial = came_from[axial]) { axial_path.EmplaceBack(AxialAndCost { .axial = axial, .cost = cost_at_axial[axial] }); }
         std::ranges::reverse(axial_path);
     }
     return axial_path;

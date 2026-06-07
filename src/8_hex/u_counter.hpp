@@ -12,8 +12,9 @@
 #include "0_engine/u_colors.hpp"
 #include "0_engine/u_fonts.hpp"
 #include "0_engine/u_texture.hpp"
-#include "r_camera_system.hpp"
-#include "r_hex_system.hpp"
+#include "1_systems/r_camera_system.hpp"
+#include "SDL3/SDL_surface.h"
+#include "u_hex.hpp"
 
 namespace pce {
 enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHELON_BATTALION, ECHELON_REGIMENT, ECHELON_BRIGADE, ECHELON_DIVISION, ECHELON_CORPS, ECHELON_ARMY };

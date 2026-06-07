@@ -114,8 +114,8 @@ constexpr Color HEX_HOVER { 190U, 205U, 175U }; // muted sage-green hover ring
 constexpr Color HEX_SELECT { 210U, 165U, 30U }; // warm amber-gold selection ring
 
 // Roads & rivers
-constexpr Color ROAD_TAN { 196U, 168U, 120U };             // warm dirt-road body
-constexpr Color ROAD_CASING_BROWN { 48U, 32U, 18U };       // dark brown outline
+constexpr Color ROAD_TAN { 196U, 168U, 120U };       // warm dirt-road body
+constexpr Color ROAD_CASING_BROWN { 48U, 32U, 18U }; // dark brown outline
 constexpr Color ROAD_GREY { 70U, 65U, 58U };
 constexpr Color RIVER_BLUE { 78U, 138U, 196U };            // mid river body
 constexpr Color RIVER_DEEP_BLUE { 22U, 52U, 92U };         // dark river outline
