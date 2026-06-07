@@ -1,12 +1,23 @@
-#pragma once
+module;
+#include <algorithm>
+#include <cmath>
 #include <utility>
+
+#include "0_engine/g_globals.hpp"
+#include "0_engine/r_window_state.hpp"
+#include "0_engine/u_assets.hpp"
 #include "0_engine/u_colors.hpp"
+#include "0_engine/u_texture.hpp"
 #include "0_engine/u_types.hpp"
 #include "0_engine/u_util.hpp"
+#include "1_systems/r_camera_system.hpp"
 #include "8_hex/g_hex_types.hpp"
+#include "8_hex/u_hex.hpp"
 
-namespace pcg {
-[[nodiscard]] inline float2 HexTileJitter(const int2 axial) {
+export module pcg.hex.render;
+
+export namespace pcg {
+[[nodiscard]] float2 HexTileJitter(const int2 axial) {
     const u32 h = pce::noise::Hash(axial.x, axial.y);
     const f32 fx = (static_cast<f32>(h & 0xFFFFU) / 65535.0F) * 2.0F - 1.0F;
     const f32 fy = (static_cast<f32>((h >> 16) & 0xFFFFU) / 65535.0F) * 2.0F - 1.0F;
@@ -37,9 +48,8 @@ namespace pcg {
 
 [[nodiscard]] constexpr Color TerrainToColorScheme(const TerrainType terrain) {
     if constexpr (TERRAIN_SCHEME == MapStyle::CIV_VIBRANT) {
-        return TerrainToColor(terrain); // saturated default (existing palette)
+        return TerrainToColor(terrain);
     } else if constexpr (TERRAIN_SCHEME == MapStyle::SLATE_TABLE) {
-        // cool, desaturated - like a board game printed on slate.
         switch (terrain) {
             case TerrainType::TERRAIN_TYPE_DEEP_OCEAN: return Color { 28U, 38U, 55U };
             case TerrainType::TERRAIN_TYPE_OCEAN: return Color { 52U, 72U, 96U };
@@ -49,7 +59,7 @@ namespace pcg {
             case TerrainType::TERRAIN_TYPE_MOUNTAIN: return Color { 92U, 92U, 100U };
             case TerrainType::TERRAIN_TYPE_SNOW: return Color { 198U, 204U, 212U };
         }
-    } else { // HOI4_PAPER - warm parchment / political-map feel.
+    } else {
         switch (terrain) {
             case TerrainType::TERRAIN_TYPE_DEEP_OCEAN: return Color { 88U, 112U, 142U };
             case TerrainType::TERRAIN_TYPE_OCEAN: return Color { 130U, 158U, 184U };
@@ -83,13 +93,13 @@ struct TerrainFeatureTextures {
     HandleOptional<Texture> marsh;
 
     explicit TerrainFeatureTextures(const RelativePath& dir) {
-        grassland = globalData.Create<Texture>(Asset(dir / "grassland.png"));
-        field = globalData.Create<Texture>(Asset(dir / "field.png"));
-        city = globalData.Create<Texture>(Asset(dir / "city.png"));
-        village = globalData.Create<Texture>(Asset(dir / "village.png"));
-        wooded_lightly = globalData.Create<Texture>(Asset(dir / "wooded-lightly.png"));
-        wooded_heavy = globalData.Create<Texture>(Asset(dir / "wooded-heavy.png"));
-        marsh = globalData.Create<Texture>(Asset(dir / "marsh.png"));
+        grassland = pce::globalData.Create<pce::Texture>(pce::Asset(dir / "grassland.png"));
+        field = pce::globalData.Create<pce::Texture>(pce::Asset(dir / "field.png"));
+        city = pce::globalData.Create<pce::Texture>(pce::Asset(dir / "city.png"));
+        village = pce::globalData.Create<pce::Texture>(pce::Asset(dir / "village.png"));
+        wooded_lightly = pce::globalData.Create<pce::Texture>(pce::Asset(dir / "wooded-lightly.png"));
+        wooded_heavy = pce::globalData.Create<pce::Texture>(pce::Asset(dir / "wooded-heavy.png"));
+        marsh = pce::globalData.Create<pce::Texture>(pce::Asset(dir / "marsh.png"));
     }
     [[nodiscard]] HandleOptional<Texture> ForFeature(const TerrainFeature feature) const {
         switch (feature) {
@@ -111,8 +121,7 @@ struct TerrainFeatureTextureStack {
 inline b8 SDL_RenderGeometry(SDL_Renderer* renderer, SDL_Texture* texture, const Span<const Vertex> vertices, const Span<const i32> indices) { return SDL_RenderGeometry(renderer, texture, reinterpret_cast<const SDL_Vertex*>(vertices.data()), vertices.size(), indices.data(), indices.size()); }
 inline b8 SDL_RenderGeometry(SDL_Renderer* renderer, SDL_Texture* texture, const Span<const Vertex> vertices) { return SDL_RenderGeometry(renderer, texture, reinterpret_cast<const SDL_Vertex*>(vertices.data()), vertices.size(), nullptr, 0); }
 
-// ai genrated border
-inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera) {
+void AppendCountryBorders(HexState& hex_state, const CameraState& camera) {
     for (u32 i = 0; i < hex_state.hex_map.Size(); i++) {
         const Hex& hex = hex_state.hex_map.data[i];
         if (hex.owner.tag == CountryTag::TAG_NONE) { continue; }
@@ -120,7 +129,6 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
         const float2 world_center = HexAxialToWorld(axial);
         const float2 screen_center = camera.WorldToScreen(world_center);
         const ColorF color = static_cast<ColorF>(CountryTagToColor(hex.owner.tag));
-        u32 edge_index = 0U;
         for (u32 s = 0; s < HEX_CORNERS; s++) {
             const int2 axial_neighbour = axial + HEX_AXIAL_NEIGHBOURS[s];
             if (!hex_state.hex_map.Contains(axial_neighbour) || hex_state.hex_map[axial_neighbour].owner.tag != hex.owner.tag) {
@@ -137,7 +145,6 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
                 hex_state.verts.EmplaceBack(screen_outer_b, color);
                 hex_state.verts.EmplaceBack(screen_outer_a, color);
 
-                // tooth
                 const float2 screen_anchor = camera.WorldToScreen(world_center + (local_angle_a + local_angle_b) * float2(0.5F));
                 const float2 local_edge = screen_inner_b - screen_inner_a;
                 const f32 length_edge_squared = math::LengthSq(local_edge);
@@ -162,7 +169,6 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
                         hex_state.verts.EmplaceBack(screen_apex, color);
                     }
                 }
-                edge_index++;
             }
         }
     }
@@ -179,7 +185,7 @@ inline void AppendCountryBorders(HexState& hex_state, const CameraState& camera)
         default: return Color { 255U, 255U, 255U };
     }
 }
-inline void AppendTerrainFeatures(HexState& hex_state, const CameraState& camera) {
+void AppendTerrainFeatures(HexState& hex_state, const CameraState& camera) {
     SDL_Renderer* renderer = Singleton::Get<WindowState>().renderer;
     const TerrainFeatureTextureStack& stack = Singleton::Get<TerrainFeatureTextureStack>();
     const TerrainFeatureTextures& textures = TERRAIN_FEATURE_THEME == TerrainStyle::TERRAIN_STYLE_ICONS ? stack.terrain_features_icons : stack.terrain_features_silhouettes;
@@ -188,7 +194,7 @@ inline void AppendTerrainFeatures(HexState& hex_state, const CameraState& camera
         if (hex.terrain_feature != TerrainFeature::TERRAIN_FEATURE_GRASSLAND) {
             const HandleOptional<Texture> texture_handle = textures.ForFeature(hex.terrain_feature);
             if (texture_handle.IsValid()) {
-                SDL_Texture* texture = globalData[texture_handle.GetHandle()];
+                SDL_Texture* texture = pce::globalData[texture_handle.GetHandle()];
                 const Color color = TerrainFeatureToTint(hex.terrain_feature);
                 (void)SDL_SetTextureColorMod(texture, color.r, color.g, color.b);
                 const int2 axial = hex_state.hex_map.IndexToAxial(i);
@@ -201,7 +207,7 @@ inline void AppendTerrainFeatures(HexState& hex_state, const CameraState& camera
     }
 }
 
-inline void AppendRoadMesh(HexState& hex_state, const CameraState& camera) {
+void AppendRoadMesh(HexState& hex_state, const CameraState& camera) {
     for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
         const Hex& hex = hex_state.hex_map.data[i];
         if (hex.roads.Any()) {
@@ -223,7 +229,7 @@ inline void AppendRoadMesh(HexState& hex_state, const CameraState& camera) {
     }
 }
 
-inline void AppendRiverMesh(HexState& hex_state, const CameraState& camera) {
+void AppendRiverMesh(HexState& hex_state, const CameraState& camera) {
     auto append_pass = [&](const f32 width, const ColorF color) {
         for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
             const Hex& hex = hex_state.hex_map.data[i];
@@ -231,7 +237,7 @@ inline void AppendRiverMesh(HexState& hex_state, const CameraState& camera) {
                 const int2 axial = hex_state.hex_map.IndexToAxial(i);
                 const float2 world = HexAxialToWorld(axial);
                 const float2 screen = camera.WorldToScreen(world);
-                for (u32 side = 0U; side < HEX_CORNERS; side++) { // efficient only cover half of sides.
+                for (u32 side = 0U; side < HEX_CORNERS; side++) {
                     if (hex.river_edges.Test(side)) {
                         const float2 screen_corner_a = screen + HEX_ANGLE[side % HEX_CORNERS] * float2 { camera.scale };
                         const float2 screen_corner_b = screen + HEX_ANGLE[(side + 1U) % HEX_CORNERS] * float2 { camera.scale };
@@ -251,10 +257,9 @@ inline void AppendRiverMesh(HexState& hex_state, const CameraState& camera) {
     append_pass(RIVER_WIDTH * camera.scale, colors::RIVER_BLUE);
     append_pass(RIVER_HIGHLIGHT_WIDTH * camera.scale, colors::RIVER_HIGHLIGHT_BLUE);
 }
+}
 
-} // namespace pcg
-
-template <> struct std::hash<pcg::AxialAndEdge> {
+export template <> struct std::hash<pcg::AxialAndEdge> {
     usize operator()(const pcg::AxialAndEdge& axial_and_side) const noexcept {
         usize seed = std::hash<int2> { }(axial_and_side.axial);
         HashCombine(seed, axial_and_side.edge);

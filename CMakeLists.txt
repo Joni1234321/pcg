@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.30)
 
 project(pcg VERSION 1.0)
 
@@ -56,6 +56,12 @@ add_executable(pcg
                #src/g_game.cpp
                src/1_systems/t_debug_system.cpp
                src/1_systems/r_ui_node.cpp
+)
+
+target_sources(pcg
+               PRIVATE
+               FILE_SET cxx_modules TYPE CXX_MODULES FILES
+               src/8_hex/r_hex.ixx
 )
 
 target_link_libraries(pcg

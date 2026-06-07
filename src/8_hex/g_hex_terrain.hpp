@@ -6,8 +6,9 @@
 #include "0_engine/u_types.hpp"
 #include "0_engine/u_util.hpp"
 #include "8_hex/g_hex_types.hpp"
-#include "8_hex/r_hex.hpp"
 #include "8_hex/u_hex.hpp"
+
+import pcg.hex.render;
 
 namespace pcg {
 [[nodiscard]] constexpr u32 TerrainToMovementCost(const TerrainType terrain) {

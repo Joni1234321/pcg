@@ -28,13 +28,14 @@
 #include "1_systems/t_tick_system.hpp"
 #include "1_systems/u_animation_system.hpp"
 #include "1_systems/u_orchestra.hpp"
-#include "8_hex/r_hex.hpp"
 #include "8_hex/u_counter.hpp"
 #include "8_hex/u_hex.hpp"
 #include "SDL3/SDL_keycode.h"
 #include "SDL3/SDL_pixels.h"
 #include "SDL3_ttf/SDL_ttf.h"
 #include "g_arcade.hpp"
+
+import pcg.hex.render;
 
 namespace pcg {
 using namespace pce;
