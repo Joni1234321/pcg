@@ -3,7 +3,7 @@
 
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_ecs.hpp"
-#include "0_engine/u_types.hpp"
+import pce.engine.types;
 
 namespace pce {
 enum class AnimationState : u8 { once, recycle, repeat, persistent, persistent_stopped };
@@ -87,7 +87,7 @@ inline b8 AnimationSystem::IsRunning(const Handle<Animation> animation_handle) {
         case AnimationState::persistent: return true;
         case AnimationState::recycle:
         case AnimationState::persistent_stopped: return false;
-        default: STL_ASSERT(false, std::format("Unknown animation state {}", data[animation_handle].state)); return false;
+        default: assert(false); return false; // , std::format("Unknown animation state {}", data[animation_handle].state)); return false;
     }
 }
 inline void AnimationSystem::operator()() const {

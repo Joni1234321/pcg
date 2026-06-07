@@ -1,5 +1,6 @@
-#include "0_engine/u_types.hpp"
 #include "g_components.hpp"
+
+import pce.engine.types;
 
 //TODO: PLYER  PLANET CONCEPT CONSTRAINTS
 namespace pcg {

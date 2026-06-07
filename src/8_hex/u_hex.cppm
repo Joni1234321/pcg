@@ -4,12 +4,13 @@ module;
 #include <array>
 
 #include "0_engine/u_collections.hpp"
-#include "0_engine/u_colors.hpp"
 #include "0_engine/u_texture.hpp"
 #include "0_engine/u_util.hpp"
 #include "SDL3/SDL_rect.h"
 
 export module pcg.hex.core;
+
+import pce.engine.colors;
 
 export namespace pce {
 // https://www.redblobgames.com/grids/hexagons/

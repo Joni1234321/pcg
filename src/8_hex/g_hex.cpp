@@ -5,11 +5,11 @@
 #include <optional>
 #include <ranges>
 #include <string>
+#include <queue>
 
 #include "0_engine/g_globals.hpp"
 #include "0_engine/r_window_state.hpp"
 #include "0_engine/u_collections.hpp"
-#include "0_engine/u_colors.hpp"
 #include "0_engine/u_fonts.hpp"
 #include "0_engine/u_texture.hpp"
 #include "0_engine/u_util.hpp"
@@ -31,6 +31,7 @@ import pcg.hex.counter;
 import pcg.hex.types;
 import pcg.hex.terrain;
 import pcg.hex.render;
+import pce.engine.colors;
 
 namespace pcg {
 using namespace pce;

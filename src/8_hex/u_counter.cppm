@@ -10,7 +10,6 @@ module;
 #include "0_engine/r_window_state.hpp"
 #include "0_engine/u_assets.hpp"
 #include "0_engine/u_collections.hpp"
-#include "0_engine/u_colors.hpp"
 #include "0_engine/u_fonts.hpp"
 #include "0_engine/u_texture.hpp"
 #include "1_systems/r_camera_system.hpp"
@@ -18,6 +17,7 @@ module;
 
 export module pcg.hex.counter;
 
+import pce.engine.colors;
 import pcg.hex.core;
 
 export namespace pce {

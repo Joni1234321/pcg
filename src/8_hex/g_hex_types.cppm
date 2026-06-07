@@ -4,10 +4,10 @@ module;
 
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_texture.hpp"
-#include "0_engine/u_types.hpp"
 
 export module pcg.hex.types;
 
+import pce.engine.types;
 import pcg.hex.core;
 import pcg.hex.counter;
 

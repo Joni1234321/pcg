@@ -61,6 +61,8 @@ add_executable(pcg
 target_sources(pcg
                PRIVATE
                FILE_SET cxx_modules TYPE CXX_MODULES FILES
+               src/0_engine/u_types.cppm
+               src/0_engine/u_colors.cppm
                src/8_hex/u_hex.cppm
                src/8_hex/u_counter.cppm
                src/8_hex/g_hex_types.cppm

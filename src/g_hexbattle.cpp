@@ -11,9 +11,7 @@
 #include "g_arcade.hpp"
 
 #include "0_engine/u_collections.hpp"
-#include "0_engine/u_colors.hpp"
 #include "0_engine/u_logger.hpp"
-#include "0_engine/u_types.hpp"
 #include "0_engine/u_util.hpp"
 
 #include "1_systems/i_input_system.hpp"
@@ -21,6 +19,9 @@
 #include "1_systems/r_ui_node.hpp"
 #include "1_systems/t_debug_system.hpp"
 #include "1_systems/t_tick_system.hpp"
+
+import pce.engine.colors;
+import pce.engine.types;
 
 namespace pcg::hexbattle {
 using namespace pce;

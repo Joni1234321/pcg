@@ -3,6 +3,7 @@ _deps
 .cmake
 cmake-build-debug
 3rdparty/
+3rdparty-cache/
 build/
 CMakeUserPresets.json
 .vscode

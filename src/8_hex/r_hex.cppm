@@ -6,14 +6,14 @@ module;
 #include "0_engine/g_globals.hpp"
 #include "0_engine/r_window_state.hpp"
 #include "0_engine/u_assets.hpp"
-#include "0_engine/u_colors.hpp"
 #include "0_engine/u_texture.hpp"
-#include "0_engine/u_types.hpp"
 #include "0_engine/u_util.hpp"
 #include "1_systems/r_camera_system.hpp"
 
 export module pcg.hex.render;
 
+import pce.engine.colors;
+import pce.engine.types;
 import pcg.hex.core;
 import pcg.hex.types;
 

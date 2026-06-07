@@ -3,9 +3,10 @@
 
 #include "0_engine/g_globals.hpp"
 #include "0_engine/r_window_state.hpp"
-#include "0_engine/u_types.hpp"
 #include "0_engine/u_util.hpp"
 #include "i_input_system.hpp"
+
+import pce.engine.types;
 
 namespace pce {
 struct CameraState {

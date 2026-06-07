@@ -13,7 +13,8 @@
 
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_ecs.hpp"
-#include "0_engine/u_types.hpp"
+
+import pce.engine.types;
 
 namespace pce {
 // Demangle a type name. GCC/Clang return the Itanium-mangled form from

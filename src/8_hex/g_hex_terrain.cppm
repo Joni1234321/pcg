@@ -5,11 +5,11 @@ module;
 #include <ranges>
 
 #include "0_engine/u_collections.hpp"
-#include "0_engine/u_types.hpp"
 #include "0_engine/u_util.hpp"
 
 export module pcg.hex.terrain;
 
+import pce.engine.types;
 import pcg.hex.core;
 import pcg.hex.types;
 import pcg.hex.render;

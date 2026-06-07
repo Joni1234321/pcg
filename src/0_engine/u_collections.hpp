@@ -14,8 +14,9 @@
 #include <utility>
 #include <vector>
 
-#include "0_engine/u_types.hpp"
 #include "0_engine/u_util.hpp"
+
+import pce.engine.types;
 
 namespace pce {
 template <typename T> concept TriviallyConstructible = std::is_trivially_constructible_v<T>;
@@ -225,15 +226,15 @@ template <typename T, typename H = T> struct HandleList {
     [[nodiscard]] constexpr const T& back() const noexcept { return data.back(); }
 
     [[nodiscard]] constexpr u32 HandleToIndex(const Handle<H> handle) const noexcept {
-        STL_ASSERT(ValidHandle(handle), "handle invalidated");
+        assert(ValidHandle(handle));
         return handle.id - offset_handle.id;
     }
     [[nodiscard]] constexpr Handle<H> IndexToHandle(const u32 index) const noexcept {
-        STL_ASSERT(index < size(), "index bigger than size");
+        assert(index < size());
         return ::Handle<H> { offset_handle.id + index };
     }
     [[nodiscard]] constexpr Handle<H> IteratorToHandle(const_iterator iterator) const noexcept {
-        STL_ASSERT(iterator > end(), "iterator out of range");
+        assert(iterator > end()); // iterator out of range
         return ::Handle<H> { offset_handle.id + static_cast<u32>(std::distance(begin(), iterator)) };
     }
     [[nodiscard]] constexpr b8 ValidHandle(const Handle<H> handle) const noexcept { return handle.id - offset_handle.id < size(); }
@@ -286,7 +287,7 @@ public:
     [[nodiscard]] constexpr b8 HasKey(const K& key) const { return std::ranges::find(keys, key) != keys.end(); }
     [[nodiscard]] constexpr V& operator[](const K& key) {
         const u32 pos = keys.IndexOf(key);
-        STL_ASSERT(pos < values.size(), "FlatMap key not found");
+        assert(pos < values.size()); // FlatMap key not found
         return values[pos];
     }
 

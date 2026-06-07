@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <concepts>
 #include <numbers>
@@ -8,7 +9,7 @@
 #include <stdexcept>
 #include <utility>
 
-#include "0_engine/u_types.hpp"
+import pce.engine.types;
 
 namespace pce {
 template <typename T, template <typename> class Skill> concept HasASkill = std::derived_from<T, Skill<T>>;
@@ -20,7 +21,7 @@ template <typename To, typename From> constexpr To& Reinterpret(From& from) { re
     return distribution(gen);
 }
 [[nodiscard]] inline u32 Rand(const u32 max) {
-    STL_ASSERT(max > 0, "max must be greater than 0");
+    assert(max > 0);
     return Rand() % max;
 }
 [[nodiscard]] inline u32 Rand(const u32 min, const u32 max) { return min + Rand(max - min); }

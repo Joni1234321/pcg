@@ -8,7 +8,8 @@
 #include "0_engine/u_assets.hpp"
 #include "0_engine/u_fonts.hpp"
 #include "0_engine/u_texture.hpp"
-#include "0_engine/u_types.hpp"
+
+import pce.engine.types;
 
 namespace pce {
 static const RelativePath PATH_FONT_NORMAL { "Titillium_Web/TitilliumWeb-Regular.ttf" };

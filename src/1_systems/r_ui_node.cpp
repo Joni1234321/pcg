@@ -5,10 +5,11 @@
 #include <span>
 
 #include "0_engine/r_window.hpp"
-#include "0_engine/u_colors.hpp"
-#include "0_engine/u_types.hpp"
 
 #include "1_systems/i_input_system.hpp"
+
+import pce.engine.colors;
+import pce.engine.types;
 
 namespace pce::ui {
 const Font& FontCollection::GetFontNormal(FontSizes size) const {
@@ -28,14 +29,14 @@ const Font& FontCollection::GetFontBold(FontSizes size) const {
     size = math::Max(size, static_cast<FontSizes>(FONT_MIN_SIZE));
     if (!fonts_bold.HasKey(size)) {
         fonts_bold.EmplaceBack(size, font_path_bold, static_cast<FontSize>(size));
-        STL_ASSERT(!fonts_bold[size].FailedLoading(), "Font failed to load — GetFontBold will return invalid font");
+        assert(!fonts_bold[size].FailedLoading()); // Font failed to load — GetFontBold will return invalid font
     }
     return fonts_bold[size];
 }
 
 // NodeTree
 Handle<Node> NodeTree::AddRoot() {
-    STL_ASSERT(styles.empty(), "Setting root non empty tree");
+    assert(styles.empty()); // Setting root non empty tree
     (void)styles.EmplaceBack();
     (void)node_properties.EmplaceBack();
     (void)node_ttf_texts.EmplaceBack(nullptr);
@@ -45,7 +46,7 @@ Handle<Node> NodeTree::AddRoot() {
     return Root();
 }
 Handle<Node> NodeTree::AddNode(const Handle<Node> parent) {
-    STL_ASSERT(!styles.empty(), "Adding node before root");
+    assert(!styles.empty()); // Adding node before root
     const Handle<Node> node = styles.EmplaceBack();
     (void)node_properties.EmplaceBack();
     (void)node_ttf_texts.EmplaceBack(nullptr);
@@ -53,7 +54,7 @@ Handle<Node> NodeTree::AddNode(const Handle<Node> parent) {
     (void)parents.PushBack(parent);
     (void)children.EmplaceBack();
     (void)subtree_roots.EmplaceBack(Root().id);
-    STL_ASSERT(node.id != parent.id, "Assigning node to itself. Recursion!");
+    assert(node.id != parent.id); // Assigning node to itself. Recursion!
     return node;
 }
 Handle<Node> NodeTree::CloneNode(const Handle<Node> clone) {
@@ -63,7 +64,7 @@ Handle<Node> NodeTree::CloneNode(const Handle<Node> clone) {
     return node;
 }
 void NodeTree::DetachNode(const Handle<Node> node) {
-    STL_ASSERT(node.id != Root().id, "trying to detach root");
+    assert(node.id != Root().id); // trying to detach root
     const Handle parent = parents[node];
     children[parent].erase_value(node);
 }
@@ -491,9 +492,9 @@ void RenderNodeSystem::operator()() const {
                 }
             }
         }
-        STL_ASSERT(rectangles.empty(), "Textures size mismatch");
-        STL_ASSERT(textures.empty(), "Textures size mismatch");
-        STL_ASSERT(texts.empty(), "Texts size mismatch");
+        assert(rectangles.empty()); // Textures size mismatch
+        assert(textures.empty()); // Textures size mismatch
+        assert(texts.empty()); // Texts size mismatch
     }
 }
 } // namespace pce::ui

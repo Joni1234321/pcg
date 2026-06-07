@@ -3,7 +3,7 @@
 #include "g_components.hpp"
 
 #include "0_engine/u_logger.hpp"
-#include "0_engine/u_types.hpp"
+import pce.engine.types;
 
 #include "1_systems/r_ui_node.hpp"
 

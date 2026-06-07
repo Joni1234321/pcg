@@ -2,9 +2,7 @@
 #include "g_arcade.hpp"
 
 #include "0_engine/u_collections.hpp"
-#include "0_engine/u_colors.hpp"
 #include "0_engine/u_texture.hpp"
-#include "0_engine/u_types.hpp"
 
 #include "1_systems/i_input_system.hpp"
 #include "1_systems/r_render.hpp"
@@ -13,6 +11,9 @@
 #include "1_systems/t_tick_system.hpp"
 #include "1_systems/u_animation_system.hpp"
 #include "1_systems/u_orchestra.hpp"
+
+import pce.engine.colors;
+import pce.engine.types;
 
 namespace pcg::cosmoclick {
 using namespace pce;

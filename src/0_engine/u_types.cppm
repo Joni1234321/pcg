@@ -1,58 +1,36 @@
-﻿// ReSharper disable CppInconsistentNaming
-#pragma once
+module;
+
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <type_traits>
 
 #if defined(_DEBUG) || defined(NDEBUG)
     #define DEBUG
 #endif // DEBUG
-#if defined(_M_IX86) || defined(_M_X64)
-    #define SIMD_OPTIMIZE
-#endif // SIMD_OPTIMIZE
-#if defined(_WIN64) || defined(__x86_64__) || defined(__aarch64__)
-    #ifndef WIN64
-        #define WIN64
-    #endif
-#endif // WIN64
+export module pce.engine.types;
 
-#if defined(_MSC_VER)
-    #define STL_VERIFY(cond, mesg) _STL_VERIFY(cond, mesg)
-#else
-    #include <cassert>
-    #define STL_VERIFY(cond, mesg) assert((cond) && (mesg))
-#endif
-#ifdef DEBUG
-    #define STL_ASSERT(cond, mesg) STL_VERIFY(cond, mesg)
-#else // DEBUG
-    #if defined(_MSC_VER)
-        #define STL_ASSERT(cond, mesg) _Analysis_assume_(cond)
-    #else
-        #define STL_ASSERT(cond, mesg) ((void)(cond))
-    #endif
-#endif // !DEBUG
+export using i8 = int8_t;
+export using u8 = uint8_t;
+export using i16 = int16_t;
+export using u16 = uint16_t;
+export using i32 = int32_t;
+export using u32 = uint32_t;
+export using i64 = int64_t;
+export using u64 = uint64_t;
+export using usize = size_t;
 
-using i8 = int8_t;    // NOLINT(*-identifier-naming)
-using u8 = uint8_t;   // NOLINT(*-identifier-naming)
-using i16 = int16_t;  // NOLINT(*-identifier-naming)
-using u16 = uint16_t; // NOLINT(*-identifier-naming)
-using i32 = int32_t;  // NOLINT(*-identifier-naming)
-using u32 = uint32_t; // NOLINT(*-identifier-naming)
-using i64 = int64_t;  // NOLINT(*-identifier-naming)
-using u64 = uint64_t; // NOLINT(*-identifier-naming)
-using usize = size_t; // NOLINT(*-identifier-naming)
+export using f32 = float;
+export using f64 = double;
 
-using f32 = float;  // NOLINT(*-identifier-naming)
-using f64 = double; // NOLINT(*-identifier-naming)
+export using c8 = char8_t;
+export using c16 = char16_t;
+export using c32 = char32_t;
+export using b8 = bool;
 
-using c8 = char8_t;   // NOLINT(*-identifier-naming)
-using c16 = char16_t; // NOLINT(*-identifier-naming)
-using c32 = char32_t; // NOLINT(*-identifier-naming)
-using b8 = bool;      // NOLINT(*-identifier-naming)
+export template <class T> using Optional = std::optional<T>;
 
-template <class T> using Optional = std::optional<T>;
-
-template <typename T> struct Vec2 {
+export template <typename T> struct Vec2 {
     T x;
     T y;
     constexpr Vec2() = default;
@@ -63,17 +41,31 @@ template <typename T> struct Vec2 {
     constexpr Vec2 operator-(const Vec2 other) const { return { x - other.x, y - other.y }; }
     constexpr Vec2 operator*(const Vec2 other) const { return { x * other.x, y * other.y }; }
     constexpr Vec2 operator/(const Vec2 other) const { return { x / other.x, y / other.y }; }
-    // clang-format off
-    constexpr Vec2& operator+=(const Vec2 other) { x += other.x; y += other.y; return *this; }
-    constexpr Vec2& operator-=(const Vec2 other) { x -= other.x; y -= other.y; return *this; }
-    constexpr Vec2& operator*=(const Vec2 other) { x *= other.x; y *= other.y; return *this; }
-    constexpr Vec2& operator/=(const Vec2 other) { x /= other.x; y /= other.y; return *this; }
-    // clang-format on
+    constexpr Vec2& operator+=(const Vec2 other) {
+        x += other.x;
+        y += other.y;
+        return *this;
+    }
+    constexpr Vec2& operator-=(const Vec2 other) {
+        x -= other.x;
+        y -= other.y;
+        return *this;
+    }
+    constexpr Vec2& operator*=(const Vec2 other) {
+        x *= other.x;
+        y *= other.y;
+        return *this;
+    }
+    constexpr Vec2& operator/=(const Vec2 other) {
+        x /= other.x;
+        y /= other.y;
+        return *this;
+    }
     constexpr b8 operator==(const Vec2 other) const { return x == other.x && y == other.y; }
     constexpr b8 operator!=(const Vec2 other) const { return !(*this == other); }
 };
 
-template <typename T> struct Vec3 {
+export template <typename T> struct Vec3 {
     T x;
     T y;
     T z;
@@ -85,17 +77,35 @@ template <typename T> struct Vec3 {
     constexpr Vec3 operator-(const Vec3 other) const { return { x - other.x, y - other.y, z - other.z }; }
     constexpr Vec3 operator*(const Vec3 other) const { return { x * other.x, y * other.y, z * other.z }; }
     constexpr Vec3 operator/(const Vec3 other) const { return { x / other.x, y / other.y, z / other.z }; }
-    // clang-format off
-    constexpr Vec3& operator+=(const Vec3 other) { x += other.x; y += other.y; z += other.z; return *this; }
-    constexpr Vec3& operator-=(const Vec3 other) { x -= other.x; y -= other.y; z -= other.z; return *this; }
-    constexpr Vec3& operator*=(const Vec3 other) { x *= other.x; y *= other.y; z *= other.z; return *this; }
-    constexpr Vec3& operator/=(const Vec3 other) { x /= other.x; y /= other.y; z /= other.z; return *this; }
-    // clang-format on
+    constexpr Vec3& operator+=(const Vec3 other) {
+        x += other.x;
+        y += other.y;
+        z += other.z;
+        return *this;
+    }
+    constexpr Vec3& operator-=(const Vec3 other) {
+        x -= other.x;
+        y -= other.y;
+        z -= other.z;
+        return *this;
+    }
+    constexpr Vec3& operator*=(const Vec3 other) {
+        x *= other.x;
+        y *= other.y;
+        z *= other.z;
+        return *this;
+    }
+    constexpr Vec3& operator/=(const Vec3 other) {
+        x /= other.x;
+        y /= other.y;
+        z /= other.z;
+        return *this;
+    }
     constexpr b8 operator==(const Vec3 other) const { return x == other.x && y == other.y && z == other.z; }
     constexpr b8 operator!=(const Vec3 other) const { return !(*this == other); }
 };
 
-template <typename T> struct Vec4 {
+export template <typename T> struct Vec4 {
     T x;
     T y;
     T z;
@@ -108,35 +118,57 @@ template <typename T> struct Vec4 {
     constexpr Vec4 operator-(const Vec4 other) const { return { x - other.x, y - other.y, z - other.z, w - other.w }; }
     constexpr Vec4 operator*(const Vec4 other) const { return { x * other.x, y * other.y, z * other.z, w * other.w }; }
     constexpr Vec4 operator/(const Vec4 other) const { return { x / other.x, y / other.y, z / other.z, w / other.w }; }
-    // clang-format off
-    constexpr Vec4& operator+=(const Vec4 other) { x += other.x; y += other.y; z += other.z; w += other.w; return *this; }
-    constexpr Vec4& operator-=(const Vec4 other) { x -= other.x; y -= other.y; z -= other.z; w -= other.w; return *this; }
-    constexpr Vec4& operator*=(const Vec4 other) { x *= other.x; y *= other.y; z *= other.z; w *= other.w; return *this; }
-    constexpr Vec4& operator/=(const Vec4 other) { x /= other.x; y /= other.y; z /= other.z; w /= other.w; return *this; }
-    // clang-format on
+    constexpr Vec4& operator+=(const Vec4 other) {
+        x += other.x;
+        y += other.y;
+        z += other.z;
+        w += other.w;
+        return *this;
+    }
+    constexpr Vec4& operator-=(const Vec4 other) {
+        x -= other.x;
+        y -= other.y;
+        z -= other.z;
+        w -= other.w;
+        return *this;
+    }
+    constexpr Vec4& operator*=(const Vec4 other) {
+        x *= other.x;
+        y *= other.y;
+        z *= other.z;
+        w *= other.w;
+        return *this;
+    }
+    constexpr Vec4& operator/=(const Vec4 other) {
+        x /= other.x;
+        y /= other.y;
+        z /= other.z;
+        w /= other.w;
+        return *this;
+    }
     constexpr b8 operator==(const Vec4 other) const { return x == other.x && y == other.y && z == other.z && w == other.w; }
     constexpr b8 operator!=(const Vec4 other) const { return !(*this == other); }
 };
 
-using uint2 = Vec2<u32>;  // NOLINT(*-identifier-naming)
-using uint3 = Vec3<u32>;  // NOLINT(*-identifier-naming)
-using uint4 = Vec4<u32>;  // NOLINT(*-identifier-naming)
-using int2 = Vec2<i32>;   // NOLINT(*-identifier-naming)
-using int3 = Vec3<i32>;   // NOLINT(*-identifier-naming)
-using float2 = Vec2<f32>; // NOLINT(*-identifier-naming)
-using float3 = Vec3<f32>; // NOLINT(*-identifier-naming)
+export using uint2 = Vec2<u32>;
+export using uint3 = Vec3<u32>;
+export using uint4 = Vec4<u32>;
+export using int2 = Vec2<i32>;
+export using int3 = Vec3<i32>;
+export using float2 = Vec2<f32>;
+export using float3 = Vec3<f32>;
 
-constexpr u8 U8_MAX = UINT8_MAX;
-constexpr u32 U32_MAX = UINT32_MAX;
+export constexpr u8 U8_MAX = UINT8_MAX;
+export constexpr u32 U32_MAX = UINT32_MAX;
 
-template <class T, class U> concept Derived = std::is_base_of_v<U, T>;
+export template <class T, class U> concept Derived = std::is_base_of_v<U, T>;
 
-struct Entity {
+export struct Entity {
     explicit constexpr Entity(const u32 index) : index(index) { }
     constexpr Entity() : index(U32_MAX) { }
     static const Entity NONE;
 
-    operator u32() const { return index; } // NOLINT(*-explicit-constructor)
+    operator u32() const { return index; }
 
     b8 operator!=(const Entity other) const { return index != other.index; }
     b8 operator==(const Entity other) const { return index == other.index; }
@@ -150,12 +182,12 @@ protected:
     u32 index;
 };
 
-template <class> struct Handle {
+export template <class> struct Handle {
     u32 id;
     explicit constexpr Handle(const u32 id) : id(id) { }
     b8 operator==(const Handle&) const = default;
 };
-template <class T> struct HandleOptional {
+export template <class T> struct HandleOptional {
     constexpr HandleOptional() noexcept : id(U32_MAX) { }
     constexpr HandleOptional(std::nullopt_t) noexcept : id(U32_MAX) { }
     constexpr explicit HandleOptional(const u32 value) noexcept : id(value) { }
@@ -166,16 +198,16 @@ template <class T> struct HandleOptional {
     b8 operator==(const HandleOptional&) const = default;
     u32 id;
 };
-template <class T> struct std::hash<Handle<T>> {
+export template <class T> struct std::hash<Handle<T>> {
     usize operator()(const Handle<T>& handle) const noexcept { return std::hash<u32> { }(handle.id); }
 };
-template <class T> struct std::hash<HandleOptional<T>> {
+export template <class T> struct std::hash<HandleOptional<T>> {
     usize operator()(const HandleOptional<T>& handle_optional) const noexcept { return std::hash<u32> { }(handle_optional.id); }
 };
 
 inline const Entity Entity::NONE = Entity { };
 
-template <Derived<Entity> T = Entity> struct OptionalEntity {
+export template <Derived<Entity> T = Entity> struct OptionalEntity {
     constexpr operator uint2() const { return entity; }
     constexpr OptionalEntity() = default;
     constexpr explicit OptionalEntity(T entity) : entity(entity) { }
@@ -187,7 +219,7 @@ private:
     T entity { Entity::NONE };
 };
 
-struct Archetype {
+export struct Archetype {
     u32 Count { 0U };
     virtual Entity Add() { return Entity { Count++ }; }
     virtual b8 Remove(Entity entity) {
@@ -201,10 +233,29 @@ struct Archetype {
     [[nodiscard]] constexpr Entity end() const noexcept { return Entity { Count }; }
 };
 
-// clang-format off
-template <class T> constexpr void HashCombine(usize& seed, const T& v) noexcept { seed ^= std::hash<T>{}(v) + 0x9e3779b9u + (seed << 6) + (seed >> 2); }
+export template <class T> constexpr void HashCombine(usize& seed, const T& v) noexcept { seed ^= std::hash<T> { }(v) + 0x9e3779b9u + (seed << 6) + (seed >> 2); }
 
-template <class T> struct std::hash<Vec2<T>> { usize operator()(const Vec2<T> vec) const noexcept { size_t h = std::hash<T>{}(vec.x); HashCombine(h, vec.y); return h; } };
-template <class T> struct std::hash<Vec3<T>> { usize operator()(const Vec3<T> vec) const noexcept { size_t h = std::hash<T>{}(vec.x); HashCombine(h, vec.y); HashCombine(h, vec.z); return h; } };
-template <class T> struct std::hash<Vec4<T>> { usize operator()(const Vec4<T> vec) const noexcept { size_t h = std::hash<T>{}(vec.x); HashCombine(h, vec.y); HashCombine(h, vec.z); HashCombine(h, vec.w); return h; } };
-// clang-format on
+export template <class T> struct std::hash<Vec2<T>> {
+    usize operator()(const Vec2<T> vec) const noexcept {
+        size_t h = std::hash<T> { }(vec.x);
+        HashCombine(h, vec.y);
+        return h;
+    }
+};
+export template <class T> struct std::hash<Vec3<T>> {
+    usize operator()(const Vec3<T> vec) const noexcept {
+        size_t h = std::hash<T> { }(vec.x);
+        HashCombine(h, vec.y);
+        HashCombine(h, vec.z);
+        return h;
+    }
+};
+export template <class T> struct std::hash<Vec4<T>> {
+    usize operator()(const Vec4<T> vec) const noexcept {
+        size_t h = std::hash<T> { }(vec.x);
+        HashCombine(h, vec.y);
+        HashCombine(h, vec.z);
+        HashCombine(h, vec.w);
+        return h;
+    }
+};

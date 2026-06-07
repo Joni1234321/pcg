@@ -9,7 +9,7 @@
 
 #include "0_engine/u_collections.hpp"
 #include "0_engine/u_logger.hpp"
-#include "0_engine/u_types.hpp"
+import pce.engine.types;
 
 namespace pce {
 struct Table {

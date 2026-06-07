@@ -1,13 +1,13 @@
-﻿#pragma once
+module;
 
-#include <complex>
+#include "0_engine/u_texture.hpp"
+#include "0_engine/u_util.hpp"
 
-#include "0_engine/u_types.hpp"
-#include "u_texture.hpp"
-#include "u_util.hpp"
+export module pce.engine.colors;
 
-namespace pce::colors {
-// NOLINTBEGIN(*-use-designated-initializers)
+import pce.engine.types;
+
+export namespace pce::colors {
 constexpr Color ColorLighten(const Color color, const f32 factor) {
     auto lerp = [factor](const u8 k) -> u8 { return static_cast<u8>(k + (255 - k) * factor); };
     return Color { lerp(color.r), lerp(color.g), lerp(color.b), color.a };
@@ -26,7 +26,6 @@ constexpr Color CLEAR { 0, 0, 0, 0 };
 constexpr Color BLACK { 0, 0, 0 };
 constexpr Color WHITE { 255U, 255U, 255U };
 
-// Color palette
 constexpr Color LIGHT_SKY_BLUE { 135U, 206U, 250U };
 constexpr Color DARK_DARK_BROWN { 62U, 68U, 43U };
 
@@ -80,46 +79,42 @@ constexpr Color DEEP_GOLD { 218, 165, 32 };
 constexpr Color SILVER { 192, 192, 192 };
 constexpr Color NAVY_BLUE { 0, 0, 128 };
 constexpr Color WHITE_SMOKE { 245, 245, 245 };
-constexpr Color MIDNIGHT_NAVY { 25, 25, 112 }; // Deep blue, immersive and sleek
-constexpr Color COSMIC_PURPLE { 50, 0, 90 };   // Deep purple with a space-like glow
-constexpr Color DARK_SLATE { 47, 79, 79 };     // Cool, dark, and slightly muted teal
+constexpr Color MIDNIGHT_NAVY { 25, 25, 112 };
+constexpr Color COSMIC_PURPLE { 50, 0, 90 };
+constexpr Color DARK_SLATE { 47, 79, 79 };
 
-// CosmoClicker
-constexpr Color FADED_GREEN { 204U, 238U, 204U }; // #CEC // close to tea green
-constexpr Color GRAY_TINT { 218U, 218U, 218U };   // #DA
+constexpr Color FADED_GREEN { 204U, 238U, 204U };
+constexpr Color GRAY_TINT { 218U, 218U, 218U };
 constexpr Color DARK_BLUE { 0, 0, 139 };
 constexpr Color DARK_NAVY_BLUE { 0U, 0U, 107U };
 constexpr Color DARK_GREY { 15U, 15U, 15U };
 constexpr Color JET { 60, 55, 68 };
 constexpr Color CERULEAN { 0, 112, 144 };
 
-// Command Strike
-constexpr Color SOFT_BLUE { 129U, 170U, 180U };   // #81AAB4 - Soft, muted blue-green
-constexpr Color DEEP_TEAL { 0U, 85U, 102U };      // #005566 - Dark teal
-constexpr Color DUSK_PURPLE { 88U, 66U, 124U };   // #58427C - Muted purple
-constexpr Color WARM_GRAY { 136U, 128U, 124U };   // #88807C - Neutral warm gray
-constexpr Color OCEAN_BLUE { 0U, 105U, 148U };    // #006994 - Deep oceanic blue
-constexpr Color BURNT_ORANGE { 208U, 107U, 5U };  // #D06B05 - Warm, earthy orange
-constexpr Color ROYAL_PURPLE { 177U, 92U, 194U }; // #B15CC2 - Vibrant purple
-constexpr Color FOREST_GREEN { 75U, 133U, 57U };  // #4B8539 - Deep forest green
-constexpr Color SKY_CYAN { 105U, 232U, 255U };    // #69E8FF - Bright cyan
-constexpr Color CHARCOAL_GRAY { 63U, 63U, 63U };  // #3F3F3F - Dark charcoal gray
-constexpr Color STEEL_GRAY { 120U, 120U, 120U };  // #787878 - Mid-tone gray
-constexpr Color ASH_GRAY { 124U, 124U, 124U };    // #7C7C7C - Muted ash gray
+constexpr Color SOFT_BLUE { 129U, 170U, 180U };
+constexpr Color DEEP_TEAL { 0U, 85U, 102U };
+constexpr Color DUSK_PURPLE { 88U, 66U, 124U };
+constexpr Color WARM_GRAY { 136U, 128U, 124U };
+constexpr Color OCEAN_BLUE { 0U, 105U, 148U };
+constexpr Color BURNT_ORANGE { 208U, 107U, 5U };
+constexpr Color ROYAL_PURPLE { 177U, 92U, 194U };
+constexpr Color FOREST_GREEN { 75U, 133U, 57U };
+constexpr Color SKY_CYAN { 105U, 232U, 255U };
+constexpr Color CHARCOAL_GRAY { 63U, 63U, 63U };
+constexpr Color STEEL_GRAY { 120U, 120U, 120U };
+constexpr Color ASH_GRAY { 124U, 124U, 124U };
 
 constexpr Color DARK_GREEN { 0U, 110U, 60U };
 constexpr Color MAP_BACKGROUND = Color::FromHsl(40.0F, 0.50F, 0.2F);
-// Hex Battle
-constexpr Color HEX_HOVER { 190U, 205U, 175U }; // muted sage-green hover ring
-constexpr Color HEX_SELECT { 210U, 165U, 30U }; // warm amber-gold selection ring
+constexpr Color HEX_HOVER { 190U, 205U, 175U };
+constexpr Color HEX_SELECT { 210U, 165U, 30U };
 
-// Roads & rivers
-constexpr Color ROAD_TAN { 196U, 168U, 120U };       // warm dirt-road body
-constexpr Color ROAD_CASING_BROWN { 48U, 32U, 18U }; // dark brown outline
+constexpr Color ROAD_TAN { 196U, 168U, 120U };
+constexpr Color ROAD_CASING_BROWN { 48U, 32U, 18U };
 constexpr Color ROAD_GREY { 70U, 65U, 58U };
-constexpr Color RIVER_BLUE { 78U, 138U, 196U };            // mid river body
-constexpr Color RIVER_DEEP_BLUE { 22U, 52U, 92U };         // dark river outline
-constexpr Color RIVER_HIGHLIGHT_BLUE { 168U, 206U, 236U }; // light center highlight
+constexpr Color RIVER_BLUE { 78U, 138U, 196U };
+constexpr Color RIVER_DEEP_BLUE { 22U, 52U, 92U };
+constexpr Color RIVER_HIGHLIGHT_BLUE { 168U, 206U, 236U };
 
 constexpr Color FEATURE_CITY { 140U, 25U, 25U };
 constexpr Color FEATURE_VILLAGE { 120U, 75U, 45U };
@@ -147,5 +142,4 @@ inline Color AnimateDamp(const f32 t) {
     const u8 blue = static_cast<u8>(base + amp * std::sin(t * 1.1F + 4.0F));
     return Color { red, green, blue };
 }
-// NOLINTEND(*-use-designated-initializers)
 } // namespace pce::colors
