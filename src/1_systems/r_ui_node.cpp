@@ -133,7 +133,7 @@ NodeBuilder& NodeBuilder::Direction(const FlexDirection direction) {
     style.direction = direction;
     return *this;
 }
-constexpr Color DEFAULT_TEXT_COLOR = colors::BLACK;
+constexpr Color DEFAULT_TEXT_COLOR = colors::COLOR_BLACK;
 NodeBuilder& NodeBuilder::Text(const String& string, const Color color) {
     properties.text = string;
     style.background_color = color;

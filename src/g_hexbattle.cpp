@@ -1301,13 +1301,13 @@ constexpr u32 TILE_H = 100U;
     if (name == "village") { return Color { 175U, 175U, 175U, 255U }; }
     if (name == "forest") { return Color { 60U, 110U, 60U, 255U }; }
     if (name == "ridge") { return Color { 130U, 100U, 70U, 255U }; }
-    return colors::GRAY;
+    return colors::COLOR_GRAY;
 }
 
 [[nodiscard]] static Color OwnerBorderColor(const Side s) {
-    if (s == Side::atk) { return colors::ROYAL_BLUE; }
-    if (s == Side::def) { return colors::RUBY_RED; }
-    return colors::DARK_SLATE;
+    if (s == Side::atk) { return colors::COLOR_ROYAL_BLUE; }
+    if (s == Side::def) { return colors::COLOR_RUBY_RED; }
+    return colors::COLOR_DARK_SLATE;
 }
 
 struct TileNode {
@@ -1322,34 +1322,34 @@ struct TileNode {
 struct HexBattleFrame : Frame {
     // Top bar
     Handle<Node> root { B(frame).Node(fill).Direction(vertical).Gap(4U).Padding(8U).Build() };
-    Handle<Node> top_bar { B(root).Node(fill, hug).Direction(horizontal).Gap(10U).Fill(colors::DARK_SLATE).Padding2({ 10U, 6U }).Build() };
-    Handle<Node> title_lbl { B(top_bar).Node(fill, hug).Text("HEX BATTLE — 394th vs 1028th", FontSizes::h3, colors::WHITE).Build() };
-    Handle<Node> phase_lbl { B(top_bar).Node(500U, hug).Text("...", FontSizes::body, colors::GOLD).Build() };
-    Handle<Node> step_lbl { B(top_bar).Node(120U, hug).Text("0/0", FontSizes::body, colors::SILVER).Right().Build() };
+    Handle<Node> top_bar { B(root).Node(fill, hug).Direction(horizontal).Gap(10U).Fill(colors::COLOR_DARK_SLATE).Padding2({ 10U, 6U }).Build() };
+    Handle<Node> title_lbl { B(top_bar).Node(fill, hug).Text("HEX BATTLE — 394th vs 1028th", FontSizes::h3, colors::COLOR_WHITE).Build() };
+    Handle<Node> phase_lbl { B(top_bar).Node(500U, hug).Text("...", FontSizes::body, colors::COLOR_GOLD).Build() };
+    Handle<Node> step_lbl { B(top_bar).Node(120U, hug).Text("0/0", FontSizes::body, colors::COLOR_SILVER).Right().Build() };
 
     Handle<Node> controls { B(root).Node(fill, hug).Direction(horizontal).Gap(6U).Padding2({ 0U, 2U }).Build() };
-    Handle<Node> btn_prev { B(controls).Node(80U, hug).Fill(colors::DARK_GRAY).Padding2({ 8U, 4U }).Text("< Prev", FontSizes::body, colors::WHITE).Center().Build() };
-    Handle<Node> btn_next { B(controls).Node(80U, hug).Fill(colors::DARK_GRAY).Padding2({ 8U, 4U }).Text("Next >", FontSizes::body, colors::WHITE).Center().Build() };
-    Handle<Node> btn_skip { B(controls).Node(80U, hug).Fill(colors::DARK_GRAY).Padding2({ 8U, 4U }).Text("Skip >>", FontSizes::body, colors::WHITE).Center().Build() };
-    Handle<Node> btn_reset { B(controls).Node(80U, hug).Fill(colors::BROWN).Padding2({ 8U, 4U }).Text("Reset", FontSizes::body, colors::WHITE).Center().Build() };
-    Handle<Node> btn_view { B(controls).Node(120U, hug).Fill(colors::ROYAL_BLUE).Padding2({ 8U, 4U }).Text("View: ATK", FontSizes::body, colors::WHITE).Center().Build() };
+    Handle<Node> btn_prev { B(controls).Node(80U, hug).Fill(colors::COLOR_DARK_GRAY).Padding2({ 8U, 4U }).Text("< Prev", FontSizes::body, colors::COLOR_WHITE).Center().Build() };
+    Handle<Node> btn_next { B(controls).Node(80U, hug).Fill(colors::COLOR_DARK_GRAY).Padding2({ 8U, 4U }).Text("Next >", FontSizes::body, colors::COLOR_WHITE).Center().Build() };
+    Handle<Node> btn_skip { B(controls).Node(80U, hug).Fill(colors::COLOR_DARK_GRAY).Padding2({ 8U, 4U }).Text("Skip >>", FontSizes::body, colors::COLOR_WHITE).Center().Build() };
+    Handle<Node> btn_reset { B(controls).Node(80U, hug).Fill(colors::COLOR_BROWN).Padding2({ 8U, 4U }).Text("Reset", FontSizes::body, colors::COLOR_WHITE).Center().Build() };
+    Handle<Node> btn_view { B(controls).Node(120U, hug).Fill(colors::COLOR_ROYAL_BLUE).Padding2({ 8U, 4U }).Text("View: ATK", FontSizes::body, colors::COLOR_WHITE).Center().Build() };
 
     // Body: grid + side panel
     Handle<Node> body { B(root).Node(fill).Direction(horizontal).Gap(8U).Build() };
 
-    Handle<Node> grid_panel { B(body).Node(fill, fill).Direction(vertical).Gap(0U).Fill(colors::BLACK).Padding(4U).Build() };
+    Handle<Node> grid_panel { B(body).Node(fill, fill).Direction(vertical).Gap(0U).Fill(colors::COLOR_BLACK).Padding(4U).Build() };
     Handle<Node> grid_rows { B(grid_panel).Node(fill, fill).Direction(vertical).Gap(2U).Build() };
 
     Array<Array<TileNode, COLS>, ROWS> tile_nodes { };
 
     Handle<Node> side { B(body).Node(620U, fill).Direction(vertical).Gap(6U).Build() };
-    Handle<Node> tile_info { B(side).Node(fill, 220U).Direction(vertical).Fill(colors::DARK_GRAY).Padding(8U).Gap(3U).Build() };
-    Handle<Node> tile_info_title { B(tile_info).Node(fill, hug).Text("Click a tile", FontSizes::h4, colors::GOLD).Build() };
-    Handle<Node> tile_info_body { B(tile_info).Node(fill, fill).Text("", FontSizes::small, colors::WHITE).Build() };
+    Handle<Node> tile_info { B(side).Node(fill, 220U).Direction(vertical).Fill(colors::COLOR_DARK_GRAY).Padding(8U).Gap(3U).Build() };
+    Handle<Node> tile_info_title { B(tile_info).Node(fill, hug).Text("Click a tile", FontSizes::h4, colors::COLOR_GOLD).Build() };
+    Handle<Node> tile_info_body { B(tile_info).Node(fill, fill).Text("", FontSizes::small, colors::COLOR_WHITE).Build() };
 
-    Handle<Node> log_panel { B(side).Node(fill, fill).Direction(vertical).Fill(colors::BLACK).Padding(6U).Gap(2U).Build() };
-    Handle<Node> log_title { B(log_panel).Node(fill, hug).Text("Turn Log", FontSizes::body, colors::GOLD).Build() };
-    Handle<Node> log_body { B(log_panel).Node(fill, fill).Text("", FontSizes::tiny, colors::WHITE).Build() };
+    Handle<Node> log_panel { B(side).Node(fill, fill).Direction(vertical).Fill(colors::COLOR_BLACK).Padding(6U).Gap(2U).Build() };
+    Handle<Node> log_title { B(log_panel).Node(fill, hug).Text("Turn Log", FontSizes::body, colors::COLOR_GOLD).Build() };
+    Handle<Node> log_body { B(log_panel).Node(fill, fill).Text("", FontSizes::tiny, colors::COLOR_WHITE).Build() };
 
     HexBattleFrame() {
         // Build grid rows × cols
@@ -1360,13 +1360,13 @@ struct HexBattleFrame : Frame {
                 const u32 offset_top = (c % 2U) * 25U;
                 const Handle<Node> col_wrap = B(row).Node(TILE_W, hug).Direction(vertical).Padding4(uint4 { 0U, offset_top, 0U, 0U }).Build();
                 TileNode tn { };
-                tn.border = B(col_wrap).Node(TILE_W, TILE_H + 4U).Direction(vertical).Fill(colors::DARK_SLATE).Padding(2U).Build();
-                tn.inner = B(tn.border).Node(fill, fill).Direction(vertical).Fill(colors::GRAY).Padding(3U).Gap(1U).Build();
+                tn.border = B(col_wrap).Node(TILE_W, TILE_H + 4U).Direction(vertical).Fill(colors::COLOR_DARK_SLATE).Padding(2U).Build();
+                tn.inner = B(tn.border).Node(fill, fill).Direction(vertical).Fill(colors::COLOR_GRAY).Padding(3U).Gap(1U).Build();
                 const Handle<Node> hdr = B(tn.inner).Node(fill, hug).Direction(horizontal).Gap(4U).Build();
-                tn.label = B(hdr).Node(40U, hug).Text("--", FontSizes::small, colors::WHITE).Build();
-                tn.terrain_lbl = B(hdr).Node(fill, hug).Text("", FontSizes::tiny, colors::BLACK).Right().Build();
-                tn.units_box = B(tn.inner).Node(fill, fill).Direction(vertical).Fill(colors::CLEAR).Build();
-                tn.units_text = B(tn.units_box).Node(fill, fill).Text("", FontSizes::tiny, colors::WHITE).Build();
+                tn.label = B(hdr).Node(40U, hug).Text("--", FontSizes::small, colors::COLOR_WHITE).Build();
+                tn.terrain_lbl = B(hdr).Node(fill, hug).Text("", FontSizes::tiny, colors::COLOR_BLACK).Right().Build();
+                tn.units_box = B(tn.inner).Node(fill, fill).Direction(vertical).Fill(colors::COLOR_CLEAR).Build();
+                tn.units_text = B(tn.units_box).Node(fill, fill).Text("", FontSizes::tiny, colors::COLOR_WHITE).Build();
                 tile_nodes[r][c] = tn;
             }
         }
@@ -1395,7 +1395,7 @@ public:
     b8 running { true };
 
     HexBattle() {
-        Singleton::Get<WindowState>().clear_color = colors::DARK_DARK_BROWN;
+        Singleton::Get<WindowState>().clear_color = colors::COLOR_DARK_DARK_BROWN;
         sim.Init();
         step_idx = 0U;
         Refresh();
@@ -1505,7 +1505,7 @@ private:
         view_side = view_side == Side::atk ? Side::def : Side::atk;
         const String txt = view_side == Side::atk ? String { "View: ATK" } : String { "View: DEF" };
         globalData[ui.tree].node_properties[ui.btn_view].text = txt;
-        globalData[ui.tree].styles[ui.btn_view].background_color = view_side == Side::atk ? colors::ROYAL_BLUE : colors::RUBY_RED;
+        globalData[ui.tree].styles[ui.btn_view].background_color = view_side == Side::atk ? colors::COLOR_ROYAL_BLUE : colors::COLOR_RUBY_RED;
         Refresh();
     }
 
@@ -1529,7 +1529,7 @@ private:
             const b8 known = view_side == Side::atk ? f.known_atk[i] : f.known_def[i];
 
             globalData[ui.tree].styles[tn.border].background_color = OwnerBorderColor(f.owners[i]);
-            globalData[ui.tree].styles[tn.inner].background_color = known ? TerrainColor(std::string_view { t.terrain.c_str() }) : colors::DARK_GRAY;
+            globalData[ui.tree].styles[tn.inner].background_color = known ? TerrainColor(std::string_view { t.terrain.c_str() }) : colors::COLOR_DARK_GRAY;
             globalData[ui.tree].node_properties[tn.label].text = Label(i);
             globalData[ui.tree].node_properties[tn.terrain_lbl].text = known ? String { "{} x{:.1f}", t.terrain, t.mul } : String { "???" };
 

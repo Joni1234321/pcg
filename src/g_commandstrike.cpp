@@ -34,13 +34,13 @@ struct GameFrame : Frame {
     Handle<Node> root { B(frame).Node(fill).Gap(10U).Padding(10U).Build() };
 
     Handle<Node> actions { B(root).Node(349U, fill).Build() };
-    Handle<Node> resources { B(actions).Node(fill, hug).Fill(colors::SOFT_BLUE).Build() };
-    Handle<Node> build { B(actions).Node(fill).Fill(colors::SOFT_BLUE).Build() };
-    Handle<Node> upgrades { B(actions).Node(349U, fill).Fill(colors::SOFT_BLUE).Build() };
+    Handle<Node> resources { B(actions).Node(fill, hug).Fill(colors::COLOR_SOFT_BLUE).Build() };
+    Handle<Node> build { B(actions).Node(fill).Fill(colors::COLOR_SOFT_BLUE).Build() };
+    Handle<Node> upgrades { B(actions).Node(349U, fill).Fill(colors::COLOR_SOFT_BLUE).Build() };
 
     Handle<Node> map { B(root).Node(fill).Build() };
-    Handle<Node> sky { B(map).Node(fill).Fill(colors::SKY_CYAN).Build() };
-    Handle<Node> ground { B(map).Node(fill, 600U).Fill(colors::FOREST_GREEN).Build() };
+    Handle<Node> sky { B(map).Node(fill).Fill(colors::COLOR_SKY_CYAN).Build() };
+    Handle<Node> ground { B(map).Node(fill, 600U).Fill(colors::COLOR_FOREST_GREEN).Build() };
 };
 } // namespace pcg::commandstrike
 
@@ -49,7 +49,7 @@ void pcg::arcade::RunCommandStrike() {
     using namespace commandstrike;
 
     // data
-    Singleton::Get<WindowState>().clear_color = colors::FADED_GREEN;
+    Singleton::Get<WindowState>().clear_color = colors::COLOR_FADED_GREEN;
 
     // systems
     Orchestra orchestra { };

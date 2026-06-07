@@ -99,7 +99,7 @@ void UnitToCounterAppend(HexState& hex_state) {
             for (; i < hex_state.pseudo_states.unit_selection->unit_handles.size(); i++) {
                 const Handle<Unit> unit_handle_selected = hex_state.pseudo_states.unit_selection->unit_handles[i];
                 const Unit& unit_selected = hex_state.units[unit_handle_selected];
-                counter.stack[i] = Counter { .color_background = CountryTagToColor(unit_selected.tag), .color_icon = unit_selected.color, .color_border = colors::HEX_SELECT };
+                counter.stack[i] = Counter { .color_background = CountryTagToColor(unit_selected.tag), .color_icon = unit_selected.color, .color_border = colors::COLOR_HEX_SELECT };
             }
 
             // only color for rest
@@ -107,14 +107,14 @@ void UnitToCounterAppend(HexState& hex_state) {
                 const Handle<Unit> unit_handle = unit_handles[j];
                 if (hex_state.pseudo_states.unit_selection->unit_handles.Contains(unit_handle)) { continue; }
                 const Unit& unit = hex_state.units[unit_handle];
-                counter.stack[i++] = Counter { .color_background = CountryTagToColor(unit.tag), .color_icon = unit.color, .color_border = colors::YELLOW };
+                counter.stack[i++] = Counter { .color_background = CountryTagToColor(unit.tag), .color_icon = unit.color, .color_border = colors::COLOR_YELLOW };
             }
         } else {
             // drawing plain
             for (u32 i = 0; i < counters_on_hex; i++) {
                 const Handle<Unit> unit_handle = unit_handles[i];
                 const Unit& unit = hex_state.units[unit_handle];
-                counter.stack[i] = Counter { .color_background = CountryTagToColor(unit.tag), .color_icon = unit.color, .color_border = colors::BLACK };
+                counter.stack[i] = Counter { .color_background = CountryTagToColor(unit.tag), .color_icon = unit.color, .color_border = colors::COLOR_BLACK };
                 dmg += unit.dmg();
                 def += unit.def();
                 move = math::Max(unit.move, move);
@@ -180,8 +180,8 @@ struct HexSystem {
         hex_state.player_action = PlayerAction::PLAYER_ACTION_NONE;
 
         // render pseudo states
-        if (hex_state.pseudo_states.axial_hover) { VertHexAppend(hex_state.verts, camera.scale, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover.value())), colors::HEX_HOVER); }
-        if (hex_state.pseudo_states.axial_select) { VertHexAppend(hex_state.verts, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select.value())), colors::HEX_SELECT); }
+        if (hex_state.pseudo_states.axial_hover) { VertHexAppend(hex_state.verts, camera.scale, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover.value())), colors::COLOR_HEX_HOVER); }
+        if (hex_state.pseudo_states.axial_select) { VertHexAppend(hex_state.verts, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select.value())), colors::COLOR_HEX_SELECT); }
 
         // render map
         for (u32 i = 0; i < hex_state.hex_map.Size(); i++) {
@@ -208,7 +208,7 @@ struct HexSystem {
             auto draw_line = [&](const Color color, const int2 axial_a, const int2 axial_b) {
                 const float2 screen_a = camera.WorldToScreen(HexAxialToWorld(axial_a));
                 const float2 screen_b = camera.WorldToScreen(HexAxialToWorld(axial_b));
-                VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_a, screen_b, camera.scale * 0.15F), colors::BLACK.WithAlpha(0.7F));
+                VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_a, screen_b, camera.scale * 0.15F), colors::COLOR_BLACK.WithAlpha(0.7F));
                 VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_a, screen_b, camera.scale * 0.1F), color);
             };
             for (const Handle<Unit>& unit_handle : hex_state.pseudo_states.unit_selection.value().unit_handles) {
@@ -216,16 +216,16 @@ struct HexSystem {
 
                 for (const Handle<Unit>& unit_handle_child : hex_state.units_oob[unit_handle]) {
                     const int2 axial_child = hex_state.units[unit_handle_child].axial;
-                    draw_line(colors::LIGHT_SKY_BLUE, axial_unit, axial_child);
+                    draw_line(colors::COLOR_LIGHT_SKY_BLUE, axial_unit, axial_child);
                 }
                 const HandleOptional<Unit>& unit_handle_parent = hex_state.units[unit_handle].parent;
                 if (unit_handle_parent.IsValid()) {
                     const int2 axial_parent = hex_state.units[unit_handle_parent.GetHandle()].axial;
-                    draw_line(colors::RED, axial_unit, axial_parent);
+                    draw_line(colors::COLOR_RED, axial_unit, axial_parent);
                     for (const Handle<Unit>& unit_handle_sibling : hex_state.units_oob[unit_handle_parent.GetHandle()]) {
                         if (unit_handle_sibling == unit_handle) { continue; }
                         const int2 axial_sibling = hex_state.units[unit_handle_sibling].axial;
-                        draw_line(colors::YELLOW, axial_parent, axial_sibling);
+                        draw_line(colors::COLOR_YELLOW, axial_parent, axial_sibling);
                     }
                 }
             }
@@ -305,7 +305,7 @@ struct HexSystem {
                     const float2 world = HexAxialToWorld(cost_and_axial.axial);
                     const float2 screen = camera.WorldToScreen(world);
 
-                    const Color movement_color = cost_and_axial.cost > units_selected_movement ? colors::BLACK : colors::RUBY_RED;
+                    const Color movement_color = cost_and_axial.cost > units_selected_movement ? colors::COLOR_BLACK : colors::COLOR_RUBY_RED;
                     VertHexAppend(hex_state.verts, camera.scale * 0.25F, screen, movement_color);
                 }
                 (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
@@ -413,11 +413,11 @@ struct HexSystem {
                 const float2 world = HexAxialToWorld(hex_state.pseudo_states.axial_hover.value());
                 const float2 screen = camera.WorldToScreen(world);
 
-                const Color color_inner = can_attack ? colors::RUBY_RED : colors::BLACK;
-                VertHexAppend(hex_state.verts, camera.scale * 0.25F, screen, colors::GRAY);
+                const Color color_inner = can_attack ? colors::COLOR_RUBY_RED : colors::COLOR_BLACK;
+                VertHexAppend(hex_state.verts, camera.scale * 0.25F, screen, colors::COLOR_GRAY);
                 VertHexAppend(hex_state.verts, camera.scale * 0.20F, screen, color_inner);
 
-                if (can_attack) { VertHexAppend(hex_state.verts, camera.scale * 0.10F, screen, colors::DARK_GREEN); }
+                if (can_attack) { VertHexAppend(hex_state.verts, camera.scale * 0.10F, screen, colors::COLOR_DARK_GREEN); }
                 (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
                 hex_state.verts.clear();
 

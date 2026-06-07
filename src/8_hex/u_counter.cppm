@@ -133,7 +133,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             const AABB area_counter = AABB::FromCenter(counter_center + float2 { OFFSET_STACK * counter_size.x * static_cast<f32>(i) }, counter_size);
 
             const AABB area_shadow = area_counter.WithOffset(float2 { OFFSET_SHADOW * counter_size.x });
-            constexpr Color COLOR_SHADOW = colors::ColorWithAlpha(colors::BLACK, 0.5F);
+            constexpr Color COLOR_SHADOW = colors::ColorWithAlpha(colors::COLOR_BLACK, 0.5F);
             (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_SHADOW.r, COLOR_SHADOW.g, COLOR_SHADOW.b, COLOR_SHADOW.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_shadow);
 
@@ -146,7 +146,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         }
 
         const AABB area_icon_border = AABB::FromCenter(counter_center, counter_size * float2 { 0.6F, 0.4F }).WithOffset(counter_size * float2 { 0.0F, -0.05F });
-        constexpr Color COLOR_ICON_BORDER { colors::BLACK };
+        constexpr Color COLOR_ICON_BORDER { colors::COLOR_BLACK };
         (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_ICON_BORDER.r, COLOR_ICON_BORDER.g, COLOR_ICON_BORDER.b, COLOR_ICON_BORDER.a);
         (void)SDL_RenderFillRect(window_state.renderer, area_icon_border);
 

@@ -74,11 +74,11 @@ inline void VertObbAppend(List<Vertex>& vertices, const OBB& obb, const ColorF c
     switch (terrain) {
         case TerrainType::TERRAIN_TYPE_DEEP_OCEAN: return Color { 20U, 60U, 120U };
         case TerrainType::TERRAIN_TYPE_OCEAN: return Color { 50U, 100U, 180U };
-        case TerrainType::TERRAIN_TYPE_BEACH: return colors::KHAKI;
+        case TerrainType::TERRAIN_TYPE_BEACH: return colors::COLOR_KHAKI;
         case TerrainType::TERRAIN_TYPE_GRASS: return Color { 100U, 190U, 80U };
-        case TerrainType::TERRAIN_TYPE_HILL: return colors::FOREST_GREEN;
-        case TerrainType::TERRAIN_TYPE_MOUNTAIN: return colors::GRAY;
-        case TerrainType::TERRAIN_TYPE_SNOW: return colors::WHITE;
+        case TerrainType::TERRAIN_TYPE_HILL: return colors::COLOR_FOREST_GREEN;
+        case TerrainType::TERRAIN_TYPE_MOUNTAIN: return colors::COLOR_GRAY;
+        case TerrainType::TERRAIN_TYPE_SNOW: return colors::COLOR_WHITE;
     }
     std::unreachable();
 }
@@ -111,10 +111,10 @@ inline void VertObbAppend(List<Vertex>& vertices, const OBB& obb, const ColorF c
 }
 [[nodiscard]] constexpr Color CountryTagToColor(const CountryTag tag) {
     switch (tag) {
-        case CountryTag::TAG_GER: return colors::WG_GER_BG;
-        case CountryTag::TAG_SOV: return colors::WG_SOV_BG;
-        case CountryTag::TAG_USA: return colors::WG_USA_BG;
-        case CountryTag::TAG_NONE: return colors::WHITE;
+        case CountryTag::TAG_GER: return colors::COLOR_WG_GER_BG;
+        case CountryTag::TAG_SOV: return colors::COLOR_WG_SOV_BG;
+        case CountryTag::TAG_USA: return colors::COLOR_WG_USA_BG;
+        case CountryTag::TAG_NONE: return colors::COLOR_WHITE;
     }
     assert(false);
     std::unreachable();
@@ -213,12 +213,12 @@ void AppendCountryBorders(HexState& hex_state, const CameraState& camera) {
 
 [[nodiscard]] constexpr Color TerrainFeatureToTint(const TerrainFeature feature) {
     switch (feature) {
-        case TerrainFeature::TERRAIN_FEATURE_CITY: return colors::FEATURE_CITY;
-        case TerrainFeature::TERRAIN_FEATURE_VILLAGE: return colors::FEATURE_VILLAGE;
-        case TerrainFeature::TERRAIN_FEATURE_WOODED_LIGHTLY: return colors::FEATURE_WOODED_LIGHT;
-        case TerrainFeature::TERRAIN_FEATURE_WOODED_HEAVY: return colors::FEATURE_WOODED_HEAVY;
-        case TerrainFeature::TERRAIN_FEATURE_FIELD: return colors::FEATURE_FIELD;
-        case TerrainFeature::TERRAIN_FEATURE_MARSH: return colors::FEATURE_MARSH;
+        case TerrainFeature::TERRAIN_FEATURE_CITY: return colors::COLOR_FEATURE_CITY;
+        case TerrainFeature::TERRAIN_FEATURE_VILLAGE: return colors::COLOR_FEATURE_VILLAGE;
+        case TerrainFeature::TERRAIN_FEATURE_WOODED_LIGHTLY: return colors::COLOR_FEATURE_WOODED_LIGHT;
+        case TerrainFeature::TERRAIN_FEATURE_WOODED_HEAVY: return colors::COLOR_FEATURE_WOODED_HEAVY;
+        case TerrainFeature::TERRAIN_FEATURE_FIELD: return colors::COLOR_FEATURE_FIELD;
+        case TerrainFeature::TERRAIN_FEATURE_MARSH: return colors::COLOR_FEATURE_MARSH;
         default: return Color { 255U, 255U, 255U };
     }
 }
@@ -259,7 +259,7 @@ void AppendRoadMesh(HexState& hex_state, const CameraState& camera) {
                     const float2 world_neighbour = HexAxialToWorld(axial_neighbour);
                     const float2 screen_neighbour = camera.WorldToScreen(world_neighbour) + HexTileJitter(axial_neighbour) * float2 { ROAD_CENTER_JITTER * camera.scale };
                     const f32 screen_width = (road_level == RoadLevel::ROAD_LEVEL_MEDIUM ? ROAD_BIG_WIDTH : ROAD_WIDTH) * camera.scale;
-                    VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_feature, screen_neighbour, screen_width), colors::ROAD_GREY.WithAlpha(0.5F));
+                    VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_feature, screen_neighbour, screen_width), colors::COLOR_ROAD_GREY.WithAlpha(0.5F));
                 }
             }
         }
@@ -279,19 +279,19 @@ void AppendRiverMesh(HexState& hex_state, const CameraState& camera) {
                         const float2 screen_corner_a = screen + HEX_ANGLE[side % HEX_CORNERS] * float2 { camera.scale };
                         const float2 screen_corner_b = screen + HEX_ANGLE[(side + 1U) % HEX_CORNERS] * float2 { camera.scale };
                         VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_corner_a, screen_corner_b, width), color);
-                        VertAabbAppend(hex_state.verts, AABB::FromCenter(screen_corner_a, float2 { 10.0F }), colors::BLUE);
-                        VertAabbAppend(hex_state.verts, AABB::FromCenter(screen_corner_b, float2 { 10.0F }), colors::RED);
+                        VertAabbAppend(hex_state.verts, AABB::FromCenter(screen_corner_a, float2 { 10.0F }), colors::COLOR_BLUE);
+                        VertAabbAppend(hex_state.verts, AABB::FromCenter(screen_corner_b, float2 { 10.0F }), colors::COLOR_RED);
                         int2 axial_neighbour = axial + HEX_AXIAL_NEIGHBOURS[side];
                         float2 screen_neighbour = camera.WorldToScreen(HexAxialToWorld(axial_neighbour));
-                        VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_neighbour, screen, 10.0f), colors::BROWN);
+                        VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_neighbour, screen, 10.0f), colors::COLOR_BROWN);
                     }
                 }
             }
         }
     };
 
-    append_pass((RIVER_WIDTH + RIVER_CASING_EXTRA) * camera.scale, colors::RIVER_DEEP_BLUE);
-    append_pass(RIVER_WIDTH * camera.scale, colors::RIVER_BLUE);
-    append_pass(RIVER_HIGHLIGHT_WIDTH * camera.scale, colors::RIVER_HIGHLIGHT_BLUE);
+    append_pass((RIVER_WIDTH + RIVER_CASING_EXTRA) * camera.scale, colors::COLOR_RIVER_DEEP_BLUE);
+    append_pass(RIVER_WIDTH * camera.scale, colors::COLOR_RIVER_BLUE);
+    append_pass(RIVER_HIGHLIGHT_WIDTH * camera.scale, colors::COLOR_RIVER_HIGHLIGHT_BLUE);
 }
 }

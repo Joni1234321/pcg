@@ -73,8 +73,8 @@ template <class T> struct ValueUnit : NodeComponentBase {
         Color color;
     };
     explicit ValueUnit(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(hug).Alignment(top_right).Build() } { }
-    Handle<Node> value { B(root).Node(hug).Fill(colors::WHITE).Build() };
-    Handle<Node> unit { B(root).Node(hug).Fill(colors::WHITE).Build() };
+    Handle<Node> value { B(root).Node(hug).Fill(colors::COLOR_WHITE).Build() };
+    Handle<Node> unit { B(root).Node(hug).Fill(colors::COLOR_WHITE).Build() };
 
     void SetValue(const T& new_value) const { globalData[root.tree].node_properties[value].text = FormatValue(new_value); }
     void SetProperty(const Property& property) const;
@@ -85,8 +85,8 @@ struct BuildingComponent : NodeComponentBase {
 
     explicit BuildingComponent(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(fill, hug).Gap(6U).Build() } { }
     Handle<Node> item { B(root).Node(128U, 64U).Build() };
-    Handle<Node> info { B(root).Node(fill, 64U).Direction(vertical).Fill(colors::JET).Padding2({ 4U, 2U }).GapAuto().Build() };
-    Handle<Node> name { B(info).Node(hug).Text(FontSizes::body, colors::LIGHT_GRAY).Build() };
+    Handle<Node> info { B(root).Node(fill, 64U).Direction(vertical).Fill(colors::COLOR_JET).Padding2({ 4U, 2U }).GapAuto().Build() };
+    Handle<Node> name { B(info).Node(hug).Text(FontSizes::body, colors::COLOR_LIGHT_GRAY).Build() };
     Handle<Node> purchasing_info { B(info).Node(hug).Gap(10U).Build() };
     ValueUnit<Money> money { B(purchasing_info).Component<ValueUnit<Money>>() };
     ValueUnit<Income> income { B(purchasing_info).Component<ValueUnit<Income>>() };
@@ -102,14 +102,14 @@ struct GameFrame : Frame, LogLifetimeWithCount<GameFrame> {
     Handle<ParticleEmitter> emitter = globalData.Create<ParticleEmitter>(ParticleEmitter { float2 { 0, -50.0F } });
 
     Handle<Node> game { B(frame).Node(fill).Direction(vertical).Center().Padding2({ 0U, 40U }).Build() };
-    Handle<Node> info { B(game).Node(500U, hug).Direction(vertical).Center().Fill(colors::CLEAR).Padding2({ 50U, 4U }).Build() };
-    ValueUnit<Money> money { B(info).Component<ValueUnit<Money>>({ Money { 0U }, Unit::cosmos, FontSizes::h1, colors::DEEP_GOLD }) };
-    ValueUnit<Income> income { B(info).Component<ValueUnit<Income>>({ Income { 0U }, Unit::cosmos_per_second, FontSizes::h4, colors::SILVER }) };
+    Handle<Node> info { B(game).Node(500U, hug).Direction(vertical).Center().Fill(colors::COLOR_CLEAR).Padding2({ 50U, 4U }).Build() };
+    ValueUnit<Money> money { B(info).Component<ValueUnit<Money>>({ Money { 0U }, Unit::cosmos, FontSizes::h1, colors::COLOR_DEEP_GOLD }) };
+    ValueUnit<Income> income { B(info).Component<ValueUnit<Income>>({ Income { 0U }, Unit::cosmos_per_second, FontSizes::h4, colors::COLOR_SILVER }) };
     Handle<Node> click { B(game).Node(fill).Padding2(uint2 { 0U, 100U }).Alignment(top_center).Build() };
     Handle<Node> planet { B(click)
                               .Node(PLANET_SIZE + PLANET_BORDER_SIZE)
                               .Padding(PLANET_BORDER_SIZE)
-                              .Fill(colors::WHITE)
+                              .Fill(colors::COLOR_WHITE)
                               .OnClick([this](const NodeReference) -> void {
                                   AnimationSystem::StartAnimation(this->planet_animation);
                                   constexpr Money money_per_click { 5U };
@@ -125,15 +125,15 @@ struct GameFrame : Frame, LogLifetimeWithCount<GameFrame> {
                                   });
                               })
                               .Build() };
-    Handle<Node> planet_intra { B(planet).Node(fill).Fill(colors::DARK_NAVY_BLUE).Build() };
-    Handle<Node> build_menu { B(frame).Node(700U, hug).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::CERULEAN).Build() };
+    Handle<Node> planet_intra { B(planet).Node(fill).Fill(colors::COLOR_DARK_NAVY_BLUE).Build() };
+    Handle<Node> build_menu { B(frame).Node(700U, hug).Direction(vertical).Padding(10U).Gap(10U).Fill(colors::COLOR_CERULEAN).Build() };
     NodeComponentPool<BuildingComponent> shop { B(build_menu).Pool<BuildingComponent>() };
 
     Handle<Animation> planet_animation = AnimationSystem::Register(AnimationDesc { .action = [this](const f32 t) -> void {
                                                                                       static constexpr u32 PLANET_PADDING_START = 10U;
                                                                                       const u32 padding_value = PLANET_PADDING_START + static_cast<u32>((1 - t) * PLANET_BORDER_SIZE);
                                                                                       globalData[tree].styles[planet].padding = uint4 { padding_value, padding_value, padding_value, padding_value };
-                                                                                      globalData[tree].styles[planet].background_color = colors::ColorLighten(colors::CYAN, t);
+                                                                                      globalData[tree].styles[planet].background_color = colors::ColorLighten(colors::COLOR_CYAN, t);
                                                                                       Singleton::Get<UIFlags>() & UIFlags::planet;
                                                                                   },
                                                                                    .duration = miliseconds32 { 400U },
@@ -160,8 +160,8 @@ void BuildingComponent::SetProperty(const Property& property) const {
 
     globalData[root.tree].node_properties[name].text = std::format("[{:04}] {:20}", count, building.name);
     globalData[root.tree].styles[item].texture = building.texture;
-    money.SetProperty({ .value = building.cost, .unit = Unit::cosmos, .font_size = FontSizes::body, .color = colors::GOLD });
-    income.SetProperty({ .value = building.income, .unit = Unit::cosmos_per_second, .font_size = FontSizes::body, .color = colors::SILVER });
+    money.SetProperty({ .value = building.cost, .unit = Unit::cosmos, .font_size = FontSizes::body, .color = colors::COLOR_GOLD });
+    income.SetProperty({ .value = building.income, .unit = Unit::cosmos_per_second, .font_size = FontSizes::body, .color = colors::COLOR_SILVER });
     globalData[root.tree].node_properties[root.node].on_click = [&building, property](const NodeReference) -> void {
         GameState& game_state = Singleton::Get<GameState>();
         if (game_state.money >= building.cost) {
@@ -224,7 +224,7 @@ void pcg::arcade::RunCosmoClick() {
     using namespace cosmoclick;
 
     // Data
-    Singleton::Get<WindowState>().clear_color = colors::DARK_GREY;
+    Singleton::Get<WindowState>().clear_color = colors::COLOR_DARK_GREY;
     Singleton::Get<GameDefines>().buildings = List {
         Building { .name = "Mine", .texture = globalData.Create<Texture>(Asset("mine-small.png")), .cost = Money { 100U }, .income = Income { 1U } },
         Building { .name = "Factory", .texture = globalData.Create<Texture>(Asset("factory-small.png")), .cost = Money { 500U }, .income = Income { 10U } },

@@ -17,7 +17,7 @@ using namespace pce;
 using namespace pce::ui;
 
 void arcade::RunMinimal() {
-    Singleton::Get<WindowState>().clear_color = colors::LIGHT_SKY_BLUE;
+    Singleton::Get<WindowState>().clear_color = colors::COLOR_LIGHT_SKY_BLUE;
 
     // Systems
     Orchestra orchestra { };
