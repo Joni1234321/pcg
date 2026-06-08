@@ -1,5 +1,9 @@
 module;
 
+#include <algorithm>
+#include <limits>
+#include <ranges>
+#include <utility>
 
 export module pcg.hex.terrain;
 import pce.u_util;

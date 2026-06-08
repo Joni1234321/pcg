@@ -1,12 +1,19 @@
 module;
 
+#include <tuple>
+
 export module pce.systems.t_debug_system;
 
 import pce.systems.r_ui_node;
+import pce.systems.r_ui_node_data;
 
 import pce.colors;
+import pce.std;
+import pce.collections;
+import pce.u_ecs;
+import pce.u_fonts;
 
-namespace pce::ui {
+export namespace pce::ui {
 struct TickComponent : NodeComponentBase {
     using Property = std::tuple<String&, nanoseconds64, nanoseconds64>;
     explicit TickComponent(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(hug).Text(FontSizes::body, colors::COLOR_RADIANT_ORANGE).Build() } { }

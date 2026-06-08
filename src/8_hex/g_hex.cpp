@@ -1,9 +1,17 @@
-module;
+#include <algorithm>
+#include <cassert>
+#include <format>
+#include <functional>
+#include <optional>
+#include <queue>
+#include <ranges>
+#include <vector>
+
+#include "g_arcade.hpp"
 
 #include "SDL3/SDL_keycode.h"
 #include "SDL3_ttf/SDL_ttf.h"
 
-export module pcg.hex.game;
 import pce.g_globals;
 import pce.r_window_state;
 import pce.u_fonts;
@@ -18,7 +26,6 @@ import pce.systems.t_debug_system;
 import pce.systems.t_tick_system;
 import pce.systems.u_animation_system;
 import pce.systems.u_orchestra;
-import pcg.g_arcade;
 
 import pce.collections;
 import pcg.hex.core;
@@ -27,6 +34,8 @@ import pcg.hex.types;
 import pcg.hex.terrain;
 import pcg.hex.render;
 import pce.colors;
+import pce.std;
+import pce.math;
 
 namespace pcg {
 using namespace pce;

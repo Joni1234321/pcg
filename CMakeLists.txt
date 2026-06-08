@@ -68,7 +68,7 @@ fetchcontent_declare(SDL3_image
                      GIT_TAG "release-3.4.4" EXCLUDE_FROM_ALL)
 fetchcontent_makeavailable(SDL3 SDL3_ttf SDL3_image)
 
-add_executable(pcg src/pcg.cpp)
+add_executable(pcg src/pcg.cpp src/8_hex/g_hex.cpp src/1_systems/t_debug_system.cpp)
 
 target_sources(pcg
                PRIVATE
@@ -103,7 +103,6 @@ target_sources(pcg
                src/1_systems/u_orchestra.cppm
 
                # hex
-               src/8_hex/g_hex.cpp
                src/8_hex/g_hex_terrain.cppm
                src/8_hex/g_hex_types.cppm
                src/8_hex/r_hex.cppm
@@ -111,7 +110,6 @@ target_sources(pcg
                src/8_hex/u_hex.cppm
 
                # app modules
-               src/g_arcade.cppm
 #               src/g_battlesim.cpp
 #               src/g_clickcore.cpp
 #               src/g_commandstrike.cpp
@@ -132,6 +130,13 @@ target_link_libraries(pcg
 target_include_directories(pcg PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_compile_options(pcg PRIVATE -Wno-unsequenced)
+
+# Workaround for clang 22 + libc++ named-modules bug: when <new> is consumed
+# through a named module (pce.std), std::align_val_t is merged as a distinct ODR
+# type, so libc++'s aligned operator-new path fails overload resolution (and even
+# crashes codegen). Disabling aligned allocation compiles out that path. Safe here
+# because no type in this project is over-aligned beyond the default new alignment.
+target_compile_options(pcg PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-fno-aligned-allocation>)
 
 if (SET_WARNINGS_ENABLED)
 	target_compile_options(pcg PRIVATE -Wall -Wextra -Wpedantic -Werror)

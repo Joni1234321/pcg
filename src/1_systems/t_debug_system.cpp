@@ -1,11 +1,28 @@
 module;
 
-export module pce.systems.debug;
+#include <algorithm>
+#include <format>
+#include <functional>
+#include <iterator>
+#include <optional>
+#include <ranges>
+#include <stack>
+#include <string>
+
+#include <SDL3/SDL_keycode.h>
+
+module pce.systems.t_debug_system;
 import pce.systems.i_input_system;
-import pce.systems.t_debug_system;
 import pce.systems.t_tick_system;
 import pce.systems.u_orchestra;
+import pce.systems.r_ui_node;
+import pce.systems.r_ui_node_data;
 
+import pce.g_globals;
+import pce.math;
+import pce.u_ecs;
+import pce.u_fonts;
+import pce.collections;
 import pce.colors;
 import pce.std;
 

@@ -1,8 +1,6 @@
-module;
+#pragma once
 
-export module pcg.g_arcade;
-
-export namespace pcg::arcade {
+namespace pcg::arcade {
 void RunClickCore();
 void RunCosmoClick();
 void RunCommandStrike();

@@ -1,7 +1,8 @@
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_main.h>
 
-import pcg.g_arcade;
+#include "g_arcade.hpp"
+
 import pce.r_window;
 import pce.u_logger;
 import pce.collections;
