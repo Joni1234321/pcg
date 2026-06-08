@@ -629,7 +629,7 @@ void arcade::RunHex() {
         hex_state.units_by_axial[hex_state.units[unit_handle].axial].EmplaceBack(unit_handle);
     }
     GenerateTerritory(hex_state);
-    GenerateRivers(hex_state, 3489);
+    GenerateRiversWalk(hex_state, 3489);
     GenerateTerrainFeatures(hex_state, 3489);
     GenerateRoads(hex_state);
     hex_state.units_by_axial.clear();
