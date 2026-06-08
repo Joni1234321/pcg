@@ -322,4 +322,4 @@ static QualityOfLife GetQualityOfLife(Planet planet) {
     const QualityOfLife quality_of_life_change { static_cast<f32>(balance > Money { 0.0F }) - static_cast<f32>(balance < Money { 0.0F }) };
     return quality_of_life + quality_of_life_change;
 }
-} // namespace pcg
+} // namespace hex

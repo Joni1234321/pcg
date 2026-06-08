@@ -214,7 +214,7 @@ void HighScoreComponent::SetProperty(const Property& property) const {
     globalData[root.tree].styles[score].background_color = secondary;
     globalData[root.tree].node_properties[score].text = std::format("{:05}", high_score.score);
 }
-} // namespace pcg::clickcore
+} // namespace hex::clickcore
 
 void hex::arcade::RunClickCore() {
     hex::Logger().Log("Running click core");

@@ -221,7 +221,7 @@ void CosmoClickUISystem::operator()() const {
         ui_flags.Reset();
     }
 }
-} // namespace pcg::cosmoclick
+} // namespace hex::cosmoclick
 void hex::arcade::RunCosmoClick() {
     hex::Logger().Log("Running cosmo click");
     using namespace hex;

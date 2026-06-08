@@ -8,4 +8,4 @@ void RunBattleSim();
 void RunHexBattle();
 void RunHex();
 void RunMinimal();
-} // namespace pcg::arcade
+} // namespace hex::arcade

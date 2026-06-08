@@ -490,7 +490,7 @@ public:
         window_render_system();
     }
 };
-} // namespace pcg::battlesim
+} // namespace hex::battlesim
 
 void hex::arcade::RunBattleSim() {
     battlesim::BattleSim sim { };

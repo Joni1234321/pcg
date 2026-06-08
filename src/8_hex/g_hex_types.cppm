@@ -1,7 +1,5 @@
 module;
 
-#include <cassert>
-
 export module hex.types;
 
 import std;

@@ -42,4 +42,4 @@ void arcade::RunMinimal() {
 
     while (!Singleton::Get<InputState>().quit && !Singleton::Get<InputState>().keys_down[SDLK_ESCAPE]) { orchestra.RunSystems(); }
 }
-} // namespace pcg
+} // namespace hex

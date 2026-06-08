@@ -45,7 +45,7 @@ struct GameFrame : Frame {
     Handle<Node> sky { B(map).Node(fill).Fill(colors::COLOR_SKY_CYAN).Build() };
     Handle<Node> ground { B(map).Node(fill, 600U).Fill(colors::COLOR_FOREST_GREEN).Build() };
 };
-} // namespace pcg::commandstrike
+} // namespace hex::commandstrike
 
 void hex::arcade::RunCommandStrike() {
     using namespace hex;

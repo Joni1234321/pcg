@@ -150,4 +150,4 @@ TestFrame::TestFrame() {
         Handle<Node> box33 = B(box3).Node(fill).Fill(colors::COLOR_YELLOW).Build();
     }
 }
-} // namespace pce::ui
+} // namespace hex::ui

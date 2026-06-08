@@ -27,7 +27,7 @@ b8 Start() {
 
     return true;
 }
-} // namespace pce
+} // namespace hex
 
 i32 main(const i32 argc, char** argv) {
     (void)argc;

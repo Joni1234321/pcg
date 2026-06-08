@@ -120,4 +120,4 @@ b8 FarmSectorArchetype::Remove(const Entity entity) {
 
     return true;
 }
-} // namespace pcg
+} // namespace hex

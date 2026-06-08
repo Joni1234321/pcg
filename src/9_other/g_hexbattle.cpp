@@ -1598,7 +1598,7 @@ private:
         }
     }
 };
-} // namespace pcg::hexbattle
+} // namespace hex::hexbattle
 
 void hex::arcade::RunHexBattle() {
     hexbattle::HexBattle game { };
