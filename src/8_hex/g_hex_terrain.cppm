@@ -199,15 +199,15 @@ inline void GenerateRivers(HexState& hex_state, const u32 seed) {
     UnorderedSet<AxialAndEdge> visited;
     for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
         const Hex& hex = hex_state.hex_map.data[i];
-        AxialAndEdge axial_and_side_current { .axial = hex_state.hex_map.IndexToAxial(i), .edge = 0 };
-        if ((hex.terrain_type == TerrainType::TERRAIN_TYPE_MOUNTAIN || hex.terrain_type == TerrainType::TERRAIN_TYPE_SNOW) && !visited.contains(axial_and_side_current)) {
+        AxialAndEdge axial_and_edge_current { .axial = hex_state.hex_map.IndexToAxial(i), .edge = 0 };
+        if ((hex.terrain_type == TerrainType::TERRAIN_TYPE_MOUNTAIN || hex.terrain_type == TerrainType::TERRAIN_TYPE_SNOW) && !visited.contains(axial_and_edge_current)) {
             for (u32 step = 0U; step < 64U; step++) {
-                visited.emplace(axial_and_side_current);
-                if (!hex_state.hex_map.Contains(axial_and_side_current.axial) || TerrainIsWater(hex_state.hex_map[axial_and_side_current.axial].terrain_type)) { break; }
+                visited.emplace(axial_and_edge_current);
+                if (!hex_state.hex_map.Contains(axial_and_edge_current.axial) || TerrainIsWater(hex_state.hex_map[axial_and_edge_current.axial].terrain_type)) { break; }
                 u8 side_best = HEX_CORNERS;
-                f32 elevation_min = elevation_at_axial(axial_and_side_current.axial);
+                f32 elevation_min = elevation_at_axial(axial_and_edge_current.axial);
                 for (u8 edge = 0; edge < HEX_CORNERS; edge++) {
-                    const int2 axial_neighbour = axial_and_side_current.axial + HEX_AXIAL_NEIGHBOURS[edge];
+                    const int2 axial_neighbour = axial_and_edge_current.axial + HEX_AXIAL_NEIGHBOURS[edge];
                     if (hex_state.hex_map.Contains(axial_neighbour) && !visited.contains(AxialAndEdge { .axial = axial_neighbour, .edge = edge })) {
                         const f32 elevation = elevation_at_axial(axial_neighbour);
                         if (elevation < elevation_min) {
@@ -217,9 +217,9 @@ inline void GenerateRivers(HexState& hex_state, const u32 seed) {
                     }
                 }
                 if (side_best == HEX_CORNERS) { break; }
-                HexSetRiver(hex_state, axial_and_side_current.axial, (side_best + 1) % HEX_CORNERS);
-                HexSetRiver(hex_state, axial_and_side_current.axial, (side_best + 2) % HEX_CORNERS);
-                axial_and_side_current.axial = axial_and_side_current.axial + HEX_AXIAL_NEIGHBOURS[side_best];
+                HexSetRiver(hex_state, axial_and_edge_current.axial, (side_best + 1) % HEX_CORNERS);
+                HexSetRiver(hex_state, axial_and_edge_current.axial, (side_best + 2) % HEX_CORNERS);
+                axial_and_edge_current.axial = axial_and_edge_current.axial + HEX_AXIAL_NEIGHBOURS[side_best];
             }
         }
     }
