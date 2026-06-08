@@ -2,7 +2,6 @@ module;
 
 export module pcg.g_battlesim;
 
-import pce.util;
 import pcg.g_arcade;
 
 import pce.collections;
@@ -17,7 +16,7 @@ import pce.colors;
 import pce.std;
 import pcs.node_data;
 import pce.font;
-import pce.texture;
+import pce.sdl;
 
 namespace pcg::battlesim {
 using namespace pce;

@@ -1,10 +1,7 @@
-module;
-
-export module hex.core;
+export module hex.hex;
 
 import pce.std;
 import pce.math;
-import pce.util;
 import pce.collections;
 
 export namespace pce {

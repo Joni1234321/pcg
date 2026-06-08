@@ -9,7 +9,7 @@ import pce.collections;
 import pce.strong;
 import pce.std;
 import pce.math;
-import pce.texture;
+import pce.sdl;
 import pce.globals;
 import pce.window_state;
 import pcs.tick;

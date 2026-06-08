@@ -5,7 +5,6 @@ export module pcg.g_clickcore;
 import pcg.g_arcade;
 
 import pce.collections;
-import pce.util;
 
 import pcs.input;
 import pcs.render;

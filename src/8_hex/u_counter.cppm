@@ -13,11 +13,12 @@ import pce.globals;
 import pce.window_state;
 import pce.assets;
 import pce.font;
-import pce.texture;
+import pce.sdl;
 import pcs.camera;
 import pce.collections;
 import pce.colors;
-import hex.core;
+
+import hex.hex;
 import hex.types;
 
 export namespace pcg {

@@ -7,7 +7,6 @@ import pce.std;
 import pce.math;
 import pce.globals;
 import pce.window_state;
-import pce.util;
 import pcs.input;
 
 import pce.std;

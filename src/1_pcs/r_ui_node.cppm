@@ -16,7 +16,7 @@ import pce.font;
 import pce.math;
 import pcs.node_data;
 import pce.collections;
-import pce.texture;
+import pce.sdl;
 import pce.window_state;
 import pce.globals;
 

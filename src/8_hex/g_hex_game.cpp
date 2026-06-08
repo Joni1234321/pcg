@@ -13,8 +13,7 @@ import pce.math;
 import pce.globals;
 import pce.window_state;
 import pce.font;
-import pce.texture;
-import pce.util;
+import pce.sdl;
 import pce.collections;
 
 import pcs.input;
@@ -27,7 +26,7 @@ import pcs.tick;
 import pcs.animation;
 import pcs.orchestra;
 
-import hex.core;
+import hex.hex;
 import hex.counter;
 import hex.types;
 import hex.terrain;

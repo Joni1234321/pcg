@@ -1,12 +1,12 @@
-module;
-
 export module hex.terrain;
-import pce.util;
 
 import std;
+
 import pce.collections;
 import pce.std;
-import hex.core;
+import pce.math;
+
+import hex.hex;
 import hex.types;
 import hex.render;
 

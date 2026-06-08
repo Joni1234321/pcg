@@ -1,36 +1,13 @@
 module;
-// NOLINTBEGIN(*-include-cleaner)
-#include <algorithm>
-#include <array>
 #include <cassert>
-#include <cmath>
-#include <cstdint>
-#include <format>
-#include <functional>
-#include <iterator>
-#include <limits>
-#include <memory>
-#include <optional>
-#include <queue>
-#include <ranges>
-#include <set>
-#include <span>
-#include <stack>
-#include <string>
-#include <type_traits>
-#include <unordered_map>
-#include <unordered_set>
-#include <new>
-#include <utility>
-#include <vector>
-#include <limits>
-#include <numbers>
-// NOLINTEND(*-include-cleaner)
+#include <cstddef>
 
 #if defined(_DEBUG) || defined(NDEBUG)
     #define DEBUG
 #endif // DEBUG
 export module pce.std;
+
+import std.compat;
 
 export using i8 = int8_t;
 export using u8 = uint8_t;
@@ -180,8 +157,8 @@ export using int3 = Vec3<i32>;
 export using float2 = Vec2<f32>;
 export using float3 = Vec3<f32>;
 
-export constexpr u8 U8_MAX = UINT8_MAX;
-export constexpr u32 U32_MAX = UINT32_MAX;
+export constexpr u8 U8_MAX = std::numeric_limits<u8>::max();
+export constexpr u32 U32_MAX = std::numeric_limits<u32>::max();
 
 export template <class T, class U> concept Derived = std::is_base_of_v<U, T>;
 

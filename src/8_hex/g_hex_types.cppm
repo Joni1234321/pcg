@@ -5,10 +5,12 @@ module;
 export module hex.types;
 
 import std;
-import pce.texture;
+
+import pce.sdl;
 import pce.collections;
 import pce.std;
-import hex.core;
+
+import hex.hex;
 
 export namespace pcg {
 using namespace pce;

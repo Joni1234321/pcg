@@ -6,7 +6,6 @@ export module pce.logger;
 import std;
 import pce.math;
 import pce.strong;
-import pce.util;
 import pce.collections;
 import pce.std;
 

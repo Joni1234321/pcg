@@ -8,7 +8,7 @@ module;
 #include <numeric>
 #include <format>
 #include <variant>
-export module pce.u_table;
+export module pce.table;
 
 import pce.collections;
 import pce.logger;

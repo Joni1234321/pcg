@@ -6,7 +6,7 @@ export module pcg.g_cosmoclick;
 import pcg.g_arcade;
 
 import pce.collections;
-import pce.texture;
+import pce.sdl;
 
 import pcs.input;
 import pcs.render;

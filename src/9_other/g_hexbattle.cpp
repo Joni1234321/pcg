@@ -13,7 +13,6 @@ import pcg.g_arcade;
 import std;
 import pce.collections;
 import pce.logger;
-import pce.util;
 
 import pcs.input;
 import pcs.render;

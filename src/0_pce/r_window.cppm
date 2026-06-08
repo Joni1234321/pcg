@@ -12,7 +12,7 @@ import pce.globals;
 import pce.window_state;
 import pce.assets;
 import pce.font;
-import pce.texture;
+import pce.sdl;
 
 
 export namespace pce {

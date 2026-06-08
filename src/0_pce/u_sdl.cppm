@@ -4,14 +4,14 @@ module;
 #include "SDL3/SDL_rect.h"
 #include "SDL3_image/SDL_image.h"
 #include "SDL3_ttf/SDL_ttf.h"
-export module pce.texture;
+
+export module pce.sdl;
 
 import pce.globals;
 import pce.window_state;
 import pce.assets;
 import pce.collections;
 import pce.logger;
-import pce.util;
 import pce.std;
 import pce.math;
 

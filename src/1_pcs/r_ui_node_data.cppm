@@ -13,7 +13,7 @@ import pce.logger;
 import pce.std;
 import pce.globals;
 import pce.colors;
-import pce.texture;
+import pce.sdl;
 
 export namespace pce::ui {
 enum class ElementType : u8 { rectangle, texture, text };

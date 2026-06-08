@@ -76,7 +76,7 @@ fetchcontent_declare(SDL3_image
                      GIT_TAG "release-3.4.4" EXCLUDE_FROM_ALL)
 fetchcontent_makeavailable(SDL3 SDL3_ttf SDL3_image)
 
-add_executable(pcg src/pcg.cpp src/8_hex/g_hex.cpp src/1_pcs/t_debug_system.cpp)
+add_executable(pcg src/pcg.cpp src/8_hex/g_hex_game.cpp src/1_pcs/t_debug_system.cpp)
 set_property(TARGET pcg PROPERTY CXX_MODULE_STD ON)
 target_sources(pcg
                PRIVATE
@@ -89,14 +89,13 @@ target_sources(pcg
                src/0_pce/u_assets.cppm
                src/0_pce/u_collections.cppm
                src/0_pce/u_colors.cppm
-               src/0_pce/u_ecs.cppm
+               src/0_pce/u_strong.cppm
                src/0_pce/u_fonts.cppm
                src/0_pce/u_logger.cppm
                src/0_pce/u_math.cppm
                src/0_pce/u_table.cppm
-               src/0_pce/u_texture.cppm
+               src/0_pce/u_sdl.cppm
                src/0_pce/u_types.cppm
-               src/0_pce/u_util.cppm
 
                # systems
                src/1_pcs/i_input_system.cppm
@@ -112,7 +111,7 @@ target_sources(pcg
                # hex
                src/8_hex/g_hex_terrain.cppm
                src/8_hex/g_hex_types.cppm
-               src/8_hex/r_hex.cppm
+               src/8_hex/r_hex_render.cppm
                src/8_hex/u_counter.cppm
                src/8_hex/u_hex.cppm
 

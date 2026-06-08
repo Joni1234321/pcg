@@ -7,8 +7,7 @@ import pcg.g_components;
 
 import pce.algorithm;
 import pce.logger;
-import pce.u_table;
-import pce.util;
+import pce.table;
 
 import pce.std;
 
