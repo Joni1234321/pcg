@@ -570,7 +570,8 @@ void arcade::RunHex() {
     camera.map_world_min = { 0.0F, 0.0F };
     camera.map_world_max = HexAxialToWorld(static_cast<int2>(hex_state.hex_map.map_size - uint2 { 1, 1 }));
 
-    HexScenarioAi(hex_state);
+    // HexScenarioAi(hex_state);
+    HexScenarioDivisionClash(hex_state);
     HexStateUpdateOOB(hex_state);
 
     for (u32 i = 0; i < hex_state.units.size(); i++) {
