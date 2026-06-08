@@ -1,8 +1,8 @@
 module;
 
 export module pcg.g_game;
-import pce.systems.t_tick_system;
-import pce.u_logger;
+import pcs.tick;
+import pce.logger;
 import pce.std;
 
 export namespace pce::ui {

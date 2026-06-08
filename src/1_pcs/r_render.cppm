@@ -1,12 +1,12 @@
 module;
 
 #include <SDL3/SDL_render.h>
-export module pce.systems.r_render;
+export module pcs.render;
 
 import pce.std;
 import pce.r_window;
-import pce.r_window_state;
-import pce.g_globals;
+import pce.window_state;
+import pce.globals;
 
 export struct RenderWindowSystem {
     void operator()() const {

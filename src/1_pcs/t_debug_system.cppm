@@ -1,17 +1,17 @@
 module;
 
-export module pce.systems.t_debug_system;
+export module pcs.debug;
 
 import std;
 
-import pce.systems.r_ui_node;
-import pce.systems.r_ui_node_data;
+import pcs.node;
+import pcs.node_data;
 
 import pce.colors;
 import pce.std;
 import pce.collections;
-import pce.u_ecs;
-import pce.u_fonts;
+import pce.strong;
+import pce.font;
 
 export namespace pce::ui {
 struct TickComponent : NodeComponentBase {

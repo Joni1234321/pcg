@@ -1,6 +1,6 @@
 module;
 
-export module pce.g_globals;
+export module pce.globals;
 
 import std;
 import pce.collections;

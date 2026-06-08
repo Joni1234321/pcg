@@ -2,22 +2,22 @@ module;
 
 export module pcg.g_battlesim;
 
-import pce.u_util;
+import pce.util;
 import pcg.g_arcade;
 
 import pce.collections;
-import pce.systems.i_input_system;
-import pce.systems.r_render;
-import pce.systems.r_ui_node;
-import pce.systems.t_debug_system;
-import pce.systems.t_tick_system;
-import pce.systems.u_animation_system;
+import pcs.input;
+import pcs.render;
+import pcs.node;
+import pcs.debug;
+import pcs.tick;
+import pcs.animation;
 
 import pce.colors;
 import pce.std;
-import pce.systems.r_ui_node_data;
-import pce.u_fonts;
-import pce.u_texture;
+import pcs.node_data;
+import pce.font;
+import pce.texture;
 
 namespace pcg::battlesim {
 using namespace pce;

@@ -1,6 +1,4 @@
-module;
-
-export module pce.u_algorithm;
+export module pce.algorithm;
 
 import std;
 import pce.collections;

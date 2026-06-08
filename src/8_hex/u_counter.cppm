@@ -4,21 +4,21 @@ module;
 #include <SDL3/SDL_surface.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-export module pcg.hex.counter;
+export module hex.counter;
 
 import std;
 
 import pce.std;
-import pce.g_globals;
-import pce.r_window_state;
-import pce.u_assets;
-import pce.u_fonts;
-import pce.u_texture;
-import pce.systems.r_camera_system;
+import pce.globals;
+import pce.window_state;
+import pce.assets;
+import pce.font;
+import pce.texture;
+import pcs.camera;
 import pce.collections;
 import pce.colors;
-import pcg.hex.core;
-import pcg.hex.types;
+import hex.core;
+import hex.types;
 
 export namespace pcg {
 enum class CounterStyle : u8 { COUNTER_STYLE_NIEHORSTER, COUNTER_STYLE_NIEHORSTER_BIG, COUNTER_STYLE_REAL };

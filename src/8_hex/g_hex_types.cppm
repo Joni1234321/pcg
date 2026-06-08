@@ -2,13 +2,13 @@ module;
 
 #include <cassert>
 
-export module pcg.hex.types;
+export module hex.types;
 
 import std;
-import pce.u_texture;
+import pce.texture;
 import pce.collections;
 import pce.std;
-import pcg.hex.core;
+import hex.core;
 
 export namespace pcg {
 using namespace pce;

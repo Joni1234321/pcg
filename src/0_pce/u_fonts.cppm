@@ -4,13 +4,13 @@ module;
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_log.h>
 #include <SDL3_ttf/SDL_ttf.h>
-export module pce.u_fonts;
+export module pce.font;
 
 import pce.std;
 import pce.math;
-import pce.u_assets;
+import pce.assets;
 import pce.collections;
-import pce.u_logger;
+import pce.logger;
 
 export namespace pce::ui {
 using FontSize = u16;

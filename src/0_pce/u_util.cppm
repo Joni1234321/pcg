@@ -2,7 +2,7 @@ module;
 
 #include <cassert>
 #include <cmath>
-export module pce.u_util;
+export module pce.util;
 
 import std;
 import pce.std;

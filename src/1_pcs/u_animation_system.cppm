@@ -2,17 +2,17 @@ module;
 
 #include <cassert>
 #include <SDL3_ttf/SDL_ttf.h>
-export module pce.systems.u_animation_system;
+export module pcs.animation;
 
 import std;
 import pce.collections;
-import pce.u_ecs;
+import pce.strong;
 import pce.std;
 import pce.math;
-import pce.u_texture;
-import pce.g_globals;
-import pce.r_window_state;
-import pce.systems.t_tick_system;
+import pce.texture;
+import pce.globals;
+import pce.window_state;
+import pcs.tick;
 import pce.colors;
 
 export namespace pce {

@@ -5,7 +5,7 @@
 
 import std;
 import pce.r_window;
-import pce.u_logger;
+import pce.logger;
 import pce.collections;
 import pce.std;
 

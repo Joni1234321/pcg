@@ -5,10 +5,10 @@ module pcg.g_game;
 // ReSharper disable CppNonExplicitConvertingConstructor
 import pcg.g_components;
 
-import pce.u_algorithm;
-import pce.u_logger;
+import pce.algorithm;
+import pce.logger;
 import pce.u_table;
-import pce.u_util;
+import pce.util;
 
 import pce.std;
 

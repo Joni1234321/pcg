@@ -3,17 +3,17 @@ module;
 #include <cassert>
 #include <SDL3_ttf/SDL_ttf.h>
 
-export module pce.systems.r_ui_node_data;
+export module pcs.node_data;
 
 import std;
-import pce.u_algorithm;
+import pce.algorithm;
 import pce.collections;
-import pce.u_fonts;
-import pce.u_logger;
+import pce.font;
+import pce.logger;
 import pce.std;
-import pce.g_globals;
+import pce.globals;
 import pce.colors;
-import pce.u_texture;
+import pce.texture;
 
 export namespace pce::ui {
 enum class ElementType : u8 { rectangle, texture, text };

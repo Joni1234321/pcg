@@ -11,7 +11,7 @@ module;
 export module pce.u_table;
 
 import pce.collections;
-import pce.u_logger;
+import pce.logger;
 import pce.std;
 
 export namespace pce {

@@ -12,14 +12,14 @@ import pcg.g_arcade;
 
 import std;
 import pce.collections;
-import pce.u_logger;
-import pce.u_util;
+import pce.logger;
+import pce.util;
 
-import pce.systems.i_input_system;
-import pce.systems.r_render;
-import pce.systems.r_ui_node;
-import pce.systems.t_debug_system;
-import pce.systems.t_tick_system;
+import pcs.input;
+import pcs.render;
+import pcs.node;
+import pcs.debug;
+import pcs.tick;
 
 import pce.colors;
 import pce.std;

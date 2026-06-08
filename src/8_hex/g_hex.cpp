@@ -6,30 +6,33 @@
 #include "SDL3_ttf/SDL_ttf.h"
 
 import std;
-import pce.g_globals;
-import pce.r_window_state;
-import pce.u_fonts;
-import pce.u_texture;
-import pce.u_util;
-import pce.systems.i_input_system;
-import pce.systems.r_camera_system;
-import pce.systems.r_render;
-import pce.systems.r_ui_node;
-import pce.systems.r_ui_node_data;
-import pce.systems.t_debug_system;
-import pce.systems.t_tick_system;
-import pce.systems.u_animation_system;
-import pce.systems.u_orchestra;
 
-import pce.collections;
-import pcg.hex.core;
-import pcg.hex.counter;
-import pcg.hex.types;
-import pcg.hex.terrain;
-import pcg.hex.render;
 import pce.colors;
 import pce.std;
 import pce.math;
+import pce.globals;
+import pce.window_state;
+import pce.font;
+import pce.texture;
+import pce.util;
+import pce.collections;
+
+import pcs.input;
+import pcs.camera;
+import pcs.render;
+import pcs.node;
+import pcs.node_data;
+import pcs.debug;
+import pcs.tick;
+import pcs.animation;
+import pcs.orchestra;
+
+import hex.core;
+import hex.counter;
+import hex.types;
+import hex.terrain;
+import hex.render;
+
 
 namespace pcg {
 using namespace pce;

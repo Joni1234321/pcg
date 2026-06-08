@@ -2,7 +2,7 @@ module;
 
 #include <SDL3/SDL_timer.h>
 
-export module pce.u_ecs;
+export module pce.strong;
 
 // ReSharper disable CppNonExplicitConversionOperator
 // ReSharper disable CppNonExplicitConversionOperator
@@ -75,10 +75,10 @@ using nanoseconds64 = StrongType<u64, struct Nanoseconds64Tag, Arithmetic>;
 inline miliseconds32 TimeNowMS() noexcept { return miliseconds32 { static_cast<u32>(SDL_GetTicks()) }; }
 inline nanoseconds64 TimeNowNS() noexcept { return nanoseconds64 { SDL_GetTicksNS() }; }
 
- constexpr f32 SECONDS_TO_MS = 1'000.0F;
- constexpr f32 MS_TO_SECONDS = 1.0F / 1'000.0F;
- constexpr f32 SECONDS_TO_NS = 1'000'000'000.0F;
- constexpr f32 NS_TO_SECONDS = 1.0F / 1'000'000'000.0F;
+constexpr f32 SECONDS_TO_MS = 1'000.0F;
+constexpr f32 MS_TO_SECONDS = 1.0F / 1'000.0F;
+constexpr f32 SECONDS_TO_NS = 1'000'000'000.0F;
+constexpr f32 NS_TO_SECONDS = 1.0F / 1'000'000'000.0F;
 
 } // namespace pce
 

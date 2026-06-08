@@ -1,11 +1,11 @@
 module;
 
-export module pce.systems.u_orchestra;
+export module pcs.orchestra;
 
 import std;
-import pce.g_globals;
-import pce.u_ecs;
-import pce.u_logger;
+import pce.globals;
+import pce.strong;
+import pce.logger;
 
 import pce.collections;
 

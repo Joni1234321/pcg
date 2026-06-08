@@ -1,14 +1,14 @@
 module;
 
 #include <SDL3/SDL_keycode.h>
-export module pce.systems.r_camera_system;
+export module pcs.camera;
 
 import pce.std;
 import pce.math;
-import pce.g_globals;
-import pce.r_window_state;
-import pce.u_util;
-import pce.systems.i_input_system;
+import pce.globals;
+import pce.window_state;
+import pce.util;
+import pcs.input;
 
 import pce.std;
 

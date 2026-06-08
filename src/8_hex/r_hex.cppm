@@ -3,20 +3,20 @@ module;
 #include <cassert>
 #include "SDL3/SDL.h"
 
-export module pcg.hex.render;
+export module hex.render;
 
 import std;
 
-import pce.g_globals;
-import pce.r_window_state;
-import pce.u_assets;
-import pce.u_texture;
-import pce.u_util;
-import pce.systems.r_camera_system;
+import pce.globals;
+import pce.window_state;
+import pce.assets;
+import pce.texture;
+import pce.util;
+import pcs.camera;
 import pce.colors;
 import pce.std;
-import pcg.hex.core;
-import pcg.hex.types;
+import hex.core;
+import hex.types;
 import pce.collections;
 import pce.math;
 

@@ -2,13 +2,13 @@ module;
 
 #include "SDL3/SDL_mouse.h"
 #include <SDL3/SDL.h>
-export module pce.systems.i_input_system;
+export module pcs.input;
 
 import std;
-import pce.g_globals;
+import pce.globals;
 import pce.collections;
 import pce.std;
-import pce.u_logger;
+import pce.logger;
 
 export namespace pce {
 struct InputState {

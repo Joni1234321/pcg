@@ -1,9 +1,9 @@
 module;
 
-export module pce.systems.t_tick_system;
+export module pcs.tick;
 
-import pce.g_globals;
-import pce.u_ecs;
+import pce.globals;
+import pce.strong;
 import pce.std;
 
 export namespace pce {

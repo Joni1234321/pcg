@@ -76,38 +76,38 @@ fetchcontent_declare(SDL3_image
                      GIT_TAG "release-3.4.4" EXCLUDE_FROM_ALL)
 fetchcontent_makeavailable(SDL3 SDL3_ttf SDL3_image)
 
-add_executable(pcg src/pcg.cpp src/8_hex/g_hex.cpp src/1_systems/t_debug_system.cpp)
+add_executable(pcg src/pcg.cpp src/8_hex/g_hex.cpp src/1_pcs/t_debug_system.cpp)
 set_property(TARGET pcg PROPERTY CXX_MODULE_STD ON)
 target_sources(pcg
                PRIVATE
                FILE_SET cxx_modules TYPE CXX_MODULES FILES
                # engine modules
-               src/0_engine/g_globals.cppm
-               src/0_engine/r_window.cppm
-               src/0_engine/r_window_state.cppm
-               src/0_engine/u_algorithm.cppm
-               src/0_engine/u_assets.cppm
-               src/0_engine/u_collections.cppm
-               src/0_engine/u_colors.cppm
-               src/0_engine/u_ecs.cppm
-               src/0_engine/u_fonts.cppm
-               src/0_engine/u_logger.cppm
-               src/0_engine/u_math.cppm
-               src/0_engine/u_table.cppm
-               src/0_engine/u_texture.cppm
-               src/0_engine/u_types.cppm
-               src/0_engine/u_util.cppm
+               src/0_pce/g_globals.cppm
+               src/0_pce/r_window.cppm
+               src/0_pce/r_window_state.cppm
+               src/0_pce/u_algorithm.cppm
+               src/0_pce/u_assets.cppm
+               src/0_pce/u_collections.cppm
+               src/0_pce/u_colors.cppm
+               src/0_pce/u_ecs.cppm
+               src/0_pce/u_fonts.cppm
+               src/0_pce/u_logger.cppm
+               src/0_pce/u_math.cppm
+               src/0_pce/u_table.cppm
+               src/0_pce/u_texture.cppm
+               src/0_pce/u_types.cppm
+               src/0_pce/u_util.cppm
 
                # systems
-               src/1_systems/i_input_system.cppm
-               src/1_systems/r_camera_system.cppm
-               src/1_systems/r_render.cppm
-               src/1_systems/r_ui_node.cppm
-               src/1_systems/r_ui_node_data.cppm
-               src/1_systems/t_debug_system.cppm
-               src/1_systems/t_tick_system.cppm
-               src/1_systems/u_animation_system.cppm
-               src/1_systems/u_orchestra.cppm
+               src/1_pcs/i_input_system.cppm
+               src/1_pcs/r_camera_system.cppm
+               src/1_pcs/r_render.cppm
+               src/1_pcs/r_ui_node.cppm
+               src/1_pcs/r_ui_node_data.cppm
+               src/1_pcs/t_debug_system.cppm
+               src/1_pcs/t_tick_system.cppm
+               src/1_pcs/u_animation_system.cppm
+               src/1_pcs/u_orchestra.cppm
 
                # hex
                src/8_hex/g_hex_terrain.cppm

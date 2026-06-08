@@ -4,7 +4,7 @@ export module pce.colors;
 
 import pce.std;
 import pce.math;
-import pce.u_texture;
+import pce.texture;
 
 export namespace pce::colors {
 constexpr Color ColorLighten(const Color color, const f32 factor) {

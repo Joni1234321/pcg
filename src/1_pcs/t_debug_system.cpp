@@ -2,20 +2,20 @@ module;
 
 #include <SDL3/SDL_keycode.h>
 
-module pce.systems.t_debug_system;
+module pcs.debug;
 
 import std;
 
-import pce.systems.i_input_system;
-import pce.systems.t_tick_system;
-import pce.systems.u_orchestra;
-import pce.systems.r_ui_node;
-import pce.systems.r_ui_node_data;
+import pcs.input;
+import pcs.tick;
+import pcs.orchestra;
+import pcs.node;
+import pcs.node_data;
 
-import pce.g_globals;
+import pce.globals;
 import pce.math;
-import pce.u_ecs;
-import pce.u_fonts;
+import pce.strong;
+import pce.font;
 import pce.collections;
 import pce.colors;
 import pce.std;

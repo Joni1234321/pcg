@@ -1,6 +1,6 @@
 module;
 
-export module pce.u_assets;
+export module pce.assets;
 import std;
 
 export namespace pce {

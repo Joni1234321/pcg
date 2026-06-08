@@ -4,21 +4,21 @@ module;
 #include <SDL3/SDL_error.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-export module pce.systems.r_ui_node;
+export module pcs.node;
 
 import std;
 import pce.r_window;
-import pce.systems.i_input_system;
+import pcs.input;
 
 import pce.colors;
 import pce.std;
-import pce.u_fonts;
+import pce.font;
 import pce.math;
-import pce.systems.r_ui_node_data;
+import pcs.node_data;
 import pce.collections;
-import pce.u_texture;
-import pce.r_window_state;
-import pce.g_globals;
+import pce.texture;
+import pce.window_state;
+import pce.globals;
 
 export namespace pce::ui {
 struct InputNodeSystem {

@@ -8,11 +8,11 @@ export module pce.r_window;
 
 import pce.std;
 
-import pce.g_globals;
-import pce.r_window_state;
-import pce.u_assets;
-import pce.u_fonts;
-import pce.u_texture;
+import pce.globals;
+import pce.window_state;
+import pce.assets;
+import pce.font;
+import pce.texture;
 
 
 export namespace pce {

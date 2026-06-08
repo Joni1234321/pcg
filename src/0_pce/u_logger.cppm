@@ -1,12 +1,12 @@
 module;
 
 #include <cxxabi.h>
-export module pce.u_logger;
+export module pce.logger;
 
 import std;
 import pce.math;
-import pce.u_ecs;
-import pce.u_util;
+import pce.strong;
+import pce.util;
 import pce.collections;
 import pce.std;
 

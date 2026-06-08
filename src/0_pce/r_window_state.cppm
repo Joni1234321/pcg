@@ -1,10 +1,10 @@
 module;
 
 #include <SDL3_ttf/SDL_ttf.h>
-export module pce.r_window_state;
+export module pce.window_state;
 
 import pce.std;
-import pce.u_fonts;
+import pce.font;
 
 export namespace pce {
  struct WindowState {

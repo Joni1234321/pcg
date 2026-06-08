@@ -1,14 +1,14 @@
 module;
 
-export module pcg.hex.terrain;
-import pce.u_util;
+export module hex.terrain;
+import pce.util;
 
 import std;
 import pce.collections;
 import pce.std;
-import pcg.hex.core;
-import pcg.hex.types;
-import pcg.hex.render;
+import hex.core;
+import hex.types;
+import hex.render;
 
 export namespace pcg {
 [[nodiscard]] constexpr u32 TerrainToMovementCost(const TerrainType terrain) {

@@ -3,8 +3,8 @@ module;
 export module pcg.g_components;
 
 import pce.math;
-import pce.u_ecs;
-import pce.systems.t_tick_system;
+import pce.strong;
+import pcs.tick;
 import pce.collections;
 import pce.std;
 
