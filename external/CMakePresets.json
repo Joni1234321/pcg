@@ -1,0 +1,31 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER":   "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "xd",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/xd",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "xdc",
+      "inherits": "xd",
+      "binaryDir": "${sourceDir}/build/xdc",
+      "cacheVariables": {
+        "SET_CLANG_TIDY": "ON",
+        "SET_WARNINGS_ENABLED": "ON"
+      }
+    }
+  ]
+}

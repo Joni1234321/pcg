@@ -1,10 +1,18 @@
 cmake_minimum_required(VERSION 3.30)
 
+# find uuid https://gitlab.kitware.com/cmake/cmake/-/blob/master/Help/dev/experimental.rst
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 4.3)
+	set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "451f2fe2-a8a2-47c3-bc32-94786d8fc91b")
+else()
+	set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
+endif()
+
 project(pcg VERSION 1.0)
 
 option(SET_WARNINGS_ENABLED "Enable warnings" FALSE)
 option(SET_CLANG_TIDY "Enable clang tidy" FALSE)
 
+set(CMAKE_CXX_MODULE_STD 1)
 set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
@@ -69,7 +77,7 @@ fetchcontent_declare(SDL3_image
 fetchcontent_makeavailable(SDL3 SDL3_ttf SDL3_image)
 
 add_executable(pcg src/pcg.cpp src/8_hex/g_hex.cpp src/1_systems/t_debug_system.cpp)
-
+set_property(TARGET pcg PROPERTY CXX_MODULE_STD ON)
 target_sources(pcg
                PRIVATE
                FILE_SET cxx_modules TYPE CXX_MODULES FILES
@@ -131,22 +139,19 @@ target_include_directories(pcg PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_compile_options(pcg PRIVATE -Wno-unsequenced)
 
-# Workaround for clang 22 + libc++ named-modules bug: when <new> is consumed
-# through a named module (pce.std), std::align_val_t is merged as a distinct ODR
-# type, so libc++'s aligned operator-new path fails overload resolution (and even
-# crashes codegen). Disabling aligned allocation compiles out that path. Safe here
-# because no type in this project is over-aligned beyond the default new alignment.
-target_compile_options(pcg PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-fno-aligned-allocation>)
-
 if (SET_WARNINGS_ENABLED)
-	target_compile_options(pcg PRIVATE -Wall -Wextra -Wpedantic -Werror)
+	target_compile_options(pcg PRIVATE -Wall -Wextra -Wpedantic -Werror
+			-Wno-error=unused-variable
+			-Wno-error=unused-parameter
+			-Wno-error=unused-function
+			-Wno-error=missing-designated-field-initializers)
 endif ()
 
 # clang-tidy — resolved after add_executable so it only applies to pcg
 if (SET_CLANG_TIDY)
 	find_program(CLANG_TIDY_PROGRAM clang-tidy REQUIRED)
 	set_target_properties(pcg PROPERTIES
-	                      CXX_CLANG_TIDY "${CLANG_TIDY_PROGRAM};--extra-arg=-std=c++26;--use-color"
+	                      CXX_CLANG_TIDY "${CLANG_TIDY_PROGRAM};--extra-arg=-std=gnu++26;--use-color"
 	)
 
 endif ()

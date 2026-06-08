@@ -3,6 +3,7 @@ module;
 #include <cassert>
 #include <optional>
 #include <utility>
+#include <new>
 
 #include "SDL3/SDL.h"
 

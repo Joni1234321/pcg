@@ -205,7 +205,7 @@ inline void GenerateRivers(HexState& hex_state, const u32 seed) {
     for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
         const Hex& hex = hex_state.hex_map.data[i];
         AxialAndEdge axial_and_side_current { .axial = hex_state.hex_map.IndexToAxial(i), .edge = 0 };
-        if (hex.terrain_type == TerrainType::TERRAIN_TYPE_MOUNTAIN || hex.terrain_type == TerrainType::TERRAIN_TYPE_SNOW && !visited.contains(axial_and_side_current)) {
+        if ((hex.terrain_type == TerrainType::TERRAIN_TYPE_MOUNTAIN || hex.terrain_type == TerrainType::TERRAIN_TYPE_SNOW) && !visited.contains(axial_and_side_current)) {
             for (u32 step = 0U; step < 64U; step++) {
                 visited.emplace(axial_and_side_current);
                 if (!hex_state.hex_map.Contains(axial_and_side_current.axial) || TerrainIsWater(hex_state.hex_map[axial_and_side_current.axial].terrain_type)) { break; }

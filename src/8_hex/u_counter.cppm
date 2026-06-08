@@ -1,10 +1,10 @@
 module;
 
-#include <optional>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_surface.h>
 #include <SDL3_ttf/SDL_ttf.h>
-#include <utility>
+// ReSharper disable once CppUnusedIncludeDirective
+// #include <new> // force keep https://github.com/llvm/llvm-project/issues/59601 NOLINT(*-include-cleaner)
 
 export module pcg.hex.counter;
 import pce.std;
@@ -18,6 +18,7 @@ import pce.collections;
 import pce.colors;
 import pcg.hex.core;
 import pcg.hex.types;
+import std;
 
 export namespace pcg {
 enum class CounterStyle : u8 { COUNTER_STYLE_NIEHORSTER, COUNTER_STYLE_NIEHORSTER_BIG, COUNTER_STYLE_REAL };

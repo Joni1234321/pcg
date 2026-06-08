@@ -3,6 +3,7 @@
 
 #include "g_arcade.hpp"
 
+import std;
 import pce.r_window;
 import pce.u_logger;
 import pce.collections;
@@ -31,6 +32,8 @@ b8 Start() {
 i32 main(const i32 argc, char** argv) {
     (void)argc;
     (void)argv;
+
+    std::printf("Hello world");
 
     const b8 result = pce::Start();
 
