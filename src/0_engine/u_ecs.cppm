@@ -1,7 +1,6 @@
 module;
 
 #include <SDL3/SDL_timer.h>
-#include <format>
 
 export module pce.u_ecs;
 
@@ -9,6 +8,7 @@ export module pce.u_ecs;
 // ReSharper disable CppNonExplicitConversionOperator
 // ReSharper disable CppNonExplicitConvertingConstructor
 
+import std;
 import pce.std;
 import pce.collections;
 

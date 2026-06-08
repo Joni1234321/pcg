@@ -1,8 +1,8 @@
 module;
 
-#include <typeindex>
 export module pce.g_globals;
 
+import std;
 import pce.collections;
 import pce.std;
 

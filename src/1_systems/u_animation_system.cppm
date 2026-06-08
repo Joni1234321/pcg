@@ -1,11 +1,10 @@
 module;
 
 #include <cassert>
-#include <functional>
 #include <SDL3_ttf/SDL_ttf.h>
-#include <ranges>
 export module pce.systems.u_animation_system;
 
+import std;
 import pce.collections;
 import pce.u_ecs;
 import pce.std;

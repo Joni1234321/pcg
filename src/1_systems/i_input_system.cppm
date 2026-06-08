@@ -2,9 +2,9 @@ module;
 
 #include "SDL3/SDL_mouse.h"
 #include <SDL3/SDL.h>
-#include <ranges>
 export module pce.systems.i_input_system;
 
+import std;
 import pce.g_globals;
 import pce.collections;
 import pce.std;

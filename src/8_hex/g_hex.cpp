@@ -1,17 +1,11 @@
-#include <algorithm>
 #include <cassert>
-#include <format>
-#include <functional>
-#include <optional>
-#include <queue>
-#include <ranges>
-#include <vector>
 
 #include "g_arcade.hpp"
 
 #include "SDL3/SDL_keycode.h"
 #include "SDL3_ttf/SDL_ttf.h"
 
+import std;
 import pce.g_globals;
 import pce.r_window_state;
 import pce.u_fonts;

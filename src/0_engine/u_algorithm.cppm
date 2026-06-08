@@ -1,8 +1,8 @@
 module;
 
-#include<ranges>
-
 export module pce.u_algorithm;
+
+import std;
 import pce.collections;
 import pce.std;
 

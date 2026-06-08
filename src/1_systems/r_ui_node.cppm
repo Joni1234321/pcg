@@ -1,16 +1,12 @@
 module;
 #include <cassert>
-#include <optional>
-#include <ranges>
-#include <span>
-#include <stack>
-#include <algorithm>
 
 #include <SDL3/SDL_error.h>
-#include <SDL3/SDL_log.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
 export module pce.systems.r_ui_node;
+
+import std;
 import pce.r_window;
 import pce.systems.i_input_system;
 

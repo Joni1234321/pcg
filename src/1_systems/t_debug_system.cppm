@@ -1,8 +1,8 @@
 module;
 
-#include <tuple>
-
 export module pce.systems.t_debug_system;
+
+import std;
 
 import pce.systems.r_ui_node;
 import pce.systems.r_ui_node_data;

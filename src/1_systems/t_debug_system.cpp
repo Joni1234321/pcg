@@ -1,17 +1,11 @@
 module;
 
-#include <algorithm>
-#include <format>
-#include <functional>
-#include <iterator>
-#include <optional>
-#include <ranges>
-#include <stack>
-#include <string>
-
 #include <SDL3/SDL_keycode.h>
 
 module pce.systems.t_debug_system;
+
+import std;
+
 import pce.systems.i_input_system;
 import pce.systems.t_tick_system;
 import pce.systems.u_orchestra;

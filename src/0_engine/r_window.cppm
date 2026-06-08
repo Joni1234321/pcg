@@ -3,7 +3,10 @@ module;
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_log.h>
 #include <SDL3_ttf/SDL_ttf.h>
+
 export module pce.r_window;
+
+import pce.std;
 
 import pce.g_globals;
 import pce.r_window_state;
@@ -11,7 +14,6 @@ import pce.u_assets;
 import pce.u_fonts;
 import pce.u_texture;
 
-import pce.std;
 
 export namespace pce {
  const RelativePath PATH_FONT_NORMAL { "Titillium_Web/TitilliumWeb-Regular.ttf" };

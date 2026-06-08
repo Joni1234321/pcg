@@ -1,6 +1,5 @@
 module;
 
-#include <unordered_map>
 export module pcg.g_components;
 
 import pce.math;

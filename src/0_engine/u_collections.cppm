@@ -1,19 +1,9 @@
 module;
 
-
-#include <array>
 #include <cassert>
-#include <ranges>
-#include <format>
-#include <set>
-#include <span>
-#include <stack>
-#include <type_traits>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
 
 export module pce.collections;
+import std;
 import pce.std;
 import pce.math;
 export namespace pce {

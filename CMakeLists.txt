@@ -93,7 +93,6 @@ target_sources(pcg
                src/0_engine/u_fonts.cppm
                src/0_engine/u_logger.cppm
                src/0_engine/u_math.cppm
-               src/0_engine/u_numerics.cppm
                src/0_engine/u_table.cppm
                src/0_engine/u_texture.cppm
                src/0_engine/u_types.cppm

@@ -1,12 +1,11 @@
 module;
 
 #include <cassert>
-#include <functional>
 #include <SDL3_ttf/SDL_ttf.h>
-#include <ranges>
 
 export module pce.systems.r_ui_node_data;
 
+import std;
 import pce.u_algorithm;
 import pce.collections;
 import pce.u_fonts;

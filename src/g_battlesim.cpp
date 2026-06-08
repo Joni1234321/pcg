@@ -1,6 +1,5 @@
 module;
 
-#include <algorithm>
 export module pcg.g_battlesim;
 
 import pce.u_util;
@@ -16,6 +15,9 @@ import pce.systems.u_animation_system;
 
 import pce.colors;
 import pce.std;
+import pce.systems.r_ui_node_data;
+import pce.u_fonts;
+import pce.u_texture;
 
 namespace pcg::battlesim {
 using namespace pce;

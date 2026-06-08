@@ -1,14 +1,9 @@
 module;
 
-#include <array>
-#include <cstdio>
 #include <cxxabi.h>
-#include <format>
-#include <ranges>
-#include <string>
-#include <typeinfo>
 export module pce.u_logger;
 
+import std;
 import pce.math;
 import pce.u_ecs;
 import pce.u_util;

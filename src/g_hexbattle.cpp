@@ -1,8 +1,5 @@
 module;
 
-#include <algorithm>
-#include <array>
-#include <ranges>
 export module pcg.g_hexbattle;
 
 // =================================================================
@@ -13,6 +10,7 @@ export module pcg.g_hexbattle;
 
 import pcg.g_arcade;
 
+import std;
 import pce.collections;
 import pce.u_logger;
 import pce.u_util;
