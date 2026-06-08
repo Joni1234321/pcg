@@ -10,7 +10,7 @@ import pce.collections;
 import pce.std;
 import pce.logger;
 
-export namespace pce {
+export namespace hex {
 struct InputState {
     UnorderedMap<SDL_Keycode, b8> keys { };
     UnorderedMap<SDL_Keycode, b8> keys_down { };

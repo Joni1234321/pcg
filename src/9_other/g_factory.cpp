@@ -7,8 +7,8 @@ import pcg.g_components;
 import pce.std;
 
 //TODO: PLYER  PLANET CONCEPT CONSTRAINTS
-namespace pcg {
-using pce::Rand;
+namespace hex {
+using hex::Rand;
 
 Entity PlayerArchetype::Add(const Money money) {
     const Entity entity = Archetype::Add();
@@ -26,7 +26,7 @@ b8 PlayerArchetype::Remove(const Entity entity) {
 
     return true;
 }
-Entity PlanetArchetype::Add(const pce::Tick tick, const Money money, const Population population) {
+Entity PlanetArchetype::Add(const hex::Tick tick, const Money money, const Population population) {
     const Entity entity = Archetype::Add();
 
     (void)players.EmplaceBack(Entity::NONE);
@@ -50,7 +50,7 @@ b8 PlanetArchetype::Remove(const Entity entity) {
 
     return true;
 }
-Entity PlanetArchetype::AddTemplate(const pce::Tick tick, const PlanetTemplate planet_template) {
+Entity PlanetArchetype::AddTemplate(const hex::Tick tick, const PlanetTemplate planet_template) {
     Entity planet;
     switch (planet_template) {
         case PlanetTemplate::Agriculture: {

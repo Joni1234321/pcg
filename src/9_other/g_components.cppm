@@ -8,14 +8,14 @@ import pcs.tick;
 import pce.collections;
 import pce.std;
 
-export namespace pcg {
-using Percentage = pce::StrongType<f32, struct PercentageTag, pce::Arithmetic>;
+export namespace hex {
+using Percentage = hex::StrongType<f32, struct PercentageTag, hex::Arithmetic>;
 
-using Money = pce::StrongType<f32, struct MoneyTag, pce::Arithmetic, pce::FormatLongNumber>;
-using Population = pce::StrongType<f32, struct PopulationTag, pce::Arithmetic, pce::FormatLongNumber>;
-using Production = pce::StrongType<u32, struct ProductionTag, pce::Arithmetic>;
+using Money = hex::StrongType<f32, struct MoneyTag, hex::Arithmetic, hex::FormatLongNumber>;
+using Population = hex::StrongType<f32, struct PopulationTag, hex::Arithmetic, hex::FormatLongNumber>;
+using Production = hex::StrongType<u32, struct ProductionTag, hex::Arithmetic>;
 
-using QualityOfLife = pce::StrongType<f32, struct QualityOfLifeTag, pce::Arithmetic>;
+using QualityOfLife = hex::StrongType<f32, struct QualityOfLifeTag, hex::Arithmetic>;
 // theory aktiver og passiver. aktiver is the initial cost of investments
 // https://ordbog.ku.dk/pdf/financial_terminology.pdf
 // https://uwaterloo.ca/economics/sites/default/files/uploads/documents/econ-101-syllabus.pdf
@@ -56,14 +56,14 @@ enum class Good : u8 { Wood, Iron, Food, Steel, Coal };
 enum class QualityOfLifeStage : u8 { Dying, Surviving, Struggling, Secure, Comfortable, Lavish, Dictator, Extravagant };
 
 struct Data {
-    pce::UnorderedMap<FarmType, Stats> farm_types;
+    hex::UnorderedMap<FarmType, Stats> farm_types;
 };
 
 struct BuildingUnderConstruction {
     FarmType type;
     u16 progress;
 };
-struct ConstructionQueue : pce::Queue<BuildingUnderConstruction> {
+struct ConstructionQueue : hex::Queue<BuildingUnderConstruction> {
     u32 construction_capacity { 1U };
 };
 struct PopulationFinance {
@@ -81,43 +81,43 @@ struct Market {
     }
 };
 constexpr QualityOfLife QUALITY_OF_LIFE_LEVELS_PER_STAGE = QualityOfLife { 5.0F };
-QualityOfLifeStage GetQualityOfLifeStage(const QualityOfLife quality_of_life) { return static_cast<QualityOfLifeStage>(pce::math::Min((quality_of_life / QUALITY_OF_LIFE_LEVELS_PER_STAGE).value, static_cast<f32>(QualityOfLifeStage::Extravagant))); }
+QualityOfLifeStage GetQualityOfLifeStage(const QualityOfLife quality_of_life) { return static_cast<QualityOfLifeStage>(hex::math::Min((quality_of_life / QUALITY_OF_LIFE_LEVELS_PER_STAGE).value, static_cast<f32>(QualityOfLifeStage::Extravagant))); }
 struct StateArchetype final : Archetype {
-    pce::Parent planets;
-    pce::Component<Market> markets;
+    hex::Parent planets;
+    hex::Component<Market> markets;
     Entity Add(Entity planet);
     b8 Remove(Entity entity) override;
 };
 struct Sector : Archetype {
-    pce::Parent planets;
+    hex::Parent planets;
 };
 struct FarmSectorArchetype final : Sector {
-    pce::Component<FarmType> types;
-    pce::Component<Finance> finances;
-    pce::Component<Money> population_balance;
+    hex::Component<FarmType> types;
+    hex::Component<Finance> finances;
+    hex::Component<Money> population_balance;
     Entity Add(Entity player, FarmType farm_type);
     b8 Remove(Entity entity) override;
 };
 
 struct PlayerArchetype final : Archetype {
-    pce::Component<Money> moneys;
-    pce::Component<ConstructionQueue> construction_queue;
+    hex::Component<Money> moneys;
+    hex::Component<ConstructionQueue> construction_queue;
     Entity Add(Money);
     b8 Remove(Entity entity) override;
 };
 
 enum class PlanetTemplate { Agriculture, Gaia, Playground, Barren };
 struct PlanetArchetype final : Archetype {
-    pce::Parent players;
-    pce::Component<pce::Tick> ages;
-    pce::Component<Money> moneys;
-    pce::Component<Population> employed;
-    pce::Component<Population> unemployed;
-    pce::Component<QualityOfLife> population_quality_of_life;
-    pce::Component<ConstructionQueue> construction_queue;
-    Entity Add(pce::Tick, Money, Population);
+    hex::Parent players;
+    hex::Component<hex::Tick> ages;
+    hex::Component<Money> moneys;
+    hex::Component<Population> employed;
+    hex::Component<Population> unemployed;
+    hex::Component<QualityOfLife> population_quality_of_life;
+    hex::Component<ConstructionQueue> construction_queue;
+    Entity Add(hex::Tick, Money, Population);
     b8 Remove(Entity entity) override;
-    Entity AddTemplate(pce::Tick, PlanetTemplate);
+    Entity AddTemplate(hex::Tick, PlanetTemplate);
 };
 
 inline PlayerArchetype player_archetype;

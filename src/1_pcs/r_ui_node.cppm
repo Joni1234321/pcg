@@ -20,7 +20,7 @@ import pce.sdl;
 import pce.window_state;
 import pce.globals;
 
-export namespace pce::ui {
+export namespace hex::ui {
 struct InputNodeSystem {
     void operator()() const;
     ~InputNodeSystem() { Singleton::Get<HoveredType>() = { }; }
@@ -113,7 +113,7 @@ NodeBuilder& NodeBuilder::Fill(const Color color) {
     style.background_color = color;
     return *this;
 }
-NodeBuilder& NodeBuilder::Texture(const Handle<pce::Texture> texture) {
+NodeBuilder& NodeBuilder::Texture(const Handle<hex::Texture> texture) {
     style.texture = HandleOptional { texture };
     return *this;
 }

@@ -21,7 +21,7 @@ import pce.colors;
 import hex.hex;
 import hex.types;
 
-export namespace pcg {
+export namespace hex {
 enum class CounterStyle : u8 { COUNTER_STYLE_NIEHORSTER, COUNTER_STYLE_NIEHORSTER_BIG, COUNTER_STYLE_REAL };
 
 constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_REAL;

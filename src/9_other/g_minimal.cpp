@@ -16,9 +16,9 @@ import pcg.g_arcade;
 
 import pce.colors;
 
-namespace pcg {
-using namespace pce;
-using namespace pce::ui;
+namespace hex {
+using namespace hex;
+using namespace hex::ui;
 
 void arcade::RunMinimal() {
     Singleton::Get<WindowState>().clear_color = colors::COLOR_LIGHT_SKY_BLUE;

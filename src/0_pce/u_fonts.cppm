@@ -12,7 +12,7 @@ import pce.assets;
 import pce.collections;
 import pce.logger;
 
-export namespace pce::ui {
+export namespace hex::ui {
 using FontSize = u16;
 enum class FontSizes : FontSize { body = 16U, h1 = 34U, h2 = 30U, h3 = 24U, h4 = 20U, h5 = 18U, small = 14U, tiny = 12U, title = 52U, massive = 72U };
 constexpr FontSize FONT_MIN_SIZE = 5;
@@ -55,7 +55,7 @@ public:
 };
 } // namespace pce::ui
 
-namespace pce::ui {
+namespace hex::ui {
 const Font& FontCollection::GetFontNormal(FontSizes size) const {
     assert(static_cast<FontSize>(size) >= FONT_MIN_SIZE);
     size = math::Max(size, static_cast<FontSizes>(FONT_MIN_SIZE));

@@ -6,7 +6,7 @@ export module pce.window_state;
 import pce.std;
 import pce.font;
 
-export namespace pce {
+export namespace hex {
  struct WindowState {
     SDL_Window* window;
     SDL_Renderer* renderer;

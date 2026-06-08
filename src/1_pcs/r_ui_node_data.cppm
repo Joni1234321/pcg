@@ -15,7 +15,7 @@ import pce.globals;
 import pce.colors;
 import pce.sdl;
 
-export namespace pce::ui {
+export namespace hex::ui {
 enum class ElementType : u8 { rectangle, texture, text };
 enum class TextAlign { left, center, right };
 enum RelativeConstraint : u8 { hug, fill };
@@ -199,7 +199,7 @@ private:
 
 } // namespace pce::ui
 
-namespace pce::ui {
+namespace hex::ui {
 Handle<Node> NodeTree::AddRoot() {
     assert(styles.empty()); // Setting root non empty tree
     (void)styles.EmplaceBack();

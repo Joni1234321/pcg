@@ -14,7 +14,7 @@ import pce.collections;
 import pce.logger;
 import pce.std;
 
-export namespace pce {
+export namespace hex {
 struct Table {
     using Cell = String;
     using Column = List<Cell>;

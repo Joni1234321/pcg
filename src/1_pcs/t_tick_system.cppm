@@ -6,7 +6,7 @@ import pce.globals;
 import pce.strong;
 import pce.std;
 
-export namespace pce {
+export namespace hex {
 using Tick = StrongType<u32, struct TickTag, Arithmetic>;
 
 struct TickState {

@@ -16,8 +16,8 @@ import pcs.orchestra;
 import pce.colors;
 import pce.std;
 
-namespace pcg::clickcore {
-using namespace pce;
+namespace hex::clickcore {
+using namespace hex;
 using namespace ui;
 
 using Score = StrongType<u32, struct ScoreTag, Arithmetic, FormatLongNumber>;
@@ -216,8 +216,8 @@ void HighScoreComponent::SetProperty(const Property& property) const {
 }
 } // namespace pcg::clickcore
 
-void pcg::arcade::RunClickCore() {
-    pce::Logger().Log("Running click core");
+void hex::arcade::RunClickCore() {
+    hex::Logger().Log("Running click core");
     clickcore::ClickCore click_core { };
     while (click_core.running) { click_core.Tick(); }
 }

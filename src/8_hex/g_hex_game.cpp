@@ -33,9 +33,9 @@ import hex.terrain;
 import hex.render;
 
 
-namespace pcg {
-using namespace pce;
-using namespace pce::ui;
+namespace hex {
+using namespace hex;
+using namespace hex::ui;
 namespace {
 [[nodiscard]] b8 AxialIsEnemy(const HexState& hex_state, const int2 axial) { return hex_state.units_by_axial.contains(axial) && !std::ranges::contains(hex_state.units_by_axial.at(axial) | hex_state.units.handle_to_view(), hex_state.player_tag, &Unit::tag); }
 [[nodiscard]] b8 AxialIsEnemyOrZoc(const HexState& hex_state, const int2 axial) {
@@ -487,29 +487,18 @@ String NumberToRomanNumerals(u32 num) {
     return romans;
 }
 
-struct UnitPreset {
-    u32 move;
-    u32 squad_inf;
-    u32 squad_art;
-    u32 squad_tank;
-};
-UnitPreset GetUnitPreset(UnitIcon icon) {
+UnitToe GetUnitToe(UnitIcon icon) {
     switch (icon) {
-        case UnitIcon::ICON_INF: return UnitPreset { .move = 16, .squad_inf = 3 * 3 * 3, .squad_art = 3, .squad_tank = 0 };
-        case UnitIcon::ICON_ART: return UnitPreset { .move = 16, .squad_inf = 3, .squad_art = 4 * 3, .squad_tank = 0 };
-        case UnitIcon::ICON_HQ: return UnitPreset { .move = 64, .squad_inf = 3, .squad_art = 0, .squad_tank = 0 };
-        case UnitIcon::ICON_TANK: return UnitPreset { .move = 32, .squad_inf = 3 * 3, .squad_art = 6 * 3, .squad_tank = 5 * 3 };
+        case UnitIcon::ICON_INF: return UnitToe { .move = 16, .squad_inf = 3 * 3 * 3, .squad_art = 3, .squad_tank = 0 };
+        case UnitIcon::ICON_ART: return UnitToe { .move = 16, .squad_inf = 3, .squad_art = 4 * 3, .squad_tank = 0 };
+        case UnitIcon::ICON_HQ: return UnitToe { .move = 64, .squad_inf = 3, .squad_art = 0, .squad_tank = 0 };
+        case UnitIcon::ICON_TANK: return UnitToe { .move = 32, .squad_inf = 3 * 3, .squad_art = 6 * 3, .squad_tank = 5 * 3 };
         default: assert(false); std::unreachable();
     }
 }
-void HexStateUpdateUnitStats(HexState& hex_state) {
-    for (Unit& unit : hex_state.units) {
-        UnitPreset unit_preset = GetUnitPreset(unit.icon);
-        unit.move = unit_preset.move;
-        unit.squad_inf = unit_preset.squad_inf;
-        unit.squad_art = unit_preset.squad_art;
-        unit.squad_tank = unit_preset.squad_tank;
-    }
+Handle<Unit> HexStateSpawnUnit(HexState& hex_state, const UnitFormation& unit_formation, int2 axial, UnitName unit_name = { }) {
+    UnitToe unit_toe = GetUnitToe(unit_formation.icon);
+    return hex_state.units.EmplaceBack(Unit { .axial = axial, .parent = unit_formation.parent, .tag = unit_formation.tag, .icon = unit_formation.icon, .echelon = unit_formation.echelon, .move = unit_toe.move, .squad_inf = unit_toe.squad_inf, .squad_art = unit_toe.squad_art, .squad_tank = unit_toe.squad_tank, .name = unit_name, .color = colors::COLOR_CLEAR });
 }
 HandleOptional<Unit> UnitGetParentWithEchelon(HexState& hex_state, Handle<Unit> unit_handle, Echelon echelon) {
     while (hex_state.units[unit_handle].parent.IsValid()) {
@@ -622,7 +611,7 @@ void arcade::RunHex() {
     (void)hex_state.units.EmplaceBack(Unit { .parent = usa_kps, .tag = CountryTag::TAG_USA, .echelon = Echelon::ECHELON_BATTALION, .icon = UnitIcon::ICON_TANK, .axial = { 17, 4 } });
 
     HexStateUpdateOOB(hex_state);
-    HexStateUpdateUnitStats(hex_state);
+    HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_USA, .icon = UnitIcon::ICON_HQ , .echelon = Echelon::ECHELON_ARMY}, { 17, 1 } );
 
     for (u32 i = 0; i < hex_state.units.size(); i++) {
         Handle<Unit> unit_handle = hex_state.units.IndexToHandle(i);

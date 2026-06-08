@@ -19,7 +19,7 @@ import hex.types;
 import pce.collections;
 import pce.math;
 
-export namespace pcg {
+export namespace hex {
 inline void VertHexAppend(List<Vertex>& vertecies, const f32 hex_size, const float2 hex_screen, const ColorF hex_color, const Optional<ColorF> hex_color_inner = std::nullopt) {
     Array<float2, HEX_CORNERS> points { };
     for (u32 i = 0; i < HEX_CORNERS; i++) { points[i] = hex_screen + HEX_ANGLE[i] * float2 { hex_size }; }
@@ -61,7 +61,7 @@ inline void VertObbAppend(List<Vertex>& vertices, const OBB& obb, const ColorF c
 }
 
 [[nodiscard]] float2 HexTileJitter(const int2 axial) {
-    const u32 h = pce::noise::Hash(axial.x, axial.y);
+    const u32 h = hex::noise::Hash(axial.x, axial.y);
     const f32 fx = (static_cast<f32>(h & 0xFFFFU) / 65535.0F) * 2.0F - 1.0F;
     const f32 fy = (static_cast<f32>((h >> 16) & 0xFFFFU) / 65535.0F) * 2.0F - 1.0F;
     return float2 { fx, fy };
@@ -136,13 +136,13 @@ struct TerrainFeatureTextures {
     HandleOptional<Texture> marsh;
 
     explicit TerrainFeatureTextures(const RelativePath& dir) {
-        grassland = pce::globalData.Create<pce::Texture>(pce::Asset(dir / "grassland.png"));
-        field = pce::globalData.Create<pce::Texture>(pce::Asset(dir / "field.png"));
-        city = pce::globalData.Create<pce::Texture>(pce::Asset(dir / "city.png"));
-        village = pce::globalData.Create<pce::Texture>(pce::Asset(dir / "village.png"));
-        wooded_lightly = pce::globalData.Create<pce::Texture>(pce::Asset(dir / "wooded-lightly.png"));
-        wooded_heavy = pce::globalData.Create<pce::Texture>(pce::Asset(dir / "wooded-heavy.png"));
-        marsh = pce::globalData.Create<pce::Texture>(pce::Asset(dir / "marsh.png"));
+        grassland = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "grassland.png"));
+        field = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "field.png"));
+        city = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "city.png"));
+        village = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "village.png"));
+        wooded_lightly = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "wooded-lightly.png"));
+        wooded_heavy = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "wooded-heavy.png"));
+        marsh = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "marsh.png"));
     }
     [[nodiscard]] HandleOptional<Texture> ForFeature(const TerrainFeature feature) const {
         switch (feature) {
@@ -237,7 +237,7 @@ void AppendTerrainFeatures(HexState& hex_state, const CameraState& camera) {
         if (hex.terrain_feature != TerrainFeature::TERRAIN_FEATURE_GRASSLAND) {
             const HandleOptional<Texture> texture_handle = textures.ForFeature(hex.terrain_feature);
             if (texture_handle.IsValid()) {
-                SDL_Texture* texture = pce::globalData[texture_handle.GetHandle()];
+                SDL_Texture* texture = hex::globalData[texture_handle.GetHandle()];
                 const Color color = TerrainFeatureToTint(hex.terrain_feature);
                 (void)SDL_SetTextureColorMod(texture, color.r, color.g, color.b);
                 const int2 axial = hex_state.hex_map.IndexToAxial(i);

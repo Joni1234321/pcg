@@ -23,9 +23,9 @@ import pcs.tick;
 import pce.colors;
 import pce.std;
 
-namespace pcg::hexbattle {
-using namespace pce;
-using namespace pce::ui;
+namespace hex::hexbattle {
+using namespace hex;
+using namespace hex::ui;
 
 // -- Grid constants ------------------------------------------------
 constexpr u32 COLS = 4U;
@@ -1600,7 +1600,7 @@ private:
 };
 } // namespace pcg::hexbattle
 
-void pcg::arcade::RunHexBattle() {
+void hex::arcade::RunHexBattle() {
     hexbattle::HexBattle game { };
     while (game.running) { game.Tick(); }
 }

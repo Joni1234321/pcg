@@ -9,7 +9,7 @@ import pce.strong;
 import pce.collections;
 import pce.std;
 
-export namespace pce {
+export namespace hex {
 // Demangle a type name. GCC/Clang return the Itanium-mangled form from
 // typeid(T).name() (e.g. "N3pce7TextureE"); MSVC already returns a readable
 // name. This helper produces a readable name on both.

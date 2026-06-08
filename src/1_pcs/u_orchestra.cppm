@@ -9,7 +9,7 @@ import pce.logger;
 
 import pce.collections;
 
-export namespace pce {
+export namespace hex {
 struct OrchestraState {
     List<std::function<void()>> systems;
     List<std::unique_ptr<void, void (*)(void*)>> system_storage;

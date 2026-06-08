@@ -19,9 +19,9 @@ import pcs.orchestra;
 import pce.colors;
 import pce.std;
 
-namespace pcg::cosmoclick {
-using namespace pce;
-using namespace pce::ui;
+namespace hex::cosmoclick {
+using namespace hex;
+using namespace hex::ui;
 
 // data
 using Count = StrongType<u32, struct CountTag, Arithmetic>;
@@ -222,9 +222,9 @@ void CosmoClickUISystem::operator()() const {
     }
 }
 } // namespace pcg::cosmoclick
-void pcg::arcade::RunCosmoClick() {
-    pce::Logger().Log("Running cosmo click");
-    using namespace pce;
+void hex::arcade::RunCosmoClick() {
+    hex::Logger().Log("Running cosmo click");
+    using namespace hex;
     using namespace cosmoclick;
 
     // Data

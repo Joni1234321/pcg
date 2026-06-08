@@ -6,7 +6,7 @@ import pce.std;
 import pce.math;
 import pce.sdl;
 
-export namespace pce::colors {
+export namespace hex::colors {
 constexpr Color ColorLighten(const Color color, const f32 factor) {
     auto lerp = [factor](const u8 k) -> u8 { return static_cast<u8>(k + (255 - k) * factor); };
     return Color { lerp(color.r), lerp(color.g), lerp(color.b), color.a };

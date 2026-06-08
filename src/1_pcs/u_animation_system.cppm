@@ -15,7 +15,7 @@ import pce.window_state;
 import pcs.tick;
 import pce.colors;
 
-export namespace pce {
+export namespace hex {
 enum class AnimationState : u8 { once, recycle, repeat, persistent, persistent_stopped };
 struct AnimationDesc {
     std::function<void(f32)> action;

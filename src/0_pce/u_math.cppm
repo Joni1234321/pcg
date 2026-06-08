@@ -6,7 +6,7 @@ export module pce.math;
 import std;
 import pce.std;
 
-export namespace pce {
+export namespace hex {
 template <std::integral T> constexpr T saturating_sub(T a, T b) noexcept {
     T result;
     if (!__builtin_sub_overflow(a, b, &result)) { return result; }
@@ -14,7 +14,7 @@ template <std::integral T> constexpr T saturating_sub(T a, T b) noexcept {
     return a < 0 ? std::numeric_limits<T>::min() : std::numeric_limits<T>::max();
 }
 }
-export namespace pce::math {
+export namespace hex::math {
  constexpr f32 PI = std::numbers::pi_v<f32>;
  constexpr f32 SQRT_3 = std::numbers::sqrt3_v<float>;
  constexpr f32 DEG_2_RAD = PI / 180.0F;
@@ -83,7 +83,7 @@ inline float2 Rotate(float2 point, f32 theta) {
 }
 } // namespace pce::math
 
-export namespace pce {
+export namespace hex {
 template <typename T, template <typename> class Skill> concept HasASkill = std::derived_from<T, Skill<T>>;
 template <typename To, typename From> constexpr To& Reinterpret(From& from) { return *reinterpret_cast<To*>(&from); } // NOLINT(*-pro-type-reinterpret-cast)
 [[nodiscard]] inline u32 Rand() {
@@ -112,7 +112,7 @@ template <typename Collection> const Collection::value_type& RandomValue(const C
 }
 } // namespace pce
 
-export namespace pce::noise {
+export namespace hex::noise {
 [[nodiscard]] inline u32 Hash(i32 x, i32 y) {
     u32 h = static_cast<u32>(x * 374761393 + y * 668265263);
     h ^= h >> 13;

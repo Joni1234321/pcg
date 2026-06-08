@@ -12,8 +12,8 @@ import pce.std;
 
 import hex.hex;
 
-export namespace pcg {
-using namespace pce;
+export namespace hex {
+using namespace hex;
 enum class CountryTag : u8 { TAG_NONE, TAG_GER, TAG_SOV, TAG_USA };
 enum class TerrainType : u8 { TERRAIN_TYPE_DEEP_OCEAN, TERRAIN_TYPE_OCEAN, TERRAIN_TYPE_HILL, TERRAIN_TYPE_BEACH, TERRAIN_TYPE_GRASS, TERRAIN_TYPE_MOUNTAIN, TERRAIN_TYPE_SNOW };
 enum class TerrainFeature : u8 { TERRAIN_FEATURE_GRASSLAND, TERRAIN_FEATURE_FIELD, TERRAIN_FEATURE_CITY, TERRAIN_FEATURE_VILLAGE, TERRAIN_FEATURE_WOODED_LIGHTLY, TERRAIN_FEATURE_WOODED_HEAVY, TERRAIN_FEATURE_MARSH };
@@ -42,89 +42,18 @@ constexpr f32 RIVER_CASING_EXTRA = 0.05F;
 constexpr f32 RIVER_HIGHLIGHT_WIDTH = RIVER_WIDTH * 0.35F;
 
 struct Counter {
-    Color color_background;
-    Color color_icon;
-    Color color_border;
+    Color color_background{};
+    Color color_icon{};
+    Color color_border{};
 };
 struct CounterStack {
     int2 axial { };
     UnitIcon icon { };
     Array<Counter, 12> stack { };
-    Label label_top;
-    Label label_center;
-    Label label_bottom;
-    SurfaceLabel label_vertical;
-};
-
-struct HexBitset {
-    u8 value;
-    [[nodiscard]] constexpr b8 None() const { return !value; }
-    [[nodiscard]] constexpr b8 Any() const { return value; }
-    [[nodiscard]] constexpr b8 Test(const u8 pos) const {
-        assert(pos < HEX_CORNERS);
-        return value & 0x1 << pos;
-    }
-    constexpr void Clear() { value = 0U; }
-    constexpr void Clear(const u8 pos) {
-        assert(pos < HEX_CORNERS);
-        value &= ~(0x1 << pos);
-    }
-    constexpr void Set() { value = 0x3F; }
-    constexpr void Set(const u8 pos) {
-        assert(pos < HEX_CORNERS);
-        value |= 0x1 << pos;
-    }
-};
-struct HexBitset2 {
-    static constexpr u8 BITS_PER_HEX = 2;
-    static constexpr u16 MASK = 0b11;
-    u16 value;
-    [[nodiscard]] constexpr b8 None() const { return !value; }
-    [[nodiscard]] constexpr b8 Any() const { return value; }
-    [[nodiscard]] constexpr u8 Test(const u8 pos) const {
-        assert(pos < HEX_CORNERS);
-        const u16 shift = pos * BITS_PER_HEX;
-        return value >> shift & MASK;
-    }
-    constexpr void Clear() { value = 0U; }
-    constexpr void Clear(const u8 pos) {
-        assert(pos < HEX_CORNERS);
-        const u16 shift = pos * BITS_PER_HEX;
-        value &= ~(MASK << shift);
-    }
-    constexpr void Set(const u8 pos, const u8 val) {
-        assert(pos < HEX_CORNERS);
-        assert(val <= MASK);
-        const u16 shift = pos * BITS_PER_HEX;
-        value &= ~(MASK << shift);
-        value |= val << shift;
-    }
-};
-
-struct HexBitset5 {
-    static constexpr u8 BITS_PER_HEX = 5;
-    static constexpr u32 MASK = 0b11111;
-    u32 value;
-    [[nodiscard]] constexpr b8 None() const { return !value; }
-    [[nodiscard]] constexpr b8 Any() const { return value; }
-    [[nodiscard]] constexpr u8 Test(const u8 pos) const {
-        assert(pos < HEX_CORNERS);
-        const u32 shift = pos * BITS_PER_HEX;
-        return value >> shift & MASK;
-    }
-    constexpr void Clear() { value = 0U; }
-    constexpr void Clear(const u8 pos) {
-        assert(pos < HEX_CORNERS);
-        const u32 shift = pos * BITS_PER_HEX;
-        value &= ~(MASK << shift);
-    }
-    constexpr void Set(const u8 pos, const u8 val) {
-        assert(pos < HEX_CORNERS);
-        assert(val <= MASK);
-        const u32 shift = pos * BITS_PER_HEX;
-        value &= ~(MASK << shift);
-        value |= val << shift;
-    }
+    Label label_top{};
+    Label label_center{};
+    Label label_bottom{};
+    SurfaceLabel label_vertical{};
 };
 
 struct HexOwner {
@@ -132,30 +61,55 @@ struct HexOwner {
     b8 contested { false };
 };
 struct Hex {
-    TerrainType terrain_type;
-    TerrainFeature terrain_feature;
-    HexOwner owner;
+    TerrainType terrain_type { };
+    TerrainFeature terrain_feature { };
+    HexOwner owner { };
     HexBitset2 roads { };
     HexBitset river_edges { };
 };
-struct Unit {
-    HandleOptional<Unit> parent;
-    Array<char, 10> name { };
-    CountryTag tag { };
-    Echelon echelon{};
-    UnitIcon icon{};
-    Color color{};
-    int2 axial;
-    u32 move{};
-    u32 squad_inf{};
-    u32 squad_tank{};
-    u32 squad_art{};
-
+struct Unit;
+struct UnitFormation {
+    HandleOptional<Unit> parent { };
+    CountryTag tag {};
+    UnitIcon icon {};
+    Echelon echelon {};
+};
+struct UnitToe {
+    u32 move {};
+    u32 squad_inf {};
+    u32 squad_art {};
+    u32 squad_tank {};
     [[nodiscard]] constexpr u32 dmg() const { return squad_inf / 3 + squad_art * 2 + squad_tank / 5 * 8; }
     [[nodiscard]] constexpr u32 def() const { return squad_inf / 3 * 2 + squad_art + squad_tank / 5; }
 };
+using UnitName = Array<char, 10>;
+struct UnitFlavor {
+    UnitName name { };
+    Color color { };
+};
+struct Unit {
+    int2 axial { };
+
+    // unit formation
+    HandleOptional<Unit> parent { };
+    CountryTag tag {};
+    UnitIcon icon {};
+    Echelon echelon {};
+
+    // unit stats
+    u32 move {};
+    u32 squad_inf {};
+    u32 squad_art {};
+    u32 squad_tank {};
+    [[nodiscard]] constexpr u32 dmg() const { return squad_inf / 3 + squad_art * 2 + squad_tank / 5 * 8; }
+    [[nodiscard]] constexpr u32 def() const { return squad_inf / 3 * 2 + squad_art + squad_tank / 5; }
+
+    // unit flavour
+    UnitName name { };
+    Color color { };
+};
 struct UnitGroup {
-    List<Handle<Unit>> unit_handles;
+    List<Handle<Unit>> unit_handles{};
     u32 dmg_sum{};
     u32 def_sum{};
     u32 move_min{};
@@ -163,7 +117,7 @@ struct UnitGroup {
 };
 struct PseudoTarget {
     int2 axial { };
-    List<Handle<Unit>> units;
+    List<Handle<Unit>> units{};
 };
 struct PseudoStates {
     Optional<int2> axial_hover{};
@@ -180,8 +134,8 @@ struct AxialAndEdge {
     b8 operator==(const AxialAndEdge& other) const = default;
 };
 struct HexState {
-    HexList<Hex> hex_map;
-    HandleList<Unit> units;
+    HexList<Hex> hex_map{};
+    HandleList<Unit> units{};
 
     CountryTag player_tag;
     PlayerAction player_action;
@@ -190,14 +144,14 @@ struct HexState {
 
     UnorderedMap<Handle<Unit>, List<Handle<Unit>>> units_oob;
 
-    Pool<CounterStack> counters;
-    Pool<Label> label_pool;
+    Pool<CounterStack> counters{};
+    Pool<Label> label_pool{};
     List<Vertex> verts { };
 };
 } // namespace pcg
 
-export template <> struct std::hash<pcg::AxialAndEdge> {
-    usize operator()(const pcg::AxialAndEdge& axial_and_edge) const noexcept {
+export template <> struct std::hash<hex::AxialAndEdge> {
+    usize operator()(const hex::AxialAndEdge& axial_and_edge) const noexcept {
         usize seed = std::hash<int2> { }(axial_and_edge.axial);
         HashCombine(seed, axial_and_edge.edge);
         return seed;

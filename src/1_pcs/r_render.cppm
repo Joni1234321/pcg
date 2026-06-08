@@ -10,7 +10,7 @@ import pce.globals;
 
 export struct RenderWindowSystem {
     void operator()() const {
-        pce::WindowState& window_state = pce::Singleton::Get<pce::WindowState>();
+        hex::WindowState& window_state = hex::Singleton::Get<hex::WindowState>();
         (void)SDL_GetWindowSize(window_state.window, reinterpret_cast<i32*>(&window_state.screen_size.x), reinterpret_cast<i32*>(&window_state.screen_size.y));
         (void)SDL_RenderPresent(window_state.renderer);
         (void)SDL_SetRenderDrawColor(window_state.renderer, window_state.clear_color.r, window_state.clear_color.g, window_state.clear_color.b, window_state.clear_color.a);

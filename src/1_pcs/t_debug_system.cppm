@@ -13,7 +13,7 @@ import pce.collections;
 import pce.strong;
 import pce.font;
 
-export namespace pce::ui {
+export namespace hex::ui {
 struct TickComponent : NodeComponentBase {
     using Property = std::tuple<String&, nanoseconds64, nanoseconds64>;
     explicit TickComponent(const NodeReference parent) : NodeComponentBase { parent.tree, B(parent).Node(hug).Text(FontSizes::body, colors::COLOR_RADIANT_ORANGE).Build() } { }

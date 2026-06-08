@@ -1,6 +1,6 @@
 #pragma once
 
-namespace pcg::arcade {
+namespace hex::arcade {
 void RunClickCore();
 void RunCosmoClick();
 void RunCommandStrike();

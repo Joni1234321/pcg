@@ -18,9 +18,9 @@ import pcs.node_data;
 import pce.font;
 import pce.sdl;
 
-namespace pcg::battlesim {
-using namespace pce;
-using namespace pce::ui;
+namespace hex::battlesim {
+using namespace hex;
+using namespace hex::ui;
 
 // --- Data -------------------------------------------------------------------
 struct UnitRow {
@@ -492,7 +492,7 @@ public:
 };
 } // namespace pcg::battlesim
 
-void pcg::arcade::RunBattleSim() {
+void hex::arcade::RunBattleSim() {
     battlesim::BattleSim sim { };
     while (sim.running) { sim.Tick(); }
 }

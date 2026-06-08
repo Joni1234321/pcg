@@ -15,7 +15,7 @@ import pce.logger;
 import pce.std;
 import pce.math;
 
-export namespace pce {
+export namespace hex {
 struct Texture : LogLifetimeWithCount<Texture> {
     explicit Texture(const AbsolutePath& path) : texture(IMG_LoadTexture(Singleton::Get<WindowState>().renderer, path.string().c_str())) {
         if (texture.Get()) {

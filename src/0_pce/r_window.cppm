@@ -15,7 +15,7 @@ import pce.font;
 import pce.sdl;
 
 
-export namespace pce {
+export namespace hex {
  const RelativePath PATH_FONT_NORMAL { "Titillium_Web/TitilliumWeb-Regular.ttf" };
  const RelativePath PATH_FONT_TITILIUM_BOLD { "Titillium_Web/TitilliumWeb-Bold.ttf" };
  const RelativePath PATH_FONT_COURIER_REGULAR { "Courier_Prime/CourierPrime-Regular.ttf" };

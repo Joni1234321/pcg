@@ -10,7 +10,7 @@ import hex.hex;
 import hex.types;
 import hex.render;
 
-export namespace pcg {
+export namespace hex {
 [[nodiscard]] constexpr u32 TerrainToMovementCost(const TerrainType terrain) {
     switch (terrain) {
         case TerrainType::TERRAIN_TYPE_DEEP_OCEAN: return 255U;

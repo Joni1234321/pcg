@@ -6,7 +6,7 @@ import std;
 import pce.collections;
 import pce.std;
 
-export namespace pce {
+export namespace hex {
 // Stored somewhere and deletable
 struct DataWrapper {
     void* ptr;

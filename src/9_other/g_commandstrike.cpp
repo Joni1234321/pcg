@@ -16,9 +16,9 @@ import pcs.orchestra;
 import pce.colors;
 import pce.std;
 
-namespace pcg::commandstrike {
-using namespace pce;
-using namespace pce::ui;
+namespace hex::commandstrike {
+using namespace hex;
+using namespace hex::ui;
 
 // data
 struct GameDefines { };
@@ -47,8 +47,8 @@ struct GameFrame : Frame {
 };
 } // namespace pcg::commandstrike
 
-void pcg::arcade::RunCommandStrike() {
-    using namespace pce;
+void hex::arcade::RunCommandStrike() {
+    using namespace hex;
     using namespace commandstrike;
 
     // data

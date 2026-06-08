@@ -9,14 +9,14 @@ import pce.logger;
 import pce.collections;
 import pce.std;
 
-namespace pce {
+namespace hex {
 b8 Start() {
     SDL_Log("Loading window");
     constexpr uint2 WINDOW_SIZE { 2500U, 1500U };
     Window window { WINDOW_SIZE };
 
     Logger().Log("Starting Game");
-    pcg::arcade::RunHex();
+    hex::arcade::RunHex();
     // pcg::arcade::RunMinimal();
     // pcg::arcade::RunHexBattle();
     // pcg::arcade::RunBattleSim();
@@ -35,9 +35,9 @@ i32 main(const i32 argc, char** argv) {
 
     std::printf("Hello world");
 
-    const b8 result = pce::Start();
+    const b8 result = hex::Start();
 
-    pce::Logger().Log("Quitting");
+    hex::Logger().Log("Quitting");
 
     return result ? 0 : 1;
 }

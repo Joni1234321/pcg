@@ -5,11 +5,11 @@ import pcs.tick;
 import pce.logger;
 import pce.std;
 
-export namespace pce::ui {
+export namespace hex::ui {
 struct RenderNodeSystem;
 }
 
-export namespace pcg {
+export namespace hex {
 struct Data;
 
 struct NewGameSettings {
@@ -17,9 +17,9 @@ struct NewGameSettings {
     u32 planets;
 };
 struct Game {
-    pce::Logger logger;
+    hex::Logger logger;
     explicit Game(NewGameSettings);
-    void PlayTick(pce::Tick tick, pce::ui::RenderNodeSystem& node_render_system, b8 debug);
+    void PlayTick(hex::Tick tick, hex::ui::RenderNodeSystem& node_render_system, b8 debug);
 };
 
 constexpr NewGameSettings GAME_SETTINGS_CHALLENGE = { .players = 2U, .planets = 4U };

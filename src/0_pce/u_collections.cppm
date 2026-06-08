@@ -6,7 +6,7 @@ export module pce.collections;
 import std;
 import pce.std;
 import pce.math;
-export namespace pce {
+export namespace hex {
 template <typename T> concept TriviallyConstructible = std::is_trivially_constructible_v<T>;
 template <typename T> concept DefaultConstructible = std::is_default_constructible_v<T>;
 

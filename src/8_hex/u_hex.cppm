@@ -1,10 +1,13 @@
+module;
+#include <cassert>
+
 export module hex.hex;
 
 import pce.std;
 import pce.math;
 import pce.collections;
 
-export namespace pce {
+export namespace hex {
 // https://www.redblobgames.com/grids/hexagons/
 constexpr u32 HEX_CORNERS = 6;
 constexpr float2 HEX_SPACING { math::SQRT_3, 1.5F };
@@ -94,5 +97,77 @@ template <class T> struct HexList {
     constexpr List<T>::const_iterator end() const { return data.end(); }
     constexpr List<T>::const_iterator cbegin() const { return data.cbegin(); }
     constexpr List<T>::const_iterator cend() const { return data.cend(); }
+};
+
+
+struct HexBitset {
+    u8 value;
+    [[nodiscard]] constexpr b8 None() const { return !value; }
+    [[nodiscard]] constexpr b8 Any() const { return value; }
+    [[nodiscard]] constexpr b8 Test(const u8 pos) const {
+        assert(pos < HEX_CORNERS);
+        return value & 0x1 << pos;
+    }
+    constexpr void Clear() { value = 0U; }
+    constexpr void Clear(const u8 pos) {
+        assert(pos < HEX_CORNERS);
+        value &= ~(0x1 << pos);
+    }
+    constexpr void Set() { value = 0x3F; }
+    constexpr void Set(const u8 pos) {
+        assert(pos < HEX_CORNERS);
+        value |= 0x1 << pos;
+    }
+};
+struct HexBitset2 {
+    static constexpr u8 BITS_PER_HEX = 2;
+    static constexpr u16 MASK = 0b11;
+    u16 value;
+    [[nodiscard]] constexpr b8 None() const { return !value; }
+    [[nodiscard]] constexpr b8 Any() const { return value; }
+    [[nodiscard]] constexpr u8 Test(const u8 pos) const {
+        assert(pos < HEX_CORNERS);
+        const u16 shift = pos * BITS_PER_HEX;
+        return value >> shift & MASK;
+    }
+    constexpr void Clear() { value = 0U; }
+    constexpr void Clear(const u8 pos) {
+        assert(pos < HEX_CORNERS);
+        const u16 shift = pos * BITS_PER_HEX;
+        value &= ~(MASK << shift);
+    }
+    constexpr void Set(const u8 pos, const u8 val) {
+        assert(pos < HEX_CORNERS);
+        assert(val <= MASK);
+        const u16 shift = pos * BITS_PER_HEX;
+        value &= ~(MASK << shift);
+        value |= val << shift;
+    }
+};
+
+struct HexBitset5 {
+    static constexpr u8 BITS_PER_HEX = 5;
+    static constexpr u32 MASK = 0b11111;
+    u32 value;
+    [[nodiscard]] constexpr b8 None() const { return !value; }
+    [[nodiscard]] constexpr b8 Any() const { return value; }
+    [[nodiscard]] constexpr u8 Test(const u8 pos) const {
+        assert(pos < HEX_CORNERS);
+        const u32 shift = pos * BITS_PER_HEX;
+        return value >> shift & MASK;
+    }
+    constexpr void Clear() { value = 0U; }
+    constexpr void Clear(const u8 pos) {
+        assert(pos < HEX_CORNERS);
+        const u32 shift = pos * BITS_PER_HEX;
+        value &= ~(MASK << shift);
+    }
+    constexpr void Set(const u8 pos, const u8 val) {
+        assert(pos < HEX_CORNERS);
+        assert(val <= MASK);
+        const u32 shift = pos * BITS_PER_HEX;
+        value &= ~(MASK << shift);
+        value |= val << shift;
+    }
 };
 } // namespace pce

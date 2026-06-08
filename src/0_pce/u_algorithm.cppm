@@ -4,7 +4,7 @@ import std;
 import pce.collections;
 import pce.std;
 
-export namespace pce {
+export namespace hex {
 template <typename Iterator, typename OutputIterator, typename UnaryOperation> constexpr OutputIterator TransformLocal(Iterator first, Iterator last, OutputIterator result, UnaryOperation unary_operation) {
     while (first != last) {
         *result = unary_operation(*first);

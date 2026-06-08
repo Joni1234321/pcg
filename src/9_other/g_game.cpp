@@ -11,18 +11,18 @@ import pce.table;
 
 import pce.std;
 
-namespace pcg {
-using pce::Component;
-using pce::List;
-using pce::Logger;
-using pce::LoggerTable;
-using pce::RandomKey;
-using pce::Select;
-using pce::Span;
-using pce::String;
-using pce::Table;
-using pce::TableU32;
-namespace math = pce::math;
+namespace hex {
+using hex::Component;
+using hex::List;
+using hex::Logger;
+using hex::LoggerTable;
+using hex::RandomKey;
+using hex::Select;
+using hex::Span;
+using hex::String;
+using hex::Table;
+using hex::TableU32;
+namespace math = hex::math;
 
 Data data;                       // NOLINT(*-avoid-non-const-global-variables)
 Game game(GAME_SETTINGS_UTOPIA); // NOLINT(*-avoid-non-const-global-variables)
@@ -36,16 +36,16 @@ struct Player : Entity {
 struct Planet : Entity {
     constexpr Planet(const Entity entity) : Entity(entity) { } // NOLINT(*-explicit-constructor, *-explicit-conversions)
 
-    [[nodiscard]] constexpr OptionalEntity<Player> Player() const { return OptionalEntity { pcg::Player { planet_archetype.players[index] } }; }
+    [[nodiscard]] constexpr OptionalEntity<Player> Player() const { return OptionalEntity { hex::Player { planet_archetype.players[index] } }; }
 
     [[nodiscard]] constexpr Money& Balance() const { return planet_archetype.moneys[index]; }
     [[nodiscard]] constexpr ConstructionQueue& ConstructionQueue() const { return planet_archetype.construction_queue[index]; }
     [[nodiscard]] constexpr Population& Unemployed() const { return planet_archetype.unemployed[index]; }
     [[nodiscard]] constexpr Population& Employed() const { return planet_archetype.employed[index]; }
     [[nodiscard]] constexpr QualityOfLife& QualityOfLife() const { return planet_archetype.population_quality_of_life[index]; }
-    [[nodiscard]] constexpr pce::Tick& Age() const { return planet_archetype.ages[index]; }
+    [[nodiscard]] constexpr hex::Tick& Age() const { return planet_archetype.ages[index]; }
 
-    constexpr void TransferOwnerShipToPlayer(const pcg::Player player) const { planet_archetype.players[index] = player; }
+    constexpr void TransferOwnerShipToPlayer(const hex::Player player) const { planet_archetype.players[index] = player; }
 
     [[nodiscard]] constexpr Population TotalPopulation() const { return Employed() + Unemployed(); }
 };
@@ -86,7 +86,7 @@ constexpr f32 PER_MILLION = 1.0F / 1'000'000.0F;
 constexpr u16 BUILDING_TIME = 30U;
 constexpr f32 GROWTH_RATE_PER_MONTH = 0.0025F * PER_MONTH;
 
-void Game::PlayTick(pce::Tick tick, pce::ui::RenderNodeSystem& node_render_system, const b8 debug) {
+void Game::PlayTick(hex::Tick tick, hex::ui::RenderNodeSystem& node_render_system, const b8 debug) {
     // Construction
     for (const Player player : player_archetype) { ProcessConstructionQueue(player); }
     for (const Planet planet : planet_archetype) { ProcessConstructionQueue(planet); }
@@ -155,14 +155,14 @@ void Game::PlayTick(pce::Tick tick, pce::ui::RenderNodeSystem& node_render_syste
     // Buy Farms
     for (const Player player : player_archetype) {
         if (planet_archetype.Count == 0U) { continue; }
-        Planet planet = Planet { Entity { pce::Rand() % planet_archetype.Count } };
+        Planet planet = Planet { Entity { hex::Rand() % planet_archetype.Count } };
         if (planet.Player().IsNone() || planet.Player().Entity() != player) { continue; }
         FarmType farm_type = RandomKey(data.farm_types);
         (void)TryQueueFarm(planet, farm_type, player.Balance());
     }
     // Settle, Exploit, Research
     for (const Player player : player_archetype) {
-        if (pce::Rand() % 100U == 0U) {
+        if (hex::Rand() % 100U == 0U) {
             Planet planet = planet_archetype.AddTemplate(tick, PlanetTemplate::Barren);
             planet.TransferOwnerShipToPlayer(player);
         }
@@ -216,7 +216,7 @@ void Game::PlayTick(pce::Tick tick, pce::ui::RenderNodeSystem& node_render_syste
 }
 
 Game::Game(const NewGameSettings game) {
-    constexpr pce::Tick start_tick = pce::Tick { 0U };
+    constexpr hex::Tick start_tick = hex::Tick { 0U };
 
     data.farm_types[FarmType::Fish] = Stats { .input_goods = 1U, .output_goods = 3U, .employees_per_level = 10U, .property_plant_equipment_per_level = 150U, .property_plant_equipment_lifetime = 5U * TICKS_PER_YEAR };
     data.farm_types[FarmType::Cows] = Stats { .input_goods = 5U, .output_goods = 20U, .employees_per_level = 15U, .property_plant_equipment_per_level = 250U, .property_plant_equipment_lifetime = 7U * TICKS_PER_YEAR };
@@ -229,7 +229,7 @@ Game::Game(const NewGameSettings game) {
     }
     for (u32 i = 0U; i < game.planets; i++) {
         Planet planet = planet_archetype.AddTemplate(start_tick, PlanetTemplate::Playground);
-        const Player owner { Entity { pce::Rand() % game.players } };
+        const Player owner { Entity { hex::Rand() % game.players } };
         planet.TransferOwnerShipToPlayer(owner);
     }
 }

@@ -11,7 +11,7 @@ import pcs.input;
 
 import pce.std;
 
-export namespace pce {
+export namespace hex {
 struct CameraState {
     float2 world_position { -100.0F, -100.0F };
     f32 scale { 140.0F };

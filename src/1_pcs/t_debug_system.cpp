@@ -20,7 +20,7 @@ import pce.collections;
 import pce.colors;
 import pce.std;
 
-namespace pce::ui {
+namespace hex::ui {
 namespace colors = colors;
 void TickComponent::SetProperty(const Property& property) const {
     static constexpr f32 THOUSANDTH = 0.001F;

@@ -12,7 +12,7 @@ import std;
 import pce.std;
 import pce.collections;
 
-export namespace pce {
+export namespace hex {
 template <typename T, typename TagType, template <typename> class... InheritList> struct StrongType : InheritList<StrongType<T, TagType, InheritList...>>... {
     T value;
     constexpr explicit StrongType(const T& value) : value(value) { }
@@ -82,14 +82,14 @@ constexpr f32 NS_TO_SECONDS = 1.0F / 1'000'000'000.0F;
 
 } // namespace pce
 
-template <typename T, typename Parameter, template <typename> class... Skills> struct std::formatter<pce::StrongType<T, Parameter, Skills...>> : std::formatter<T> {
-    auto format(const pce::StrongType<T, Parameter, Skills...>& data, std::format_context& ctx) const { return std::formatter<T>::format(data.value, ctx); }
+template <typename T, typename Parameter, template <typename> class... Skills> struct std::formatter<hex::StrongType<T, Parameter, Skills...>> : std::formatter<T> {
+    auto format(const hex::StrongType<T, Parameter, Skills...>& data, std::format_context& ctx) const { return std::formatter<T>::format(data.value, ctx); }
 };
 template <typename EnumType> requires std::is_enum_v<EnumType> struct std::formatter<EnumType> : std::formatter<std::underlying_type_t<EnumType>> {
     auto format(const EnumType& enum_value, format_context& ctx) const { return std::formatter<std::underlying_type_t<EnumType>>::format(static_cast<const std::underlying_type_t<EnumType>>(enum_value), ctx); }
 };
-template <> struct std::formatter<pce::String> : std::formatter<const char*> {
-    auto format(const pce::String& data, std::format_context& ctx) const { return formatter<const char*>::format(data.c_str(), ctx); }
+template <> struct std::formatter<hex::String> : std::formatter<const char*> {
+    auto format(const hex::String& data, std::format_context& ctx) const { return formatter<const char*>::format(data.c_str(), ctx); }
 };
 template <> struct std::formatter<Entity> : std::formatter<u32> {
     auto format(const Entity& data, std::format_context& ctx) const { return formatter<u32>::format(static_cast<u32>(data), ctx); }

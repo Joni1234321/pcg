@@ -3,7 +3,7 @@ module;
 export module pce.assets;
 import std;
 
-export namespace pce {
+export namespace hex {
 using AbsolutePath = std::filesystem::path;
 using RelativePath = std::filesystem::path;
 using AssetPath = std::filesystem::path;
