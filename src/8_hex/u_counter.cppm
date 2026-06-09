@@ -47,6 +47,7 @@ constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_REAL;
         case UnitIcon::ICON_ART: return "art";
         case UnitIcon::ICON_HQ: return "hq";
         case UnitIcon::ICON_TANK: return "tnk";
+        case UnitIcon::ICON_ENGINEER: return "eng";
     }
     std::unreachable();
 }
@@ -56,12 +57,14 @@ struct CounterTextures {
     HandleOptional<Texture> artillery;
     HandleOptional<Texture> armor;
     HandleOptional<Texture> headquarters;
+    HandleOptional<Texture> engineer;
 
     explicit CounterTextures(const RelativePath& dir) {
         infantry = globalData.Create<Texture>(Asset(dir / "counter-inf.jpg"));
         artillery = globalData.Create<Texture>(Asset(dir / "counter-art.jpg"));
         armor = globalData.Create<Texture>(Asset(dir / "counter-armor.jpg"));
         headquarters = globalData.Create<Texture>(Asset(dir / "counter-hq.jpg"));
+        engineer = globalData.Create<Texture>(Asset(dir / "counter-engineer.jpg"));
     }
     [[nodiscard]] HandleOptional<Texture> ForIcon(const UnitIcon icon) const {
         switch (icon) {
@@ -69,6 +72,7 @@ struct CounterTextures {
             case UnitIcon::ICON_ART: return artillery;
             case UnitIcon::ICON_TANK: return armor;
             case UnitIcon::ICON_HQ: return headquarters;
+            case UnitIcon::ICON_ENGINEER: return engineer;
         }
         std::unreachable();
     }

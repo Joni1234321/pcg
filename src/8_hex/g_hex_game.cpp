@@ -564,14 +564,14 @@ void arcade::RunHex() {
     Singleton::Get<WindowState>().clear_color = Color::FromHsl(180.0F, 0.5F, 0.20F);
 
     HexState& hex_state = Singleton::Get<HexState>();
-    hex_state.hex_map = GenerateTerrainType({ 40, 40 }, 3489);
+
+    // HexScenarioAi(hex_state);
+    HexScenarioDivisionClash(hex_state);
 
     CameraState& camera = Singleton::Get<CameraState>();
     camera.map_world_min = { 0.0F, 0.0F };
     camera.map_world_max = HexAxialToWorld(static_cast<int2>(hex_state.hex_map.map_size - uint2 { 1, 1 }));
 
-    // HexScenarioAi(hex_state);
-    HexScenarioDivisionClash(hex_state);
     HexStateUpdateOOB(hex_state);
 
     for (u32 i = 0; i < hex_state.units.size(); i++) {
