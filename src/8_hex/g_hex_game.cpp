@@ -32,6 +32,7 @@ import hex.types;
 import hex.terrain;
 import hex.render;
 import hex.scenarios;
+import pce.logger;
 
 namespace hex {
 using namespace hex;
@@ -244,6 +245,12 @@ struct HexSystem {
         hex_state.counters.Clear();
         UnitToCounterAppend(hex_state);
         RenderCounters(hex_state.counters);
+
+        if (hex_state.pseudo_states.axial_hover.has_value() && input_state.keys.at(SDLK_LALT) && input_state.left_mouse_down) {
+            const int2 axial = hex_state.pseudo_states.axial_hover.value();
+            const int2 offset = HexAxialToOffset(axial);
+            Logger().Log("[Hex] Offset ({},{}) Axial ({},{})", offset.x,offset.y, axial.x, axial.y);
+        }
 
         // logic and render
         hex_state.player_action = GetPlayerAction(hex_state);
@@ -576,7 +583,7 @@ void arcade::RunHex() {
         Handle<Unit> unit_handle = hex_state.units.IndexToHandle(i);
         hex_state.units_by_axial[hex_state.units[unit_handle].axial].EmplaceBack(unit_handle);
     }
-    GenerateTerritory(hex_state);
+    HexTerrainSetBorder(hex_state);
     hex_state.units_by_axial.clear();
 
     // Systems

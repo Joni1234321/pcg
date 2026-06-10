@@ -1,3 +1,6 @@
+module;
+#include <cassert>
+
 export module hex.terrain;
 
 import std;
@@ -9,6 +12,7 @@ import pce.math;
 import hex.hex;
 import hex.types;
 import hex.render;
+import pce.logger;
 
 export namespace hex {
 [[nodiscard]] constexpr u32 TerrainToMovementCost(const TerrainType terrain) {
@@ -23,7 +27,7 @@ export namespace hex {
     }
     std::unreachable();
 }
-constexpr void GenerateTerritory(HexState& hex_state) {
+constexpr void HexTerrainSetBorder(HexState& hex_state) {
     std::ranges::fill(hex_state.hex_map | std::views::transform(&Hex::owner), HexOwner { .tag = CountryTag::TAG_NONE, .contested = false });
 
     Queue<int2> frontier;
@@ -46,7 +50,7 @@ constexpr void GenerateTerritory(HexState& hex_state) {
         }
     }
 }
-constexpr void HexSetRoad(HexState& hex_state, const int2 axial, const u32 edge, const RoadLevel road_level) {
+constexpr void HexTerrainSetRoad(HexState& hex_state, const int2 axial, const u32 edge, const RoadLevel road_level) {
     const int2 axial_side = axial + HEX_AXIAL_NEIGHBOURS[edge];
     if (hex_state.hex_map.Contains(axial) && hex_state.hex_map.Contains(axial_side)) {
         const u32 mirror = (edge + 3) % HEX_CORNERS;
@@ -55,7 +59,7 @@ constexpr void HexSetRoad(HexState& hex_state, const int2 axial, const u32 edge,
         if (hex_state.hex_map[axial_side].roads.Test(mirror) < road_level_u8) { hex_state.hex_map[axial_side].roads.Set(mirror, road_level_u8); }
     }
 }
-constexpr void HexSetRiver(HexState& hex_state, const int2 axial, const u32 edge) {
+constexpr void HexTerrainSetRiver(HexState& hex_state, const int2 axial, const u32 edge) {
     const int2 axial_neighbour = axial + HEX_AXIAL_NEIGHBOURS[edge];
     if (hex_state.hex_map.Contains(axial) && hex_state.hex_map.Contains(axial_neighbour)) {
         hex_state.hex_map[axial].river_edges.Set(edge);
@@ -65,7 +69,7 @@ constexpr void HexSetRiver(HexState& hex_state, const int2 axial, const u32 edge
 
 [[nodiscard]] constexpr b8 TerrainIsWater(const TerrainType terrain) { return terrain == TerrainType::TERRAIN_TYPE_DEEP_OCEAN || terrain == TerrainType::TERRAIN_TYPE_OCEAN; }
 
-constexpr void CarveRoad(HexState& hex_state, const int2 axial_a, const int2 axial_b, const RoadLevel road_level) {
+constexpr void HexTerrainCarveRoad(HexState& hex_state, const int2 axial_a, const int2 axial_b, const RoadLevel road_level) {
     const u32 distance = HexAxialDistance(axial_a, axial_b);
     if (distance) {
         const int3 cube_a = HexAxialToCube(axial_a);
@@ -81,7 +85,7 @@ constexpr void CarveRoad(HexState& hex_state, const int2 axial_a, const int2 axi
             }
             for (u32 side = 0U; side < HEX_CORNERS; side++) {
                 if (axial_previous + HEX_AXIAL_NEIGHBOURS[side] == axial_current) {
-                    HexSetRoad(hex_state, axial_previous, side, road_level);
+                    HexTerrainSetRoad(hex_state, axial_previous, side, road_level);
                     break;
                 }
             }
@@ -89,4 +93,31 @@ constexpr void CarveRoad(HexState& hex_state, const int2 axial_a, const int2 axi
         }
     }
 }
+
+constexpr void HexTerrainSetRiverBetween(HexState& hex_state, const int2 axial_start, const int2 axial_end) {
+    assert(axial_start != axial_end);
+    List<int2> axial_line = HexAxialLine(axial_start, axial_end);
+
+    {
+        const u8 edge = HexAxialEdgeNeighbor(axial_start, axial_line[1]);
+        HexTerrainSetRiver(hex_state, axial_start, edge);
+    }
+
+    for (u32 i = 1U; i < axial_line.size() - 1U; i++) {
+        const int2 axial = axial_line[i];
+        const u8 edge_from =  HexAxialEdgeNeighbor(axial, axial_line[i - 1U]);
+        const u8 edge_to = HexAxialEdgeNeighbor(axial, axial_line[i + 1U]);
+        const u8 edge_clock_wise = (edge_to + HEX_CORNERS - edge_from) % HEX_CORNERS;
+        const u8 edge_counter_clock_wise = (edge_from + HEX_CORNERS - edge_to) % HEX_CORNERS;
+        const u8 step_edge = edge_clock_wise <= edge_counter_clock_wise ? 1U : HEX_CORNERS - 1U;
+        for (u8 edge = (edge_from + step_edge) % HEX_CORNERS; edge != edge_to; edge = (edge + step_edge) % HEX_CORNERS) {
+            HexTerrainSetRiver(hex_state, axial, edge);
+        }
+    }
+    {
+        const u8 edge = HexAxialEdgeNeighbor(axial_line[axial_line.size() - 2U], axial_end);
+        HexTerrainSetRiver(hex_state, axial_end, edge);
+    }
+}
+
 } // namespace pcg

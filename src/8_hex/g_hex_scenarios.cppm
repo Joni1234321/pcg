@@ -16,7 +16,7 @@ import hex.terrain;
 import hex.terrain.generation;
 
 export namespace hex {
-    UnitToe GetUnitToe(UnitIcon icon) {
+    UnitToe UnitGetToe(UnitIcon icon) {
         switch (icon) {
             case UnitIcon::ICON_INF: return UnitToe { .move = 16, .squad_inf = 3 * 3 * 3, .squad_art = 3, .squad_tank = 0 };
             case UnitIcon::ICON_ART: return UnitToe { .move = 16, .squad_inf = 3, .squad_art = 4 * 3, .squad_tank = 0 };
@@ -28,7 +28,7 @@ export namespace hex {
     }
 
     Handle<Unit> HexStateSpawnUnit(HexState& hex_state, const UnitFormation& unit_formation, int2 offset) {
-        const UnitToe unit_toe = GetUnitToe(unit_formation.icon);
+        const UnitToe unit_toe = UnitGetToe(unit_formation.icon);
         const int2 axial = HexOffsetToAxial(offset);
         return hex_state.units.EmplaceBack(
             Unit { .axial = axial, .parent = unit_formation.parent, .tag = unit_formation.tag, .icon = unit_formation.icon, .echelon = unit_formation.echelon, .move = unit_toe.move, .squad_inf = unit_toe.squad_inf, .squad_art = unit_toe.squad_art, .squad_tank = unit_toe.squad_tank, .name = { }, .color = { } });
@@ -38,10 +38,10 @@ export namespace hex {
         constexpr u32 SEED = 3489;
 
         hex_state.hex_map.Resize({ 20, 8 });
-        TerrainGenerateFeatures(hex_state, SEED);
-        TerrainGenerateRiversWalk(hex_state, SEED);
-        TerrainGenerateFeatures(hex_state, SEED);
-        TerrainGenerateRoads(hex_state);
+        HexTerrainGenerateFeatures(hex_state, SEED);
+        HexTerrainGenerateRiversWalk(hex_state, SEED);
+        HexTerrainGenerateFeatures(hex_state, SEED);
+        HexTerrainGenerateRoads(hex_state);
 
         // GER: Heeresgruppe → I.Korps → Rgt → Bn
         const Handle<Unit> ger_hgr = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_ARMY }, { 1, 2 });
@@ -75,7 +75,10 @@ export namespace hex {
     void HexScenarioDivisionClash(HexState& hex_state) {
         constexpr u32 SEED = 3489;
         hex_state.hex_map.Resize({ 20, 8 });
-        GenerateTerrainType(hex_state, SEED);
+        HexTerrainGenerateType(hex_state, SEED);
+        HexTerrainSetRiverBetween(hex_state, int2 { 8, 0 }, int2 { 5, 3 });
+
+
 
         // GER (attacker): pushed up against the left edge. Division → 2 Regiments → Bns, with divisional art + armor.
         const Handle<Unit> ger_div = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_DIVISION }, { 1, 3 });

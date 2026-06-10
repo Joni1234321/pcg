@@ -3,6 +3,8 @@ module;
 
 export module hex.hex;
 
+import std;
+
 import pce.std;
 import pce.math;
 import pce.collections;
@@ -69,6 +71,25 @@ constexpr Array<int2, HEX_CORNERS> HEX_AXIAL_NEIGHBOURS {
 [[nodiscard]] constexpr int2 HexWorldToAxial(const float2 world) {
     const float2 coord = float2 { 1.0F / 3.0F, 2.0F / 3.0F } * float2 { HEX_SPACING.x * world.x - world.y, world.y };
     return HexAxialRound(coord);
+}
+[[nodiscard]] constexpr u8 HexAxialEdgeNeighbor(const int2 axial_a, const int2 axial_neighbour) {
+    for (u8 edge = 0U; edge < HEX_CORNERS; edge++) {
+        if (axial_a + HEX_AXIAL_NEIGHBOURS[edge] == axial_neighbour) { return edge; }
+    }
+    std::unreachable();
+}
+[[nodiscard]] constexpr List<int2> HexAxialLine(const int2 axial_a, const int2 axial_b) {
+    const int3 cube_a = HexAxialToCube(axial_a);
+    const int3 cube_b = HexAxialToCube(axial_b);
+    const u32 distance = HexCubeDistance(cube_a, cube_b);
+    const f32 distance_reciprocal = 1.0F / distance;
+    List<int2> axial_path;
+    for (u32 i = 0; i <= distance; i++) {
+        const f32 t = static_cast<f32>(i) * distance_reciprocal;
+        const int2 axial = HexCubeToAxial(HexCubeRound(HexCubeLerp(cube_a, cube_b, t)));
+        axial_path.EmplaceBack(axial);
+    }
+    return axial_path;
 }
 
 // hex collections

@@ -12,7 +12,7 @@ import hex.render;
 import hex.terrain;
 
 export namespace hex {
-constexpr void GenerateTerrainType(HexState& hex_state, const u32 seed) {
+constexpr void HexTerrainGenerateType(HexState& hex_state, const u32 seed) {
     constexpr f32 SCALE = 0.04F;
     const f32 seed_f = static_cast<f32>(seed);
     for (u32 i = 0; i < hex_state.hex_map.Size(); i++) {
@@ -22,7 +22,7 @@ constexpr void GenerateTerrainType(HexState& hex_state, const u32 seed) {
     }
 }
 
-constexpr void TerrainGenerateRoads(HexState& hex_state) {
+constexpr void HexTerrainGenerateRoads(HexState& hex_state) {
     List<int2> cities;
     List<int2> villages;
     for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
@@ -58,7 +58,7 @@ constexpr void TerrainGenerateRoads(HexState& hex_state) {
             }
             if (next == n) { break; }
             in_tree[next] = 1U;
-            if (step > 0U) { CarveRoad(hex_state, cities[best_parent[next]], cities[next], RoadLevel::ROAD_LEVEL_SMALL); }
+            if (step > 0U) { HexTerrainCarveRoad(hex_state, cities[best_parent[next]], cities[next], RoadLevel::ROAD_LEVEL_SMALL); }
             for (u32 i = 0U; i < n; i++) {
                 if (in_tree[i] == 0U) {
                     const u32 d = HexAxialDistance(cities[next], cities[i]);
@@ -95,7 +95,7 @@ constexpr void TerrainGenerateRoads(HexState& hex_state) {
                 std::swap(idx[k], idx[best]);
             }
             for (u32 k = 0U; k < take; k++) {
-                CarveRoad(hex_state, sources[i], targets[idx[k]], k < big_count ? RoadLevel::ROAD_LEVEL_MEDIUM : RoadLevel::ROAD_LEVEL_SMALL);
+                HexTerrainCarveRoad(hex_state, sources[i], targets[idx[k]], k < big_count ? RoadLevel::ROAD_LEVEL_MEDIUM : RoadLevel::ROAD_LEVEL_SMALL);
             }
         }
     };
@@ -104,7 +104,7 @@ constexpr void TerrainGenerateRoads(HexState& hex_state) {
     if (villages.size() >= 2U) { connect_k_nearest(villages, villages, 0U, 2U); }
     if (!cities.empty() && !villages.empty()) { connect_k_nearest(villages, cities, 0U, 1U); }
 }
-constexpr void TerrainGenerateRivers(HexState& hex_state, const u32 seed) {
+constexpr void HexTerrainGenerateRivers(HexState& hex_state, const u32 seed) {
     constexpr f32 SCALE = 0.04F;
     constexpr u32 RIVER_THRESHOLD = 24U; // min upstream cells before an edge becomes a river
     const f32 seed_f = static_cast<f32>(seed);
@@ -189,33 +189,17 @@ constexpr void TerrainGenerateRivers(HexState& hex_state, const u32 seed) {
         if (TerrainIsWater(map.data[i].terrain_type)) { continue; }
         const int2 axial = map.IndexToAxial(i);
         const u8 side = flow_side[i];
-        HexSetRiver(hex_state, axial, (side + 1U) % HEX_CORNERS);
-        HexSetRiver(hex_state, axial, (side + 2U) % HEX_CORNERS);
+        HexTerrainSetRiver(hex_state, axial, (side + 1U) % HEX_CORNERS);
+        HexTerrainSetRiver(hex_state, axial, (side + 2U) % HEX_CORNERS);
     }
 }
-constexpr void TerrainGenerateRiversWalk(HexState& hex_state, const u32 seed) {
+constexpr void HexTerrainGenerateRiversWalk(HexState& hex_state, const u32 seed) {
     constexpr f32 SCALE = 0.04F;
     const f32 seed_f = static_cast<f32>(seed);
     HexList<Hex>& map = hex_state.hex_map;
     auto elevation_at_axial = [&](const int2 axial) -> f32 {
         const float2 world = HexAxialToWorld(axial);
         return noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f);
-    };
-    auto dir_between = [&](const int2 from, const int2 to) -> u8 {
-        for (u8 side = 0U; side < HEX_CORNERS; side++) {
-            if (from + HEX_AXIAL_NEIGHBOURS[side] == to) { return side; }
-        }
-        return HEX_CORNERS;
-    };
-    // Edge walking: set the perimeter edges connecting the inflow edge to the outflow edge,
-    // following the shorter arc around the hex so the river stays a single connected channel.
-    auto set_arc = [&](const int2 axial, const u8 from_side, const u8 to_side) {
-        const u8 cw = (to_side + HEX_CORNERS - from_side) % HEX_CORNERS;
-        const u8 ccw = (from_side + HEX_CORNERS - to_side) % HEX_CORNERS;
-        const u8 step = cw <= ccw ? 1U : HEX_CORNERS - 1U;
-        for (u8 side = (from_side + step) % HEX_CORNERS; side != to_side; side = (side + step) % HEX_CORNERS) {
-            HexSetRiver(hex_state, axial, side);
-        }
     };
 
     UnorderedSet<int2> visited;
@@ -226,12 +210,12 @@ constexpr void TerrainGenerateRiversWalk(HexState& hex_state, const u32 seed) {
         if (visited.contains(source)) { continue; }
 
         // Pass 1: walk downhill (steepest descent) and collect every hex the river runs through.
-        List<int2> path;
+        List<int2> axial_path;
         int2 current = source;
         for (u32 step = 0U; step < 64U; step++) {
             if (visited.contains(current)) { break; }
             visited.emplace(current);
-            path.EmplaceBack(current);
+            axial_path.EmplaceBack(current);
             if (!map.Contains(current) || TerrainIsWater(map[current].terrain_type)) { break; }
             u8 side_best = HEX_CORNERS;
             f32 elevation_min = elevation_at_axial(current);
@@ -248,25 +232,10 @@ constexpr void TerrainGenerateRiversWalk(HexState& hex_state, const u32 seed) {
             if (side_best == HEX_CORNERS) { break; }
             current = current + HEX_AXIAL_NEIGHBOURS[side_best];
         }
-
-        // Pass 2: edge-walk the collected path, drawing the correct channel edges per hex.
-        for (u32 p = 0U; p < path.size(); p++) {
-            const int2 axial = path[p];
-            const u8 in_side = p > 0U ? dir_between(axial, path[p - 1U]) : HEX_CORNERS;
-            const u8 out_side = p + 1U < path.size() ? dir_between(axial, path[p + 1U]) : HEX_CORNERS;
-            if (in_side != HEX_CORNERS && out_side != HEX_CORNERS) {
-                set_arc(axial, in_side, out_side);
-            } else if (out_side != HEX_CORNERS) { // source: cap the two edges flanking the outflow
-                HexSetRiver(hex_state, axial, (out_side + 1U) % HEX_CORNERS);
-                HexSetRiver(hex_state, axial, (out_side + HEX_CORNERS - 1U) % HEX_CORNERS);
-            } else if (in_side != HEX_CORNERS) { // mouth: cap the two edges flanking the inflow
-                HexSetRiver(hex_state, axial, (in_side + 1U) % HEX_CORNERS);
-                HexSetRiver(hex_state, axial, (in_side + HEX_CORNERS - 1U) % HEX_CORNERS);
-            }
-        }
+        for (u32 j = 0; j < axial_path.size() - 1; j++) { HexTerrainSetRiverBetween(hex_state, axial_path[j], axial_path[j + 1]); }
     }
 }
-constexpr void TerrainGenerateFeatures(HexState& hex_state, const u32 seed) {
+constexpr void HexTerrainGenerateFeatures(HexState& hex_state, const u32 seed) {
     constexpr f32 SCALE = 0.12F;
     const f32 forest_seed = static_cast<f32>(seed) + 1000.0F;
     const f32 field_seed = static_cast<f32>(seed) + 4717.0F;
