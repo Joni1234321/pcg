@@ -31,9 +31,12 @@ constexpr Array<int2, HEX_CORNERS> HEX_AXIAL_NEIGHBOURS {
     int2 { +1, 0 }, int2 { +1, -1 }, int2 { 0, -1 }, int2 { -1, 0 }, int2 { -1, +1 }, int2 { 0, +1 },
 };
 
-constexpr int2 HexCubeToAxial(const int3 cube) { return int2 { cube.x, cube.y }; }
-constexpr int3 HexAxialToCube(const int2 axial) { return int3 { axial.x, axial.y, -axial.x - axial.y }; }
-constexpr int3 HexCubeRound(const float3 cube_frac) {
+[[nodiscard]] constexpr int2 HexCubeToAxial(const int3 cube) { return int2 { cube.x, cube.y }; }
+[[nodiscard]] constexpr int3 HexAxialToCube(const int2 axial) { return int3 { axial.x, axial.y, -axial.x - axial.y }; }
+[[nodiscard]] constexpr int2 HexAxialToOffset(const int2 axial) { return int2 { axial.x + (axial.y - (axial.y & 1)) / 2, axial.y }; }
+[[nodiscard]] constexpr int2 HexOffsetToAxial(const int2 offset) { return int2 { offset.x - (offset.y - (offset.y & 1)) / 2, offset.y }; }
+
+[[nodiscard]] constexpr int3 HexCubeRound(const float3 cube_frac) {
     int3 cube { math::Round(cube_frac.x), math::Round(cube_frac.y), math::Round(cube_frac.z) };
 
     const float3 diff = math::Abs(float3 { cube } - cube_frac);
@@ -68,6 +71,7 @@ constexpr int3 HexCubeRound(const float3 cube_frac) {
     return HexAxialRound(coord);
 }
 
+// hex collections
 template <class T> struct HexList {
     uint2 map_size { 0, 0 };
     List<T> data { 0 };

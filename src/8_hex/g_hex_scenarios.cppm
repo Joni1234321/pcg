@@ -26,14 +26,21 @@ export namespace hex {
         }
     }
 
-    Handle<Unit> HexStateSpawnUnit(HexState& hex_state, const UnitFormation& unit_formation, int2 axial) {
-        UnitToe unit_toe = GetUnitToe(unit_formation.icon);
+    Handle<Unit> HexStateSpawnUnit(HexState& hex_state, const UnitFormation& unit_formation, int2 offset) {
+        const UnitToe unit_toe = GetUnitToe(unit_formation.icon);
+        const int2 axial = HexOffsetToAxial(offset);
         return hex_state.units.EmplaceBack(
             Unit { .axial = axial, .parent = unit_formation.parent, .tag = unit_formation.tag, .icon = unit_formation.icon, .echelon = unit_formation.echelon, .move = unit_toe.move, .squad_inf = unit_toe.squad_inf, .squad_art = unit_toe.squad_art, .squad_tank = unit_toe.squad_tank, .name = { }, .color = { } });
     }
 
     void HexScenarioAi(HexState& hex_state) {
-        hex_state.hex_map = GenerateTerrainType({ 40, 40 }, 3489);
+        constexpr u32 SEED = 3489;
+
+        hex_state.hex_map = GenerateTerrainType({ 40, 40 }, SEED);
+        GenerateRiversWalk(hex_state, SEED);
+        GenerateTerrainFeatures(hex_state, SEED);
+        GenerateRoads(hex_state);
+
         // GER: Heeresgruppe → I.Korps → Rgt → Bn
         const Handle<Unit> ger_hgr = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_ARMY }, { 0, 2 });
         const Handle<Unit> ger_kps = HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_hgr, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_CORPS }, { 2, 2 });
@@ -64,7 +71,8 @@ export namespace hex {
 
     // 22x8 map: two divisions clashing. Only battalions (and SOV companies) are fielded; everything else is HQ.
     void HexScenarioDivisionClash(HexState& hex_state) {
-        hex_state.hex_map = GenerateTerrainType({ 20, 8 }, 3489);
+        constexpr u32 SEED = 3489;
+        hex_state.hex_map = GenerateTerrainType({ 20, 8 }, SEED);
 
         // GER (attacker): pushed up against the left edge. Division → 2 Regiments → Bns, with divisional art + armor.
         const Handle<Unit> ger_div = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_DIVISION }, { 0, 3 });
