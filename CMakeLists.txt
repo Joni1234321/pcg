@@ -110,6 +110,7 @@ target_sources(pcg
 
                # hex
                src/8_hex/g_hex_terrain.cppm
+               src/8_hex/g_hex_terrain_generation.cppm
                src/8_hex/g_hex_scenarios.cppm
                src/8_hex/g_hex_types.cppm
                src/8_hex/r_hex_render.cppm

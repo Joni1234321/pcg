@@ -13,6 +13,7 @@ import pce.std;
 import hex.hex;
 import hex.types;
 import hex.terrain;
+import hex.terrain.generation;
 
 export namespace hex {
     UnitToe GetUnitToe(UnitIcon icon) {
@@ -37,10 +38,10 @@ export namespace hex {
         constexpr u32 SEED = 3489;
 
         hex_state.hex_map.Resize({ 20, 8 });
-        GenerateTerrainType(hex_state, SEED);
-        GenerateRiversWalk(hex_state, SEED);
-        GenerateTerrainFeatures(hex_state, SEED);
-        GenerateRoads(hex_state);
+        TerrainGenerateFeatures(hex_state, SEED);
+        TerrainGenerateRiversWalk(hex_state, SEED);
+        TerrainGenerateFeatures(hex_state, SEED);
+        TerrainGenerateRoads(hex_state);
 
         // GER: Heeresgruppe → I.Korps → Rgt → Bn
         const Handle<Unit> ger_hgr = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_ARMY }, { 1, 2 });

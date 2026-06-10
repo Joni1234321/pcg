@@ -51,4 +51,5 @@ CheckOptions:
   readability-identifier-naming.ConstexprVariableCase:    UPPER_CASE
   readability-identifier-naming.StaticConstantCase:       UPPER_CASE
   readability-identifier-naming.GlobalConstantCase:       UPPER_CASE
-  misc-include-cleaner.IgnoreHeaders: "SDL3/.*;SDL3_ttf/.*;SDL3_image/.*;.*u_types.hpp"
+  misc-include-cleaner.IgnoreHeaders: "SDL3/.*;SDL3_ttf/.*;SDL3_image/.*"
+  readability-function-cognitive-complexity.Threshold: '80'

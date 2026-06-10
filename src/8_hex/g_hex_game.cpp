@@ -55,23 +55,21 @@ List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start
     came_from[axial_start] = axial_start;
     cost_at_axial[axial_start] = 0;
 
-    //
-
     while (!frontier.empty()) {
         const AxialAndCost current = frontier.top();
         frontier.pop();
 
         if (current.axial == axial_end) { break; } // finished
 
-        for (u32 side = 0; side < HEX_CORNERS; side++) {
-            const int2 axial_neighbour_offset = HEX_AXIAL_NEIGHBOURS[side];
+        for (u32 edge = 0; edge < HEX_CORNERS; edge++) {
+            const int2 axial_neighbour_offset = HEX_AXIAL_NEIGHBOURS[edge];
             const int2 axial_next = current.axial + axial_neighbour_offset;
             if (!hex_state.hex_map.Contains(axial_next) || AxialIsEnemy(hex_state, axial_next)) { continue; }
 
             const Hex& hex = hex_state.hex_map[axial_next];
             const u32 cost_conquer = (hex.owner.tag != hex_state.player_tag) + hex.owner.contested + AxialIsEnemyOrZoc(hex_state, axial_next) + (AxialAdjecentEnemyControl(hex_state, axial_next) > 0) * 1U;
             u32 cost_terrain = TerrainToMovementCost(hex.terrain_type);
-            const b8 has_road = hex_state.hex_map.Contains(current.axial) && static_cast<RoadLevel>(hex_state.hex_map[current.axial].roads.Test(side)) != RoadLevel::ROAD_LEVEL_NONE;
+            const b8 has_road = hex_state.hex_map.Contains(current.axial) && static_cast<RoadLevel>(hex_state.hex_map[current.axial].roads.Test(edge)) != RoadLevel::ROAD_LEVEL_NONE;
             if (has_road) { cost_terrain = cost_terrain > MOVE_COST_ROAD_REDUCTION ? cost_terrain - MOVE_COST_ROAD_REDUCTION : 1U; }
             const u32 cost_new = cost_at_axial[current.axial] + cost_terrain + cost_conquer;
             if (!cost_at_axial.contains(axial_next) || cost_new < cost_at_axial[axial_next]) {
