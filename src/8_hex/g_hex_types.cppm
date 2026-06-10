@@ -135,12 +135,12 @@ struct HexState {
     HexList<Hex> hex_map{};
     HandleList<Unit> units{};
 
-    CountryTag player_tag;
-    PlayerAction player_action;
-    PseudoStates pseudo_states;
-    UnorderedMap<int2, List<Handle<Unit>>> units_by_axial;
+    CountryTag player_tag {};
+    PlayerAction player_action {};
+    PseudoStates pseudo_states {};
+    UnorderedMap<int2, List<Handle<Unit>>> units_by_axial {};
 
-    UnorderedMap<Handle<Unit>, List<Handle<Unit>>> units_oob;
+    UnorderedMap<Handle<Unit>, List<Handle<Unit>>> units_oob  {};
 
     Pool<CounterStack> counters{};
     Pool<Label> label_pool{};

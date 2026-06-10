@@ -23,17 +23,14 @@ export namespace hex {
     }
     std::unreachable();
 }
-constexpr HexList<Hex> GenerateTerrainType(const uint2 map_size, const u32 seed) {
-    HexList<Hex> hexes;
-    hexes.Resize(map_size);
+constexpr void GenerateTerrainType(HexState& hex_state, const u32 seed) {
     constexpr f32 SCALE = 0.04F;
     const f32 seed_f = static_cast<f32>(seed);
-    for (u32 i = 0; i < hexes.Size(); i++) {
-        const int2 axial = hexes.IndexToAxial(i);
+    for (u32 i = 0; i < hex_state.hex_map.Size(); i++) {
+        const int2 axial = hex_state.hex_map.IndexToAxial(i);
         const float2 world = HexAxialToWorld(axial);
-        hexes[axial].terrain_type = FloatToTerrainType((noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f) + 1.0F) * 0.5F);
+        hex_state.hex_map[axial].terrain_type = FloatToTerrainType((noise::Fbm(world.x * SCALE + seed_f, world.y * SCALE + seed_f) + 1.0F) * 0.5F);
     }
-    return hexes;
 }
 
 inline void GenerateTerritory(HexState& hex_state) {
