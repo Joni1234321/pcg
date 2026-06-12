@@ -78,13 +78,27 @@ export namespace hex {
         HexTerrainGenerateType(hex_state, SEED);
         HexTerrainSetRiverBetween(hex_state, HexOffsetToAxial({ 4, 0 }), HexOffsetToAxial({ 5, 9 }));
 
-        hex_state.hex_map[HexOffsetToAxial({10,2})].terrain_feature = TerrainFeature::TERRAIN_FEATURE_CITY;
-        hex_state.hex_map[HexOffsetToAxial({4,6})].terrain_feature = TerrainFeature::TERRAIN_FEATURE_CITY;
-        hex_state.hex_map[HexOffsetToAxial({3,3})].terrain_feature = TerrainFeature::TERRAIN_FEATURE_CITY;
-        hex_state.hex_map[HexOffsetToAxial({2,2})].terrain_feature = TerrainFeature::TERRAIN_FEATURE_CITY;
-        hex_state.hex_map[HexOffsetToAxial({6,3})].terrain_feature = TerrainFeature::TERRAIN_FEATURE_VILLAGE;
-        hex_state.hex_map[HexOffsetToAxial({6,7})].terrain_feature = TerrainFeature::TERRAIN_FEATURE_VILLAGE;
-        hex_state.hex_map[HexOffsetToAxial({3,3})].terrain_feature = TerrainFeature::TERRAIN_FEATURE_VILLAGE;
+        constexpr int2 cities[] = {
+            HexOffsetToAxial({10, 2}),
+            HexOffsetToAxial({4, 6}),
+            HexOffsetToAxial({3, 3}),
+            HexOffsetToAxial({2, 2}),
+        };
+
+        constexpr int2 villages[] = {
+            HexOffsetToAxial({6, 3}),
+            HexOffsetToAxial({6, 7}),
+        };
+
+        for (const int2 axial : cities) { hex_state.hex_map[axial].terrain_feature = TerrainFeature::TERRAIN_FEATURE_CITY; }
+        for (const int2 axial : villages) { hex_state.hex_map[axial].terrain_feature = TerrainFeature::TERRAIN_FEATURE_VILLAGE; }
+
+        HexTerrainSetRoadBetween(hex_state, cities[0], cities[1], RoadLevel::ROAD_LEVEL_SMALL);
+        HexTerrainSetRoadBetween(hex_state, cities[1], cities[2], RoadLevel::ROAD_LEVEL_MEDIUM);
+        HexTerrainSetRoadBetween(hex_state, cities[2], cities[3], RoadLevel::ROAD_LEVEL_MEDIUM);
+        HexTerrainSetRoadBetween(hex_state, cities[0], cities[3], RoadLevel::ROAD_LEVEL_LARGE);
+        HexTerrainSetRoadBetween(hex_state, cities[1], villages[0], RoadLevel::ROAD_LEVEL_SMALL);
+        HexTerrainSetRoadBetween(hex_state, cities[1], villages[1], RoadLevel::ROAD_LEVEL_SMALL);
 
         // GER (attacker): pushed up against the left edge. Division → 2 Regiments → Bns, with divisional art + armor.
         const Handle<Unit> ger_div = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_DIVISION }, { 1, 3 });

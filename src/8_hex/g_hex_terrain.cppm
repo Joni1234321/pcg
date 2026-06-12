@@ -122,4 +122,16 @@ constexpr void HexTerrainSetRiverBetween(HexState& hex_state, const int2 axial_s
     // }
 }
 
+constexpr void HexTerrainSetRoadBetween(HexState& hex_state, const int2 axial_start, const int2 axial_end,const RoadLevel road_level) {
+    assert(axial_start != axial_end);
+    const List<int2> axial_line = HexAxialLine(axial_start, axial_end);
+
+    for (u32 i = 0; i < axial_line.size() - 1; ++i) {
+        const int2 from = axial_line[i];
+        const int2 to   = axial_line[i + 1];
+        const u8 edge = HexAxialEdgeNeighbor(from, to);
+        HexTerrainSetRoad(hex_state, from, edge, road_level);
+    }
+}
+
 } // namespace pcg
