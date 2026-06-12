@@ -11,7 +11,7 @@ import pce.collections;
 
 export namespace hex {
 // https://www.redblobgames.com/grids/hexagons/
-constexpr u32 HEX_CORNERS = 6;
+constexpr u8 HEX_CORNERS = 6;
 constexpr float2 HEX_SPACING { math::SQRT_3, 1.5F };
 // NOLINTNEXTLINE(*-throwing-static-initialization)
 const Array<float2, HEX_CORNERS> HEX_ANGLE = { {

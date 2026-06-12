@@ -285,11 +285,11 @@ void AppendRiverMesh(HexState& hex_state, const CameraState& camera) {
                         const float2 screen_corner_a = screen + HEX_ANGLE[side % HEX_CORNERS] * float2 { camera.scale };
                         const float2 screen_corner_b = screen + HEX_ANGLE[(side + 1U) % HEX_CORNERS] * float2 { camera.scale };
                         VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_corner_a, screen_corner_b, width), color);
-                        VertAabbAppend(hex_state.verts, AABB::FromCenter(screen_corner_a, float2 { 10.0F }), colors::COLOR_BLUE);
-                        VertAabbAppend(hex_state.verts, AABB::FromCenter(screen_corner_b, float2 { 10.0F }), colors::COLOR_RED);
-                        int2 axial_neighbour = axial + HEX_AXIAL_NEIGHBOURS[side];
-                        float2 screen_neighbour = camera.WorldToScreen(HexAxialToWorld(axial_neighbour));
-                        VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_neighbour, screen, 10.0f), colors::COLOR_BROWN);
+                        // VertAabbAppend(hex_state.verts, AABB::FromCenter(screen_corner_a, float2 { 10.0F }), colors::COLOR_BLUE);
+                        // VertAabbAppend(hex_state.verts, AABB::FromCenter(screen_corner_b, float2 { 10.0F }), colors::COLOR_RED);
+                        // int2 axial_neighbour = axial + HEX_AXIAL_NEIGHBOURS[side];
+                        // float2 screen_neighbour = camera.WorldToScreen(HexAxialToWorld(axial_neighbour));
+                        // VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_neighbour, screen, 10.0f), colors::COLOR_BROWN);
                     }
                 }
             }

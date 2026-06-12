@@ -76,9 +76,15 @@ export namespace hex {
         constexpr u32 SEED = 3489;
         hex_state.hex_map.Resize({ 20, 8 });
         HexTerrainGenerateType(hex_state, SEED);
-        HexTerrainSetRiverBetween(hex_state, int2 { 8, 0 }, int2 { 5, 3 });
+        HexTerrainSetRiverBetween(hex_state, HexOffsetToAxial({ 4, 0 }), HexOffsetToAxial({ 5, 9 }));
 
-
+        hex_state.hex_map[HexOffsetToAxial({10,2})].terrain_feature = TerrainFeature::TERRAIN_FEATURE_CITY;
+        hex_state.hex_map[HexOffsetToAxial({4,6})].terrain_feature = TerrainFeature::TERRAIN_FEATURE_CITY;
+        hex_state.hex_map[HexOffsetToAxial({3,3})].terrain_feature = TerrainFeature::TERRAIN_FEATURE_CITY;
+        hex_state.hex_map[HexOffsetToAxial({2,2})].terrain_feature = TerrainFeature::TERRAIN_FEATURE_CITY;
+        hex_state.hex_map[HexOffsetToAxial({6,3})].terrain_feature = TerrainFeature::TERRAIN_FEATURE_VILLAGE;
+        hex_state.hex_map[HexOffsetToAxial({6,7})].terrain_feature = TerrainFeature::TERRAIN_FEATURE_VILLAGE;
+        hex_state.hex_map[HexOffsetToAxial({3,3})].terrain_feature = TerrainFeature::TERRAIN_FEATURE_VILLAGE;
 
         // GER (attacker): pushed up against the left edge. Division → 2 Regiments → Bns, with divisional art + armor.
         const Handle<Unit> ger_div = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_DIVISION }, { 1, 3 });

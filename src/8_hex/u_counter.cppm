@@ -22,10 +22,6 @@ import hex.hex;
 import hex.types;
 
 export namespace hex {
-enum class CounterStyle : u8 { COUNTER_STYLE_NIEHORSTER, COUNTER_STYLE_NIEHORSTER_BIG, COUNTER_STYLE_REAL };
-
-constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_REAL;
-
 [[nodiscard]] constexpr String EchelonToString(const Echelon echelon) {
     switch (echelon) {
         case Echelon::ECHELON_SQUAD: return "..";
