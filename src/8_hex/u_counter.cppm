@@ -190,7 +190,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         // div
         if (font_10_opt.has_value()) {
             {
-                AABB area_div = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.15F }, counter_size * float2 { 1.0F, 0.17F });
+                AABB area_div = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.09F }, counter_size * float2 { 1.0F, 0.25F });
                 ColorBox color_box { .color_fill = counter.stack[0].color_icon, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_BLACK };
                 draw_color_box(font_10_opt.value(), counter.label_name_div, color_box, area_div);
             }
@@ -199,6 +199,12 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
                 ColorBox color_box { .color_fill = colors::COLOR_CLEAR, .color_stroke = colors::COLOR_CLEAR, .color_text = colors::COLOR_BLACK };
                 draw_color_box(font_10_opt.value(), counter.label_name_sub, color_box, area_div);
             }
+        }
+        else {
+            AABB area_div = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.09F }, counter_size * float2 { 1.0F, 0.5F });
+            Color color = counter.stack[0].color_icon;
+            (void)SDL_SetRenderDrawColor(window_state.renderer, color.r, color.g, color.b, color.a);
+            (void)SDL_RenderFillRect(window_state.renderer, area_div);
         }
 
         // icon
