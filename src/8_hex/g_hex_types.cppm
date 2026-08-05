@@ -65,7 +65,7 @@ struct CounterStack {
     UnitIcon icon { };
     Array<Counter, 12> stack { };
     Label label_top_upper { };
-    Label label_top_lower { };
+    Label label_div { };
     Label label_icon_placeholder { };
     Label label_bottom_left_upper { };
     Label label_bottom_left_lower { };

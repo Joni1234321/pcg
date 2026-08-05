@@ -144,14 +144,17 @@ void UnitToCounterAppend(HexState& hex_state) {
         const Unit& unit_largest_echelon = hex_state.units[unit_handle_largest_echelon];
 
         counter.icon = unit_largest_echelon.icon;
-        counter.label_top_upper.SetText(std::format("{}\n[{}]", EchelonToString(unit_largest_echelon.echelon), steps));
+        counter.label_top_upper.SetText(std::format("{}", EchelonToString(unit_largest_echelon.echelon), steps));
+        counter.label_div.SetText(std::format("{}", EchelonToString(unit_largest_echelon.echelon), steps));
         counter.label_icon_placeholder.SetText(UnitIconToString(unit_largest_echelon.icon));
         counter.label_bottom_left_lower.SetText(std::format("{}", dmg));
         counter.label_bottom_left_upper.SetText(std::format("+{}", dmg_ranged));
         counter.label_bottom_right.SetText(std::format("{}", move));
         counter.label_steps.SetText(std::format("{}", steps));
+
         String unit_name = String(Span(unit_largest_echelon.name));
         counter.label_vertical.SetText(unit_name);
+        counter.label_div.SetText(unit_name);
     }
 }
 PlayerAction GetPlayerAction(const HexState& hex_state) {
