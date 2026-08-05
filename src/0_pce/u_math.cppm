@@ -96,9 +96,15 @@ template <typename To, typename From> constexpr To& Reinterpret(From& from) { re
     assert(max > 0);
     return Rand() % max;
 }
-[[nodiscard]] inline u32 Rand(const u32 min, const u32 max) { return min + Rand(max - min); }
+// half-open [min, max)
+[[nodiscard]] inline u32 Rand(const u32 min, const u32 max) {
+    assert(max > min);
+    return min + Rand(max - min);
+}
 [[nodiscard]] inline f32 RandF() { return static_cast<f32>(Rand()) / static_cast<f32>(U32_MAX); }
 [[nodiscard]] inline f32 RandF(const f32 min, const f32 max) { return min + RandF() * (max - min); }
+[[nodiscard]] inline u8 RandD6() { return Rand(1U, 7U); }
+[[nodiscard]] inline u8 Rand2D6() { return RandD6() + RandD6(); }
 
 template <typename Collection> Collection::key_type RandomKey(const Collection& collection) {
     if (std::empty(collection)) { throw std::runtime_error("Collection is empty!"); }

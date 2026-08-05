@@ -93,14 +93,13 @@ void UnitToCounterAppend(HexState& hex_state) {
         CounterStack& counter = hex_state.counters.Get();
         counter.axial = axial_unit;
         u32 dmg = 0;
-        u32 def = 0;
+        u32 dmg_ranged = 0;
         u32 move = 0;
         counter.stack = { };
         const u32 counters_on_hex = math::Min<u32>(counter.stack.size(), unit_handles.size());
         b8 axial_is_selected = hex_state.pseudo_states.unit_selection.has_value() && hex_state.pseudo_states.axial_select == axial_unit;
         if (axial_is_selected) {
             dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
-            def = hex_state.pseudo_states.unit_selection->def_sum;
             move = hex_state.pseudo_states.unit_selection->move_min;
             // drawing selected
             u32 i = 0;
@@ -123,9 +122,8 @@ void UnitToCounterAppend(HexState& hex_state) {
                 const Handle<Unit> unit_handle = unit_handles[i];
                 const Unit& unit = hex_state.units[unit_handle];
                 counter.stack[i] = Counter { .color_background = CountryTagToColor(unit.tag), .color_icon = unit.color, .color_border = colors::COLOR_BLACK };
-                dmg += unit.dmg();
-                def += unit.def();
-                move = math::Max(unit.move, move);
+                dmg += unit.dmg;
+                move = math::Max(static_cast<u32>(unit.move), move);
             }
         }
 
@@ -136,7 +134,7 @@ void UnitToCounterAppend(HexState& hex_state) {
         counter.icon = unit_largest_echelon.icon;
         counter.label_top.SetText(EchelonToString(unit_largest_echelon.echelon));
         counter.label_center.SetText(UnitIconToString(unit_largest_echelon.icon));
-        counter.label_bottom.SetText(std::format("{}-{}-{}", dmg / 10, def / 10, move));
+        counter.label_bottom.SetText(std::format("{}(+{}) {}", dmg, dmg_ranged    , move));
         String unit_name = String(Span(unit_largest_echelon.name));
         counter.label_vertical.SetText(unit_name);
     }
@@ -173,7 +171,6 @@ struct HexSystem {
 
         if (hex_state.pseudo_states.unit_selection.has_value()) {
             const auto unit_selection = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
-            hex_state.pseudo_states.unit_selection->def_sum = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::def), u32 { 0 }, std::plus { });
             hex_state.pseudo_states.unit_selection->dmg_sum = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::dmg), u32 { 0 }, std::plus { });
             const auto [move_min, move_max] = std::ranges::minmax(unit_selection | std::views::transform(&Unit::move), std::less { });
             hex_state.pseudo_states.unit_selection->move_min = move_min;
@@ -352,39 +349,38 @@ struct HexSystem {
                 auto units_defender = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()] | hex_state.units.handle_to_view();
                 int2 axial_battle = units_defender[0].axial;
 
-                // attack
+                // so the idea is that we have battle phases.
+                // roll for survey
+                // roll for damage (a1, dr, a1/dr, ex, d1/d1, d1, a1/d2, dh)
+                // roll for inf engages. with art. then combat. then support art.
+                // 
                 const u32 dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
-                const u32 def = std::ranges::fold_left(units_defender | std::views::transform(&Unit::def), 0U, std::plus { });
-                const f32 ratio = static_cast<f32>(dmg) / static_cast<f32>(def);
+                // const f32 ratio = static_cast<f32>(dmg) / static_cast<f32>(def);
                 enum class PostBattleOutcome { DEFENDER_COUNTER_ATTACKED, DEFENDER_SCOUTED, DEFENDER_HELD, DEFENDER_RETREAT, DEFENDER_ROUT, DEFENDER_SURRENDER };
                 struct BattleOutcome {
                     PostBattleOutcome post_battle_outcome;
                     u32 dmg_attacker;
                     u32 dmg_defender;
                 } battle_outcome;
-                if (ratio >= 2.0F) {
-                    battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_RETREAT, .dmg_attacker = 1U, .dmg_defender = 3U };
-                } else if (ratio >= 1.5F) {
-                    battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_HELD, .dmg_attacker = 2U, .dmg_defender = 1U };
-                } else if (ratio <= 0.3F) {
-                    battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_COUNTER_ATTACKED, .dmg_attacker = 3U, .dmg_defender = 1U };
-                } else {
-                    battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_SCOUTED, .dmg_attacker = 2U, .dmg_defender = 1U };
-                }
+                // if (ratio >= 2.0F) {
+                //     battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_RETREAT, .dmg_attacker = 1U, .dmg_defender = 3U };
+                // } else if (ratio >= 1.5F) {
+                //     battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_HELD, .dmg_attacker = 2U, .dmg_defender = 1U };
+                // } else if (ratio <= 0.3F) {
+                //     battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_COUNTER_ATTACKED, .dmg_attacker = 3U, .dmg_defender = 1U };
+                // } else {
+                //     battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_SCOUTED, .dmg_attacker = 2U, .dmg_defender = 1U };
+                // }
 
                 const b8 attacker_won = battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_RETREAT || battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_ROUT || battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_SURRENDER;
+                u8 result = Rand2D6();
 
-                for (Unit& attacker : units_attacker) {
-                    attacker.squad_inf = math::SaturatingSub(attacker.squad_inf, battle_outcome.dmg_attacker);
-                    attacker.squad_art = math::SaturatingSub(attacker.squad_art, battle_outcome.dmg_attacker / 8);
-                    attacker.squad_tank = math::SaturatingSub(attacker.squad_art, battle_outcome.dmg_attacker / 64);
-                    attacker.move = math::SaturatingSub(attacker.move, MOVE_COST_ATTACK);
-                }
-                for (Unit& defender : units_defender) {
-                    defender.squad_inf = math::SaturatingSub(defender.squad_inf, battle_outcome.dmg_defender);
-                    defender.squad_art = math::SaturatingSub(defender.squad_art, battle_outcome.dmg_defender / 8);
-                    defender.squad_tank = math::SaturatingSub(defender.squad_art, battle_outcome.dmg_defender / 64);
-                }
+                u8 step_loss_attacker= result;
+                u8 step_loss_defender = 14 - result;
+                units_attacker[0].steps = math::SaturatingSub(units_attacker[0].steps, step_loss_attacker);
+                units_defender[0].steps = math::SaturatingSub(units_defender[0].steps, step_loss_defender);
+                units_attacker[0].move = math::SaturatingSub(units_attacker[0].move, MOVE_COST_ATTACK);
+
                 switch (battle_outcome.post_battle_outcome) {
                     case PostBattleOutcome::DEFENDER_COUNTER_ATTACKED:
                         for (Unit& attacker : units_attacker) {
@@ -447,7 +443,7 @@ struct HexSystem {
                     auto units_attacker = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
                     auto units_defender = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()] | hex_state.units.handle_to_view();
                     const u32 dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
-                    const u32 def = std::ranges::fold_left(units_defender | std::views::transform(&Unit::def), 0U, std::plus { });
+                    const u32 def = std::ranges::fold_left(units_defender | std::views::transform(&Unit::dmg), 0U, std::plus { });
                     label.SetText(std::format("{}->{}", dmg, def));
                 } else if (attacker_is_hq) {
                     label.SetText("hq cannot attack");

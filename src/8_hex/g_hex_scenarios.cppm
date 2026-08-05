@@ -18,11 +18,11 @@ import hex.terrain.generation;
 export namespace hex {
     UnitToe UnitGetToe(UnitIcon icon) {
         switch (icon) {
-            case UnitIcon::ICON_INF: return UnitToe { .move = 16, .squad_inf = 3 * 3 * 3, .squad_art = 3, .squad_tank = 0 };
-            case UnitIcon::ICON_ART: return UnitToe { .move = 16, .squad_inf = 3, .squad_art = 4 * 3, .squad_tank = 0 };
-            case UnitIcon::ICON_HQ: return UnitToe { .move = 64, .squad_inf = 3, .squad_art = 0, .squad_tank = 0 };
-            case UnitIcon::ICON_TANK: return UnitToe { .move = 32, .squad_inf = 3 * 3, .squad_art = 6 * 3, .squad_tank = 5 * 3 };
-            case UnitIcon::ICON_ENGINEER: return UnitToe { .move = 16, .squad_inf = 3 * 3 * 3, .squad_art = 3, .squad_tank = 0 };
+            case UnitIcon::ICON_INF: return UnitToe { .move = 4, .dmg = 3, .dmg_ranged = 0, .steps = 6 };
+            case UnitIcon::ICON_ART: return UnitToe { .move = 4, .dmg = 3, .dmg_ranged = 0, .steps = 255U };
+            case UnitIcon::ICON_HQ: return UnitToe { .move = 8, .dmg = 0, .dmg_ranged = 0, .steps = 255U };
+            case UnitIcon::ICON_TANK: return UnitToe { .move = 16, .dmg = 3, .dmg_ranged = 5, .steps = 4 };
+            case UnitIcon::ICON_ENGINEER: return UnitToe { .move = 4, .dmg = 3, .dmg_ranged = 0, .steps = 0 };
             default: assert(false); std::unreachable();
         }
     }
@@ -31,7 +31,7 @@ export namespace hex {
         const UnitToe unit_toe = UnitGetToe(unit_formation.icon);
         const int2 axial = HexOffsetToAxial(offset);
         return hex_state.units.EmplaceBack(
-            Unit { .axial = axial, .parent = unit_formation.parent, .tag = unit_formation.tag, .icon = unit_formation.icon, .echelon = unit_formation.echelon, .move = unit_toe.move, .squad_inf = unit_toe.squad_inf, .squad_art = unit_toe.squad_art, .squad_tank = unit_toe.squad_tank, .name = { }, .color = { } });
+            Unit { .axial = axial, .parent = unit_formation.parent, .tag = unit_formation.tag, .icon = unit_formation.icon, .echelon = unit_formation.echelon, .move = unit_toe.move, .dmg = unit_toe.dmg, .dmg_ranged = unit_toe.dmg_ranged, .steps = unit_toe.steps, .name = { }, .color = { } });
     }
 
     void HexScenarioAi(HexState& hex_state) {

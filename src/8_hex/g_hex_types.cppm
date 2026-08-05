@@ -28,7 +28,7 @@ constexpr MapStyle TERRAIN_SCHEME = MapStyle::SLATE_TABLE;
 constexpr TerrainStyle TERRAIN_FEATURE_THEME = TerrainStyle::TERRAIN_STYLE_ICONS;
 constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_NIEHORSTER;
 
-constexpr u32 MOVE_COST_ATTACK = 2U;
+constexpr u8 MOVE_COST_ATTACK = 2U;
 constexpr u32 MOVE_COST_ATTACK_PLANNED = 6U;
 constexpr u32 MOVE_COST_ROAD_REDUCTION = 2U;
 constexpr f32 BORDER_INNER_RADIUS = 0.90F;
@@ -77,12 +77,10 @@ struct UnitFormation {
     Echelon echelon {};
 };
 struct UnitToe {
-    u32 move {};
-    u32 squad_inf {};
-    u32 squad_art {};
-    u32 squad_tank {};
-    [[nodiscard]] constexpr u32 dmg() const { return squad_inf / 3 + squad_art * 2 + squad_tank / 5 * 8; }
-    [[nodiscard]] constexpr u32 def() const { return squad_inf / 3 * 2 + squad_art + squad_tank / 5; }
+    u8 move {};
+    u8 dmg {};
+    u8 dmg_ranged {};
+    u8 steps {};
 };
 using UnitName = Array<char, 10>;
 struct UnitFlavor {
@@ -99,12 +97,10 @@ struct Unit {
     Echelon echelon {};
 
     // unit stats
-    u32 move {};
-    u32 squad_inf {};
-    u32 squad_art {};
-    u32 squad_tank {};
-    [[nodiscard]] constexpr u32 dmg() const { return squad_inf / 3 + squad_art * 2 + squad_tank / 5 * 8; }
-    [[nodiscard]] constexpr u32 def() const { return squad_inf / 3 * 2 + squad_art + squad_tank / 5; }
+    u8 move {};
+    u8 dmg {};
+    u8 dmg_ranged{};
+    u8 steps {};
 
     // unit flavour
     UnitName name { };
@@ -113,7 +109,6 @@ struct Unit {
 struct UnitGroup {
     List<Handle<Unit>> unit_handles{};
     u32 dmg_sum{};
-    u32 def_sum{};
     u32 move_min{};
     u32 move_max{};
 };
