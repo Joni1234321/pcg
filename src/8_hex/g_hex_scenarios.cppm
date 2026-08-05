@@ -30,7 +30,8 @@ UnitToe UnitGetToe(UnitIcon icon) {
 Handle<Unit> HexStateSpawnUnit(HexState& hex_state, const UnitFormation& unit_formation, int2 offset) {
     const UnitToe unit_toe = UnitGetToe(unit_formation.icon);
     const int2 axial = HexOffsetToAxial(offset);
-    return hex_state.units.EmplaceBack(Unit { .axial = axial, .parent = unit_formation.parent, .tag = unit_formation.tag, .icon = unit_formation.icon, .echelon = unit_formation.echelon, .move = unit_toe.move, .dmg = unit_toe.dmg, .dmg_ranged = unit_toe.dmg_ranged, .steps = unit_toe.steps, .name = { }, .color = { } });
+    return hex_state.units.EmplaceBack(
+        Unit { .axial = axial, .parent = unit_formation.parent, .tag = unit_formation.tag, .icon = unit_formation.icon, .echelon = unit_formation.echelon, .move = unit_toe.move, .dmg = unit_toe.dmg, .dmg_ranged = unit_toe.dmg_ranged, .steps = unit_toe.steps, .name_div = { }, .color = { } });
 }
 
 void HexScenarioAi(HexState& hex_state) {

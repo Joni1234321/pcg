@@ -189,9 +189,16 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
 
         // div
         if (font_10_opt.has_value()) {
-            AABB  area_div = AABB::FromPoint(counter_top_left + counter_size * float2 {0.0F, 0.15F }, counter_size * float2 { 1.0F, 0.17F });
-            ColorBox color_box {.color_fill = counter.stack[0].color_icon, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_BLACK};
-            draw_color_box(font_10_opt.value(), counter.label_div,  color_box, area_div);
+            {
+                AABB area_div = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.15F }, counter_size * float2 { 1.0F, 0.17F });
+                ColorBox color_box { .color_fill = counter.stack[0].color_icon, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_BLACK };
+                draw_color_box(font_10_opt.value(), counter.label_name_div, color_box, area_div);
+            }
+            {
+                AABB area_div = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.02F }, counter_size * float2 { 0.97F, 0.12F });
+                ColorBox color_box { .color_fill = colors::COLOR_CLEAR, .color_stroke = colors::COLOR_CLEAR, .color_text = colors::COLOR_BLACK };
+                draw_color_box(font_10_opt.value(), counter.label_name_sub, color_box, area_div);
+            }
         }
 
         // icon
@@ -201,8 +208,8 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         // (void)SDL_RenderFillRect(window_state.renderer, area_icon_border);
 
         const AABB area_icon = area_icon_border.WithPadding(float2 { camera.scale / 40.0F });
-        const Color color_icon = counter.stack[0].color_icon;
-        // const Color color_icon = colors::COLOR_WHITE;
+        // const Color color_icon = counter.stack[0].color_icon;
+        const Color color_icon = colors::COLOR_WHITE;
         const HandleOptional<Texture> texture_handle = counter_textures.ForIcon(counter.icon);
         SDL_Texture* icon_texture = texture_handle.IsValid() ? globalData[texture_handle.GetHandle()] : nullptr;
         if (icon_texture) {
@@ -221,44 +228,19 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             }
         }
 
-        constexpr f32 PADDING = 0.1F;
-        const i32 width = counter_size.x * (1.0F - PADDING);
-        const i32 left = counter_top_left.x + counter_size.x * PADDING * 0.5F;
-        const i32 top = counter_top_left.y + counter_size.y * PADDING * 0.5F;
-        const i32 bottom = counter_top_left.y + counter_size.y * (1.0F - PADDING * 0.5F);
-
         if (font_08_opt.has_value()) {
             const ui::Font& font_08 = font_08_opt.value();
 
-            TTF_SetFontWrapAlignment(font_08, TTF_HORIZONTAL_ALIGN_RIGHT);
-            (void)TTF_SetTextColorFloat(counter.label_top_upper, 0.0F, 0.0F, 0.0F, 1.0F);
-            (void)TTF_SetTextFont(counter.label_top_upper, font_08);
-            (void)TTF_SetTextWrapWidth(counter.label_top_upper, width);
-            (void)TTF_DrawRendererText(counter.label_top_upper, left, top);
+            TTF_SetFontWrapAlignment(font_08, TTF_HORIZONTAL_ALIGN_CENTER);
+            (void)TTF_SetTextColorFloat(counter.label_echelon, 0.0F, 0.0F, 0.0F, 1.0F);
+            (void)TTF_SetTextFont(counter.label_echelon, font_08);
+            (void)TTF_SetTextWrapWidth(counter.label_echelon, area_icon_border.size.x);
+            (void)TTF_DrawRendererText(counter.label_echelon, area_icon_border.point.x, area_icon_border.point.y + 0.03F * counter_size.y);
         }
-
-        if (font_10_opt.has_value()) {
-            const ui::Font& font_10 = font_10_opt.value();
-            (void)TTF_SetTextFont(counter.label_vertical, font_10);
-            (void)TTF_SetTextWrapWidth(counter.label_vertical, static_cast<i32>(counter_size.y));
-            if (SDL_Surface* surface = SDL_CreateSurface(static_cast<i32>(counter_size.y), pt_16, SDL_PIXELFORMAT_ARGB8888)) {
-                (void)TTF_DrawSurfaceText(counter.label_vertical, 0, 0, surface);
-                SDL_Texture* tex = SDL_CreateTextureFromSurface(window_state.renderer, surface);
-                SDL_DestroySurface(surface);
-                if (tex) {
-                    const AABB dst = AABB::FromCenter(float2 { counter_top_left.x + counter_size.x, counter_center.y }, float2 { counter_size.y, static_cast<f32>(pt_16) });
-                    constexpr f32 ANGLE_DEGREES = 90.0;
-                    SDL_RenderTextureRotated(window_state.renderer, tex, nullptr, dst, ANGLE_DEGREES, nullptr, SDL_FLIP_NONE);
-                    SDL_DestroyTexture(tex);
-                }
-            }
-        }
-
-
 
         if (font_12_opt.has_value()) {
             const AABB area_stroke = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.82F, 0.56F }, counter_size * float2 { 0.14F });
-            constexpr ColorBox COLOR_BOX_STEPS = {.color_fill = colors::COLOR_WHITE_SMOKE, .color_stroke = colors::COLOR_ORANGE, .color_text = colors::COLOR_BLACK};
+            constexpr ColorBox COLOR_BOX_STEPS = { .color_fill = colors::COLOR_WHITE_SMOKE, .color_stroke = colors::COLOR_ORANGE, .color_text = colors::COLOR_BLACK };
             draw_color_box(font_12_opt.value(), counter.label_steps, COLOR_BOX_STEPS, area_stroke);
         }
 
@@ -266,7 +248,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             {
                 const AABB area_stroke = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.725F }, counter_size * float2 { 0.25F });
                 ColorBox color_box = MoveTypeToColorBox(MoveTypeUnitIcon(counter.icon));
-                draw_color_box(font_22_opt.value(), counter.label_bottom_right, color_box, area_stroke);
+                draw_color_box(font_22_opt.value(), counter.label_move_allowance, color_box, area_stroke);
             }
 
             {
@@ -274,15 +256,14 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
                 ColorBox color_box = MoveTypeToColorBox(MoveTypeUnitIcon(counter.icon));
                 // color_box.color_fill = colors::COLOR_CLEAR;
                 // color_box.color_fill = colors::COLOR_CLEAR;
-                draw_color_box(font_22_opt.value(), counter.label_bottom_left_lower, color_box, area_stroke);
+                draw_color_box(font_22_opt.value(), counter.label_dmg, color_box, area_stroke);
             }
 
             {
                 const AABB area_stroke = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.43F }, counter_size * float2 { 0.25F });
                 ColorBox color_box = RangedTypeToColorBox(RangedTypeUnitIcon(counter.icon));
-                draw_color_box(font_22_opt.value(), counter.label_bottom_left_upper, color_box,  area_stroke);
+                draw_color_box(font_22_opt.value(), counter.label_dmg_ranged, color_box, area_stroke);
             }
-
         }
     }
 }

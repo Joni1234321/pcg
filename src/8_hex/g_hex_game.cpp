@@ -96,7 +96,11 @@ List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start
     }
     return axial_path;
 }
-
+[[nodiscard]] String UnitNameToString(const UnitName& name) { return std::string(name.begin(), std::ranges::find(name, '\0')); }
+void UnitNameSet(UnitName& name, const String& text) {
+    name = { };
+    std::memcpy(name.data(), text.c_str(), math::Min(text.size(), static_cast<u32>(name.size())));
+}
 void UnitToCounterAppend(HexState& hex_state) {
     for (const auto& [axial_unit, unit_handles] : hex_state.units_by_axial) {
         CounterStack& counter = hex_state.counters.Get();
@@ -144,17 +148,15 @@ void UnitToCounterAppend(HexState& hex_state) {
         const Unit& unit_largest_echelon = hex_state.units[unit_handle_largest_echelon];
 
         counter.icon = unit_largest_echelon.icon;
-        counter.label_top_upper.SetText(std::format("{}", EchelonToString(unit_largest_echelon.echelon), steps));
-        counter.label_div.SetText(std::format("{}", EchelonToString(unit_largest_echelon.echelon), steps));
+        counter.label_echelon.SetText(std::format("{}", EchelonToString(unit_largest_echelon.echelon)));
         counter.label_icon_placeholder.SetText(UnitIconToString(unit_largest_echelon.icon));
-        counter.label_bottom_left_lower.SetText(std::format("{}", dmg));
-        counter.label_bottom_left_upper.SetText(std::format("+{}", dmg_ranged));
-        counter.label_bottom_right.SetText(std::format("{}", move));
+        counter.label_dmg.SetText(std::format("{}", dmg));
+        counter.label_dmg_ranged.SetText(std::format("+{}", dmg_ranged));
+        counter.label_move_allowance.SetText(std::format("{}", move));
         counter.label_steps.SetText(std::format("{}", steps));
 
-        String unit_name = String(Span(unit_largest_echelon.name));
-        counter.label_vertical.SetText(unit_name);
-        counter.label_div.SetText(unit_name);
+        counter.label_name_div.SetText(UnitNameToString(unit_largest_echelon.name_div));
+        counter.label_name_sub.SetText(UnitNameToString(unit_largest_echelon.name_sub));
     }
 }
 PlayerAction GetPlayerAction(const HexState& hex_state) {
@@ -542,10 +544,13 @@ void HexStateUpdateOOB(HexState& hex_state) {
     const std::array letters = {
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'P',
     };
-    auto get_unit_name = [&](const Unit& unit, u32 i) -> String {
+    // parent name is the designation of the formation itself, "333rd"
+    auto get_unit_parent_name = [&](const Unit& unit) -> String {
         switch (unit.echelon) {
-            case Echelon::ECHELON_COMPANY: return std::format("{}", letters[i % letters.size()]);
-            case Echelon::ECHELON_BATTALION: return std::format("{}/{}", NumberToRomanNumerals(i + 1), unit.parent.IsValid() ? String(hex_state.units[unit.parent.GetHandle()].name) : "dtc");
+            case Echelon::ECHELON_COMPANY:
+            case Echelon::ECHELON_BATTALION: {
+                return !unit.parent.IsValid() ? "dtc" : UnitNameToString(hex_state.units[unit.parent.GetHandle()].name_div);
+            }
             case Echelon::ECHELON_REGIMENT: {
                 u32 regiment_number = 0;
                 switch (unit.tag) {
@@ -553,12 +558,21 @@ void HexStateUpdateOOB(HexState& hex_state) {
                     case CountryTag::TAG_SOV: regiment_number = Rand(600U, 900U); break;
                     default: regiment_number = Rand(200U, 999U); break;
                 }
-                return std::format("{}{} Rgt", regiment_number, NumberToOrdinal(regiment_number));
+                return std::format("{}{}", regiment_number, NumberToOrdinal(regiment_number));
             }
-            case Echelon::ECHELON_DIVISION: return std::format("{}{} Div", ++number_div, NumberToOrdinal(number_div));
-            case Echelon::ECHELON_CORPS: return std::format("{}{} Corps", ++number_corps, NumberToOrdinal(number_corps));
-            case Echelon::ECHELON_ARMY: return std::format("{}{} Army", ++number_army, NumberToOrdinal(number_army));
+            case Echelon::ECHELON_DIVISION: ++number_div; return std::format("{}{}", number_div, NumberToOrdinal(number_div));
+            case Echelon::ECHELON_CORPS: ++number_corps; return std::format("{}{}", number_corps, NumberToOrdinal(number_corps));
+            case Echelon::ECHELON_ARMY: ++number_army; return std::format("{}{}", number_army, NumberToOrdinal(number_army));
             default: return "fail";
+        }
+    };
+
+    // sub name is the position inside the parent formation, "III" or "A"
+    auto get_unit_sub_name = [&](const Unit& unit, u32 i) -> String {
+        switch (unit.echelon) {
+            case Echelon::ECHELON_COMPANY: return std::format("{}", letters[i % letters.size()]);
+            case Echelon::ECHELON_BATTALION: return NumberToRomanNumerals(i + 1);
+            default: return "";
         }
     };
 
@@ -572,8 +586,8 @@ void HexStateUpdateOOB(HexState& hex_state) {
             Handle<Unit> unit_handle_child = unit_handles_children[i];
             queue.EmplaceBack(unit_handle_child);
             Unit& unit_child = hex_state.units[unit_handle_child];
-            const String name = get_unit_name(unit_child, i);
-            std::memcpy(unit_child.name.data(), name.c_str(), math::Min(name.size(), static_cast<u32>(unit_child.name.size())));
+            UnitNameSet(unit_child.name_div, get_unit_parent_name(unit_child));
+            UnitNameSet(unit_child.name_sub, get_unit_sub_name(unit_child, i));
             unit_child.color = get_unit_color(unit_child);
         }
     }

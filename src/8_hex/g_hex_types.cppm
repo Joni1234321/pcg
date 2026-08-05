@@ -64,14 +64,14 @@ struct CounterStack {
     int2 axial { };
     UnitIcon icon { };
     Array<Counter, 12> stack { };
-    Label label_top_upper { };
-    Label label_div { };
+    Label label_echelon { };
+    Label label_name_div { };
+    Label label_name_sub { };
     Label label_icon_placeholder { };
-    Label label_bottom_left_upper { };
-    Label label_bottom_left_lower { };
-    Label label_bottom_right { };
+    Label label_dmg_ranged { };
+    Label label_dmg { };
+    Label label_move_allowance { };
     Label label_steps { };
-    SurfaceLabel label_vertical { };
 };
 
 struct HexOwner {
@@ -119,7 +119,8 @@ struct Unit {
     u8 steps { };
 
     // unit flavour
-    UnitName name { };
+    UnitName name_div { };
+    UnitName name_sub { };
     Color color { };
 };
 struct UnitGroup {
