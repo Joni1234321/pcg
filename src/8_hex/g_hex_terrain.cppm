@@ -26,6 +26,16 @@ export namespace hex {
     }
     std::unreachable();
 }
+[[nodiscard]] constexpr RangedType RangedTypeUnitIcon(const UnitIcon icon) {
+    switch (icon) {
+        case UnitIcon::ICON_INF: return RangedType::RANGED_NONE;
+        case UnitIcon::ICON_ENGINEER: return RangedType::RANGED_DEFENSE;
+        case UnitIcon::ICON_TANK: return RangedType::RANGED_ATTACK;
+        case UnitIcon::ICON_ART: return RangedType::RANGED_NONE;
+        case UnitIcon::ICON_HQ: return RangedType::RANGED_NONE;
+    }
+    std::unreachable();
+}
 
 [[nodiscard]] constexpr MoveCost MoveCostTerrain(const TerrainType terrain, const TerrainFeature feature) {
     switch (feature) {

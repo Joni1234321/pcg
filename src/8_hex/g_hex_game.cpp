@@ -149,6 +149,7 @@ void UnitToCounterAppend(HexState& hex_state) {
         counter.label_bottom_left_lower.SetText(std::format("{}", dmg));
         counter.label_bottom_left_upper.SetText(std::format("+{}", dmg_ranged));
         counter.label_bottom_right.SetText(std::format("{}", move));
+        counter.label_steps.SetText(std::format("{}", steps));
         String unit_name = String(Span(unit_largest_echelon.name));
         counter.label_vertical.SetText(unit_name);
     }

@@ -20,6 +20,7 @@ enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHEL
 enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK, ICON_ENGINEER };
 enum class RoadLevel : u8 { ROAD_LEVEL_NONE, ROAD_LEVEL_TRACK, ROAD_LEVEL_SECONDARY, ROAD_LEVEL_PRIMARY };
 enum class MoveType : u8 { MOVE_LEG, MOVE_TAC, MOVE_TRUCK };
+enum class RangedType : u8 { RANGED_NONE, RANGED_DEFENSE, RANGED_ATTACK };
 
 enum class CounterStyle : u8 { COUNTER_STYLE_NIEHORSTER, COUNTER_STYLE_NIEHORSTER_BIG, COUNTER_STYLE_REAL };
 enum class MapStyle : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER };
@@ -68,8 +69,8 @@ struct CounterStack {
     Label label_icon_placeholder { };
     Label label_bottom_left_upper { };
     Label label_bottom_left_lower { };
-    Label label_bottom_center { };
     Label label_bottom_right { };
+    Label label_steps { };
     SurfaceLabel label_vertical { };
 };
 
