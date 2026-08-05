@@ -144,7 +144,7 @@ void UnitToCounterAppend(HexState& hex_state) {
         const Unit& unit_largest_echelon = hex_state.units[unit_handle_largest_echelon];
 
         counter.icon = unit_largest_echelon.icon;
-        counter.label_top.SetText(std::format("{} [{}]", EchelonToString(unit_largest_echelon.echelon), steps));
+        counter.label_top_upper.SetText(std::format("{}\n[{}]", EchelonToString(unit_largest_echelon.echelon), steps));
         counter.label_icon_placeholder.SetText(UnitIconToString(unit_largest_echelon.icon));
         counter.label_bottom_left_lower.SetText(std::format("{}", dmg));
         counter.label_bottom_left_upper.SetText(std::format("+{}", dmg_ranged));

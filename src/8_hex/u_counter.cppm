@@ -20,6 +20,7 @@ import pce.colors;
 
 import hex.hex;
 import hex.types;
+import hex.terrain;
 
 export namespace hex {
 [[nodiscard]] constexpr String EchelonToString(const Echelon echelon) {
@@ -44,6 +45,19 @@ export namespace hex {
         case UnitIcon::ICON_HQ: return "hq";
         case UnitIcon::ICON_TANK: return "tnk";
         case UnitIcon::ICON_ENGINEER: return "eng";
+    }
+    std::unreachable();
+}
+struct ColorBox {
+    Color color_fill { };
+    Color color_stroke { };
+    Color color_text { };
+};
+[[nodiscard]] constexpr ColorBox MoveTypeToColor(const MoveType moveType) {
+    switch (moveType) {
+        case MoveType::MOVE_LEG: return ColorBox { .color_fill = colors::COLOR_WHITE, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_BLACK };
+        case MoveType::MOVE_TAC: return ColorBox { .color_fill = colors::COLOR_RED, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_WHITE };
+        case MoveType::MOVE_TRUCK: return ColorBox { .color_fill = colors::COLOR_SEA_GREEN, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_WHITE };
     }
     std::unreachable();
 }
@@ -140,7 +154,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         const AABB area_icon_border = AABB::FromPoint(counter_top_left, counter_size * float2 { 0.6F, 0.4F }).WithOffset(counter_size * float2 { 0.02F });
         constexpr Color COLOR_ICON_BORDER { colors::COLOR_BLACK };
         (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_ICON_BORDER.r, COLOR_ICON_BORDER.g, COLOR_ICON_BORDER.b, COLOR_ICON_BORDER.a);
-        (void)SDL_RenderFillRect(window_state.renderer, area_icon_border);
+        // (void)SDL_RenderFillRect(window_state.renderer, area_icon_border);
 
         const AABB area_icon = area_icon_border.WithPadding(float2 { camera.scale / 40.0F });
         const Color color_icon = counter.stack[0].color_icon;
@@ -166,15 +180,16 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         const i32 width = counter_size.x * (1.0F - PADDING);
         const i32 left = counter_top_left.x + counter_size.x * PADDING * 0.5F;
         const i32 top = counter_top_left.y + counter_size.y * PADDING * 0.5F;
+        const i32 bottom = counter_top_left.y + counter_size.y * (1.0F - PADDING * 0.5F);
 
         if (font_08_opt.has_value()) {
             const ui::Font& font_08 = font_08_opt.value();
 
-            TTF_SetFontWrapAlignment(font_08, TTF_HORIZONTAL_ALIGN_CENTER);
-            (void)TTF_SetTextColorFloat(counter.label_top, 0.0F, 0.0F, 0.0F, 1.0F);
-            (void)TTF_SetTextFont(counter.label_top, font_08);
-            (void)TTF_SetTextWrapWidth(counter.label_top, width);
-            (void)TTF_DrawRendererText(counter.label_top, left, top);
+            TTF_SetFontWrapAlignment(font_08, TTF_HORIZONTAL_ALIGN_RIGHT);
+            (void)TTF_SetTextColorFloat(counter.label_top_upper, 0.0F, 0.0F, 0.0F, 1.0F);
+            (void)TTF_SetTextFont(counter.label_top_upper, font_08);
+            (void)TTF_SetTextWrapWidth(counter.label_top_upper, width);
+            (void)TTF_DrawRendererText(counter.label_top_upper, left, top);
         }
 
         if (font_10_opt.has_value()) {
@@ -186,7 +201,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
                 SDL_Texture* tex = SDL_CreateTextureFromSurface(window_state.renderer, surface);
                 SDL_DestroySurface(surface);
                 if (tex) {
-                    const AABB dst = AABB::FromCenter(float2 { counter_top_left.x + counter_size.x - static_cast<f32>(pt_16) * 0.5F, counter_center.y }, float2 { counter_size.y, static_cast<f32>(pt_16) });
+                    const AABB dst = AABB::FromCenter(float2 { counter_top_left.x + counter_size.x, counter_center.y }, float2 { counter_size.y, static_cast<f32>(pt_16) });
                     constexpr f32 ANGLE_DEGREES = 90.0;
                     SDL_RenderTextureRotated(window_state.renderer, tex, nullptr, dst, ANGLE_DEGREES, nullptr, SDL_FLIP_NONE);
                     SDL_DestroyTexture(tex);
@@ -195,34 +210,45 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         }
 
         if (font_22_opt.has_value()) {
-            const i32 bottom = counter_top_left.y + counter_size.y * (1.0F - PADDING * 0.5F) - pt_22;
-
             const ui::Font& font_22 = font_22_opt.value();
             TTF_SetFontWrapAlignment(font_22, TTF_HORIZONTAL_ALIGN_CENTER);
 
             (void)TTF_SetTextFont(counter.label_bottom_center, font_22);
             (void)TTF_SetTextWrapWidth(counter.label_bottom_center, width);
-            (void)TTF_DrawRendererText(counter.label_bottom_center, left, bottom);
+            (void)TTF_DrawRendererText(counter.label_bottom_center, left, bottom - pt_22);
 
             TTF_SetFontWrapAlignment(font_22, TTF_HORIZONTAL_ALIGN_LEFT);
             (void)TTF_SetTextFont(counter.label_bottom_left_upper, font_22);
             (void)TTF_SetTextWrapWidth(counter.label_bottom_left_upper, width);
-            (void)TTF_DrawRendererText(counter.label_bottom_left_upper, left, bottom - pt_22);
+            (void)TTF_DrawRendererText(counter.label_bottom_left_upper, left, bottom - pt_22 * 2);
 
             (void)TTF_SetTextFont(counter.label_bottom_left_lower, font_22);
             (void)TTF_SetTextWrapWidth(counter.label_bottom_left_lower, width);
-            (void)TTF_DrawRendererText(counter.label_bottom_left_lower, left, bottom);
+            (void)TTF_DrawRendererText(counter.label_bottom_left_lower, left, bottom - pt_22);
         }
 
-        if (font_32_opt.has_value()) {
-            const ui::Font& font_32 = font_32_opt.value();
-            const i32 bottom = counter_top_left.y + counter_size.y * (1.0F - PADDING * 0.5F) - pt_32;
-            TTF_SetFontWrapAlignment(font_32, TTF_HORIZONTAL_ALIGN_RIGHT);
-            (void)TTF_SetTextFont(counter.label_bottom_right, font_32);
+        if (font_22_opt.has_value()) {
+            const ui::Font& font_22 = font_22_opt.value();
+
+            const AABB area_label_bottom_right_background = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.735F }, counter_size * float2 { 0.24F });
+            const AABB area_label_bottom_right = area_label_bottom_right_background.WithPadding(counter_size * float2 { 0.02F });
+
+            Color color;
+            ColorBox color_box = MoveTypeToColor(MoveTypeUnitIcon(counter.icon));
+            color = color_box.color_stroke;
+            (void)SDL_SetRenderDrawColor(window_state.renderer, color.r, color.g, color.b, color.a);
+            (void)SDL_RenderFillRect(window_state.renderer, area_label_bottom_right_background);
+
+            color = color_box.color_fill;
+            (void)SDL_SetRenderDrawColor(window_state.renderer, color.r, color.g, color.b, color.a);
+            (void)SDL_RenderFillRect(window_state.renderer, area_label_bottom_right);
+
+            color = color_box.color_text;
+            TTF_SetFontWrapAlignment(font_22, TTF_HORIZONTAL_ALIGN_RIGHT);
+            (void)TTF_SetTextFont(counter.label_bottom_right, font_22);
+            (void)TTF_SetTextColor(counter.label_bottom_right, color.r, color.g, color.b, color.a);
             (void)TTF_SetTextWrapWidth(counter.label_bottom_right, width);
-            (void)TTF_DrawRendererText(counter.label_bottom_right, left, bottom);
-
-
+            (void)TTF_DrawRendererText(counter.label_bottom_right, left, bottom - pt_22);
         }
     }
 }

@@ -37,8 +37,8 @@ class FontCollection {
     AbsolutePath font_path_bold_courier { };
     AbsolutePath font_path_bold_compact { };
     mutable FlatMap<FontSizes, Font> fonts_normal_courier { 256U };
-    mutable FlatMap<FontSizes, Font> fonts_bold_courier {  256U };
-    mutable FlatMap<FontSizes, Font> fonts_bold_compact {  256U };
+    mutable FlatMap<FontSizes, Font> fonts_bold_courier { 256U };
+    mutable FlatMap<FontSizes, Font> fonts_bold_compact { 256U };
 
     [[nodiscard]] static const Font& GetFont(FlatMap<FontSizes, Font>& fonts, const AbsolutePath& font_path, FontSizes font_size) {
         assert(static_cast<FontSize>(font_size) >= FONT_MIN_SIZE);
