@@ -148,6 +148,17 @@ target_include_directories(pcg PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 target_compile_options(pcg PRIVATE -Wno-unsequenced)
 
+# Debug info for module-owned types. Clang "homes" the definition of a type
+# declared in a named module in that module's object file; importing TUs emit
+# only a DW_AT_declaration stub. But CMake's single-step module compile
+# (-fmodule-output=x.pcm -c x.cppm -o x.obj) emits no type debug info at all,
+# so plain aggregates like AABB/OBB end up with no complete definition anywhere
+# and the debugger shows locals as <incomplete type> with nothing to expand.
+# (Types with user-declared constructors escape this by accident.)
+# -fno-eliminate-unused-debug-types puts the definitions back in the module
+# objects. Costs debug-info size; Debug-only. -fstandalone-debug does not fix it.
+target_compile_options(pcg PRIVATE $<$<CONFIG:Debug>:-fno-eliminate-unused-debug-types>)
+
 if (SET_WARNINGS_ENABLED)
 	target_compile_options(pcg PRIVATE -Wall -Wextra -Wpedantic -Werror
 			-Wno-error=unused-variable

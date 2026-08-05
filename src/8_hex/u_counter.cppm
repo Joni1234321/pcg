@@ -227,28 +227,28 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             (void)TTF_DrawRendererText(counter.label_bottom_left_lower, left, bottom - pt_22);
         }
 
-        if (font_22_opt.has_value()) {
-            const ui::Font& font_22 = font_22_opt.value();
-
-            const AABB area_label_bottom_right_background = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.735F }, counter_size * float2 { 0.24F });
-            const AABB area_label_bottom_right = area_label_bottom_right_background.WithPadding(counter_size * float2 { 0.02F });
-
-            Color color;
-            ColorBox color_box = MoveTypeToColor(MoveTypeUnitIcon(counter.icon));
-            color = color_box.color_stroke;
+        auto draw_color_box = [&](const ui::Font& font, const Label& label, const ColorBox& color_box, AABB area_stroke, AABB area_fill) {
+            Color color = color_box.color_stroke;
             (void)SDL_SetRenderDrawColor(window_state.renderer, color.r, color.g, color.b, color.a);
-            (void)SDL_RenderFillRect(window_state.renderer, area_label_bottom_right_background);
+            (void)SDL_RenderFillRect(window_state.renderer, area_stroke);
 
             color = color_box.color_fill;
             (void)SDL_SetRenderDrawColor(window_state.renderer, color.r, color.g, color.b, color.a);
-            (void)SDL_RenderFillRect(window_state.renderer, area_label_bottom_right);
+            (void)SDL_RenderFillRect(window_state.renderer, area_fill);
 
             color = color_box.color_text;
-            TTF_SetFontWrapAlignment(font_22, TTF_HORIZONTAL_ALIGN_RIGHT);
-            (void)TTF_SetTextFont(counter.label_bottom_right, font_22);
-            (void)TTF_SetTextColor(counter.label_bottom_right, color.r, color.g, color.b, color.a);
-            (void)TTF_SetTextWrapWidth(counter.label_bottom_right, width);
-            (void)TTF_DrawRendererText(counter.label_bottom_right, left, bottom - pt_22);
+            TTF_SetFontWrapAlignment(font, TTF_HORIZONTAL_ALIGN_RIGHT);
+            (void)TTF_SetTextFont(label, font);
+            (void)TTF_SetTextColor(label, color.r, color.g, color.b, color.a);
+            (void)TTF_SetTextWrapWidth(label, area_fill.size.x);
+            (void)TTF_DrawRendererText(label, area_fill.point.x, area_stroke.point.y);
+        };
+
+        if (font_22_opt.has_value()) {
+            const AABB area_label_bottom_right_background = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.725F }, counter_size * float2 { 0.25F });
+            const AABB area_label_bottom_right = area_label_bottom_right_background.WithPadding(counter_size * float2 { 0.02F });
+            ColorBox color_box = MoveTypeToColor(MoveTypeUnitIcon(counter.icon));
+            draw_color_box(font_22_opt.value(), counter.label_bottom_right, color_box,  area_label_bottom_right_background, area_label_bottom_right);
         }
     }
 }
