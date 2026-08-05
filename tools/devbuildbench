@@ -1,0 +1,233 @@
+#!/usr/bin/env bash
+# Benchmark compilation with clang -ftime-trace + ninja logs.
+#
+#   tools/devbuildbench                          clean full build, report timings
+#   tools/devbuildbench -j 8                     fixed parallelism = comparable numbers
+#   tools/devbuildbench -t src/8_hex/u_counter.cppm   touch then rebuild (incremental bench)
+#   tools/devbuildbench -n                       only re-report the last build
+#   tools/devbuildbench -p xdc -k 10             other preset, top-10 tables
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BUILD_DIR="$ROOT/build/bench"
+PRESET=xd
+JOBS=""
+TARGET=""
+TOP=15
+GRANULARITY=500
+EXTRA_FLAGS=""
+JSON_OUT=""
+DO_BUILD=1
+DO_CLEAN=1
+RECONFIGURE=0
+TOUCH=()
+
+usage() {
+	sed -n '2,8p' "${BASH_SOURCE[0]}" | cut -c3-
+	cat <<'EOF'
+
+  -b DIR   build dir (default build/bench)
+  -p NAME  configure preset to mirror (default xd)
+  -j N     ninja parallelism
+  -T NAME  ninja target (default: all)
+  -t FILE  touch FILE before building; repeatable, implies no clean
+  -c       do not clean before building
+  -r       delete the build dir and reconfigure
+  -n       do not build, just report on the existing build dir
+  -k N     rows per table (default 15)
+  -g US    -ftime-trace-granularity (default 500)
+  -f FLAGS extra flags appended to CMAKE_CXX_FLAGS
+  -J FILE  also dump raw numbers as JSON
+EOF
+}
+
+while getopts "b:p:j:T:t:crnk:g:f:J:h" opt; do
+	case "$opt" in
+	b) BUILD_DIR="$(cd "$(dirname "$OPTARG")" && pwd)/$(basename "$OPTARG")" ;;
+	p) PRESET="$OPTARG" ;;
+	j) JOBS="$OPTARG" ;;
+	T) TARGET="$OPTARG" ;;
+	t) TOUCH+=("$OPTARG") ;;
+	c) DO_CLEAN=0 ;;
+	r) RECONFIGURE=1 ;;
+	n) DO_BUILD=0 ;;
+	k) TOP="$OPTARG" ;;
+	g) GRANULARITY="$OPTARG" ;;
+	f) EXTRA_FLAGS="$OPTARG" ;;
+	J) JSON_OUT="$OPTARG" ;;
+	h)
+		usage
+		exit 0
+		;;
+	*)
+		usage >&2
+		exit 2
+		;;
+	esac
+done
+
+cd "$ROOT"
+WALL=""
+
+if ((DO_BUILD)); then
+	((RECONFIGURE)) && rm -rf "$BUILD_DIR"
+	if [[ ! -f "$BUILD_DIR/build.ninja" ]]; then
+		cmake --preset "$PRESET" -B "$BUILD_DIR" \
+			-DCMAKE_CXX_FLAGS="-stdlib=libc++ -ftime-trace -ftime-trace-granularity=$GRANULARITY $EXTRA_FLAGS" \
+			-DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+		rm -f -- "$ROOT/-.json" # trace of cmake's stdin compiler check
+	fi
+
+	if ((${#TOUCH[@]})); then
+		DO_CLEAN=0
+		touch "${TOUCH[@]}"
+	fi
+	((DO_CLEAN)) && ninja -C "$BUILD_DIR" -t clean
+
+	# stale traces would pollute the report; CMake's own *.json files must survive
+	find "$BUILD_DIR" -name '*.cpp.json' -o -name '*.cppm.json' -o -name '*.cxx.json' \
+		-o -name '*.cc.json' -o -name '*.c.json' | xargs -r rm -f
+
+	# ninja appends to its log, so only lines added by this run describe this run
+	SKIP=$([[ -f "$BUILD_DIR/.ninja_log" ]] && wc -l <"$BUILD_DIR/.ninja_log" || echo 0)
+	START=$(date +%s.%N)
+	# ccache would hand back cached objects and no trace files
+	CCACHE_DISABLE=1 ninja -C "$BUILD_DIR" ${JOBS:+-j "$JOBS"} ${TARGET:+"$TARGET"}
+	WALL=$(awk -v a="$START" -v b="$(date +%s.%N)" 'BEGIN{printf "%.2f", b-a}')
+fi
+
+BUILD_DIR="$BUILD_DIR" WALL="$WALL" TOP="$TOP" JSON_OUT="$JSON_OUT" ROOT="$ROOT" SKIP="${SKIP:-0}" \
+	python3 - <<'PYEOF'
+# JSON traces are too structured for awk, so the report is generated here.
+import json, os
+from collections import defaultdict
+from pathlib import Path
+
+build_dir = Path(os.environ["BUILD_DIR"])
+root = Path(os.environ["ROOT"])
+wall = os.environ.get("WALL") or ""
+top = int(os.environ["TOP"])
+json_out = os.environ.get("JSON_OUT") or ""
+skip = int(os.environ.get("SKIP") or 0)
+
+TRACE_SUFFIXES = (".cpp.json", ".cppm.json", ".cxx.json", ".cc.json", ".c.json")
+
+
+def parse_ninja_log():
+    """{output: wall_seconds} for this run's entries, most recent per output."""
+    log = build_dir / ".ninja_log"
+    edges = {}
+    if not log.exists():
+        return edges
+    for line in log.read_text(errors="replace").splitlines()[skip:]:
+        parts = line.split("\t")
+        if line.startswith("#") or len(parts) < 5:
+            continue
+        try:
+            edges[parts[3]] = (int(parts[1]) - int(parts[0])) / 1000.0
+        except ValueError:
+            continue
+    return edges
+
+
+def parse_trace(path):
+    try:
+        events = json.loads(path.read_text(errors="replace")).get("traceEvents", [])
+    except (json.JSONDecodeError, OSError):
+        return None
+    tu = {"name": path.name.removesuffix(".json"), "total": 0.0, "frontend": 0.0, "backend": 0.0,
+          "modules": defaultdict(float), "instantiations": defaultdict(float),
+          "activity": defaultdict(float)}
+    stack = []  # module loads nest, only the outermost is real cost
+    for e in sorted((e for e in events if e.get("ph") == "X"), key=lambda e: e.get("ts", 0)):
+        name, dur, ts = e.get("name", ""), e.get("dur", 0) / 1e6, e.get("ts", 0)
+        detail = (e.get("args") or {}).get("detail", "")
+        if name == "ExecuteCompiler":
+            tu["total"] = dur
+        elif name == "Total Frontend":
+            tu["frontend"] = dur
+        elif name == "Total Backend":
+            tu["backend"] = dur
+        elif not name.startswith("Total "):
+            tu["activity"][name] += dur
+            if name == "Module Load":
+                while stack and stack[-1] <= ts:
+                    stack.pop()
+                if not stack and detail:
+                    tu["modules"][detail] += dur
+                stack.append(ts + e.get("dur", 0))
+            elif name.startswith("Instantiate") and detail:
+                tu["instantiations"][detail] += dur
+    return tu if tu["total"] else None
+
+
+def table(rows, headers):
+    widths = [max(len(str(r[i])) for r in [headers] + rows) for i in range(len(headers))]
+    print("  ".join(h.ljust(w) for h, w in zip(headers, widths)))
+    print("  ".join("-" * w for w in widths))
+    for r in rows:
+        print("  ".join(str(c).ljust(w) for c, w in zip(r, widths)))
+
+
+def merge(tus, key):
+    total, count = defaultdict(float), defaultdict(int)
+    for t in tus:
+        for k, d in t[key].items():
+            total[k] += d
+            count[k] += 1
+    return total, count
+
+
+traces = sorted(p for p in build_dir.rglob("*.json") if p.name.endswith(TRACE_SUFFIXES))
+tus = [t for t in (parse_trace(p) for p in traces) if t]
+edges = parse_ninja_log()
+obj = {o: s for o, s in edges.items() if o.endswith((".o", ".pcm"))}
+other = sum(s for o, s in edges.items() if not o.endswith((".o", ".pcm")))
+
+print(f"\n=== compile benchmark ({build_dir.relative_to(root)}) ===")
+if wall:
+    print(f"wall clock (ninja)      {float(wall):7.2f}s")
+print(f"sum of compile edges    {sum(obj.values()):7.2f}s over {len(obj)} edges")
+print(f"non-compile edges       {other:7.2f}s (link, custom commands)")
+if tus:
+    print(f"clang frontend total    {sum(t['frontend'] for t in tus):7.2f}s")
+    print(f"clang backend total     {sum(t['backend'] for t in tus):7.2f}s")
+
+if obj:
+    print("\n-- slowest edges (ninja wall time) --")
+    table([[f"{s:6.2f}s", o] for o, s in sorted(obj.items(), key=lambda kv: -kv[1])[:top]],
+          ["time", "output"])
+
+if tus:
+    print("\n-- slowest translation units (clang self-reported) --")
+    table([[f"{t['total']:6.2f}s", f"{t['frontend']:6.2f}s", f"{t['backend']:6.2f}s", t["name"]]
+           for t in sorted(tus, key=lambda t: -t["total"])[:top]],
+          ["total", "frontend", "backend", "tu"])
+
+    act, _ = merge(tus, "activity")
+    print("\n-- time by activity (summed over TUs; nested events overlap) --")
+    table([[f"{d:6.2f}s", k] for k, d in sorted(act.items(), key=lambda kv: -kv[1])[:top]],
+          ["time", "activity"])
+
+    mods, mod_tus = merge(tus, "modules")
+    if mods:
+        print("\n-- costliest module imports (BMI load time, summed over TUs) --")
+        table([[f"{d:6.3f}s", mod_tus[m], m] for m, d in sorted(mods.items(), key=lambda kv: -kv[1])[:top]],
+              ["time", "TUs", "module"])
+
+    inst, _ = merge(tus, "instantiations")
+    inst = {k: v for k, v in inst.items() if v >= 0.05}
+    if inst:
+        print("\n-- costliest template instantiations --")
+        table([[f"{d:6.2f}s", k[:110]] for k, d in sorted(inst.items(), key=lambda kv: -kv[1])[:top]],
+              ["time", "symbol"])
+
+print("\ntip: open a trace in chrome://tracing or https://ui.perfetto.dev — "
+      f"files are {build_dir.relative_to(root)}/CMakeFiles/pcg.dir/**/*.json")
+
+if json_out:
+    dump = {"wall": float(wall) if wall else None, "edges": edges,
+            "tus": [{k: (dict(v) if isinstance(v, defaultdict) else v) for k, v in t.items()} for t in tus]}
+    Path(json_out).write_text(json.dumps(dump, indent=2))
+    print(f"wrote {json_out}")
+PYEOF
