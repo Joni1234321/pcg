@@ -13,11 +13,11 @@ template <std::integral T> constexpr T saturating_sub(T a, T b) noexcept {
     if constexpr (std::is_unsigned_v<T>) { return std::numeric_limits<T>::min(); }
     return a < 0 ? std::numeric_limits<T>::min() : std::numeric_limits<T>::max();
 }
-}
+} // namespace hex
 export namespace hex::math {
- constexpr f32 PI = std::numbers::pi_v<f32>;
- constexpr f32 SQRT_3 = std::numbers::sqrt3_v<float>;
- constexpr f32 DEG_2_RAD = PI / 180.0F;
+constexpr f32 PI = std::numbers::pi_v<f32>;
+constexpr f32 SQRT_3 = std::numbers::sqrt3_v<float>;
+constexpr f32 DEG_2_RAD = PI / 180.0F;
 [[nodiscard]] constexpr f32 Sqrt(const f32 val) { return std::sqrtf(val); }
 [[nodiscard]] constexpr f32 Square(const f32 val) { return val * val; }
 [[nodiscard]] inline f32 Sin(const f32 t) { return std::sinf(t); }
@@ -81,7 +81,7 @@ inline float2 Rotate(float2 point, f32 theta) {
     const f32 y = point.x * sin + point.y * cos;
     return float2 { x, y };
 }
-} // namespace pce::math
+} // namespace hex::math
 
 export namespace hex {
 template <typename T, template <typename> class Skill> concept HasASkill = std::derived_from<T, Skill<T>>;
@@ -116,7 +116,7 @@ template <typename Collection> const Collection::value_type& RandomValue(const C
     auto iterator = std::next(std::begin(collection), Rand() % std::size(collection));
     return iterator->second;
 }
-} // namespace pce
+} // namespace hex
 
 export namespace hex::noise {
 [[nodiscard]] inline u32 Hash(i32 x, i32 y) {
@@ -154,4 +154,4 @@ export namespace hex::noise {
     }
     return value;
 }
-} // namespace pce::noise
+} // namespace hex::noise

@@ -62,5 +62,4 @@ public:
 };
 inline constexpr _Find_Index_Of_fn find_index_of;
 inline constexpr _Find_Handle_Of_fn find_handle_of;
-} // namespace pce
-
+} // namespace hex

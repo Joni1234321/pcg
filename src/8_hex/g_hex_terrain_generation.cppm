@@ -94,9 +94,7 @@ constexpr void HexTerrainGenerateRoads(HexState& hex_state) {
                 std::swap(dist[k], dist[best]);
                 std::swap(idx[k], idx[best]);
             }
-            for (u32 k = 0U; k < take; k++) {
-                HexTerrainCarveRoad(hex_state, sources[i], targets[idx[k]], k < big_count ? RoadLevel::ROAD_LEVEL_MEDIUM : RoadLevel::ROAD_LEVEL_SMALL);
-            }
+            for (u32 k = 0U; k < take; k++) { HexTerrainCarveRoad(hex_state, sources[i], targets[idx[k]], k < big_count ? RoadLevel::ROAD_LEVEL_MEDIUM : RoadLevel::ROAD_LEVEL_SMALL); }
         }
     };
 
@@ -166,7 +164,7 @@ constexpr void HexTerrainGenerateRivers(HexState& hex_state, const u32 seed) {
             if (visited[ni]) { continue; }
             visited[ni] = 1U;
             elevation[ni] = std::max(elevation[ni], node.elevation); // depression fill
-            flow_side[ni] = (side + 3U) % HEX_CORNERS;                // points back to 'node' (downhill)
+            flow_side[ni] = (side + 3U) % HEX_CORNERS;               // points back to 'node' (downhill)
             open.push(Node { elevation[ni], ni });
         }
     }
@@ -275,4 +273,4 @@ constexpr void HexTerrainGenerateFeatures(HexState& hex_state, const u32 seed) {
         }
     }
 }
-} // namespace pcg
+} // namespace hex

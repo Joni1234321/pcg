@@ -7,7 +7,7 @@ import pce.std;
 import pce.font;
 
 export namespace hex {
- struct WindowState {
+struct WindowState {
     SDL_Window* window;
     SDL_Renderer* renderer;
     TTF_TextEngine* text_engine;
@@ -15,4 +15,4 @@ export namespace hex {
     uint2 screen_size;
     SDL_Color clear_color;
 };
-} // namespace pce
+} // namespace hex

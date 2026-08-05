@@ -1,7 +1,7 @@
 module;
 
-#include <cassert>
 #include <SDL3_ttf/SDL_ttf.h>
+#include <cassert>
 
 export module pcs.node_data;
 
@@ -197,7 +197,7 @@ private:
     }
 };
 
-} // namespace pce::ui
+} // namespace hex::ui
 
 namespace hex::ui {
 Handle<Node> NodeTree::AddRoot() {
@@ -246,5 +246,4 @@ void NodeTree::Clear() {
     children.clear();
     subtree_roots.clear();
 }
-} // namespace pce::ui
-
+} // namespace hex::ui

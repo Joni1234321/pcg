@@ -69,5 +69,4 @@ extern Game game; // NOLINT(*-avoid-non-const-global-variables)
 // Uses goods to sell them more expensive
 
 // Resource list
-} // namespace pcg
-
+} // namespace hex

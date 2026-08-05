@@ -1,9 +1,9 @@
 module;
 
-#include <cassert>
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_log.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#include <cassert>
 export module pce.font;
 
 import pce.std;
@@ -53,7 +53,7 @@ public:
     }
     ~FontCollection() { Clear(); }
 };
-} // namespace pce::ui
+} // namespace hex::ui
 
 namespace hex::ui {
 const Font& FontCollection::GetFontNormal(FontSizes size) const {
@@ -77,4 +77,4 @@ const Font& FontCollection::GetFontBold(FontSizes size) const {
     }
     return fonts_bold[size];
 }
-} // namespace pce::ui
+} // namespace hex::ui

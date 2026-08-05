@@ -67,4 +67,4 @@ struct CameraSystem {
         camera_state.world_position.y = math::Clamp(camera_state.world_position.y, pos_min.y, pos_max.y);
     }
 };
-} // namespace pce
+} // namespace hex

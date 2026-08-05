@@ -124,4 +124,4 @@ inline PlayerArchetype player_archetype;
 inline StateArchetype state_archetype;
 inline FarmSectorArchetype farm_archetype;
 inline PlanetArchetype planet_archetype;
-} // namespace pcg
+} // namespace hex

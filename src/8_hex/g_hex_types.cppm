@@ -44,18 +44,18 @@ constexpr f32 RIVER_CASING_EXTRA = 0.05F;
 constexpr f32 RIVER_HIGHLIGHT_WIDTH = RIVER_WIDTH * 0.35F;
 
 struct Counter {
-    Color color_background{};
-    Color color_icon{};
-    Color color_border{};
+    Color color_background { };
+    Color color_icon { };
+    Color color_border { };
 };
 struct CounterStack {
     int2 axial { };
     UnitIcon icon { };
     Array<Counter, 12> stack { };
-    Label label_top{};
-    Label label_center{};
-    Label label_bottom{};
-    SurfaceLabel label_vertical{};
+    Label label_top { };
+    Label label_center { };
+    Label label_bottom { };
+    SurfaceLabel label_vertical { };
 };
 
 struct HexOwner {
@@ -72,15 +72,15 @@ struct Hex {
 struct Unit;
 struct UnitFormation {
     HandleOptional<Unit> parent { };
-    CountryTag tag {};
-    UnitIcon icon {};
-    Echelon echelon {};
+    CountryTag tag { };
+    UnitIcon icon { };
+    Echelon echelon { };
 };
 struct UnitToe {
-    u8 move {};
-    u8 dmg {};
-    u8 dmg_ranged {};
-    u8 steps {};
+    u8 move { };
+    u8 dmg { };
+    u8 dmg_ranged { };
+    u8 steps { };
 };
 using UnitName = Array<char, 10>;
 struct UnitFlavor {
@@ -92,60 +92,60 @@ struct Unit {
 
     // unit formation
     HandleOptional<Unit> parent { };
-    CountryTag tag {};
-    UnitIcon icon {};
-    Echelon echelon {};
+    CountryTag tag { };
+    UnitIcon icon { };
+    Echelon echelon { };
 
     // unit stats
-    u8 move {};
-    u8 dmg {};
-    u8 dmg_ranged{};
-    u8 steps {};
+    u8 move { };
+    u8 dmg { };
+    u8 dmg_ranged { };
+    u8 steps { };
 
     // unit flavour
     UnitName name { };
     Color color { };
 };
 struct UnitGroup {
-    List<Handle<Unit>> unit_handles{};
-    u32 dmg_sum{};
-    u32 move_min{};
-    u32 move_max{};
+    List<Handle<Unit>> unit_handles { };
+    u32 dmg_sum { };
+    u32 move_min { };
+    u32 move_max { };
 };
 struct PseudoTarget {
     int2 axial { };
-    List<Handle<Unit>> units{};
+    List<Handle<Unit>> units { };
 };
 struct PseudoStates {
-    Optional<int2> axial_hover{};
-    Optional<int2> axial_select{};
-    Optional<UnitGroup> unit_selection{};
+    Optional<int2> axial_hover { };
+    Optional<int2> axial_select { };
+    Optional<UnitGroup> unit_selection { };
 };
 struct AxialAndCost {
-    int2 axial{};
-    u32 cost{};
+    int2 axial { };
+    u32 cost { };
 };
 struct AxialAndEdge {
-    int2 axial{};
-    u8 edge {};
+    int2 axial { };
+    u8 edge { };
     b8 operator==(const AxialAndEdge& other) const = default;
 };
 struct HexState {
-    HexList<Hex> hex_map{};
-    HandleList<Unit> units{};
+    HexList<Hex> hex_map { };
+    HandleList<Unit> units { };
 
-    CountryTag player_tag {};
-    PlayerAction player_action {};
-    PseudoStates pseudo_states {};
-    UnorderedMap<int2, List<Handle<Unit>>> units_by_axial {};
+    CountryTag player_tag { };
+    PlayerAction player_action { };
+    PseudoStates pseudo_states { };
+    UnorderedMap<int2, List<Handle<Unit>>> units_by_axial { };
 
-    UnorderedMap<Handle<Unit>, List<Handle<Unit>>> units_oob  {};
+    UnorderedMap<Handle<Unit>, List<Handle<Unit>>> units_oob { };
 
-    Pool<CounterStack> counters{};
-    Pool<Label> label_pool{};
+    Pool<CounterStack> counters { };
+    Pool<Label> label_pool { };
     List<Vertex> verts { };
 };
-} // namespace pcg
+} // namespace hex
 
 export template <> struct std::hash<hex::AxialAndEdge> {
     usize operator()(const hex::AxialAndEdge& axial_and_edge) const noexcept {

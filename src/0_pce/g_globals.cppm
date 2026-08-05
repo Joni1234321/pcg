@@ -57,5 +57,4 @@ struct Singleton {
 
 inline GlobalDataInstantNoReset globalData { };
 inline Singleton singleton { };
-} // namespace pce
-
+} // namespace hex

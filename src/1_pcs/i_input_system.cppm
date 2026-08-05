@@ -1,7 +1,7 @@
 module;
 
-#include "SDL3/SDL_mouse.h"
 #include <SDL3/SDL.h>
+#include "SDL3/SDL_mouse.h"
 export module pcs.input;
 
 import std;
@@ -60,4 +60,4 @@ struct InputSystem {
         input_state.right_mouse = state & SDL_BUTTON_RMASK;
     }
 };
-} // namespace pce
+} // namespace hex

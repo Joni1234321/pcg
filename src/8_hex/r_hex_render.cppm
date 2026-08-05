@@ -300,4 +300,4 @@ void AppendRiverMesh(HexState& hex_state, const CameraState& camera) {
     append_pass(RIVER_WIDTH * camera.scale, colors::COLOR_RIVER_BLUE);
     append_pass(RIVER_HIGHLIGHT_WIDTH * camera.scale, colors::COLOR_RIVER_HIGHLIGHT_BLUE);
 }
-}
+} // namespace hex

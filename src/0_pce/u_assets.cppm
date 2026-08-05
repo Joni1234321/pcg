@@ -13,4 +13,4 @@ inline AbsolutePath Asset(const AssetPath& asset_path) {
     const RelativePath assets_dir = "assets";
     return std::filesystem::absolute(assets_dir / asset_path);
 }
-} // namespace pce
+} // namespace hex

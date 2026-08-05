@@ -71,4 +71,4 @@ struct DebugSystem {
     DebugFrame debug_frame { };
     void operator()();
 };
-} // namespace pce::ui
+} // namespace hex::ui

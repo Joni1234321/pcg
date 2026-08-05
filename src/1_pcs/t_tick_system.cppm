@@ -23,5 +23,4 @@ struct TickSystem {
         tick_state.tick += Tick { 1U };
     }
 };
-} // namespace pce
-
+} // namespace hex

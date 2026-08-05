@@ -377,4 +377,4 @@ template <class T, u32 BLOCK_SIZE = 128U> struct Pool {
 
     u32 Size() const { return size; }
 };
-} // namespace pce
+} // namespace hex

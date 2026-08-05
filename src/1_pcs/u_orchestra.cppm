@@ -35,5 +35,4 @@ struct Orchestra {
     }
     ~Orchestra() { Singleton::Get<OrchestraState>() = { }; }
 };
-} // namespace pce
-
+} // namespace hex

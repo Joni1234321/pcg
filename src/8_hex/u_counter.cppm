@@ -190,4 +190,4 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         }
     }
 }
-} // namespace pce
+} // namespace hex

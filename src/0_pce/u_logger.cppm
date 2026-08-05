@@ -49,14 +49,14 @@ constexpr auto LOGGER_PREFIX_ERROR = "[ERROR    ] ";
         return RETURN;                                                                    \
     }
 
- auto LoggerColorSet(const u32 color) { return "\033[38;5;" + std::to_string(color) + "m"; }
- constexpr auto LOGGER_COLOR_CLEAR = "\033[m";
+auto LoggerColorSet(const u32 color) { return "\033[38;5;" + std::to_string(color) + "m"; }
+constexpr auto LOGGER_COLOR_CLEAR = "\033[m";
 
 constexpr auto LOG_LINE_STRING = "=======================================\n";        // NOLINT(*-err58-cpp)
 constexpr auto LOG_SIMPLE_LINE_STRING = "---------------------------------------\n"; // NOLINT(*-err58-cpp)
 
- constexpr u8 START_COLOR = 172U;
- constexpr u32 DEFAULT_COLUMN_WIDTH = 12U;
+constexpr u8 START_COLOR = 172U;
+constexpr u32 DEFAULT_COLUMN_WIDTH = 12U;
 
 struct Logger {
     // NOLINT(*-struct-pack-align)
@@ -257,4 +257,4 @@ template <LongNumberFormattable T> String FormatValue(const T value) {
 }
 template <typename T> String FormatValue(const T value) { return std::format("{} ", value); }
 template <> inline String FormatValue<Entity>(const Entity value) { return value == Entity::NONE ? String { "NONE" } : std::format("{} ", value); }
-} // namespace pce
+} // namespace hex

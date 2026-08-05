@@ -134,7 +134,7 @@ void UnitToCounterAppend(HexState& hex_state) {
         counter.icon = unit_largest_echelon.icon;
         counter.label_top.SetText(EchelonToString(unit_largest_echelon.echelon));
         counter.label_center.SetText(UnitIconToString(unit_largest_echelon.icon));
-        counter.label_bottom.SetText(std::format("{}(+{}) {}", dmg, dmg_ranged    , move));
+        counter.label_bottom.SetText(std::format("{}(+{}) {}", dmg, dmg_ranged, move));
         String unit_name = String(Span(unit_largest_echelon.name));
         counter.label_vertical.SetText(unit_name);
     }
@@ -246,7 +246,7 @@ struct HexSystem {
         if (hex_state.pseudo_states.axial_hover.has_value() && input_state.keys.at(SDLK_LALT) && input_state.left_mouse_down) {
             const int2 axial = hex_state.pseudo_states.axial_hover.value();
             const int2 offset = HexAxialToOffset(axial);
-            Logger().Log("[Hex] Offset ({},{}) Axial ({},{})", offset.x,offset.y, axial.x, axial.y);
+            Logger().Log("[Hex] Offset ({},{}) Axial ({},{})", offset.x, offset.y, axial.x, axial.y);
         }
 
         // logic and render
@@ -353,7 +353,7 @@ struct HexSystem {
                 // roll for survey
                 // roll for damage (a1, dr, a1/dr, ex, d1/d1, d1, a1/d2, dh)
                 // roll for inf engages. with art. then combat. then support art.
-                // 
+                //
                 const u32 dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
                 // const f32 ratio = static_cast<f32>(dmg) / static_cast<f32>(def);
                 enum class PostBattleOutcome { DEFENDER_COUNTER_ATTACKED, DEFENDER_SCOUTED, DEFENDER_HELD, DEFENDER_RETREAT, DEFENDER_ROUT, DEFENDER_SURRENDER };
@@ -375,7 +375,7 @@ struct HexSystem {
                 const b8 attacker_won = battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_RETREAT || battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_ROUT || battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_SURRENDER;
                 u8 result = Rand2D6();
 
-                u8 step_loss_attacker= result;
+                u8 step_loss_attacker = result;
                 u8 step_loss_defender = 14 - result;
                 units_attacker[0].steps = math::SaturatingSub(units_attacker[0].steps, step_loss_attacker);
                 units_defender[0].steps = math::SaturatingSub(units_defender[0].steps, step_loss_defender);

@@ -11,15 +11,25 @@ CHECK=0
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC_DIR="$SCRIPT_DIR/src"
 
-# Prefer the MSYS2 clang-format matching the toolchain
-CLANG_FORMAT="/d/tools/msys64/clang64/bin/clang-format"
-if [[ ! -x "$CLANG_FORMAT" ]]; then
-    CLANG_FORMAT="$(command -v clang-format 2>/dev/null)" \
-        || { echo "error: clang-format not found"; exit 1; }
-fi
+# Prefer $CLANG_FORMAT, then the MSYS2 build matching the toolchain, then whatever
+# is on PATH. Debian/Ubuntu only ship versioned names, so glob those too.
+find_clang_format() {
+    local candidate
+    for candidate in "${CLANG_FORMAT:-}" \
+                     /d/tools/msys64/clang64/bin/clang-format \
+                     "$(command -v clang-format 2>/dev/null || true)" \
+                     /usr/lib/llvm-*/bin/clang-format \
+                     /usr/bin/clang-format-[0-9]*; do
+        [[ -n "$candidate" && -x "$candidate" ]] && { echo "$candidate"; return 0; }
+    done
+    return 1
+}
+
+CLANG_FORMAT="$(find_clang_format)" \
+    || { echo "error: clang-format not found (tried PATH, /usr/lib/llvm-*/bin, /usr/bin/clang-format-*)"; exit 1; }
 
 mapfile -d '' files < <(find "$SRC_DIR" -type f \
-    \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.c" -o -name "*.cc" -o -name "*.cxx" \) \
+    \( -name "*.cpp" -o -name "*.cppm" -o -name "*.ixx" -o -name "*.hpp" -o -name "*.h" -o -name "*.c" -o -name "*.cc" -o -name "*.cxx" \) \
     -print0)
 
 echo "clang-format : $CLANG_FORMAT"

@@ -3,10 +3,10 @@ module;
 #include <algorithm>
 #include <any>
 #include <cassert>
+#include <format>
 #include <functional>
 #include <initializer_list>
 #include <numeric>
-#include <format>
 #include <variant>
 export module pce.table;
 
@@ -125,4 +125,4 @@ template <typename T> void PrintListStats(Logger& logger, const List<T>& list) {
     table.AddColumn("Min", List<T> { { min } });
     table.Print(logger, LoggerTable::COLOR_DISABLED);
 }
-} // namespace pce
+} // namespace hex

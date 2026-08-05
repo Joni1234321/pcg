@@ -141,4 +141,4 @@ inline Color AnimateDamp(const f32 t) {
     const u8 blue = static_cast<u8>(base + amp * math::Sin(t * 1.1F + 4.0F));
     return Color { red, green, blue };
 }
-} // namespace pce::colors
+} // namespace hex::colors

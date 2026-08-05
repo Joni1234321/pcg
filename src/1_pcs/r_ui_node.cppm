@@ -507,4 +507,4 @@ void RenderNodeSystem::operator()() const {
         assert(texts.empty());      // Texts size mismatch
     }
 }
-} // namespace pce::ui
+} // namespace hex::ui

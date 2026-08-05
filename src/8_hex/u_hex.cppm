@@ -124,7 +124,6 @@ template <class T> struct HexList {
     constexpr List<T>::const_iterator cend() const { return data.cend(); }
 };
 
-
 struct HexBitset {
     u8 value;
     [[nodiscard]] constexpr b8 None() const { return !value; }
@@ -195,4 +194,4 @@ struct HexBitset5 {
         value |= val << shift;
     }
 };
-} // namespace pce
+} // namespace hex

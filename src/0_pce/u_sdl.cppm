@@ -157,5 +157,4 @@ struct Vertex {
     [[nodiscard]] constexpr operator SDL_Vertex() const { return *reinterpret_cast<const SDL_Vertex*>(this); }
 };
 static_assert(sizeof(Vertex) == sizeof(SDL_Vertex));
-} // namespace pce
-
+} // namespace hex
