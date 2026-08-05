@@ -45,7 +45,7 @@ namespace {
 [[nodiscard]] u8 AxialAdjecentEnemyControl(const HexState& hex_state, const int2 axial) {
     return std::ranges::count_if(HEX_AXIAL_NEIGHBOURS, [&](const int2 axial_offset) -> b8 { return hex_state.hex_map.Contains(axial + axial_offset) && hex_state.hex_map[axial + axial_offset].owner.tag != hex_state.player_tag; });
 }
-List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start, const int2 axial_end) {
+List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start, const int2 axial_end, const MoveType movement, const u32 move_allowance) {
     List<AxialAndCost> axial_path;
     auto cmp = [](const AxialAndCost& a, const AxialAndCost& b) -> ::b8 { return a.cost > b.cost; };
     std::priority_queue<AxialAndCost, std::vector<AxialAndCost>, decltype(cmp)> frontier(cmp);
@@ -69,10 +69,19 @@ List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start
 
             const Hex& hex = hex_state.hex_map[axial_next];
             const u32 cost_conquer = (hex.owner.tag != hex_state.player_tag) + hex.owner.contested + AxialIsEnemyOrZoc(hex_state, axial_next) + (AxialAdjecentEnemyControl(hex_state, axial_next) > 0) * 1U;
-            u32 cost_terrain = TerrainToMovementCost(hex.terrain_type);
-            const b8 has_road = hex_state.hex_map.Contains(current.axial) && static_cast<RoadLevel>(hex_state.hex_map[current.axial].roads.Test(edge)) != RoadLevel::ROAD_LEVEL_NONE;
-            if (has_road) { cost_terrain = cost_terrain > MOVE_COST_ROAD_REDUCTION ? cost_terrain - MOVE_COST_ROAD_REDUCTION : 1U; }
-            const u32 cost_new = cost_at_axial[current.axial] + cost_terrain + cost_conquer;
+            const RoadLevel road_level = static_cast<RoadLevel>(hex_state.hex_map[current.axial].roads.Test(edge));
+            const b8 has_road = road_level != RoadLevel::ROAD_LEVEL_NONE;
+            const MoveCost move_cost_terrain = has_road ? MovementCostRoad(road_level) : MoveCostTerrain(hex.terrain_type, hex.terrain_feature);
+            const u32 crosses_river = !has_road && hex_state.hex_map[current.axial].river_edges.Test(edge); // roads carry a bridge
+            u32 cost_terrain = 0;
+            switch (movement) {
+                case MoveType::MOVE_LEG: cost_terrain = move_cost_terrain.leg + crosses_river * MOVE_COST_RIVER.leg; break;
+                case MoveType::MOVE_TAC: cost_terrain = move_cost_terrain.tac + crosses_river * MOVE_COST_RIVER.tac; break;
+                case MoveType::MOVE_TRUCK: cost_terrain = move_cost_terrain.truck + crosses_river * MOVE_COST_RIVER.truck; break;
+            }
+            if (cost_terrain >= MOVE_COST_PROHIBITED) { continue; }
+
+            const u32 cost_new = cost_terrain >= MOVE_COST_STOP ? move_allowance : cost_at_axial[current.axial] + cost_terrain + cost_conquer;
             if (!cost_at_axial.contains(axial_next) || cost_new < cost_at_axial[axial_next]) {
                 const u32 heuristic_distance = HexAxialDistance(axial_next, axial_end);
                 cost_at_axial[axial_next] = cost_new;
@@ -285,8 +294,9 @@ struct HexSystem {
                 auto units_selected = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
 
                 // path finding
-                List<AxialAndCost> axial_path = HexAxialPathAStar(hex_state, axial_start, axial_hover);
-                const List<AxialAndCost>::iterator it = std::ranges::upper_bound(axial_path, hex_state.pseudo_states.unit_selection->move_min, std::less { }, &AxialAndCost::cost);
+                const u32 move_allowance = hex_state.pseudo_states.unit_selection->move_min;
+                List<AxialAndCost> axial_path = HexAxialPathAStar(hex_state, axial_start, axial_hover, MoveType::MOVE_LEG, move_allowance);
+                const List<AxialAndCost>::iterator it = std::ranges::upper_bound(axial_path, move_allowance, std::less { }, &AxialAndCost::cost);
                 if (it != axial_path.begin()) {
                     for (List<AxialAndCost>::iterator step = axial_path.begin(); step != it; ++step) {
                         Hex& hex_center = hex_state.hex_map[step->axial];
@@ -312,10 +322,9 @@ struct HexSystem {
                 break;
             }
             case PlayerAction::PLAYER_ACTION_MOVE_HOVER: {
-                const List<AxialAndCost> axial_path = HexAxialPathAStar(hex_state, hex_state.pseudo_states.axial_select.value(), hex_state.pseudo_states.axial_hover.value());
-
                 auto units_selected = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
                 const u32 units_selected_movement = std::ranges::min(units_selected | std::views::transform(&Unit::move));
+                const List<AxialAndCost> axial_path = HexAxialPathAStar(hex_state, hex_state.pseudo_states.axial_select.value(), hex_state.pseudo_states.axial_hover.value(), MoveType::MOVE_LEG, units_selected_movement);
                 for (const AxialAndCost cost_and_axial : axial_path) {
                     const float2 world = HexAxialToWorld(cost_and_axial.axial);
                     const float2 screen = camera.WorldToScreen(world);

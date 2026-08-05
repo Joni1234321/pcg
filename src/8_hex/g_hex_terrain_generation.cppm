@@ -58,7 +58,7 @@ constexpr void HexTerrainGenerateRoads(HexState& hex_state) {
             }
             if (next == n) { break; }
             in_tree[next] = 1U;
-            if (step > 0U) { HexTerrainCarveRoad(hex_state, cities[best_parent[next]], cities[next], RoadLevel::ROAD_LEVEL_SMALL); }
+            if (step > 0U) { HexTerrainCarveRoad(hex_state, cities[best_parent[next]], cities[next], RoadLevel::ROAD_LEVEL_TRACK); }
             for (u32 i = 0U; i < n; i++) {
                 if (in_tree[i] == 0U) {
                     const u32 d = HexAxialDistance(cities[next], cities[i]);
@@ -94,7 +94,7 @@ constexpr void HexTerrainGenerateRoads(HexState& hex_state) {
                 std::swap(dist[k], dist[best]);
                 std::swap(idx[k], idx[best]);
             }
-            for (u32 k = 0U; k < take; k++) { HexTerrainCarveRoad(hex_state, sources[i], targets[idx[k]], k < big_count ? RoadLevel::ROAD_LEVEL_MEDIUM : RoadLevel::ROAD_LEVEL_SMALL); }
+            for (u32 k = 0U; k < take; k++) { HexTerrainCarveRoad(hex_state, sources[i], targets[idx[k]], k < big_count ? RoadLevel::ROAD_LEVEL_SECONDARY : RoadLevel::ROAD_LEVEL_TRACK); }
         }
     };
 

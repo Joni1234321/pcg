@@ -15,15 +15,43 @@ import hex.render;
 import pce.logger;
 
 export namespace hex {
-[[nodiscard]] constexpr u32 TerrainToMovementCost(const TerrainType terrain) {
+
+[[nodiscard]] constexpr MoveType MoveTypeUnitIcon(const UnitIcon icon) {
+    switch (icon) {
+        case UnitIcon::ICON_INF: return MoveType::MOVE_LEG;
+        case UnitIcon::ICON_ENGINEER: return MoveType::MOVE_LEG;
+        case UnitIcon::ICON_TANK: return MoveType::MOVE_TAC;
+        case UnitIcon::ICON_ART: return MoveType::MOVE_TRUCK;
+        case UnitIcon::ICON_HQ: return MoveType::MOVE_TRUCK;
+    }
+    std::unreachable();
+}
+
+[[nodiscard]] constexpr MoveCost MoveCostTerrain(const TerrainType terrain, const TerrainFeature feature) {
+    switch (feature) {
+        case TerrainFeature::TERRAIN_FEATURE_MARSH: return { .leg = MOVE_COST_STOP, .tac = MOVE_COST_PROHIBITED, .truck = MOVE_COST_PROHIBITED };
+        case TerrainFeature::TERRAIN_FEATURE_WOODED_LIGHTLY:
+        case TerrainFeature::TERRAIN_FEATURE_WOODED_HEAVY: return { .leg = 2U, .tac = MOVE_COST_STOP, .truck = MOVE_COST_STOP };
+        default: break;
+    }
     switch (terrain) {
-        case TerrainType::TERRAIN_TYPE_DEEP_OCEAN: return 255U;
-        case TerrainType::TERRAIN_TYPE_OCEAN: return 255U;
-        case TerrainType::TERRAIN_TYPE_BEACH: return 2U;
-        case TerrainType::TERRAIN_TYPE_GRASS: return 1U;
-        case TerrainType::TERRAIN_TYPE_HILL: return 3U;
-        case TerrainType::TERRAIN_TYPE_MOUNTAIN: return 5U;
-        case TerrainType::TERRAIN_TYPE_SNOW: return 4U;
+        case TerrainType::TERRAIN_TYPE_DEEP_OCEAN: return { .leg = MOVE_COST_PROHIBITED, .tac = MOVE_COST_PROHIBITED, .truck = MOVE_COST_PROHIBITED };
+        case TerrainType::TERRAIN_TYPE_OCEAN: return { .leg = MOVE_COST_PROHIBITED, .tac = MOVE_COST_PROHIBITED, .truck = MOVE_COST_PROHIBITED };
+        case TerrainType::TERRAIN_TYPE_BEACH: return { .leg = 2U, .tac = 4U, .truck = 8U }; // sand
+        case TerrainType::TERRAIN_TYPE_GRASS: return { .leg = 2U, .tac = 2U, .truck = 2U }; // open
+        case TerrainType::TERRAIN_TYPE_SNOW: return { .leg = 2U, .tac = 2U, .truck = 2U };  // not on the chart, open
+        case TerrainType::TERRAIN_TYPE_HILL: return { .leg = 2U, .tac = 4U, .truck = 6U };
+        case TerrainType::TERRAIN_TYPE_MOUNTAIN: return { .leg = 2U, .tac = 4U, .truck = 6U }; // not on the chart, hill
+    }
+    std::unreachable();
+}
+[[nodiscard]] constexpr MoveCost MovementCostRoad(const RoadLevel road) {
+    switch (road) {
+        case RoadLevel::ROAD_LEVEL_NONE: return { .leg = MOVE_COST_PROHIBITED, .tac = MOVE_COST_PROHIBITED, .truck = MOVE_COST_PROHIBITED };
+        case RoadLevel::ROAD_LEVEL_TRACK: return { .leg = 1U, .tac = 2U, .truck = 2U };  // track
+        case RoadLevel::ROAD_LEVEL_SECONDARY:
+        case RoadLevel::ROAD_LEVEL_PRIMARY:
+            return { .leg = 1U, .tac = 1U, .truck = 1U };
     }
     std::unreachable();
 }

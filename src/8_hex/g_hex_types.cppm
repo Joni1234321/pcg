@@ -18,7 +18,8 @@ enum class TerrainFeature : u8 { TERRAIN_FEATURE_GRASSLAND, TERRAIN_FEATURE_FIEL
 enum class PlayerAction : u8 { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_ACTION_DESELECT, PLAYER_ACTION_MOVE_CLICK, PLAYER_ACTION_MOVE_HOVER, PLAYER_ACTION_ATTACK_CLICK, PLAYER_ACTION_ATTACK_HOVER };
 enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHELON_BATTALION, ECHELON_REGIMENT, ECHELON_BRIGADE, ECHELON_DIVISION, ECHELON_CORPS, ECHELON_ARMY };
 enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK, ICON_ENGINEER };
-enum class RoadLevel : u8 { ROAD_LEVEL_NONE, ROAD_LEVEL_SMALL, ROAD_LEVEL_MEDIUM, ROAD_LEVEL_LARGE };
+enum class RoadLevel : u8 { ROAD_LEVEL_NONE, ROAD_LEVEL_TRACK, ROAD_LEVEL_SECONDARY, ROAD_LEVEL_PRIMARY };
+enum class MoveType : u8 { MOVE_LEG, MOVE_TAC, MOVE_TRUCK };
 
 enum class CounterStyle : u8 { COUNTER_STYLE_NIEHORSTER, COUNTER_STYLE_NIEHORSTER_BIG, COUNTER_STYLE_REAL };
 enum class MapStyle : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER };
@@ -28,9 +29,12 @@ constexpr MapStyle TERRAIN_SCHEME = MapStyle::SLATE_TABLE;
 constexpr TerrainStyle TERRAIN_FEATURE_THEME = TerrainStyle::TERRAIN_STYLE_ICONS;
 constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_NIEHORSTER;
 
-constexpr u8 MOVE_COST_ATTACK = 2U;
-constexpr u32 MOVE_COST_ATTACK_PLANNED = 6U;
-constexpr u32 MOVE_COST_ROAD_REDUCTION = 2U;
+constexpr u8 MOVE_POINT = 2U;
+constexpr u8 MOVE_COST_ATTACK = 1U;
+constexpr u8 MOVE_COST_ATTACK_PLANNED = 2U;
+constexpr u8 MOVE_COST_STOP = 100U;       // enter, then movement ends
+constexpr u8 MOVE_COST_PROHIBITED = 200U; // stays above STOP + any hexside cost
+
 constexpr f32 BORDER_INNER_RADIUS = 0.90F;
 constexpr f32 BORDER_TEETH_DEPTH = 0.12F;
 constexpr f32 BORDER_TEETH_HALF = 0.18F;
@@ -42,6 +46,13 @@ constexpr f32 FEATURE_POSITION_JITTER = 0.2F;
 constexpr f32 RIVER_WIDTH = 0.13F;
 constexpr f32 RIVER_CASING_EXTRA = 0.05F;
 constexpr f32 RIVER_HIGHLIGHT_WIDTH = RIVER_WIDTH * 0.35F;
+
+struct MoveCost {
+    u8 leg { };
+    u8 tac { };
+    u8 truck { };
+};
+constexpr MoveCost MOVE_COST_RIVER { .leg = 2U, .tac = 6U, .truck = 8U };
 
 struct Counter {
     Color color_background { };

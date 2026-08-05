@@ -264,7 +264,7 @@ void AppendRoadMesh(HexState& hex_state, const CameraState& camera) {
                     const int2 axial_neighbour = axial + HEX_AXIAL_NEIGHBOURS[side];
                     const float2 world_neighbour = HexAxialToWorld(axial_neighbour);
                     const float2 screen_neighbour = camera.WorldToScreen(world_neighbour) + HexTileJitter(axial_neighbour) * float2 { ROAD_CENTER_JITTER * camera.scale };
-                    const f32 screen_width = (road_level == RoadLevel::ROAD_LEVEL_MEDIUM ? ROAD_BIG_WIDTH : ROAD_WIDTH) * camera.scale;
+                    const f32 screen_width = (road_level == RoadLevel::ROAD_LEVEL_SECONDARY ? ROAD_BIG_WIDTH : ROAD_WIDTH) * camera.scale;
                     VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_feature, screen_neighbour, screen_width), colors::COLOR_ROAD_GREY.WithAlpha(0.5F));
                 }
             }

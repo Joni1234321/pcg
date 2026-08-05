@@ -18,11 +18,11 @@ import hex.terrain.generation;
 export namespace hex {
 UnitToe UnitGetToe(UnitIcon icon) {
     switch (icon) {
-        case UnitIcon::ICON_INF: return UnitToe { .move = 4, .dmg = 3, .dmg_ranged = 0, .steps = 6 };
-        case UnitIcon::ICON_ART: return UnitToe { .move = 4, .dmg = 3, .dmg_ranged = 0, .steps = 255U };
-        case UnitIcon::ICON_HQ: return UnitToe { .move = 8, .dmg = 0, .dmg_ranged = 0, .steps = 255U };
-        case UnitIcon::ICON_TANK: return UnitToe { .move = 16, .dmg = 3, .dmg_ranged = 5, .steps = 4 };
-        case UnitIcon::ICON_ENGINEER: return UnitToe { .move = 4, .dmg = 3, .dmg_ranged = 0, .steps = 0 };
+        case UnitIcon::ICON_INF: return UnitToe { .move = 4 * MOVE_POINT, .dmg = 3, .dmg_ranged = 0, .steps = 6 };
+        case UnitIcon::ICON_ART: return UnitToe { .move = 4 * MOVE_POINT, .dmg = 3, .dmg_ranged = 0, .steps = 255U };
+        case UnitIcon::ICON_HQ: return UnitToe { .move = 8 * MOVE_POINT, .dmg = 0, .dmg_ranged = 0, .steps = 255U };
+        case UnitIcon::ICON_TANK: return UnitToe { .move = 16 * MOVE_POINT, .dmg = 3, .dmg_ranged = 5, .steps = 4 };
+        case UnitIcon::ICON_ENGINEER: return UnitToe { .move = 4 * MOVE_POINT, .dmg = 3, .dmg_ranged = 0, .steps = 0 };
         default: assert(false); std::unreachable();
     }
 }
@@ -70,7 +70,7 @@ void HexScenarioAi(HexState& hex_state) {
     (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = usa_kps, .tag = CountryTag::TAG_USA, .icon = UnitIcon::ICON_TANK, .echelon = Echelon::ECHELON_BATTALION }, { 19, 4 });
 }
 
-// 22x8 map: two divisions clashing. Only battalions (and SOV companies) are fielded; everything else is HQ.
+// 22x8 map: two independent divisions per side, div HQ over battalions
 void HexScenarioDivisionClash(HexState& hex_state) {
     constexpr u32 SEED = 3489;
     hex_state.hex_map.Resize({ 20, 8 });
@@ -92,43 +92,38 @@ void HexScenarioDivisionClash(HexState& hex_state) {
     for (const int2 axial : cities) { hex_state.hex_map[axial].terrain_feature = TerrainFeature::TERRAIN_FEATURE_CITY; }
     for (const int2 axial : villages) { hex_state.hex_map[axial].terrain_feature = TerrainFeature::TERRAIN_FEATURE_VILLAGE; }
 
-    HexTerrainSetRoadBetween(hex_state, cities[0], cities[1], RoadLevel::ROAD_LEVEL_SMALL);
-    HexTerrainSetRoadBetween(hex_state, cities[1], cities[2], RoadLevel::ROAD_LEVEL_MEDIUM);
-    HexTerrainSetRoadBetween(hex_state, cities[2], cities[3], RoadLevel::ROAD_LEVEL_MEDIUM);
-    HexTerrainSetRoadBetween(hex_state, cities[0], cities[3], RoadLevel::ROAD_LEVEL_LARGE);
-    HexTerrainSetRoadBetween(hex_state, cities[1], villages[0], RoadLevel::ROAD_LEVEL_SMALL);
-    HexTerrainSetRoadBetween(hex_state, cities[1], villages[1], RoadLevel::ROAD_LEVEL_SMALL);
+    HexTerrainSetRoadBetween(hex_state, cities[0], cities[1], RoadLevel::ROAD_LEVEL_TRACK);
+    HexTerrainSetRoadBetween(hex_state, cities[1], cities[2], RoadLevel::ROAD_LEVEL_SECONDARY);
+    HexTerrainSetRoadBetween(hex_state, cities[2], cities[3], RoadLevel::ROAD_LEVEL_SECONDARY);
+    HexTerrainSetRoadBetween(hex_state, cities[0], cities[3], RoadLevel::ROAD_LEVEL_PRIMARY);
+    HexTerrainSetRoadBetween(hex_state, cities[1], villages[0], RoadLevel::ROAD_LEVEL_TRACK);
+    HexTerrainSetRoadBetween(hex_state, cities[1], villages[1], RoadLevel::ROAD_LEVEL_TRACK);
 
-    // GER (attacker): pushed up against the left edge. Division → 2 Regiments → Bns, with divisional art + armor.
-    const Handle<Unit> ger_div = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_DIVISION }, { 1, 3 });
-    const Handle<Unit> ger_r1 = HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_REGIMENT }, { 1, 1 });
-    const Handle<Unit> ger_r2 = HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_REGIMENT }, { 4, 6 });
-    // 6 inf bns split across the two regiments, staggered
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_r1, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 3, 0 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_r1, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 3, 2 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_r1, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 5, 3 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_r2, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 6, 4 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_r2, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 4, 5 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_r2, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 6, 7 });
-    // divisional support: 1 art bn + 1 armor bn
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_ART, .echelon = Echelon::ECHELON_BATTALION }, { 2, 3 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_TANK, .echelon = Echelon::ECHELON_BATTALION }, { 4, 4 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_ENGINEER, .echelon = Echelon::ECHELON_BATTALION }, { 5, 4 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_ENGINEER, .echelon = Echelon::ECHELON_BATTALION }, { 6, 6 });
+    // GER (attacker): pushed up against the left edge, two independent divisions
+    const Handle<Unit> ger_div1 = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_DIVISION }, { 1, 3 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div1, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 3, 0 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div1, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 3, 2 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div1, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 5, 3 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div1, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_ART, .echelon = Echelon::ECHELON_BATTALION }, { 2, 3 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div1, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_TANK, .echelon = Echelon::ECHELON_BATTALION }, { 4, 4 });
 
-    // SOV (defender): dug in close to the attackers. Division → 2 Rifle Regiments → Bns + Coys, with divisional art.
-    const Handle<Unit> sov_div = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_DIVISION }, { 10, 3 });
-    const Handle<Unit> sov_r1 = HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_REGIMENT }, { 8, 1 });
-    const Handle<Unit> sov_r2 = HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_REGIMENT }, { 11, 6 });
-    // 4 inf bns split across the two regiments, staggered
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_r1, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 6, 0 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_r1, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 8, 2 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_r2, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 9, 5 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_r2, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 9, 7 });
-    // 2 inf companies, both under the first regiment
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_r1, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_COMPANY }, { 5, 1 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_r1, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_COMPANY }, { 7, 3 });
-    // divisional support: 1 art bn
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_ART, .echelon = Echelon::ECHELON_BATTALION }, { 11, 5 });
+    const Handle<Unit> ger_div2 = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_DIVISION }, { 4, 6 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div2, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 6, 4 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div2, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 4, 5 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div2, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 6, 7 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div2, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_ENGINEER, .echelon = Echelon::ECHELON_BATTALION }, { 5, 4 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div2, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_ENGINEER, .echelon = Echelon::ECHELON_BATTALION }, { 6, 6 });
+
+    // SOV (defender): dug in close to the attackers, two independent divisions
+    const Handle<Unit> sov_div1 = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_DIVISION }, { 10, 3 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div1, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 6, 0 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div1, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 8, 2 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div1, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 5, 1 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div1, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 7, 3 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div1, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_ART, .echelon = Echelon::ECHELON_BATTALION }, { 11, 5 });
+
+    const Handle<Unit> sov_div2 = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_DIVISION }, { 11, 6 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div2, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 9, 5 });
+    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div2, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 9, 7 });
 }
 } // namespace hex
