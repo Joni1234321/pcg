@@ -94,6 +94,7 @@ void UnitToCounterAppend(HexState& hex_state) {
         counter.axial = axial_unit;
         u32 dmg = 0;
         u32 dmg_ranged = 0;
+        u32 steps = 0;
         u32 move = 0;
         counter.stack = { };
         const u32 counters_on_hex = math::Min<u32>(counter.stack.size(), unit_handles.size());
@@ -101,6 +102,7 @@ void UnitToCounterAppend(HexState& hex_state) {
         if (axial_is_selected) {
             dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
             move = hex_state.pseudo_states.unit_selection->move_min;
+            steps = hex_state.pseudo_states.unit_selection->steps;
             // drawing selected
             u32 i = 0;
             for (; i < hex_state.pseudo_states.unit_selection->unit_handles.size(); i++) {
@@ -123,6 +125,7 @@ void UnitToCounterAppend(HexState& hex_state) {
                 const Unit& unit = hex_state.units[unit_handle];
                 counter.stack[i] = Counter { .color_background = CountryTagToColor(unit.tag), .color_icon = unit.color, .color_border = colors::COLOR_BLACK };
                 dmg += unit.dmg;
+                steps += unit.steps;
                 move = math::Max(static_cast<u32>(unit.move), move);
             }
         }
@@ -132,7 +135,7 @@ void UnitToCounterAppend(HexState& hex_state) {
         const Unit& unit_largest_echelon = hex_state.units[unit_handle_largest_echelon];
 
         counter.icon = unit_largest_echelon.icon;
-        counter.label_top.SetText(EchelonToString(unit_largest_echelon.echelon));
+        counter.label_top.SetText(std::format("{} [{}]", EchelonToString(unit_largest_echelon.echelon), steps));
         counter.label_center.SetText(UnitIconToString(unit_largest_echelon.icon));
         counter.label_bottom.SetText(std::format("{}(+{}) {}", dmg, dmg_ranged, move));
         String unit_name = String(Span(unit_largest_echelon.name));
@@ -172,6 +175,7 @@ struct HexSystem {
         if (hex_state.pseudo_states.unit_selection.has_value()) {
             const auto unit_selection = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
             hex_state.pseudo_states.unit_selection->dmg_sum = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::dmg), u32 { 0 }, std::plus { });
+            hex_state.pseudo_states.unit_selection->steps = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::steps), u32 { 0 }, std::plus { });
             const auto [move_min, move_max] = std::ranges::minmax(unit_selection | std::views::transform(&Unit::move), std::less { });
             hex_state.pseudo_states.unit_selection->move_min = move_min;
             hex_state.pseudo_states.unit_selection->move_max = move_max;
