@@ -35,46 +35,58 @@ public:
 class FontCollection {
     AbsolutePath font_path_normal { };
     AbsolutePath font_path_bold { };
+    AbsolutePath font_path_bold_courier { };
     mutable FlatMap<FontSizes, Font> fonts_normal { 16U };
     mutable FlatMap<FontSizes, Font> fonts_bold { 16U };
+    mutable FlatMap<FontSizes, Font> fonts_bold_courier { 16U };
 
 public:
     explicit FontCollection() { }
-    void SetFontFile(const AbsolutePath& normal, const AbsolutePath& bold) {
+    void SetFontFile(const AbsolutePath& normal, const AbsolutePath& bold, const AbsolutePath& bold_courier) {
         font_path_normal = normal;
         font_path_bold = bold;
+        font_path_bold_courier = bold_courier;
         Clear();
     }
-    [[nodiscard]] const Font& GetFontNormal(FontSizes size) const;
-    [[nodiscard]] const Font& GetFontBold(FontSizes size) const;
+    [[nodiscard]] const Font& GetFontNormal(FontSizes size) const {
+        assert(static_cast<FontSize>(size) >= FONT_MIN_SIZE);
+        size = math::Max(size, static_cast<FontSizes>(FONT_MIN_SIZE));
+        if (!fonts_normal.HasKey(size)) {
+            fonts_normal.EmplaceBack(size, font_path_normal, static_cast<FontSize>(size));
+            if (fonts_normal[size].FailedLoading()) {
+                SDL_Log("ERROR Failed Font not loaded (%s)", SDL_GetError());
+                fonts_normal.Erase(size);
+            }
+        }
+        return fonts_normal[size];
+    }
+    [[nodiscard]] const Font& GetFontBold(FontSizes size) const {
+        assert(static_cast<FontSize>(size) >= FONT_MIN_SIZE);
+        size = math::Max(size, static_cast<FontSizes>(FONT_MIN_SIZE));
+        if (!fonts_bold.HasKey(size)) {
+            fonts_bold.EmplaceBack(size, font_path_bold, static_cast<FontSize>(size));
+            assert(!fonts_bold[size].FailedLoading()); // Font failed to load — GetFontBold will return invalid font
+        }
+        return fonts_bold[size];
+    }
+    [[nodiscard]] const Font& GetFontBoldCourier(FontSizes size) const {
+        assert(static_cast<FontSize>(size) >= FONT_MIN_SIZE);
+        size = math::Max(size, static_cast<FontSizes>(FONT_MIN_SIZE));
+        if (!fonts_bold_courier.HasKey(size)) {
+            fonts_bold_courier.EmplaceBack(size, font_path_bold_courier, static_cast<FontSize>(size));
+            assert(!fonts_bold_courier[size].FailedLoading()); // Font failed to load — GetFontBoldCourier will return invalid font
+        }
+        return fonts_bold_courier[size];
+    }
     void Clear() {
         fonts_normal.Clear();
         fonts_bold.Clear();
+        fonts_bold_courier.Clear();
     }
     ~FontCollection() { Clear(); }
 };
 } // namespace hex::ui
 
 namespace hex::ui {
-const Font& FontCollection::GetFontNormal(FontSizes size) const {
-    assert(static_cast<FontSize>(size) >= FONT_MIN_SIZE);
-    size = math::Max(size, static_cast<FontSizes>(FONT_MIN_SIZE));
-    if (!fonts_normal.HasKey(size)) {
-        fonts_normal.EmplaceBack(size, font_path_normal, static_cast<FontSize>(size));
-        if (fonts_normal[size].FailedLoading()) {
-            SDL_Log("ERROR Failed Font not loaded (%s)", SDL_GetError());
-            fonts_normal.Erase(size);
-        }
-    }
-    return fonts_normal[size];
-}
-const Font& FontCollection::GetFontBold(FontSizes size) const {
-    assert(static_cast<FontSize>(size) >= FONT_MIN_SIZE);
-    size = math::Max(size, static_cast<FontSizes>(FONT_MIN_SIZE));
-    if (!fonts_bold.HasKey(size)) {
-        fonts_bold.EmplaceBack(size, font_path_bold, static_cast<FontSize>(size));
-        assert(!fonts_bold[size].FailedLoading()); // Font failed to load — GetFontBold will return invalid font
-    }
-    return fonts_bold[size];
-}
+
 } // namespace hex::ui

@@ -48,10 +48,9 @@ export namespace hex {
 [[nodiscard]] constexpr MoveCost MovementCostRoad(const RoadLevel road) {
     switch (road) {
         case RoadLevel::ROAD_LEVEL_NONE: return { .leg = MOVE_COST_PROHIBITED, .tac = MOVE_COST_PROHIBITED, .truck = MOVE_COST_PROHIBITED };
-        case RoadLevel::ROAD_LEVEL_TRACK: return { .leg = 1U, .tac = 2U, .truck = 2U };  // track
+        case RoadLevel::ROAD_LEVEL_TRACK: return { .leg = 1U, .tac = 2U, .truck = 2U }; // track
         case RoadLevel::ROAD_LEVEL_SECONDARY:
-        case RoadLevel::ROAD_LEVEL_PRIMARY:
-            return { .leg = 1U, .tac = 1U, .truck = 1U };
+        case RoadLevel::ROAD_LEVEL_PRIMARY: return { .leg = 1U, .tac = 1U, .truck = 1U };
     }
     std::unreachable();
 }

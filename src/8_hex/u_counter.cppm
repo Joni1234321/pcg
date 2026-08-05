@@ -96,19 +96,23 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
     const CounterTextures& counter_textures = CounterStyleToTextures(COUNTER_THEME);
 
     constexpr f32 COUNTER_SIZE = 1.1F;
-    const float2 counter_size = float2 { camera.scale * COUNTER_SIZE } * float2 { 1.0F, 0.8F };
+    const float2 counter_size = float2 { camera.scale * COUNTER_SIZE };
 
-    const ui::FontSize pt_normal = static_cast<ui::FontSize>(counter_size.y * 0.25F);
-    const ui::FontSize pt_small = static_cast<ui::FontSize>(counter_size.y * 0.15F);
-    if (pt_normal >= ui::FONT_MIN_SIZE) { (void)font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_normal)); }
-    if (pt_small >= ui::FONT_MIN_SIZE) { (void)font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_small)); }
-    const Optional<std::reference_wrapper<const ui::Font>> font_normal_opt = pt_normal < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_normal));
-    const Optional<std::reference_wrapper<const ui::Font>> font_small_opt = pt_small < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_small));
+    const ui::FontSize pt_32 = static_cast<ui::FontSize>(counter_size.y * 0.32F);
+    const ui::FontSize pt_22 = static_cast<ui::FontSize>(counter_size.y * 0.22F);
+    const ui::FontSize pt_16 = static_cast<ui::FontSize>(counter_size.y * 0.16F);
+    const ui::FontSize pt_10 = static_cast<ui::FontSize>(counter_size.y * 0.10F);
+    const ui::FontSize pt_08 = static_cast<ui::FontSize>(counter_size.y * 0.08F);
+    const Optional<std::reference_wrapper<const ui::Font>> font_32_opt = pt_32 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_32));
+    const Optional<std::reference_wrapper<const ui::Font>> font_22_opt = pt_22 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_22));
+    const Optional<std::reference_wrapper<const ui::Font>> font_16_opt = pt_16 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_16));
+    const Optional<std::reference_wrapper<const ui::Font>> font_10_opt = pt_10 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBold(static_cast<ui::FontSizes>(pt_10));
+    const Optional<std::reference_wrapper<const ui::Font>> font_08_opt = pt_08 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCourier(static_cast<ui::FontSizes>(pt_08));
 
     for (const CounterStack& counter : counters) {
         const float2 world = HexAxialToWorld(counter.axial);
         const float2 counter_center = camera.WorldToScreen(world);
-        const float2 counter_point = counter_center - counter_size * float2 { 0.5F };
+        const float2 counter_top_left = counter_center - counter_size * float2 { 0.5F };
 
         for (i32 i = static_cast<i32>(counter.stack.size()) - 1; i >= 0; i--) {
             const Counter& counter_stack = counter.stack[static_cast<u32>(i)];
@@ -133,7 +137,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             (void)SDL_RenderFillRect(window_state.renderer, area_background);
         }
 
-        const AABB area_icon_border = AABB::FromCenter(counter_center, counter_size * float2 { 0.6F, 0.4F }).WithOffset(counter_size * float2 { 0.0F, -0.05F });
+        const AABB area_icon_border = AABB::FromPoint(counter_top_left, counter_size * float2 { 0.6F, 0.4F }).WithOffset(counter_size * float2 { 0.02F });
         constexpr Color COLOR_ICON_BORDER { colors::COLOR_BLACK };
         (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_ICON_BORDER.r, COLOR_ICON_BORDER.g, COLOR_ICON_BORDER.b, COLOR_ICON_BORDER.a);
         (void)SDL_RenderFillRect(window_state.renderer, area_icon_border);
@@ -149,44 +153,76 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         } else {
             (void)SDL_SetRenderDrawColor(window_state.renderer, color_icon.r, color_icon.g, color_icon.b, color_icon.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_icon);
-            if (font_normal_opt.has_value()) {
-                const ui::Font& font_normal = font_normal_opt.value();
-                (void)TTF_SetTextFont(counter.label_center, font_normal);
-                (void)TTF_SetTextColorFloat(counter.label_center, 0.0F, 0.0F, 0.0F, 1.0F);
-                (void)TTF_SetTextWrapWidth(counter.label_center, static_cast<i32>(counter_size.x));
-                (void)TTF_DrawRendererText(counter.label_center, counter_point.x, counter_point.y + counter_size.y * 0.4F - static_cast<f32>(pt_normal) * 0.3F);
+            if (font_22_opt.has_value()) {
+                const ui::Font& font_22 = font_22_opt.value();
+                (void)TTF_SetTextFont(counter.label_icon_placeholder, font_22);
+                (void)TTF_SetTextColorFloat(counter.label_icon_placeholder, 0.0F, 0.0F, 0.0F, 1.0F);
+                (void)TTF_SetTextWrapWidth(counter.label_icon_placeholder, static_cast<i32>(counter_size.x));
+                (void)TTF_DrawRendererText(counter.label_icon_placeholder, counter_top_left.x, counter_top_left.y + counter_size.y * 0.4F - static_cast<f32>(pt_22) * 0.3F);
             }
         }
 
-        if (font_normal_opt.has_value()) {
-            const ui::Font& font_normal = font_normal_opt.value();
-            TTF_SetFontWrapAlignment(font_normal, TTF_HORIZONTAL_ALIGN_CENTER);
+        constexpr f32 PADDING = 0.1F;
+        const i32 width = counter_size.x * (1.0F - PADDING);
+        const i32 left = counter_top_left.x + counter_size.x * PADDING * 0.5F;
+        const i32 top = counter_top_left.y + counter_size.y * PADDING * 0.5F;
 
-            (void)TTF_SetTextFont(counter.label_bottom, font_normal);
-            (void)TTF_SetTextWrapWidth(counter.label_bottom, static_cast<i32>(counter_size.x));
-            (void)TTF_DrawRendererText(counter.label_bottom, counter_point.x, counter_point.y + counter_size.y - static_cast<f32>(pt_normal));
+        if (font_08_opt.has_value()) {
+            const ui::Font& font_08 = font_08_opt.value();
 
-            (void)TTF_SetTextFont(counter.label_top, font_normal);
-            (void)TTF_SetTextWrapWidth(counter.label_top, static_cast<i32>(counter_size.x));
-            (void)TTF_DrawRendererText(counter.label_top, counter_point.x, counter_point.y);
+            TTF_SetFontWrapAlignment(font_08, TTF_HORIZONTAL_ALIGN_CENTER);
+            (void)TTF_SetTextColorFloat(counter.label_top, 0.0F, 0.0F, 0.0F, 1.0F);
+            (void)TTF_SetTextFont(counter.label_top, font_08);
+            (void)TTF_SetTextWrapWidth(counter.label_top, width);
+            (void)TTF_DrawRendererText(counter.label_top, left, top);
         }
 
-        if (font_small_opt.has_value()) {
-            const ui::Font& font_small = font_small_opt.value();
-            (void)TTF_SetTextFont(counter.label_vertical, font_small);
+        if (font_10_opt.has_value()) {
+            const ui::Font& font_10 = font_10_opt.value();
+            (void)TTF_SetTextFont(counter.label_vertical, font_10);
             (void)TTF_SetTextWrapWidth(counter.label_vertical, static_cast<i32>(counter_size.y));
-            SDL_Surface* surface = SDL_CreateSurface(static_cast<i32>(counter_size.y), pt_small, SDL_PIXELFORMAT_ARGB8888);
-            if (surface) {
+            if (SDL_Surface* surface = SDL_CreateSurface(static_cast<i32>(counter_size.y), pt_16, SDL_PIXELFORMAT_ARGB8888)) {
                 (void)TTF_DrawSurfaceText(counter.label_vertical, 0, 0, surface);
                 SDL_Texture* tex = SDL_CreateTextureFromSurface(window_state.renderer, surface);
                 SDL_DestroySurface(surface);
                 if (tex) {
-                    const AABB dst = AABB::FromCenter(float2 { counter_point.x + counter_size.x - static_cast<f32>(pt_small) * 0.5F, counter_center.y }, float2 { counter_size.y, static_cast<f32>(pt_small) });
+                    const AABB dst = AABB::FromCenter(float2 { counter_top_left.x + counter_size.x - static_cast<f32>(pt_16) * 0.5F, counter_center.y }, float2 { counter_size.y, static_cast<f32>(pt_16) });
                     constexpr f32 ANGLE_DEGREES = 90.0;
                     SDL_RenderTextureRotated(window_state.renderer, tex, nullptr, dst, ANGLE_DEGREES, nullptr, SDL_FLIP_NONE);
                     SDL_DestroyTexture(tex);
                 }
             }
+        }
+
+        if (font_22_opt.has_value()) {
+            const i32 bottom = counter_top_left.y + counter_size.y * (1.0F - PADDING * 0.5F) - pt_22;
+
+            const ui::Font& font_22 = font_22_opt.value();
+            TTF_SetFontWrapAlignment(font_22, TTF_HORIZONTAL_ALIGN_CENTER);
+
+            (void)TTF_SetTextFont(counter.label_bottom_center, font_22);
+            (void)TTF_SetTextWrapWidth(counter.label_bottom_center, width);
+            (void)TTF_DrawRendererText(counter.label_bottom_center, left, bottom);
+
+            TTF_SetFontWrapAlignment(font_22, TTF_HORIZONTAL_ALIGN_LEFT);
+            (void)TTF_SetTextFont(counter.label_bottom_left_upper, font_22);
+            (void)TTF_SetTextWrapWidth(counter.label_bottom_left_upper, width);
+            (void)TTF_DrawRendererText(counter.label_bottom_left_upper, left, bottom - pt_22);
+
+            (void)TTF_SetTextFont(counter.label_bottom_left_lower, font_22);
+            (void)TTF_SetTextWrapWidth(counter.label_bottom_left_lower, width);
+            (void)TTF_DrawRendererText(counter.label_bottom_left_lower, left, bottom);
+        }
+
+        if (font_32_opt.has_value()) {
+            const ui::Font& font_32 = font_32_opt.value();
+            const i32 bottom = counter_top_left.y + counter_size.y * (1.0F - PADDING * 0.5F) - pt_32;
+            TTF_SetFontWrapAlignment(font_32, TTF_HORIZONTAL_ALIGN_RIGHT);
+            (void)TTF_SetTextFont(counter.label_bottom_right, font_32);
+            (void)TTF_SetTextWrapWidth(counter.label_bottom_right, width);
+            (void)TTF_DrawRendererText(counter.label_bottom_right, left, bottom);
+
+
         }
     }
 }

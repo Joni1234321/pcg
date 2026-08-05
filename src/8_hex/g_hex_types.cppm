@@ -64,8 +64,11 @@ struct CounterStack {
     UnitIcon icon { };
     Array<Counter, 12> stack { };
     Label label_top { };
-    Label label_center { };
-    Label label_bottom { };
+    Label label_icon_placeholder { };
+    Label label_bottom_left_upper { };
+    Label label_bottom_left_lower { };
+    Label label_bottom_center { };
+    Label label_bottom_right { };
     SurfaceLabel label_vertical { };
 };
 
