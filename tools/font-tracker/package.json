@@ -1,0 +1,12 @@
+{
+  "name": "font-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bake letter-spacing (tracking) into a TTF by shifting hmtx advance widths, so fonts render tighter without any engine-side layout code.",
+  "scripts": {
+    "start": "npx --yes http-server -c-1 -o /index.html ."
+  },
+  "dependencies": {
+    "opentype.js": "^1.3.4"
+  }
+}

@@ -19,6 +19,7 @@ const RelativePath PATH_FONT_NORMAL { "Titillium_Web/TitilliumWeb-Regular.ttf" }
 const RelativePath PATH_FONT_TITILIUM_BOLD { "Titillium_Web/TitilliumWeb-Bold.ttf" };
 const RelativePath PATH_FONT_COURIER_REGULAR { "Courier_Prime/CourierPrime-Regular.ttf" };
 const RelativePath PATH_FONT_COURIER_BOLD { "Courier_Prime/CourierPrime-Bold.ttf" };
+const RelativePath PATH_FONT_COSETTE_TITRE_REGULAR { "Cossette_Titre/CossetteTitre-Regular.ttf" };
 struct Window {
     explicit Window(const uint2 size) {
         constexpr u32 window_flags = SDL_WINDOW_RESIZABLE;
@@ -40,7 +41,7 @@ struct Window {
         window_state.surface_text_engine = TTF_CreateSurfaceTextEngine();
         window_state.screen_size = size;
 
-        Singleton::Get<ui::FontCollection>().SetFontFile(Asset(PATH_FONT_NORMAL), Asset(PATH_FONT_COURIER_REGULAR));
+        Singleton::Get<ui::FontCollection>().SetFontFile(Asset(PATH_FONT_NORMAL), Asset(PATH_FONT_COSETTE_TITRE_REGULAR));
     }
     ~Window() {
         Singleton::Get<ui::FontCollection>().Clear();

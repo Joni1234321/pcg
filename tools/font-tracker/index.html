@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>font tracker</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header>
+    <h1>font tracker</h1>
+    <p class="sub">
+        Bake letter-spacing into a <code>.ttf</code> by shifting every glyph's
+        <code>hmtx</code> advance width. SDL_ttf has no tracking API, so the font file
+        carries the spacing instead &mdash; FreeType reads the new advances and
+        <code>TTF_Text</code>, <code>TTF_GetTextSize</code> and wrapping all keep working unchanged.
+    </p>
+</header>
+
+<main>
+
+    <section class="panel">
+        <h2>1 &middot; Font</h2>
+        <div class="drop" id="drop">
+            Drop a <strong>.ttf</strong> here, or
+            <label style="display:inline-block;width:auto;margin-left:4px">
+                <input type="file" id="file" accept=".ttf,.otf,font/ttf,font/otf" style="width:auto" />
+            </label>
+        </div>
+        <p class="hint" style="margin-top:10px">
+            For this repo that's <code>assets/Titillium_Web/font.ttf</code>.
+        </p>
+        <div class="facts hidden" id="facts">
+            <div><span class="k">Family</span><span class="v" id="f-family">&mdash;</span></div>
+            <div><span class="k">Style</span><span class="v" id="f-style">&mdash;</span></div>
+            <div><span class="k">Units / em</span><span class="v" id="f-upm">&mdash;</span></div>
+            <div><span class="k">Glyphs</span><span class="v" id="f-glyphs">&mdash;</span></div>
+            <div><span class="k">Outlines</span><span class="v" id="f-outlines">&mdash;</span></div>
+        </div>
+        <div class="warn err hidden" id="load-error"></div>
+        <div class="warn hidden" id="cff-warn">
+            This is a CFF / PostScript-flavoured font (<code>.otf</code>). opentype.js re-serialises
+            these less reliably than TrueType outlines &mdash; check the exported file before shipping,
+            or use the fontTools snippet at the bottom of this page instead.
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>2 &middot; Tracking</h2>
+        <p class="hint">
+            Measured in <strong>1/1000 em</strong>, the standard typographic unit &mdash; size-independent,
+            so one value behaves the same at every point size. Negative tightens.
+            Type any value in the box &mdash; it isn't limited to the slider's range.
+        </p>
+        <div class="row">
+            <input type="range" id="track" min="-1000" max="1000" step="1" value="-20" style="flex:1;min-width:260px" />
+            <div class="readout">
+                <input type="number" id="track-num" step="1" value="-20" />
+                <small>&thinsp;/1000 em</small>
+            </div>
+        </div>
+        <div class="row">
+            <button class="secondary" data-preset="0">0 &middot; none</button>
+            <button class="secondary" data-preset="-10">-10 &middot; subtle</button>
+            <button class="secondary" data-preset="-20">-20 &middot; UI dense</button>
+            <button class="secondary" data-preset="-35">-35 &middot; tight</button>
+            <button class="secondary" data-preset="-60">-60 &middot; very tight</button>
+            <button class="secondary" data-preset="-120">-120 &middot; extreme</button>
+            <button class="secondary" data-preset="-250">-250 &middot; overlap</button>
+        </div>
+        <div class="facts" style="margin-top:14px">
+            <div><span class="k">Advance delta</span><span class="v" id="f-delta">&mdash;</span></div>
+            <div><span class="k">At 16&nbsp;px</span><span class="v" id="f-px16">&mdash;</span></div>
+            <div><span class="k">Narrowest glyph</span><span class="v" id="f-narrow">&mdash;</span></div>
+        </div>
+        <div class="warn hidden" id="clamp-warn"></div>
+    </section>
+
+    <section class="panel">
+        <h2>3 &middot; Preview</h2>
+        <div class="grid">
+            <label>Sample text
+                <textarea id="sample" rows="3">Ranked Flex  6/7/7  188 CS (4.7)
+Movement 12  Attack 34  Vision 27
+HEXAGON abcdefghijklm 0123456789</textarea>
+            </label>
+            <div style="display:grid;gap:12px;align-content:start">
+                <label>Preview size <span id="size-val" style="color:var(--fg)">16 px</span>
+                    <input type="range" id="size" min="8" max="72" step="1" value="16" />
+                </label>
+                <label>Field width guide <span id="fieldw-val" style="color:var(--fg)">off</span>
+                    <input type="range" id="fieldw" min="0" max="900" step="10" value="0" />
+                </label>
+            </div>
+        </div>
+
+        <div class="preview-block">
+            <div class="preview-label"><span>Original</span><span class="w" id="w-orig">&mdash;</span></div>
+            <div class="sample" id="prev-orig">&nbsp;</div>
+        </div>
+        <div class="preview-block">
+            <div class="preview-label">
+                <span>Tracked</span>
+                <span class="w"><span id="w-new">&mdash;</span> &nbsp; <span class="delta" id="w-delta"></span></span>
+            </div>
+            <div class="sample" id="prev-new">&nbsp;</div>
+        </div>
+        <p class="hint" id="fit-note" style="margin-top:12px">&nbsp;</p>
+    </section>
+
+    <section class="panel">
+        <h2>4 &middot; Export</h2>
+        <div class="row">
+            <button id="download" disabled>Download patched font</button>
+            <span class="hint" style="margin:0" id="out-name">&mdash;</span>
+        </div>
+        <p class="hint" style="margin-top:12px">
+            Drop it next to the original and point
+            <code>FontCollection::SetFontFile</code> at it &mdash; no code changes beyond the path.
+        </p>
+    </section>
+
+</main>
+
+<footer>
+    <h3>Lossless alternative</h3>
+    <p>
+        opentype.js rebuilds the font from its parsed model, so tables it doesn't round-trip
+        (<code>GPOS</code>/<code>GSUB</code>, hinting) can be dropped. Use this page to find the
+        value you like by eye, then produce the shipping asset with fontTools, which patches
+        <code>hmtx</code> in place and leaves every other table byte-identical:
+    </p>
+    <pre>pip install fonttools
+
+python -c "
+from fontTools.ttLib import TTFont
+f = TTFont('font.ttf')
+delta = round(-20 / 1000 * f['head'].unitsPerEm)   # &lt;- the value from this page
+hmtx = f['hmtx']
+for n in f.getGlyphOrder():
+    aw, lsb = hmtx[n]
+    if aw: hmtx[n] = (max(0, aw + delta), lsb)
+f['hhea'].advanceWidthMax = max(hmtx[n][0] for n in f.getGlyphOrder())
+f.save('font-tight.ttf')
+"</pre>
+    <p>
+        Zero-advance glyphs (combining marks) are skipped in both paths &mdash; widening them
+        would detach accents from their base letters.
+    </p>
+</footer>
+
+<script src="node_modules/opentype.js/dist/opentype.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
