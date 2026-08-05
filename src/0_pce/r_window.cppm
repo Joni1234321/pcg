@@ -41,7 +41,7 @@ struct Window {
         window_state.surface_text_engine = TTF_CreateSurfaceTextEngine();
         window_state.screen_size = size;
 
-        Singleton::Get<ui::FontCollection>().SetFontFile(Asset(PATH_FONT_NORMAL), Asset(PATH_FONT_COSETTE_TITRE_REGULAR), Asset(PATH_FONT_COURIER_BOLD));
+        Singleton::Get<ui::FontCollection>().SetFontFile(Asset(PATH_FONT_NORMAL), Asset(PATH_FONT_COURIER_BOLD), Asset(PATH_FONT_COSETTE_TITRE_REGULAR));
     }
     ~Window() {
         Singleton::Get<ui::FontCollection>().Clear();

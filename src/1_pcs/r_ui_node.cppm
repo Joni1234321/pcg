@@ -243,7 +243,7 @@ void RecalculateTreeLayout(NodeTree& tree, Handle<SubtreeRoot> subtree_root) {
             continue;
         }
 
-        const Font& font = Singleton::Get<FontCollection>().GetFontNormal(node_properties.font_size);
+        const Font& font = Singleton::Get<FontCollection>().GetFontNormalCourier(node_properties.font_size);
         if (!ttf_text) {
             ttf_text.Reset(TTF_CreateText(Singleton::Get<WindowState>().text_engine, font, node_properties.text.c_str(), node_properties.text.size()));
         } else {

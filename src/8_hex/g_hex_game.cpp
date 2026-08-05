@@ -339,7 +339,7 @@ struct HexSystem {
 
                 const f32 pt = camera.scale * 0.3F;
                 if (static_cast<FontSize>(pt) < FONT_MIN_SIZE) { break; }
-                const Font& font_movement = font_collection.GetFontBold(static_cast<FontSizes>(pt));
+                const Font& font_movement = font_collection.GetFontBoldCompact(static_cast<FontSizes>(pt));
                 TTF_SetFontWrapAlignment(font_movement, TTF_HORIZONTAL_ALIGN_CENTER);
                 for (AxialAndCost cost_and_axial : axial_path) {
                     const float2 world = HexAxialToWorld(cost_and_axial.axial);
@@ -448,7 +448,7 @@ struct HexSystem {
 
                 const f32 pt = camera.scale * 0.1F;
                 if (static_cast<FontSize>(pt) < FONT_MIN_SIZE) { break; }
-                const Font& font_attack = font_collection.GetFontBold(static_cast<FontSizes>(pt));
+                const Font& font_attack = font_collection.GetFontBoldCompact(static_cast<FontSizes>(pt));
                 TTF_SetFontWrapAlignment(font_attack, TTF_HORIZONTAL_ALIGN_CENTER);
                 const Label& label = hex_state.label_pool.Get();
                 (void)TTF_SetTextWrapWidth(label, static_cast<i32>(camera.scale));

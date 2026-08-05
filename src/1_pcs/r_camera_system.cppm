@@ -26,7 +26,7 @@ struct CameraState {
 
 struct CameraSystem {
     static constexpr f32 PAN_SPEED = 8.0F;
-    static constexpr f32 ZOOM_FACTOR = 1.02F;
+    static constexpr f32 ZOOM_FACTOR = 1.5F;
     static constexpr f32 ZOOM_MIN = 5.0F;
     static constexpr f32 ZOOM_MAX = 200.0F;
     static constexpr f32 ZOOM_LERP = 0.15F;

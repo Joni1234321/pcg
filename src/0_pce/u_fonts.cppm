@@ -33,55 +33,38 @@ public:
     [[nodiscard]] FontSize GetSize() const { return static_cast<FontSize>(TTF_GetFontSize(font.Get())); }
 };
 class FontCollection {
-    AbsolutePath font_path_normal { };
-    AbsolutePath font_path_bold { };
+    AbsolutePath font_path_normal_courier { };
     AbsolutePath font_path_bold_courier { };
-    mutable FlatMap<FontSizes, Font> fonts_normal { 16U };
-    mutable FlatMap<FontSizes, Font> fonts_bold { 16U };
-    mutable FlatMap<FontSizes, Font> fonts_bold_courier { 16U };
+    AbsolutePath font_path_bold_compact { };
+    mutable FlatMap<FontSizes, Font> fonts_normal_courier { 256U };
+    mutable FlatMap<FontSizes, Font> fonts_bold_courier {  256U };
+    mutable FlatMap<FontSizes, Font> fonts_bold_compact {  256U };
+
+    [[nodiscard]] static const Font& GetFont(FlatMap<FontSizes, Font>& fonts, const AbsolutePath& font_path, FontSizes font_size) {
+        assert(static_cast<FontSize>(font_size) >= FONT_MIN_SIZE);
+        font_size = math::Max(font_size, static_cast<FontSizes>(FONT_MIN_SIZE));
+        if (!fonts.HasKey(font_size)) {
+            fonts.EmplaceBack(font_size, font_path, static_cast<FontSize>(font_size));
+            if (fonts[font_size].FailedLoading()) { SDL_Log("ERROR Failed Font not loaded, size %u (%s)", static_cast<u32>(font_size), SDL_GetError()); }
+        }
+        return fonts[font_size];
+    }
 
 public:
     explicit FontCollection() { }
-    void SetFontFile(const AbsolutePath& normal, const AbsolutePath& bold, const AbsolutePath& bold_courier) {
-        font_path_normal = normal;
-        font_path_bold = bold;
+    void SetFontFile(const AbsolutePath& normal_courier, const AbsolutePath& bold_courier, const AbsolutePath& bold_compact) {
+        font_path_normal_courier = normal_courier;
         font_path_bold_courier = bold_courier;
+        font_path_bold_compact = bold_compact;
         Clear();
     }
-    [[nodiscard]] const Font& GetFontNormal(FontSizes size) const {
-        assert(static_cast<FontSize>(size) >= FONT_MIN_SIZE);
-        size = math::Max(size, static_cast<FontSizes>(FONT_MIN_SIZE));
-        if (!fonts_normal.HasKey(size)) {
-            fonts_normal.EmplaceBack(size, font_path_normal, static_cast<FontSize>(size));
-            if (fonts_normal[size].FailedLoading()) {
-                SDL_Log("ERROR Failed Font not loaded (%s)", SDL_GetError());
-                fonts_normal.Erase(size);
-            }
-        }
-        return fonts_normal[size];
-    }
-    [[nodiscard]] const Font& GetFontBold(FontSizes size) const {
-        assert(static_cast<FontSize>(size) >= FONT_MIN_SIZE);
-        size = math::Max(size, static_cast<FontSizes>(FONT_MIN_SIZE));
-        if (!fonts_bold.HasKey(size)) {
-            fonts_bold.EmplaceBack(size, font_path_bold, static_cast<FontSize>(size));
-            assert(!fonts_bold[size].FailedLoading()); // Font failed to load — GetFontBold will return invalid font
-        }
-        return fonts_bold[size];
-    }
-    [[nodiscard]] const Font& GetFontBoldCourier(FontSizes size) const {
-        assert(static_cast<FontSize>(size) >= FONT_MIN_SIZE);
-        size = math::Max(size, static_cast<FontSizes>(FONT_MIN_SIZE));
-        if (!fonts_bold_courier.HasKey(size)) {
-            fonts_bold_courier.EmplaceBack(size, font_path_bold_courier, static_cast<FontSize>(size));
-            assert(!fonts_bold_courier[size].FailedLoading()); // Font failed to load — GetFontBoldCourier will return invalid font
-        }
-        return fonts_bold_courier[size];
-    }
+    [[nodiscard]] const Font& GetFontNormalCourier(const FontSizes size) const { return GetFont(fonts_normal_courier, font_path_normal_courier, size); }
+    [[nodiscard]] const Font& GetFontBoldCourier(const FontSizes size) const { return GetFont(fonts_bold_courier, font_path_bold_courier, size); }
+    [[nodiscard]] const Font& GetFontBoldCompact(const FontSizes size) const { return GetFont(fonts_bold_compact, font_path_bold_compact, size); }
     void Clear() {
-        fonts_normal.Clear();
-        fonts_bold.Clear();
+        fonts_normal_courier.Clear();
         fonts_bold_courier.Clear();
+        fonts_bold_compact.Clear();
     }
     ~FontCollection() { Clear(); }
 };
