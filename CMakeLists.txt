@@ -30,11 +30,18 @@ else ()
     add_link_options(-stdlib=libc++)
 endif ()
 
-# ccache
-find_program(CCACHE_PROGRAM ccache)
-if (CCACHE_PROGRAM)
-    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
-    set(CMAKE_C_COMPILER_LAUNCHER   ${CCACHE_PROGRAM})
+# ccache — off by default: it does not hash C++20 module BMIs. The -fmodule-file=
+# flags live in the modmap response file, so changing a module *interface* leaves
+# a consuming .cpp's hash untouched and ccache replays a stale object. Result is a
+# green build linking code compiled against the old interface. Do not turn this on
+# while the project is module-based.
+option(SET_CCACHE "Enable ccache (unsafe with C++20 modules)" FALSE)
+if (SET_CCACHE)
+    find_program(CCACHE_PROGRAM ccache)
+    if (CCACHE_PROGRAM)
+        set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+        set(CMAKE_C_COMPILER_LAUNCHER   ${CCACHE_PROGRAM})
+    endif ()
 endif ()
 
 # libs — downloaded once into 3rdparty/, reused across all build dirs
