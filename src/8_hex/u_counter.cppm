@@ -56,8 +56,8 @@ struct ColorBox {
 [[nodiscard]] constexpr ColorBox MoveTypeToColorBox(const MoveType move_type) {
     switch (move_type) {
         case MoveType::MOVE_LEG: return ColorBox { .color_fill = colors::COLOR_SOFT_BLUE, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_BLACK };
-        case MoveType::MOVE_TAC: return ColorBox { .color_fill = colors::COLOR_RED, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_WHITE };
-        case MoveType::MOVE_TRUCK: return ColorBox { .color_fill = colors::COLOR_SEA_GREEN, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_WHITE };
+        case MoveType::MOVE_TAC: return ColorBox { .color_fill = colors::COLOR_CRIMSON, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_WHITE_SMOKE_2 };
+        case MoveType::MOVE_TRUCK: return ColorBox { .color_fill = colors::COLOR_SEA_GREEN, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_WHITE_SMOKE_2 };
     }
     std::unreachable();
 }
@@ -65,8 +65,8 @@ struct ColorBox {
 [[nodiscard]] constexpr ColorBox RangedTypeToColorBox(const RangedType ranged_type) {
     switch (ranged_type) {
         case RangedType::RANGED_NONE: return ColorBox { .color_fill = colors::COLOR_CLEAR, .color_stroke = colors::COLOR_CLEAR, .color_text = colors::COLOR_CLEAR };
-        case RangedType::RANGED_DEFENSE: return ColorBox { .color_fill = colors::COLOR_BLACK, .color_stroke = colors::COLOR_ASH_GRAY, .color_text = colors::COLOR_WHITE };
-        case RangedType::RANGED_ATTACK: return ColorBox { .color_fill = colors::COLOR_RED, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_WHITE };
+        case RangedType::RANGED_DEFENSE: return ColorBox { .color_fill = colors::COLOR_BLACK, .color_stroke = colors::COLOR_ASH_GRAY, .color_text = colors::COLOR_WHITE_SMOKE_2 };
+        case RangedType::RANGED_ATTACK: return ColorBox { .color_fill = colors::COLOR_CRIMSON, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_WHITE_SMOKE_2 };
     }
     std::unreachable();
 }
@@ -123,12 +123,14 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
 
     const ui::FontSize pt_32 = static_cast<ui::FontSize>(counter_size.y * 0.32F);
     const ui::FontSize pt_22 = static_cast<ui::FontSize>(counter_size.y * 0.22F);
+    const ui::FontSize pt_14 = static_cast<ui::FontSize>(counter_size.y * 0.10F);
     const ui::FontSize pt_16 = static_cast<ui::FontSize>(counter_size.y * 0.16F);
     const ui::FontSize pt_12 = static_cast<ui::FontSize>(counter_size.y * 0.12F);
     const ui::FontSize pt_10 = static_cast<ui::FontSize>(counter_size.y * 0.10F);
     const ui::FontSize pt_08 = static_cast<ui::FontSize>(counter_size.y * 0.08F);
     const Optional<std::reference_wrapper<const ui::Font>> font_32_opt = pt_32 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_32));
     const Optional<std::reference_wrapper<const ui::Font>> font_22_opt = pt_22 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_22));
+    const Optional<std::reference_wrapper<const ui::Font>> font_14_opt = pt_14 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCourier(static_cast<ui::FontSizes>(pt_14));
     const Optional<std::reference_wrapper<const ui::Font>> font_16_opt = pt_16 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_16));
     const Optional<std::reference_wrapper<const ui::Font>> font_12_opt = pt_12 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCourier(static_cast<ui::FontSizes>(pt_12));
     const Optional<std::reference_wrapper<const ui::Font>> font_10_opt = pt_10 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_10));
@@ -188,16 +190,11 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         };
 
         // div
-        if (font_10_opt.has_value()) {
+        if (font_14_opt.has_value()) {
             {
                 AABB area_div = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.09F }, counter_size * float2 { 1.0F, 0.25F });
                 ColorBox color_box { .color_fill = counter.stack[0].color_icon, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_BLACK };
-                draw_color_box(font_10_opt.value(), counter.label_name_div, color_box, area_div);
-            }
-            {
-                AABB area_div = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.02F }, counter_size * float2 { 0.97F, 0.12F });
-                ColorBox color_box { .color_fill = colors::COLOR_CLEAR, .color_stroke = colors::COLOR_CLEAR, .color_text = colors::COLOR_BLACK };
-                draw_color_box(font_10_opt.value(), counter.label_name_sub, color_box, area_div);
+                draw_color_box(font_14_opt.value(), counter.label_name_div, color_box, area_div);
             }
         }
         else {
@@ -205,6 +202,14 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             Color color = counter.stack[0].color_icon;
             (void)SDL_SetRenderDrawColor(window_state.renderer, color.r, color.g, color.b, color.a);
             (void)SDL_RenderFillRect(window_state.renderer, area_div);
+        }
+
+        if (font_10_opt.has_value()) {
+            {
+                AABB area_div = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.02F }, counter_size * float2 { 0.97F, 0.12F });
+                ColorBox color_box { .color_fill = colors::COLOR_CLEAR, .color_stroke = colors::COLOR_CLEAR, .color_text = colors::COLOR_BLACK };
+                draw_color_box(font_10_opt.value(), counter.label_name_sub, color_box, area_div);
+            }
         }
 
         // icon
@@ -252,16 +257,25 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
 
         if (font_22_opt.has_value()) {
             {
-                const AABB area_stroke = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.725F }, counter_size * float2 { 0.25F });
+                const AABB area_stroke = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.90F }, counter_size * float2 { 1.00F, 0.05F });
                 ColorBox color_box = MoveTypeToColorBox(MoveTypeUnitIcon(counter.icon));
+                color_box.color_text = colors::COLOR_CLEAR;
                 draw_color_box(font_22_opt.value(), counter.label_move_allowance, color_box, area_stroke);
             }
+            {
+                const AABB area_stroke = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.725F }, counter_size * float2 { 0.25F, 0.25F });
+                ColorBox color_box = MoveTypeToColorBox(MoveTypeUnitIcon(counter.icon));
+                color_box.color_fill = colors::COLOR_CLEAR;
+                color_box.color_stroke = colors::COLOR_CLEAR;
+                draw_color_box(font_22_opt.value(), counter.label_move_allowance, color_box, area_stroke);
+            }
+
 
             {
                 const AABB area_stroke = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.725F }, counter_size * float2 { 0.25F });
                 ColorBox color_box = MoveTypeToColorBox(MoveTypeUnitIcon(counter.icon));
-                // color_box.color_fill = colors::COLOR_CLEAR;
-                // color_box.color_fill = colors::COLOR_CLEAR;
+                color_box.color_fill = colors::COLOR_CLEAR;
+                color_box.color_stroke = colors::COLOR_CLEAR;
                 draw_color_box(font_22_opt.value(), counter.label_dmg, color_box, area_stroke);
             }
 

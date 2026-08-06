@@ -106,7 +106,6 @@ void UnitToCounterAppend(HexState& hex_state) {
         CounterStack& counter = hex_state.counters.Get();
         counter.axial = axial_unit;
         u32 dmg = 0;
-        u32 dmg_ranged = 0;
         u32 steps = 0;
         u32 move = 0;
         counter.stack = { };
@@ -151,7 +150,7 @@ void UnitToCounterAppend(HexState& hex_state) {
         counter.label_echelon.SetText(std::format("{}", EchelonToString(unit_largest_echelon.echelon)));
         counter.label_icon_placeholder.SetText(UnitIconToString(unit_largest_echelon.icon));
         counter.label_dmg.SetText(std::format("{}", dmg));
-        counter.label_dmg_ranged.SetText(std::format("+{}", dmg_ranged));
+        counter.label_dmg_ranged.SetText(std::format("+{}", unit_largest_echelon.dmg_ranged));
         counter.label_move_allowance.SetText(std::format("{}", move));
         counter.label_steps.SetText(std::format("{}", steps));
 

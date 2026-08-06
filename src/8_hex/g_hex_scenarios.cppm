@@ -19,10 +19,10 @@ export namespace hex {
 UnitToe UnitGetToe(UnitIcon icon) {
     switch (icon) {
         case UnitIcon::ICON_INF: return UnitToe { .move = 4 * MOVE_POINT, .dmg = 3, .dmg_ranged = 0, .steps = 6 };
-        case UnitIcon::ICON_ART: return UnitToe { .move = 4 * MOVE_POINT, .dmg = 3, .dmg_ranged = 0, .steps = 255U };
-        case UnitIcon::ICON_HQ: return UnitToe { .move = 8 * MOVE_POINT, .dmg = 0, .dmg_ranged = 0, .steps = 255U };
+        case UnitIcon::ICON_ART: return UnitToe { .move = 4 * MOVE_POINT, .dmg = 3, .dmg_ranged = 0, .steps = static_cast<u8>(-1U) };
+        case UnitIcon::ICON_HQ: return UnitToe { .move = 8 * MOVE_POINT, .dmg = 0, .dmg_ranged = 0, .steps = static_cast<u8>(-1U) };
         case UnitIcon::ICON_TANK: return UnitToe { .move = 16 * MOVE_POINT, .dmg = 3, .dmg_ranged = 5, .steps = 4 };
-        case UnitIcon::ICON_ENGINEER: return UnitToe { .move = 4 * MOVE_POINT, .dmg = 3, .dmg_ranged = 0, .steps = 0 };
+        case UnitIcon::ICON_ENGINEER: return UnitToe { .move = 4 * MOVE_POINT, .dmg = 3, .dmg_ranged = 2, .steps = 0 };
         default: assert(false); std::unreachable();
     }
 }

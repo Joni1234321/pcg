@@ -58,6 +58,9 @@ constexpr Color COLOR_DEEP_SKY_BLUE { 0, 191U, 255U };
 constexpr Color COLOR_ROYAL_BLUE { 65U, 105U, 225U };
 constexpr Color COLOR_SEA_GREEN { 46U, 139U, 87U };
 
+constexpr Color COLOR_DARK_RED   { 139U, 0U, 0U };
+constexpr Color COLOR_CRIMSON    { 220U, 20U, 60U };
+
 constexpr Color COLOR_INDIGO { 75U, 0, 130U };
 constexpr Color COLOR_VIOLET { 238U, 130U, 238U };
 constexpr Color COLOR_LAVENDER { 230U, 230U, 250U };
@@ -78,6 +81,7 @@ constexpr Color COLOR_DEEP_GOLD { 218, 165, 32 };
 constexpr Color COLOR_SILVER { 192, 192, 192 };
 constexpr Color COLOR_NAVY_BLUE { 0, 0, 128 };
 constexpr Color COLOR_WHITE_SMOKE { 245, 245, 245 };
+constexpr Color COLOR_WHITE_SMOKE_2 { 220, 220, 220 };
 constexpr Color COLOR_MIDNIGHT_NAVY { 25, 25, 112 };
 constexpr Color COLOR_COSMIC_PURPLE { 50, 0, 90 };
 constexpr Color COLOR_DARK_SLATE { 47, 79, 79 };
