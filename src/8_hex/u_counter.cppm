@@ -257,7 +257,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
 
         if (font_22_opt.has_value()) {
             {
-                const AABB area_stroke = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.90F }, counter_size * float2 { 1.00F, 0.05F });
+                const AABB area_stroke = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.90F }, counter_size * float2 { 1.00F, 0.15F });
                 ColorBox color_box = MoveTypeToColorBox(MoveTypeUnitIcon(counter.icon));
                 color_box.color_text = colors::COLOR_CLEAR;
                 draw_color_box(font_22_opt.value(), counter.label_move_allowance, color_box, area_stroke);
@@ -265,6 +265,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             {
                 const AABB area_stroke = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.725F }, counter_size * float2 { 0.25F, 0.25F });
                 ColorBox color_box = MoveTypeToColorBox(MoveTypeUnitIcon(counter.icon));
+                color_box.color_text = colors::COLOR_RED;
                 color_box.color_fill = colors::COLOR_CLEAR;
                 color_box.color_stroke = colors::COLOR_CLEAR;
                 draw_color_box(font_22_opt.value(), counter.label_move_allowance, color_box, area_stroke);
@@ -279,11 +280,20 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
                 draw_color_box(font_22_opt.value(), counter.label_dmg, color_box, area_stroke);
             }
 
+            // {
+            //     const AABB area_stroke = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.53F }, counter_size * float2 { 0.35F, 0.15F });
+            //     ColorBox color_box = RangedTypeToColorBox(RangedTypeUnitIcon(counter.icon));
+            //     color_box.color_text = colors::COLOR_CLEAR;
+            //     draw_color_box(font_22_opt.value(), counter.label_dmg_ranged, color_box, area_stroke);
+            // }
             {
                 const AABB area_stroke = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.43F }, counter_size * float2 { 0.25F });
                 ColorBox color_box = RangedTypeToColorBox(RangedTypeUnitIcon(counter.icon));
+                color_box.color_fill = colors::COLOR_CLEAR;
+                color_box.color_stroke = colors::COLOR_CLEAR;
                 draw_color_box(font_22_opt.value(), counter.label_dmg_ranged, color_box, area_stroke);
             }
+
         }
     }
 }
