@@ -199,8 +199,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
                 ColorBox color_box { .color_fill = colors::COLOR_CLEAR, .color_stroke = colors::COLOR_CLEAR, .color_text = colors::COLOR_BLACK };
                 draw_color_box(font_10_opt.value(), counter.label_name_sub, color_box, area_div);
             }
-        }
-        else {
+        } else {
             AABB area_div = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.09F }, counter_size * float2 { 1.0F, 0.5F });
             Color color = counter.stack[0].color_icon;
             (void)SDL_SetRenderDrawColor(window_state.renderer, color.r, color.g, color.b, color.a);

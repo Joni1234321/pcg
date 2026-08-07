@@ -377,11 +377,13 @@ struct HexSystem {
                 //
                 const u32 dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
                 // const f32 ratio = static_cast<f32>(dmg) / static_cast<f32>(def);
-                enum class PostBattleOutcome { DEFENDER_COUNTER_ATTACKED, DEFENDER_SCOUTED, DEFENDER_HELD, DEFENDER_RETREAT, DEFENDER_ROUT, DEFENDER_SURRENDER };
+                // enum class PostBattleOutcome : u8 { DEFENDER_COUNTER_ATTACKED, DEFENDER_SCOUTED, DEFENDER_HELD, DEFENDER_RETREAT, DEFENDER_ROUT, DEFENDER_SURRENDER };
+                enum class DefenderRetreat : u8 { DEFENDER_HOLDS, DEFENDER_RETREAT, DEFENDER_ROUT};
                 struct BattleOutcome {
-                    PostBattleOutcome post_battle_outcome;
-                    u32 dmg_attacker;
-                    u32 dmg_defender;
+                    // PostBattleOutcome post_battle_outcome;
+                    DefenderRetreat defender_retreat;
+                    u8 attacker_step_loss;
+                    u8 defender_step_loss;
                 } battle_outcome;
                 // if (ratio >= 2.0F) {
                 //     battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_RETREAT, .dmg_attacker = 1U, .dmg_defender = 3U };
@@ -393,44 +395,58 @@ struct HexSystem {
                 //     battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_SCOUTED, .dmg_attacker = 2U, .dmg_defender = 1U };
                 // }
 
-                const b8 attacker_won = battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_RETREAT || battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_ROUT || battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_SURRENDER;
-                u8 result = Rand2D6();
+                // const b8 attacker_won = battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_RETREAT || battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_ROUT || battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_SURRENDER;
 
-                u8 step_loss_attacker = result;
-                u8 step_loss_defender = 14 - result;
-                units_attacker[0].steps = math::SaturatingSub(units_attacker[0].steps, step_loss_attacker);
-                units_defender[0].steps = math::SaturatingSub(units_defender[0].steps, step_loss_defender);
+                i8 diff = units_attacker[0].dmg - units_defender[0].dmg;
+                u8 roll = Rand2D6();
+                u8 roll_mod = math::SaturatingAdd(roll, diff);
+
+                // 50 / 50 whether they retreat. grouped in 2 after
+                if (roll <= 4) {
+                    battle_outcome.defender_retreat = DefenderRetreat::DEFENDER_HOLDS;
+                    battle_outcome.attacker_step_loss = 2;
+                } else if (roll <= 6) {
+                    battle_outcome.defender_retreat = DefenderRetreat::DEFENDER_HOLDS;
+                    battle_outcome.attacker_step_loss = 1;
+                } else if (roll <= 8) {
+                    battle_outcome.defender_retreat = DefenderRetreat::DEFENDER_RETREAT;
+                    battle_outcome.attacker_step_loss = 1;
+                } else if (roll <= 10) {
+                    battle_outcome.defender_retreat = DefenderRetreat::DEFENDER_RETREAT;
+                    battle_outcome.attacker_step_loss = 1;
+                } else if (roll <= 12) {
+                    battle_outcome.defender_retreat = DefenderRetreat::DEFENDER_ROUT;
+                    battle_outcome.defender_step_loss = 1;
+                } else {
+                    battle_outcome.defender_retreat = DefenderRetreat::DEFENDER_ROUT;
+                    battle_outcome.defender_step_loss = 2;
+                }
+
+                units_attacker[0].steps = math::SaturatingSub(units_attacker[0].steps, battle_outcome.attacker_step_loss);
+                units_defender[0].steps = math::SaturatingSub(units_defender[0].steps, battle_outcome.defender_step_loss);
                 units_attacker[0].move = math::SaturatingSub(units_attacker[0].move, MOVE_COST_ATTACK);
 
-                switch (battle_outcome.post_battle_outcome) {
-                    case PostBattleOutcome::DEFENDER_COUNTER_ATTACKED:
-                        for (Unit& attacker : units_attacker) {
-                            const int2 axial_retreat = attacker.tag == CountryTag::TAG_GER ? int2 { -2, 0 } : int2 { 2, 0 };
-                            attacker.axial += axial_retreat;
-                        }
+                switch (battle_outcome.defender_retreat) {
+                    case DefenderRetreat::DEFENDER_HOLDS:
                         break;
-                    case PostBattleOutcome::DEFENDER_SCOUTED:
-                    case PostBattleOutcome::DEFENDER_HELD: break;
-                    case PostBattleOutcome::DEFENDER_RETREAT:
-                        for (Unit& defender : units_defender) {
-                            const int2 axial_retreat = defender.tag == CountryTag::TAG_GER ? int2 { -2, 0 } : int2 { 2, 0 };
-                            defender.axial += axial_retreat;
-                        }
-                        break;
-                    case PostBattleOutcome::DEFENDER_ROUT:
+                    case DefenderRetreat::DEFENDER_RETREAT:
                         for (Unit& defender : units_defender) {
                             const int2 axial_retreat = defender.tag == CountryTag::TAG_GER ? int2 { -3, 0 } : int2 { 3, 0 };
                             defender.axial += axial_retreat;
                         }
                         break;
-                    case PostBattleOutcome::DEFENDER_SURRENDER:
-                        // unit breaks
-                        break;
+                    case DefenderRetreat::DEFENDER_ROUT: {
+                        for (Unit& defender : units_defender) {
+                            const int2 axial_retreat = defender.tag == CountryTag::TAG_GER ? int2 { -3, 0 } : int2 { 3, 0 };
+                            defender.axial += axial_retreat;
+                        }
+                    }
+
                 }
 
-                if (attacker_won) {
-                    Hex& hex_battle = hex_state.hex_map[axial_battle];
-                    if (hex_battle.owner.tag != hex_state.player_tag) { hex_battle.owner = HexOwner { .tag = hex_state.player_tag, .contested = true }; } // conquer
+                if (battle_outcome.defender_retreat != DefenderRetreat::DEFENDER_HOLDS) {
+                    if (hex_state.hex_map[axial_battle].owner.tag != hex_state.player_tag) { hex_state.hex_map[axial_battle].owner = HexOwner { .tag = hex_state.player_tag, .contested = true }; } // conquer
+                    units_attacker[0].axial = axial_battle;
                 }
 
                 break;
