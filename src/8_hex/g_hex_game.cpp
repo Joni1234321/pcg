@@ -370,32 +370,12 @@ struct HexSystem {
                 auto units_defender = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()] | hex_state.units.handle_to_view();
                 int2 axial_battle = units_defender[0].axial;
 
-                // so the idea is that we have battle phases.
-                // roll for survey
-                // roll for damage (a1, dr, a1/dr, ex, d1/d1, d1, a1/d2, dh)
-                // roll for inf engages. with art. then combat. then support art.
-                //
-                const u32 dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
-                // const f32 ratio = static_cast<f32>(dmg) / static_cast<f32>(def);
-                // enum class PostBattleOutcome : u8 { DEFENDER_COUNTER_ATTACKED, DEFENDER_SCOUTED, DEFENDER_HELD, DEFENDER_RETREAT, DEFENDER_ROUT, DEFENDER_SURRENDER };
                 enum class DefenderRetreat : u8 { DEFENDER_HOLDS, DEFENDER_RETREAT, DEFENDER_ROUT};
                 struct BattleOutcome {
-                    // PostBattleOutcome post_battle_outcome;
                     DefenderRetreat defender_retreat;
                     u8 attacker_step_loss;
                     u8 defender_step_loss;
                 } battle_outcome;
-                // if (ratio >= 2.0F) {
-                //     battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_RETREAT, .dmg_attacker = 1U, .dmg_defender = 3U };
-                // } else if (ratio >= 1.5F) {
-                //     battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_HELD, .dmg_attacker = 2U, .dmg_defender = 1U };
-                // } else if (ratio <= 0.3F) {
-                //     battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_COUNTER_ATTACKED, .dmg_attacker = 3U, .dmg_defender = 1U };
-                // } else {
-                //     battle_outcome = BattleOutcome { .post_battle_outcome = PostBattleOutcome::DEFENDER_SCOUTED, .dmg_attacker = 2U, .dmg_defender = 1U };
-                // }
-
-                // const b8 attacker_won = battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_RETREAT || battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_ROUT || battle_outcome.post_battle_outcome == PostBattleOutcome::DEFENDER_SURRENDER;
 
                 i8 diff = units_attacker[0].dmg - units_defender[0].dmg;
                 u8 roll = Rand2D6();
@@ -437,7 +417,7 @@ struct HexSystem {
                         break;
                     case DefenderRetreat::DEFENDER_ROUT: {
                         for (Unit& defender : units_defender) {
-                            const int2 axial_retreat = defender.tag == CountryTag::TAG_GER ? int2 { -3, 0 } : int2 { 3, 0 };
+                            const int2 axial_retreat = defender.tag == CountryTag::TAG_GER ? int2 { -6, 0 } : int2 { 6, 0 };
                             defender.axial += axial_retreat;
                         }
                     }
