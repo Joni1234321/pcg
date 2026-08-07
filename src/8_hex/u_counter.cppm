@@ -280,12 +280,12 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
                 draw_color_box(font_22_opt.value(), counter.label_dmg, color_box, area_stroke);
             }
 
-            // {
-            //     const AABB area_stroke = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.53F }, counter_size * float2 { 0.35F, 0.15F });
-            //     ColorBox color_box = RangedTypeToColorBox(RangedTypeUnitIcon(counter.icon));
-            //     color_box.color_text = colors::COLOR_CLEAR;
-            //     draw_color_box(font_22_opt.value(), counter.label_dmg_ranged, color_box, area_stroke);
-            // }
+            {
+                const AABB area_stroke = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.53F }, counter_size * float2 { 0.35F, 0.15F });
+                ColorBox color_box = RangedTypeToColorBox(RangedTypeUnitIcon(counter.icon));
+                color_box.color_text = colors::COLOR_CLEAR;
+                draw_color_box(font_22_opt.value(), counter.label_dmg_ranged, color_box, area_stroke);
+            }
             {
                 const AABB area_stroke = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.43F }, counter_size * float2 { 0.25F });
                 ColorBox color_box = RangedTypeToColorBox(RangedTypeUnitIcon(counter.icon));
