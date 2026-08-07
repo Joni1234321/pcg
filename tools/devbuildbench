@@ -10,7 +10,9 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="$ROOT/build/bench"
-PRESET=xd
+PRESET=xd-msys
+# the preset's environment only reaches cmake; the ninja call below needs clang on PATH too
+PATH="${MSYS_BIN:-/d/tools/msys64/clang64/bin}:$PATH" # posix form, a drive letter would split on the : separator
 JOBS=""
 TARGET=""
 TOP=15
@@ -19,6 +21,7 @@ EXTRA_FLAGS=""
 JSON_OUT=""
 DO_BUILD=1
 DO_CLEAN=1
+BUILD_FAILED=0
 RECONFIGURE=0
 TOUCH=()
 
@@ -27,7 +30,7 @@ usage() {
 	cat <<'EOF'
 
   -b DIR   build dir (default build/bench)
-  -p NAME  configure preset to mirror (default xd)
+  -p NAME  configure preset to mirror (default xd-msys)
   -j N     ninja parallelism
   -T NAME  ninja target (default: all)
   -t FILE  touch FILE before building; repeatable, implies no clean
@@ -92,15 +95,18 @@ if ((DO_BUILD)); then
 	SKIP=$([[ -f "$BUILD_DIR/.ninja_log" ]] && wc -l <"$BUILD_DIR/.ninja_log" || echo 0)
 	START=$(date +%s.%N)
 	# ccache would hand back cached objects and no trace files
-	CCACHE_DISABLE=1 ninja -C "$BUILD_DIR" ${JOBS:+-j "$JOBS"} ${TARGET:+"$TARGET"}
+	# -k 0: SDL's windres edges fail sporadically under load, don't lose the whole measurement over it
+	CCACHE_DISABLE=1 ninja -C "$BUILD_DIR" -k 0 ${JOBS:+-j "$JOBS"} ${TARGET:+"$TARGET"} || BUILD_FAILED=1
 	WALL=$(awk -v a="$START" -v b="$(date +%s.%N)" 'BEGIN{printf "%.2f", b-a}')
+	((BUILD_FAILED)) && echo "warning: some edges failed, report covers what did compile" >&2
 fi
 
 BUILD_DIR="$BUILD_DIR" WALL="$WALL" TOP="$TOP" JSON_OUT="$JSON_OUT" ROOT="$ROOT" SKIP="${SKIP:-0}" \
 	python3 - <<'PYEOF'
 # JSON traces are too structured for awk, so the report is generated here.
-import json, os
+import json, os, html as html_mod
 from collections import defaultdict
+from datetime import datetime
 from pathlib import Path
 
 build_dir = Path(os.environ["BUILD_DIR"])
@@ -109,6 +115,7 @@ wall = os.environ.get("WALL") or ""
 top = int(os.environ["TOP"])
 json_out = os.environ.get("JSON_OUT") or ""
 skip = int(os.environ.get("SKIP") or 0)
+stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
 
 TRACE_SUFFIXES = (".cpp.json", ".cppm.json", ".cxx.json", ".cc.json", ".c.json")
 
@@ -135,7 +142,8 @@ def parse_trace(path):
         events = json.loads(path.read_text(errors="replace")).get("traceEvents", [])
     except (json.JSONDecodeError, OSError):
         return None
-    tu = {"name": path.name.removesuffix(".json"), "total": 0.0, "frontend": 0.0, "backend": 0.0,
+    tu = {"name": path.name.removesuffix(".json"), "path": str(path.relative_to(build_dir)),
+          "total": 0.0, "frontend": 0.0, "backend": 0.0,
           "modules": defaultdict(float), "instantiations": defaultdict(float),
           "activity": defaultdict(float)}
     stack = []  # module loads nest, only the outermost is real cost
@@ -224,6 +232,161 @@ if tus:
 
 print("\ntip: open a trace in chrome://tracing or https://ui.perfetto.dev — "
       f"files are {build_dir.relative_to(root)}/CMakeFiles/pcg.dir/**/*.json")
+
+
+def bars(rows, lab_ch=24, digits=2):
+    """rows: [(label, [(seconds, css_role), ...], hover_note[, expandable_html])] — bar length is the segment sum."""
+    scale = max((sum(v for v, _ in segs) for _, segs, _, *_r in rows), default=0) or 1
+    out = [f'<div class=bars style="--lab:{lab_ch}ch">']
+    for label, segs, note, *rest in rows:
+        fill = "".join(f'<i style="width:{v / scale * 100:.3f}%;background:var(--{role})"></i>'
+                       for v, role in segs if v > 0)
+        body = (f'<span class=lab title="{esc(label)}">{esc(label)}</span>'
+                f'<span class=track>{fill}<b class=tip>{esc(note)}</b></span>'
+                f'<span class=val>{sum(v for v, _ in segs):.{digits}f}s</span>')
+        out.append(f'<details class=exp><summary class="row clickable">{body}</summary>'
+                   f'<div class=detail>{rest[0]}</div></details>'
+                   if rest and rest[0] else f'<div class=row>{body}</div>')
+    return "\n".join(out + ["</div>"])
+
+
+def esc(s):
+    return html_mod.escape(str(s))
+
+
+def section(title, sub, body):
+    return f"<section><h2>{esc(title)}</h2><p class=sub>{esc(sub)}</p>{body}</section>"
+
+
+def tile(value, label):
+    return f'<div class=tile><span class=big>{value}</span><span class=cap>{esc(label)}</span></div>'
+
+
+def why(t):
+    """the expanded panel: what this one TU actually spent its time on."""
+    out = []
+    for heading, data, digits, floor, empty in (
+            ("where the time went", t["activity"], 2, 0.01, ""),
+            ("module imports (BMI load)", t["modules"], 3, 0, "imports nothing"),
+            ("template instantiations", t["instantiations"], 2, 0.01, "nothing above 10ms")):
+        rows = [(k, [(d, "s1")], f"{k} — {d:.3f}s")
+                for k, d in sorted(data.items(), key=lambda kv: -kv[1])[:8] if d >= floor]
+        out.append(f"<h3>{esc(heading)}</h3>" +
+                   (bars(rows, lab_ch=44, digits=digits) if rows else f"<p class=none>{esc(empty)}</p>"))
+    out.append(f'<p class=none>trace: {esc(t["path"])}</p>')
+    return "".join(out)
+
+
+parts = []
+if tus:
+    ranked = sorted(tus, key=lambda t: -t["total"])[:top]
+    parts.append(section(
+        "Slowest translation units", "click a row to see where its time went",
+        '<div class=legend><span class=key><i style="background:var(--s1)"></i>frontend</span>'
+        '<span class=key><i style="background:var(--s2)"></i>backend</span>'
+        '<span class=key><i style="background:var(--s3)"></i>other</span></div>'
+        + bars([(t["name"],
+                 [(t["frontend"], "s1"), (t["backend"], "s2"),
+                  (max(0.0, t["total"] - t["frontend"] - t["backend"]), "s3")],
+                 f"frontend {t['frontend']:.2f}s · backend {t['backend']:.2f}s · total {t['total']:.2f}s",
+                 why(t))
+                for t in ranked])))
+if obj:
+    ranked = sorted(obj.items(), key=lambda kv: -kv[1])[:top]
+    parts.append(section("Slowest edges", "ninja wall time per output, includes module BMIs",
+                         bars([(o.split("/")[-1], [(s, "s1")], o) for o, s in ranked], lab_ch=30)))
+if tus:
+    act, _ = merge(tus, "activity")
+    parts.append(section("Time by activity", "summed over TUs, nested events overlap",
+                         bars([(k, [(d, "s1")], f"{d:.2f}s across all TUs")
+                               for k, d in sorted(act.items(), key=lambda kv: -kv[1])[:top]], lab_ch=30)))
+    mods, mod_tus = merge(tus, "modules")
+    if mods:
+        parts.append(section("Costliest module imports", "BMI load time summed over importing TUs",
+                             bars([(m, [(d, "s1")], f"{mod_tus[m]} TUs import this")
+                                   for m, d in sorted(mods.items(), key=lambda kv: -kv[1])[:top]], digits=3)))
+    inst, _ = merge(tus, "instantiations")
+    inst = {k: v for k, v in inst.items() if v >= 0.05}
+    if inst:
+        parts.append(section("Costliest template instantiations", "hover a row for the full symbol",
+                             bars([(k, [(d, "s1")], k) for k, d in
+                                   sorted(inst.items(), key=lambda kv: -kv[1])[:top]], lab_ch=60)))
+
+stats = (tile(f"{float(wall):.2f}s", "wall clock") if wall else "")
+stats += tile(f"{sum(obj.values()):.2f}s", f"compile edges ({len(obj)})")
+if tus:
+    stats += tile(f"{sum(t['frontend'] for t in tus):.2f}s", "clang frontend")
+    stats += tile(f"{sum(t['backend'] for t in tus):.2f}s", "clang backend")
+
+report = build_dir / "report.html"
+report.write_text(f"""<!doctype html>
+<html lang=en><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>build bench — {esc(build_dir.name)}</title>
+<style>
+:root {{
+  color-scheme: light dark;
+  --plane:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+  --line:#e1e0d9; --baseline:#c3c2b7; --s1:#2a78d6; --s2:#eb6834; --s3:#c3c2b7;
+}}
+@media (prefers-color-scheme: dark) {{ :root:where(:not([data-theme=light])) {{
+  --plane:#0d0d0d; --surface:#1a1a19; --ink:#fff; --ink2:#c3c2b7; --muted:#898781;
+  --line:#2c2c2a; --baseline:#383835; --s1:#3987e5; --s2:#d95926; --s3:#383835;
+}} }}
+* {{ box-sizing:border-box }}
+body {{ margin:0; padding:32px 24px 64px; background:var(--plane); color:var(--ink);
+  font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif }}
+main {{ max-width:1040px; margin:0 auto }}
+h1 {{ font-size:22px; margin:0 0 4px }}
+.meta {{ color:var(--muted); font-size:13px; margin:0 0 28px }}
+.tiles {{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:32px }}
+.tile {{ flex:1 1 160px; background:var(--surface); border:1px solid var(--line);
+  border-radius:10px; padding:14px 16px; display:flex; flex-direction:column; gap:2px }}
+.big {{ font-size:26px; font-weight:600; letter-spacing:-.02em }}
+.cap {{ font-size:12px; color:var(--muted) }}
+section {{ background:var(--surface); border:1px solid var(--line); border-radius:10px;
+  padding:18px 20px 22px; margin-bottom:20px }}
+h2 {{ font-size:15px; margin:0 0 2px }}
+.sub {{ font-size:12px; color:var(--muted); margin:0 0 16px }}
+.legend {{ display:flex; gap:16px; font-size:12px; color:var(--ink2); margin-bottom:12px }}
+.key {{ display:flex; align-items:center; gap:6px }}
+.key i {{ width:10px; height:10px; border-radius:2px }}
+.row {{ display:grid; grid-template-columns:minmax(0,var(--lab)) 1fr 7ch;
+  gap:14px; align-items:center; padding:3px 0; position:relative }}
+.lab {{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  color:var(--ink2); font-size:13px }}
+.track {{ position:relative; display:flex; gap:2px; height:13px;
+  border-bottom:1px solid transparent }}
+.track i {{ display:block; min-width:1px }}
+.track i:last-child {{ border-radius:0 4px 4px 0 }}
+.val {{ text-align:right; font-size:13px; color:var(--ink2);
+  font-variant-numeric:tabular-nums }}
+.tip {{ position:absolute; left:0; bottom:20px; z-index:2; max-width:min(90vw,720px);
+  background:var(--ink); color:var(--surface); font-size:12px; font-weight:400;
+  padding:6px 9px; border-radius:6px; opacity:0; pointer-events:none;
+  transition:opacity .12s; overflow-wrap:anywhere }}
+.row:hover .tip {{ opacity:1 }}
+.row:hover .lab {{ color:var(--ink) }}
+.clickable {{ cursor:pointer; list-style:none }}
+.clickable::-webkit-details-marker {{ display:none }}
+.clickable .lab::before {{ content:"›"; display:inline-block; width:1em; color:var(--muted);
+  transition:transform .12s }}
+.exp[open] > .clickable .lab {{ color:var(--ink); font-weight:600 }}
+.exp[open] > .clickable .lab::before {{ transform:rotate(90deg) }}
+.detail {{ margin:6px 0 16px; padding:14px 16px; border-left:2px solid var(--s1);
+  background:color-mix(in srgb, var(--s1) 5%, transparent); border-radius:0 8px 8px 0 }}
+.detail h3 {{ font-size:12px; font-weight:600; color:var(--muted); margin:0 0 6px;
+  text-transform:uppercase; letter-spacing:.04em }}
+.detail h3 ~ h3 {{ margin-top:16px }}
+.detail .bars {{ margin:0 }}
+.none {{ font-size:12px; color:var(--muted); margin:0 }}
+</style></head><body><main>
+<h1>build bench — {esc(build_dir.name)}</h1>
+<p class=meta>{esc(stamp)} · top {top} rows per chart · every bar is directly labelled</p>
+<div class=tiles>{stats}</div>
+{"".join(parts)}
+</main></body></html>""", encoding="utf-8")
+print(f"report: {report.relative_to(root)}")
 
 if json_out:
     dump = {"wall": float(wall) if wall else None, "edges": edges,
