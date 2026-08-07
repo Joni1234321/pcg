@@ -178,7 +178,7 @@ endif ()
 
 add_custom_command(
 		TARGET pcg POST_BUILD
-		COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/assets" "$<TARGET_FILE_DIR:pcg>/assets"
+		COMMAND "${CMAKE_COMMAND}" -E copy_directory_if_different "${CMAKE_SOURCE_DIR}/assets" "$<TARGET_FILE_DIR:pcg>/assets"
 		COMMENT "Copying assets to output directory"
 		VERBATIM
 )
@@ -195,12 +195,24 @@ if (WIN32 OR MINGW OR MSYS OR CMAKE_SYSTEM_NAME STREQUAL "MSYS")
 
     # Dev convenience: do the same bundling into the build dir so double-click
     # works straight from build/xd/.
+    #
+    # Skip the script's ~1s scan unless a trigger is newer than the stamp;
+    # CMakeCache.txt covers reconfigures, i.e. target_link_libraries changes.
+    # Kept POST_BUILD so `ninja pcg`, which the IDEs invoke, still bundles.
+    set(PCG_BUNDLE_TRIGGERS
+        "$<TARGET_FILE:SDL3::SDL3>"
+        "$<TARGET_FILE:SDL3_ttf::SDL3_ttf>"
+        "$<TARGET_FILE:SDL3_image::SDL3_image>"
+        "${CMAKE_CURRENT_BINARY_DIR}/CMakeCache.txt")
+
     add_custom_command(
             TARGET pcg POST_BUILD
             COMMAND "${CMAKE_COMMAND}"
                     -DEXECUTABLE=$<TARGET_FILE:pcg>
                     -DOUTPUT_DIR=$<TARGET_FILE_DIR:pcg>
                     "-DSEARCH_DIRS=${PCG_RUNTIME_SEARCH_DIRS}"
+                    "-DSTAMP=${CMAKE_CURRENT_BINARY_DIR}/pcg_runtime_dlls.stamp"
+                    "-DTRIGGER_FILES=${PCG_BUNDLE_TRIGGERS}"
                     -P "${CMAKE_SOURCE_DIR}/cmake/bundle_runtime_deps.cmake"
             COMMENT "Bundling runtime DLLs next to pcg.exe"
             VERBATIM
