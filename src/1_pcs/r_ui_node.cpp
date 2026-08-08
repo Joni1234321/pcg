@@ -7,10 +7,8 @@ module;
 module pcs.node;
 
 import std;
-import pce.r_window;
 import pcs.input;
 
-import pce.colors;
 import pce.std;
 import pce.font;
 import pce.math;

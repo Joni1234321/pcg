@@ -3,11 +3,10 @@
 #include "g_arcade.hpp"
 
 #include "SDL3/SDL_keycode.h"
-#include "SDL3_ttf/SDL_ttf.h"
 
 import std;
 
-import pce.colors;
+import pce.sdl;
 import pce.std;
 import pce.math;
 import pce.globals;

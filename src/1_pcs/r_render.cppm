@@ -4,7 +4,6 @@ module;
 export module pcs.render;
 
 import pce.std;
-import pce.r_window;
 import pce.window_state;
 import pce.globals;
 

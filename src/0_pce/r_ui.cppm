@@ -5,14 +5,11 @@ module;
 
 export module pce.ui;
 
-import std;
-
 import pce.std;
 import pce.globals;
 import pce.window_state;
 import pce.font;
 import pce.sdl;
-import pce.colors;
 
 export namespace hex {
 

@@ -11,8 +11,6 @@ import pce.math;
 
 import hex.hex;
 import hex.types;
-import hex.render;
-import pce.logger;
 
 export namespace hex {
 

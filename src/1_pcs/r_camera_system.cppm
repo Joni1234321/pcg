@@ -9,8 +9,6 @@ import pce.globals;
 import pce.window_state;
 import pcs.input;
 
-import pce.std;
-
 export namespace hex {
 struct CameraState {
     float2 world_position { -100.0F, -100.0F };

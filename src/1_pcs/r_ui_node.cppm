@@ -2,18 +2,12 @@ module;
 
 export module pcs.node;
 
-import std;
-import pce.r_window;
-import pcs.input;
-
 import pce.colors;
 import pce.std;
 import pce.font;
-import pce.math;
 import pcs.node_data;
 import pce.collections;
 import pce.sdl;
-import pce.window_state;
 import pce.globals;
 
 // Function bodies live in r_ui_node.cpp (module pcs.node;). Keeping them out of

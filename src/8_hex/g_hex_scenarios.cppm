@@ -6,8 +6,6 @@ export module hex.scenarios;
 
 import std;
 
-import pce.sdl;
-import pce.collections;
 import pce.std;
 
 import hex.hex;
