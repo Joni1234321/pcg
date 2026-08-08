@@ -90,13 +90,6 @@ struct Hex {
     HexBitset2 roads { };
     HexBitset river_edges { };
 };
-struct Unit;
-struct UnitFormation {
-    HandleOptional<Unit> parent { };
-    CountryTag tag { };
-    UnitIcon icon { };
-    Echelon echelon { };
-};
 struct UnitToe {
     u8 move { };
     u8 dmg { };
@@ -113,11 +106,21 @@ struct UnitFlavor {
     UnitName name { };
     Color color { };
 };
+struct Unit;
+struct UnitFormation {
+    CountryTag tag { };
+    Echelon echelon { };
+    UnitName name { };
+    Color color { };
+    b8 prepared_defense { };
+    u8 fatigue { };
+    List<Handle<Unit>> support { };
+};
 struct Unit {
     int2 axial { };
 
     // unit formation
-    HandleOptional<Unit> parent { };
+    Handle<UnitFormation> formation;
     CountryTag tag { };
     UnitIcon icon { };
     Echelon echelon { };
@@ -159,16 +162,24 @@ struct AxialAndEdge {
     u8 edge { };
     b8 operator==(const AxialAndEdge& other) const = default;
 };
+
+struct UnitSpawnCmd {
+    Handle<UnitFormation> formation;
+    UnitIcon icon;
+    Echelon echelon;
+};
 struct HexState {
     HexList<Hex> hex_map { };
+
     HandleList<Unit> units { };
+    HandleList<UnitFormation> unit_formations { };
 
     CountryTag player_tag { };
     PlayerAction player_action { };
     PseudoStates pseudo_states { };
-    UnorderedMap<int2, List<Handle<Unit>>> units_by_axial { };
 
-    UnorderedMap<Handle<Unit>, List<Handle<Unit>>> units_oob { };
+    UnorderedMap<int2, List<Handle<Unit>>> units_by_axial { };
+    UnorderedMap<Handle<UnitFormation>, List<Handle<Unit>>> units_by_formation { };
 
     Pool<CounterStack> counters { };
     Pool<Label> label_pool { };

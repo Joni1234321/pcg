@@ -35,86 +35,60 @@ using namespace hex;
 using namespace hex::ui;
 namespace {
 
-HandleOptional<Unit> UnitGetParentWithEchelon(HexState& hex_state, Handle<Unit> unit_handle, Echelon echelon) {
-    while (hex_state.units[unit_handle].parent.IsValid()) {
-        Handle<Unit> unit_handle_parent = hex_state.units[unit_handle].parent.GetHandle();
-        Unit& unit_parent = hex_state.units[unit_handle_parent];
-        if (unit_parent.echelon >= echelon) { return hex_state.units[unit_handle].parent; }
-        unit_handle = unit_handle_parent;
-    }
-    return std::nullopt;
-}
-
 void HexStateUpdateOOB(HexState& hex_state) {
+    hex_state.units_by_formation.clear();
+    for (u32 i = 0; i < hex_state.units.size(); i++) {
+        const Handle<Unit> unit_handle = hex_state.units.IndexToHandle(i);
+        hex_state.units_by_formation[hex_state.units[unit_handle].formation].EmplaceBack(unit_handle);
+    }
+
+    constexpr std::array letters = {
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'P',
+    };
     f32 hue_next = 0.0F;
     u32 number_army = 1;
     u32 number_corps = 15;
     u32 number_div = 100;
 
-    // generate oob.
-    hex_state.units_oob.clear();
-    for (u32 i = 0; i < hex_state.units.size(); i++) {
-        const Handle<Unit> unit_handle = hex_state.units.IndexToHandle(i);
-        const Unit& unit = hex_state.units[unit_handle];
-        hex_state.units_oob[unit.parent.GetHandle()].EmplaceBack(unit_handle);
-    }
+    for (u32 i = 0; i < hex_state.unit_formations.size(); i++) {
+        const Handle<UnitFormation> formation_handle = hex_state.unit_formations.IndexToHandle(i);
+        UnitFormation& formation = hex_state.unit_formations[formation_handle];
 
-    // create colors and names
-    auto get_unit_color = [&](const Unit& unit) -> Color {
-        if (unit.icon != UnitIcon::ICON_HQ && unit.parent.IsValid()) { return hex_state.units[unit.parent.GetHandle()].color; }
-        const Color color = Color::FromHsl(hue_next, 0.5F, 0.5F);
-        hue_next = std::fmod(hue_next + 37.0F, 360.0F);
-        return color;
-    };
-
-    const std::array letters = {
-        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'P',
-    };
-    // parent name is the designation of the formation itself, "333rd"
-    auto get_unit_parent_name = [&](const Unit& unit) -> String {
-        switch (unit.echelon) {
-            case Echelon::ECHELON_COMPANY:
-            case Echelon::ECHELON_BATTALION: {
-                return !unit.parent.IsValid() ? "dtc" : UnitNameToString(hex_state.units[unit.parent.GetHandle()].name_div);
-            }
+        // formation designation, "333rd"
+        String name_formation;
+        switch (formation.echelon) {
             case Echelon::ECHELON_REGIMENT: {
                 u32 regiment_number = 0;
-                switch (unit.tag) {
+                switch (formation.tag) {
                     case CountryTag::TAG_GER: regiment_number = Rand(200U, 500U); break;
                     case CountryTag::TAG_SOV: regiment_number = Rand(600U, 900U); break;
                     default: regiment_number = Rand(200U, 999U); break;
                 }
-                return std::format("{}{}", regiment_number, NumberToOrdinal(regiment_number));
+                name_formation = std::format("{}{}", regiment_number, NumberToOrdinal(regiment_number));
+                break;
             }
-            case Echelon::ECHELON_DIVISION: ++number_div; return std::format("{}{}", number_div, NumberToOrdinal(number_div));
-            case Echelon::ECHELON_CORPS: ++number_corps; return std::format("{}{}", number_corps, NumberToOrdinal(number_corps));
-            case Echelon::ECHELON_ARMY: ++number_army; return std::format("{}{}", number_army, NumberToOrdinal(number_army));
-            default: return "fail";
+            case Echelon::ECHELON_DIVISION: ++number_div; name_formation = std::format("{}{}", number_div, NumberToOrdinal(number_div)); break;
+            case Echelon::ECHELON_CORPS: ++number_corps; name_formation = std::format("{}{}", number_corps, NumberToOrdinal(number_corps)); break;
+            case Echelon::ECHELON_ARMY: ++number_army; name_formation = std::format("{}{}", number_army, NumberToOrdinal(number_army)); break;
+            default: name_formation = "dtc"; break;
         }
-    };
+        UnitNameSet(formation.name, name_formation);
+        formation.color = Color::FromHsl(hue_next, 0.5F, 0.5F);
+        hue_next = std::fmod(hue_next + 37.0F, 360.0F);
 
-    // sub name is the position inside the parent formation, "III" or "A"
-    auto get_unit_sub_name = [&](const Unit& unit, u32 i) -> String {
-        switch (unit.echelon) {
-            case Echelon::ECHELON_COMPANY: return std::format("{}", letters[i % letters.size()]);
-            case Echelon::ECHELON_BATTALION: return NumberToRomanNumerals(i + 1);
-            default: return "";
-        }
-    };
-
-    Queue<Handle<Unit>> queue;
-    queue.EmplaceBack(HandleOptional<Unit> { std::nullopt }.GetHandle());
-
-    while (!queue.empty()) {
-        List<Handle<Unit>> unit_handles_children = hex_state.units_oob[queue.Front()];
-        queue.Pop();
-        for (u32 i = 0; i < unit_handles_children.size(); i++) {
-            Handle<Unit> unit_handle_child = unit_handles_children[i];
-            queue.EmplaceBack(unit_handle_child);
-            Unit& unit_child = hex_state.units[unit_handle_child];
-            UnitNameSet(unit_child.name_div, get_unit_parent_name(unit_child));
-            UnitNameSet(unit_child.name_sub, get_unit_sub_name(unit_child, i));
-            unit_child.color = get_unit_color(unit_child);
+        // sub name is the position inside the formation, "III" or "A"
+        const List<Handle<Unit>>& unit_handles = hex_state.units_by_formation[formation_handle];
+        for (u32 j = 0; j < unit_handles.size(); j++) {
+            Unit& unit = hex_state.units[unit_handles[j]];
+            String name_sub;
+            switch (unit.echelon) {
+                case Echelon::ECHELON_COMPANY: name_sub = std::format("{}", letters[j % letters.size()]); break;
+                case Echelon::ECHELON_BATTALION: name_sub = NumberToRomanNumerals(j + 1); break;
+                default: break;
+            }
+            unit.name_div = formation.name;
+            UnitNameSet(unit.name_sub, name_sub);
+            unit.color = formation.color;
         }
     }
 }

@@ -224,7 +224,7 @@ struct HexSystem {
 
         AppendTerrainFeatures(hex_state, camera);
 
-        // render hq
+        // render formation
         if (hex_state.pseudo_states.unit_selection) {
             auto draw_line = [&](const Color color, const int2 axial_a, const int2 axial_b) {
                 const float2 screen_a = camera.WorldToScreen(HexAxialToWorld(axial_a));
@@ -233,21 +233,11 @@ struct HexSystem {
                 VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_a, screen_b, camera.scale * 0.1F), color);
             };
             for (const Handle<Unit>& unit_handle : hex_state.pseudo_states.unit_selection.value().unit_handles) {
-                const int2 axial_unit = hex_state.units[unit_handle].axial;
-
-                for (const Handle<Unit>& unit_handle_child : hex_state.units_oob[unit_handle]) {
-                    const int2 axial_child = hex_state.units[unit_handle_child].axial;
-                    draw_line(colors::COLOR_LIGHT_SKY_BLUE, axial_unit, axial_child);
-                }
-                const HandleOptional<Unit>& unit_handle_parent = hex_state.units[unit_handle].parent;
-                if (unit_handle_parent.IsValid()) {
-                    const int2 axial_parent = hex_state.units[unit_handle_parent.GetHandle()].axial;
-                    draw_line(colors::COLOR_RED, axial_unit, axial_parent);
-                    for (const Handle<Unit>& unit_handle_sibling : hex_state.units_oob[unit_handle_parent.GetHandle()]) {
-                        if (unit_handle_sibling == unit_handle) { continue; }
-                        const int2 axial_sibling = hex_state.units[unit_handle_sibling].axial;
-                        draw_line(colors::COLOR_YELLOW, axial_parent, axial_sibling);
-                    }
+                const Unit& unit = hex_state.units[unit_handle];
+                for (const Handle<Unit>& unit_handle_member : hex_state.units_by_formation[unit.formation]) {
+                    if (unit_handle_member == unit_handle) { continue; }
+                    const Unit& unit_member = hex_state.units[unit_handle_member];
+                    draw_line(unit_member.icon == UnitIcon::ICON_HQ ? colors::COLOR_RED : colors::COLOR_LIGHT_SKY_BLUE, unit.axial, unit_member.axial);
                 }
             }
         }
