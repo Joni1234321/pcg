@@ -25,7 +25,8 @@ enum class MoveType : u8 { MOVE_LEG, MOVE_TAC, MOVE_TRUCK };
 enum class RangedType : u8 { RANGED_NONE, RANGED_DEFENSE, RANGED_ATTACK };
 
 enum class PlayerAction : u8 { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_ACTION_DESELECT, PLAYER_ACTION_MOVE_CLICK, PLAYER_ACTION_MOVE_HOVER, PLAYER_ACTION_ATTACK_CLICK, PLAYER_ACTION_ATTACK_HOVER };
-enum class ActivationState : u8 { TURN_HQ_ACTIVATE, TURN_HQ_LOGISTIC, TURN_HQ_OBJ_PLACEMENT, TURN_HQ_EXECUTE, TURN_HQ_CLEAN, TURN_HQ_ISOLATION };
+enum class TurnState : u8 { TURN_NONE, TURN_START, TURN_REINFORCEMENT, TURN_ASSIGNMENT, TURN_HQ_ACTIVATE, TURN_END };
+enum class TurnHqState : u8 { TURN_HQ_NONE, TURN_HQ_START, TURN_HQ_ACTIVATE, TURN_HQ_LOGISTIC, TURN_HQ_OBJ_PLACEMENT, TURN_HQ_EXECUTE, TURN_HQ_CLEAN, TURN_HQ_ISOLATION, TURN_HQ_END };
 enum class ExecutePhase : u8 { EXECUTE_IDLE, EXECUTE_MOVE, EXECUTE_ATTACK };
 
 enum class CounterStyle : u8 { COUNTER_STYLE_NIEHORSTER, COUNTER_STYLE_NIEHORSTER_BIG, COUNTER_STYLE_REAL };
@@ -182,16 +183,23 @@ struct UnitSpawnCmd {
 struct HexState {
     HexList<Hex> hex_map { };
 
+    CountryTag player_tag;
     HandleList<Unit> units { };
     HandleList<UnitFormation> unit_formations { };
 
-    CountryTag player_tag { };
+    // per frame
     PlayerAction player_action { };
     PseudoStates pseudo_states { };
-
     UnorderedMap<int2, List<Handle<Unit>>> units_by_axial { };
     UnorderedMap<Handle<UnitFormation>, List<Handle<Unit>>> units_by_formation { };
 
+    // turn state
+    TurnState turn_state { TurnState::TURN_NONE };
+    TurnHqState turn_hq_state { TurnHqState::TURN_HQ_NONE };
+    HandleOptional<UnitFormation> unit_formation_active { };
+    List<Handle<UnitFormation>> unit_formations_left { };
+
+    // per frame
     Pool<CounterStack> counters { };
     Pool<Label> label_pool { };
     List<Vertex> verts { };

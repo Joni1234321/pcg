@@ -180,15 +180,7 @@ struct HexSystem {
         const FontCollection& font_collection = Singleton::Get<FontCollection>();
         HexState& hex_state = Singleton::Get<HexState>();
 
-        // render table background, world-anchored so it pans and zooms with the map
-        if constexpr (TABLE_THEME == TableStyle::TABLE_STYLE_TEXTURE) {
-            constexpr f32 TABLE_MARGIN = 6.0F;
-            const float2 screen_min = camera.WorldToScreen(camera.map_world_min - float2 { TABLE_MARGIN });
-            const float2 screen_max = camera.WorldToScreen(camera.map_world_max + float2 { TABLE_MARGIN });
-            (void)ui::DrawTexture(window_state, table_texture, AABB::FromPoint(screen_min, screen_max - screen_min), colors::COLOR_WHITE);
-        }
-
-        // precompute
+        // per frame compute
         hex_state.label_pool.Clear();
         hex_state.units_by_axial.clear();
         for (u32 i = 0; i < hex_state.units.size(); i++) {
@@ -196,6 +188,12 @@ struct HexSystem {
             hex_state.units_by_axial[hex_state.units[unit_handle].axial].EmplaceBack(unit_handle);
         }
 
+        // pseudo states set
+        const float2 mouse_world = camera.ScreenToWorld(input_state.mouse_position);
+        if (hex_state.pseudo_states.unit_selection.has_value()) { hex_state.pseudo_states.axial_select = hex_state.units[hex_state.pseudo_states.unit_selection->unit_handles[0]].axial; } // update selection
+        hex_state.pseudo_states.axial_hover = hex_state.hex_map.Contains(HexWorldToAxial(mouse_world)) ? Optional { HexWorldToAxial(mouse_world) } : std::nullopt;
+        hex_state.player_tag = hex_state.pseudo_states.unit_selection.has_value() ? hex_state.units[hex_state.pseudo_states.unit_selection->unit_handles[0]].tag : CountryTag::TAG_GER;
+        hex_state.player_action = PlayerAction::PLAYER_ACTION_NONE;
         if (hex_state.pseudo_states.unit_selection.has_value()) {
             const auto unit_selection = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
             hex_state.pseudo_states.unit_selection->dmg_sum = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::dmg), u32 { 0 }, std::plus { });
@@ -206,12 +204,14 @@ struct HexSystem {
             hex_state.pseudo_states.unit_selection->move_max = move_max;
         }
 
-        // pseudo states set
-        const float2 mouse_world = camera.ScreenToWorld(input_state.mouse_position);
-        if (hex_state.pseudo_states.unit_selection.has_value()) { hex_state.pseudo_states.axial_select = hex_state.units[hex_state.pseudo_states.unit_selection->unit_handles[0]].axial; } // update selection
-        hex_state.pseudo_states.axial_hover = hex_state.hex_map.Contains(HexWorldToAxial(mouse_world)) ? Optional { HexWorldToAxial(mouse_world) } : std::nullopt;
-        hex_state.player_tag = hex_state.pseudo_states.unit_selection.has_value() ? hex_state.units[hex_state.pseudo_states.unit_selection->unit_handles[0]].tag : CountryTag::TAG_GER;
-        hex_state.player_action = PlayerAction::PLAYER_ACTION_NONE;
+
+        // render table background, world-anchored so it pans and zooms with the map
+        if constexpr (TABLE_THEME == TableStyle::TABLE_STYLE_TEXTURE) {
+            constexpr f32 TABLE_MARGIN = 6.0F;
+            const float2 screen_min = camera.WorldToScreen(camera.map_world_min - float2 { TABLE_MARGIN });
+            const float2 screen_max = camera.WorldToScreen(camera.map_world_max + float2 { TABLE_MARGIN });
+            DrawTexture(window_state, table_texture, AABB::FromPoint(screen_min, screen_max - screen_min), colors::COLOR_WHITE);
+        }
 
         // render out-of-map filler hexes, a fixed border ring around the map
         {
@@ -237,7 +237,12 @@ struct HexSystem {
             if (hex.owner.contested) { VertHexAppend(hex_state.verts, camera.scale * 0.70F, camera.WorldToScreen(world), color.Mul(0.80F)); }
         }
 
-        // render pseudo states as rings on top of the map
+        AppendCountryBorders(hex_state, camera);
+        AppendRiverMesh(hex_state, camera);
+        AppendRoadMesh(hex_state, camera);
+        AppendTerrainFeatures(hex_state, camera);
+
+        // render pseudo states
         if (hex_state.pseudo_states.axial_hover) { VertHexRingAppend(hex_state.verts, camera.scale, camera.scale * 0.88F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover.value())), colors::COLOR_HEX_HOVER); }
         if (hex_state.pseudo_states.unit_selection) {
             // draw formation
@@ -245,16 +250,6 @@ struct HexSystem {
             for (const Unit& unit_member : hex_state.units_by_formation[formation] | hex_state.units.handle_to_view()) { VertHexRingAppend(hex_state.verts, camera.scale * 0.98F, camera.scale * 0.86F, camera.WorldToScreen(HexAxialToWorld(unit_member.axial)), hex_state.unit_formations[formation].color); }
         }
         if (hex_state.pseudo_states.axial_select) { VertHexRingAppend(hex_state.verts, camera.scale * 0.88F, camera.scale * 0.76F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select.value())), colors::COLOR_HEX_SELECT); }
-        (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
-        hex_state.verts.clear();
-
-        AppendCountryBorders(hex_state, camera);
-        AppendRiverMesh(hex_state, camera);
-        AppendRoadMesh(hex_state, camera);
-        (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
-        hex_state.verts.clear();
-
-        AppendTerrainFeatures(hex_state, camera);
 
         // render formation
         if (hex_state.pseudo_states.unit_selection) {
@@ -272,6 +267,8 @@ struct HexSystem {
                 }
             }
         }
+
+        // render it all
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
         hex_state.verts.clear();
 
@@ -280,15 +277,9 @@ struct HexSystem {
         UnitToCounterAppend(hex_state);
         RenderCounters(hex_state.counters);
 
-        if (hex_state.pseudo_states.axial_hover.has_value() && input_state.keys.at(SDLK_LALT) && input_state.left_mouse_down) {
-            const int2 axial = hex_state.pseudo_states.axial_hover.value();
-            const int2 offset = HexAxialToOffset(axial);
-            Logger().Log("[Hex] Offset ({},{}) Axial ({},{})", offset.x, offset.y, axial.x, axial.y);
-        }
 
         // logic and render
         hex_state.player_action = GetPlayerAction(hex_state);
-
         switch (hex_state.player_action) {
             case PlayerAction::PLAYER_ACTION_NONE: break;
             case PlayerAction::PLAYER_ACTION_SELECT: {
@@ -323,9 +314,8 @@ struct HexSystem {
                 const List<AxialAndCost>::iterator it = std::ranges::upper_bound(axial_path, move_allowance, std::less { }, &AxialAndCost::cost);
                 if (it != axial_path.begin()) {
                     for (List<AxialAndCost>::iterator step = axial_path.begin(); step != it; ++step) {
-                        globalData[particle_emitter].particles.items.EmplaceBack(Particle { .position = camera.WorldToScreen(HexAxialToWorld(step->axial)),
-                                                                                            .text = Label { font_collection.GetFontBoldCourier(FontSizes::h5), MoveTypeToString(MoveTypeUnitIcon(units_selected[0].icon)) },
-                                                                                            .duration = miliseconds32 { 1000U }});
+                        globalData[particle_emitter].particles.items.EmplaceBack(
+                            Particle { .position = camera.WorldToScreen(HexAxialToWorld(step->axial)), .text = Label { font_collection.GetFontBoldCourier(FontSizes::h5), MoveTypeToString(MoveTypeUnitIcon(units_selected[0].icon)) }, .duration = miliseconds32 { 1000U } });
                         Hex& hex_center = hex_state.hex_map[step->axial];
                         if (hex_center.owner.tag != hex_state.player_tag) { hex_center.owner = HexOwner { .tag = hex_state.player_tag, .contested = true }; } // conquer
                         // zone of control
@@ -504,6 +494,13 @@ struct HexSystem {
                 label.Draw(float2 { screen.x - camera.scale * 0.5F, screen.y - pt * 0.5F });
 
                 break;
+        }
+
+        // debug
+        if (hex_state.pseudo_states.axial_hover.has_value() && input_state.keys.at(SDLK_LALT) && input_state.left_mouse_down) {
+            const int2 axial = hex_state.pseudo_states.axial_hover.value();
+            const int2 offset = HexAxialToOffset(axial);
+            Logger().Log("[Hex] Offset ({},{}) Axial ({},{})", offset.x, offset.y, axial.x, axial.y);
         }
     }
 };

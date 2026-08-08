@@ -44,7 +44,7 @@ Handle<Unit> HexStateSpawnUnit(HexState& hex_state, const UnitSpawnCmd& unit_spa
                                               .move = Stat { .current = unit_toe.move, .max = unit_toe.move },
                                               .dmg = unit_toe.dmg,
                                               .dmg_ranged = unit_toe.dmg_ranged,
-                                              .steps = { .current = unit_toe.steps, .max = unit_toe.steps},
+                                              .steps = { .current = unit_toe.steps, .max = unit_toe.steps },
                                               .name_div = { },
                                               .color = { } });
 }

@@ -121,7 +121,7 @@ struct Texture : LogLifetimeWithCount<Texture> {
         if (texture.Get()) {
             Logger().Created("Texture {} {}", texture->w, texture->h);
         } else {
-            Logger().Created("Texture FAILED to load: {}", path.string());
+            Logger().Error("Texture FAILED to load: {}", path.string());
         }
     }
     [[nodiscard]] b8 FailedLoading() const { return texture.Get() == nullptr; }
