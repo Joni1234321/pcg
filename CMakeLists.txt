@@ -126,6 +126,7 @@ target_sources(pcg
                src/8_hex/g_hex_scenarios.cppm
                src/8_hex/g_hex_types.cppm
                src/8_hex/r_hex_render.cppm
+               src/8_hex/r_hex_ui.cppm
                src/8_hex/u_counter.cppm
                src/8_hex/u_hex.cppm
 

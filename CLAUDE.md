@@ -9,3 +9,4 @@ good code:
 - prefer inlining code over many helpers. unless function is complex
 - good code locality
 - i prefer bigger more complex structs than many small. same with helper methods. rather have inlined functions and a slightly more complex method.
+- dont overly abbreviate variable names. example ColorBoxCmd cmd_dmg. should be called color_box_cmd_dmg. otherwise i cant understand it
