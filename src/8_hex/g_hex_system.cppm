@@ -324,9 +324,8 @@ struct HexSystem {
                 if (it != axial_path.begin()) {
                     for (List<AxialAndCost>::iterator step = axial_path.begin(); step != it; ++step) {
                         globalData[particle_emitter].particles.items.EmplaceBack(Particle { .position = camera.WorldToScreen(HexAxialToWorld(step->axial)),
-                                                                                            .text = Label { font_collection.GetFontBoldCourier(FontSizes::h3), MoveTypeToString(MoveTypeUnitIcon(units_selected[0].icon)) },
-                                                                                            .duration = miliseconds32 { 1000U },
-                                                                                            .delay = miliseconds32 { static_cast<u32>(std::distance(axial_path.begin(), step)) } });
+                                                                                            .text = Label { font_collection.GetFontBoldCourier(FontSizes::h5), MoveTypeToString(MoveTypeUnitIcon(units_selected[0].icon)) },
+                                                                                            .duration = miliseconds32 { 1000U }});
                         Hex& hex_center = hex_state.hex_map[step->axial];
                         if (hex_center.owner.tag != hex_state.player_tag) { hex_center.owner = HexOwner { .tag = hex_state.player_tag, .contested = true }; } // conquer
                         // zone of control

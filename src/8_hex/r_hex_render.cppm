@@ -152,7 +152,7 @@ inline void VertObbAppend(List<Vertex>& vertices, const OBB& obb, const ColorF c
 [[nodiscard]] constexpr Color CountryBranchToColor(const CountryTag tag, const UnitBranch branch) {
     switch (tag) {
         case CountryTag::TAG_GER:
-            switch (branch) { // darker = stronger: infantry bright, guard vivid mid, armor black
+            switch (branch) { // darker = stronger: infantry bright, guard vivid mid, armor very dark grey
                 case UnitBranch::BRANCH_INFANTRY: return Color::FromHsl(95.0F, 0.03F, 0.60F);
                 case UnitBranch::BRANCH_ARMOR: return Color::FromHsl(95.0F, 0.03F, 0.09F);
                 case UnitBranch::BRANCH_GUARD: return Color::FromHsl(45.0F, 0.60F, 0.42F);
