@@ -45,6 +45,15 @@ export namespace hex {
     }
     std::unreachable();
 }
+[[nodiscard]] constexpr String MoveTypeToString(const MoveType move_type) {
+    switch (move_type) {
+        case MoveType::MOVE_LEG:   return "/\\";
+        case MoveType::MOVE_TAC:   return "ooo";
+        case MoveType::MOVE_TRUCK: return "O O";
+    }
+    std::unreachable();
+}
+
 constexpr f32 TEXT_SHADOW_STRENGTH = 1.0F;
 
 [[nodiscard]] constexpr ui::ColorBox MoveTypeToColorBox(const MoveType move_type) {

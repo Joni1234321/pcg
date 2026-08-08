@@ -42,6 +42,7 @@ struct Particle {
     float2 position { 0.0F, 0.0F };
     Label text { };
     miliseconds32 duration { 0U };
+    miliseconds32 delay { 0U };
     miliseconds32 start { TimeNowMS() };
 };
 struct ParticleEmitter {
@@ -59,6 +60,7 @@ struct ParticleSystem {
         (void)SDL_SetRenderDrawColor(Singleton::Get<WindowState>().renderer, color.r, color.g, color.b, color.a);
         for (ParticleEmitter& emitter : globalData.Get<ParticleEmitter>()) {
             for (Particle& particle : emitter.particles.items) {
+                if (current_ms - particle.start < particle.delay) { continue; }
                 TTF_Font* font = TTF_GetTextFont(particle.text);
                 const i32 outline = static_cast<i32>(TTF_GetFontSize(font) * 0.04F) + 1;
                 particle.text.SetColor(colors::COLOR_BLACK);
@@ -70,7 +72,7 @@ struct ParticleSystem {
                 particle.position += emitter.velocity * float2 { delta_time };
             }
             for (Particle& particle : emitter.particles.items | std::ranges::views::reverse) {
-                if (current_ms - particle.start > particle.duration) { emitter.particles.SwapBackErase(particle); }
+                if (current_ms - particle.start > particle.delay + particle.duration) { emitter.particles.SwapBackErase(particle); }
             }
             emitter.particles.ApplyErase();
         }

@@ -47,7 +47,7 @@ inline void DrawText(const Font& font, const Label& label, const AABB area, cons
 }
 
 inline void DrawColorBox(const WindowState& window_state, const Font& font, const Label& label, const AABBWithPadding& area_with_padding, const ColorBox& color_box, const TextAlignment alignment = TextAlignment::RIGHT) {
-    const AABB area_fill = area_with_padding.area.WithPadding( area_with_padding.padding);
+    const AABB area_fill = area_with_padding.area.WithPadding(area_with_padding.padding);
 
     DrawRect(window_state, area_with_padding.area, color_box.color_stroke);
     DrawRect(window_state, area_fill, color_box.color_fill);
@@ -57,4 +57,4 @@ inline void DrawColorBox(const WindowState& window_state, const Font& font, cons
     DrawText(font, label, area_text, color_box.color_text, alignment);
 }
 
-}
+} // namespace hex::ui

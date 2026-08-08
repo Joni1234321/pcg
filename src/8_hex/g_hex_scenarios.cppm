@@ -41,7 +41,7 @@ Handle<Unit> HexStateSpawnUnit(HexState& hex_state, const UnitSpawnCmd& unit_spa
                                               .tag = hex_state.unit_formations[unit_spawn_cmd.formation].tag,
                                               .icon = unit_spawn_cmd.icon,
                                               .ranged_type = RangedTypeUnitIcon(unit_spawn_cmd.icon),
-                                              .move = unit_toe.move,
+                                              .move = Stat { .current = unit_toe.move, .max = unit_toe.move },
                                               .dmg = unit_toe.dmg,
                                               .dmg_ranged = unit_toe.dmg_ranged,
                                               .steps = unit_toe.steps,

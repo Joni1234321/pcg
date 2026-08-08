@@ -25,8 +25,8 @@ enum class MoveType : u8 { MOVE_LEG, MOVE_TAC, MOVE_TRUCK };
 enum class RangedType : u8 { RANGED_NONE, RANGED_DEFENSE, RANGED_ATTACK };
 
 enum class PlayerAction : u8 { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_ACTION_DESELECT, PLAYER_ACTION_MOVE_CLICK, PLAYER_ACTION_MOVE_HOVER, PLAYER_ACTION_ATTACK_CLICK, PLAYER_ACTION_ATTACK_HOVER };
-enum class ActivationState : u8  { TURN_HQ_ACTIVATE, TURN_HQ_LOGISTIC, TURN_HQ_OBJ_PLACEMENT, TURN_HQ_EXECUTE, TURN_HQ_CLEAN, TURN_HQ_ISOLATION };
-enum class ExecutePhase : u8  { EXECUTE_IDLE, EXECUTE_MOVE, EXECUTE_ATTACK  };
+enum class ActivationState : u8 { TURN_HQ_ACTIVATE, TURN_HQ_LOGISTIC, TURN_HQ_OBJ_PLACEMENT, TURN_HQ_EXECUTE, TURN_HQ_CLEAN, TURN_HQ_ISOLATION };
+enum class ExecutePhase : u8 { EXECUTE_IDLE, EXECUTE_MOVE, EXECUTE_ATTACK };
 
 enum class CounterStyle : u8 { COUNTER_STYLE_NIEHORSTER, COUNTER_STYLE_NIEHORSTER_BIG, COUNTER_STYLE_REAL };
 enum class MapStyle : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER, FADED_LINEN };
@@ -56,6 +56,10 @@ constexpr f32 RIVER_WIDTH = 0.13F;
 constexpr f32 RIVER_CASING_EXTRA = 0.05F;
 constexpr f32 RIVER_HIGHLIGHT_WIDTH = RIVER_WIDTH * 0.35F;
 
+struct Stat {
+    u8 current;
+    u8 max;
+};
 struct MoveCost {
     u8 leg { };
     u8 tac { };
@@ -120,6 +124,7 @@ struct UnitFormation {
     b8 prepared_defense { };
     u8 fatigue { };
     List<Handle<Unit>> support { };
+    Stat artillery { };
 };
 struct Unit {
     int2 axial { };
@@ -132,10 +137,10 @@ struct Unit {
     RangedType ranged_type { };
 
     // unit stats
-    u8 move { };
+    Stat move { };
     u8 dmg { };
     u8 dmg_ranged { };
-    u8 steps { };
+    Stat steps { };
 
     // unit flavour
     UnitName name_div { };

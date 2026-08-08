@@ -34,7 +34,7 @@ using namespace hex::ui;
 using namespace hex::math;
 
 [[nodiscard]] b8 AxialIsEnemy(const HexState& hex_state, const int2 axial) { return hex_state.units_by_axial.contains(axial) && !std::ranges::contains(hex_state.units_by_axial.at(axial) | hex_state.units.handle_to_view(), hex_state.player_tag, &Unit::tag); }
-[[nodiscard]] b8 AxialIsEnemyZoc (const HexState& hex_state, const int2 axial) {
+[[nodiscard]] b8 AxialIsEnemyZoc(const HexState& hex_state, const int2 axial) {
     return std::ranges::any_of(HEX_AXIAL_NEIGHBOURS, [&](const int2 axial_offset) -> b8 { return AxialIsEnemy(hex_state, axial + axial_offset); });
 }
 [[nodiscard]] u8 AxialAdjecentEnemyControl(const HexState& hex_state, const int2 axial) {
@@ -130,8 +130,8 @@ void UnitToCounterAppend(HexState& hex_state) {
                 counter.stack[i] = Counter { .color_background = CountryBranchToColor(unit.tag, hex_state.unit_formations[unit.formation].branch), .color_icon = unit.color, .color_border = colors::COLOR_BLACK };
                 dmg += unit.dmg;
                 dmg_ranged += unit.dmg_ranged;
-                steps += unit.steps;
-                move = Max(static_cast<u32>(unit.move), move);
+                steps += unit.steps.current;
+                move = Max(static_cast<u32>(unit.move.current), move);
             }
         }
 
@@ -165,7 +165,7 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
     }
     return PlayerAction::PLAYER_ACTION_NONE;
 }
-}
+} // namespace hex
 
 export namespace hex {
 struct HexSystem {
@@ -200,8 +200,8 @@ struct HexSystem {
             const auto unit_selection = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
             hex_state.pseudo_states.unit_selection->dmg_sum = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::dmg), u32 { 0 }, std::plus { });
             hex_state.pseudo_states.unit_selection->dmg_ranged_sum = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::dmg_ranged), u32 { 0 }, std::plus { });
-            hex_state.pseudo_states.unit_selection->steps = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::steps), u32 { 0 }, std::plus { });
-            const auto [move_min, move_max] = std::ranges::minmax(unit_selection | std::views::transform(&Unit::move), std::less { });
+            hex_state.pseudo_states.unit_selection->steps = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::steps) | std::views::transform(&Stat::current), u32 { 0 }, std::plus { });
+            const auto [move_min, move_max] = std::ranges::minmax(unit_selection | std::views::transform(&Unit::move) | std::views::transform(&Stat::current), std::less { });
             hex_state.pseudo_states.unit_selection->move_min = move_min;
             hex_state.pseudo_states.unit_selection->move_max = move_max;
         }
@@ -242,9 +242,7 @@ struct HexSystem {
         if (hex_state.pseudo_states.unit_selection) {
             // draw formation
             const Handle<UnitFormation> formation = hex_state.units[hex_state.pseudo_states.unit_selection->unit_handles[0]].formation;
-            for (const Unit& unit_member : hex_state.units_by_formation[formation] | hex_state.units.handle_to_view()) {
-                VertHexRingAppend(hex_state.verts, camera.scale * 0.98F, camera.scale * 0.86F, camera.WorldToScreen(HexAxialToWorld(unit_member.axial)), hex_state.unit_formations[formation].color);
-            }
+            for (const Unit& unit_member : hex_state.units_by_formation[formation] | hex_state.units.handle_to_view()) { VertHexRingAppend(hex_state.verts, camera.scale * 0.98F, camera.scale * 0.86F, camera.WorldToScreen(HexAxialToWorld(unit_member.axial)), hex_state.unit_formations[formation].color); }
         }
         if (hex_state.pseudo_states.axial_select) { VertHexRingAppend(hex_state.verts, camera.scale * 0.88F, camera.scale * 0.76F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select.value())), colors::COLOR_HEX_SELECT); }
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
@@ -325,6 +323,10 @@ struct HexSystem {
                 const List<AxialAndCost>::iterator it = std::ranges::upper_bound(axial_path, move_allowance, std::less { }, &AxialAndCost::cost);
                 if (it != axial_path.begin()) {
                     for (List<AxialAndCost>::iterator step = axial_path.begin(); step != it; ++step) {
+                        globalData[particle_emitter].particles.items.EmplaceBack(Particle { .position = camera.WorldToScreen(HexAxialToWorld(step->axial)),
+                                                                                            .text = Label { font_collection.GetFontBoldCourier(FontSizes::h3), MoveTypeToString(MoveTypeUnitIcon(units_selected[0].icon)) },
+                                                                                            .duration = miliseconds32 { 1000U },
+                                                                                            .delay = miliseconds32 { static_cast<u32>(std::distance(axial_path.begin(), step)) } });
                         Hex& hex_center = hex_state.hex_map[step->axial];
                         if (hex_center.owner.tag != hex_state.player_tag) { hex_center.owner = HexOwner { .tag = hex_state.player_tag, .contested = true }; } // conquer
                         // zone of control
@@ -341,7 +343,7 @@ struct HexSystem {
                     const AxialAndCost& cost_and_axial_end = *std::prev(it);
                     for (Unit& unit : units_selected) {
                         unit.axial = cost_and_axial_end.axial;
-                        unit.move -= cost_and_axial_end.cost;
+                        unit.move.current -= cost_and_axial_end.cost;
                     }
                     hex_state.pseudo_states.axial_select = cost_and_axial_end.axial;
                 }
@@ -349,7 +351,7 @@ struct HexSystem {
             }
             case PlayerAction::PLAYER_ACTION_MOVE_HOVER: {
                 auto units_selected = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
-                const u32 units_selected_movement = std::ranges::min(units_selected | std::views::transform(&Unit::move));
+                const u32 units_selected_movement = std::ranges::min(units_selected | std::views::transform(&Unit::move) | std::views::transform(&Stat::current));
                 const List<AxialAndCost> axial_path = HexAxialPathAStar(hex_state, hex_state.pseudo_states.axial_select.value(), hex_state.pseudo_states.axial_hover.value(), MoveType::MOVE_LEG, units_selected_movement);
                 for (const AxialAndCost cost_and_axial : axial_path) {
                     const float2 world = HexAxialToWorld(cost_and_axial.axial);
@@ -386,25 +388,27 @@ struct HexSystem {
 
                 auto units_attacker = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
                 auto units_defender = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()] | hex_state.units.handle_to_view();
-                int2 axial_battle = units_defender[0].axial;
 
-                enum class DefenderRetreat : u8 { DEFENDER_HOLDS, DEFENDER_RETREAT, DEFENDER_ROUT};
+                enum class DefenderRetreat : u8 { DEFENDER_HOLDS, DEFENDER_RETREAT, DEFENDER_ROUT };
                 struct BattleOutcome {
                     DefenderRetreat defender_retreat;
                     u8 attacker_step_loss;
                     u8 defender_step_loss;
                 } battle_outcome;
 
+                int2 axial_battle = units_defender[0].axial;
                 Hex& hex_battle = hex_state.hex_map[axial_battle];
                 Unit& unit_attacker = units_attacker[0];
                 Unit& unit_defender = units_defender[0];
                 UnitFormation& formation_attacker = hex_state.unit_formations[unit_attacker.formation];
                 UnitFormation& formation_defender = hex_state.unit_formations[unit_defender.formation];
                 u8 dmg_attacker = unit_attacker.dmg + std::ranges::contains(formation_attacker.support | hex_state.units.handle_to_view(), RangedType::RANGED_ATTACK, &Unit::ranged_type) - formation_attacker.prepared_defense + (unit_attacker.ranged_type == RangedType::RANGED_ATTACK);
-                u8 dmg_defender = unit_defender.dmg + !std::ranges::contains(formation_defender.support | hex_state.units.handle_to_view(), RangedType::RANGED_NONE, &Unit::ranged_type) + (units_defender.size() > 2 ? -2 : units_defender.size() == 2) + (hex_battle.terrain_type != TerrainType::TERRAIN_TYPE_GRASS) + (unit_defender.ranged_type == RangedType::RANGED_ATTACK) * (hex_battle.terrain_feature == TerrainFeature::TERRAIN_FEATURE_CITY ? -3 : (hex_battle.terrain_type == TerrainType::TERRAIN_TYPE_GRASS) * 2);
+                u8 dmg_defender = unit_defender.dmg + !std::ranges::contains(formation_defender.support | hex_state.units.handle_to_view(), RangedType::RANGED_NONE, &Unit::ranged_type) + (units_defender.size() > 2 ? -2 : units_defender.size() == 2) + (hex_battle.terrain_type != TerrainType::TERRAIN_TYPE_GRASS) +
+                                  (unit_defender.ranged_type == RangedType::RANGED_ATTACK) * (hex_battle.terrain_feature == TerrainFeature::TERRAIN_FEATURE_CITY ? -3 : (hex_battle.terrain_type == TerrainType::TERRAIN_TYPE_GRASS) * 2) +
+                                  hex_battle.river_edges.Test(HexAxialEdgeNeighbor(axial_battle, units_attacker[0].axial));
                 i8 diff = dmg_attacker - dmg_defender;
-                u8 roll = RandD6() + RandD6();
-                u8 roll_mod = SaturatingAdd(roll, diff);
+                i8 roll = RandD6() + RandD6();
+                i8 roll_mod = roll + diff;
 
                 // 50 / 50 whether they retreat. grouped in 2 after
                 if (roll_mod <= 4) {
@@ -427,15 +431,17 @@ struct HexSystem {
                     battle_outcome.defender_step_loss = 2;
                 }
 
-                units_attacker[0].steps = SaturatingSub(units_attacker[0].steps, battle_outcome.attacker_step_loss);
-                units_defender[0].steps = SaturatingSub(units_defender[0].steps, battle_outcome.defender_step_loss);
-                units_attacker[0].move = SaturatingSub(units_attacker[0].move, MOVE_COST_ATTACK);
+                unit_attacker.steps.current = SaturatingSub(unit_attacker.steps.current, battle_outcome.attacker_step_loss);
+                unit_defender.steps.current = SaturatingSub(unit_defender.steps.current, battle_outcome.defender_step_loss);
+                unit_attacker.move.current = SaturatingSub(unit_attacker.move.current, MOVE_COST_ATTACK);
 
-                globalData[particle_emitter].particles.items.EmplaceBack(Particle { .position = camera.WorldToScreen(HexAxialToWorld(axial_battle)), .text = Label { font_collection.GetFontBoldCourier(FontSizes::h1), std::format("{} [{:+}]\nA{} D{}\n{}", roll_mod, dmg_attacker - dmg_defender, battle_outcome.attacker_step_loss, battle_outcome.defender_step_loss, battle_outcome.defender_retreat) }, .duration = miliseconds32 { 1500U } });
+                globalData[particle_emitter].particles.items.EmplaceBack(
+                    Particle { .position = camera.WorldToScreen(HexAxialToWorld(axial_battle)),
+                               .text = Label { font_collection.GetFontBoldCourier(FontSizes::h1), std::format("{} [{:+}]\nA{} D{}\n{}", roll_mod, dmg_attacker - dmg_defender, battle_outcome.attacker_step_loss, battle_outcome.defender_step_loss, battle_outcome.defender_retreat) },
+                               .duration = miliseconds32 { 1500U } });
 
                 switch (battle_outcome.defender_retreat) {
-                    case DefenderRetreat::DEFENDER_HOLDS:
-                        break;
+                    case DefenderRetreat::DEFENDER_HOLDS: break;
                     case DefenderRetreat::DEFENDER_RETREAT:
                         for (Unit& defender : units_defender) {
                             const int2 axial_retreat = defender.tag == CountryTag::TAG_GER ? int2 { -3, 0 } : int2 { 3, 0 };
@@ -448,7 +454,6 @@ struct HexSystem {
                             defender.axial += axial_retreat;
                         }
                     }
-
                 }
 
                 if (battle_outcome.defender_retreat != DefenderRetreat::DEFENDER_HOLDS) {
@@ -486,8 +491,9 @@ struct HexSystem {
                 if (can_attack) {
                     auto units_attacker = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
                     auto units_defender = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()] | hex_state.units.handle_to_view();
-                    const u32 dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
-                    const u32 def = std::ranges::fold_left(units_defender | std::views::transform(&Unit::dmg), 0U, std::plus { });
+                    const i32 dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
+                    const i32 def = std::ranges::fold_left(units_defender | std::views::transform(&Unit::dmg), 0U, std::plus { });
+
                     label.SetText(std::format("{:+}", dmg - def));
                 } else if (attacker_is_hq) {
                     label.SetText("hq cannot attack");
@@ -502,4 +508,4 @@ struct HexSystem {
         }
     }
 };
-}
+} // namespace hex
