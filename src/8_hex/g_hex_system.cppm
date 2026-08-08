@@ -346,10 +346,10 @@ struct HexSystem {
 
                     const Label& label = hex_state.label_pool.Get();
                     const String string_distance = std::format("{}", cost_and_axial.cost);
-                    (void)TTF_SetTextWrapWidth(label, static_cast<i32>(camera.scale));
+                    label.SetWrapWidth(camera.scale);
                     label.SetFont(font_movement);
                     label.SetText(string_distance);
-                    (void)TTF_DrawRendererText(label, screen.x - camera.scale * 0.5F, screen.y - pt * 0.5F);
+                    label.Draw(float2 { screen.x - camera.scale * 0.5F, screen.y - pt * 0.5F });
                 }
                 break;
             }
@@ -374,7 +374,7 @@ struct HexSystem {
                 u8 roll = Rand2D6();
                 u8 roll_mod = SaturatingAdd(roll, diff);
 
-                globalData[particle_emitter].particles.items.EmplaceBack(Particle { .position = camera.WorldToScreen(HexAxialToWorld(axial_battle)), .text = Label { font_collection.GetFontBoldCompact(FontSizes::h1), std::format("{}", roll_mod) }, .duration = miliseconds32 { 1500U } });
+                globalData[particle_emitter].particles.items.EmplaceBack(Particle { .position = camera.WorldToScreen(HexAxialToWorld(axial_battle)), .text = Label { font_collection.GetFontBoldCompact(FontSizes::h1), std::format("{} [{}]", roll_mod, roll) }, .duration = miliseconds32 { 1500U } });
 
                 // 50 / 50 whether they retreat. grouped in 2 after
                 if (roll_mod <= 4) {
@@ -448,7 +448,7 @@ struct HexSystem {
                 const Font& font_attack = font_collection.GetFontBoldCompact(static_cast<FontSizes>(pt));
                 TTF_SetFontWrapAlignment(font_attack, TTF_HORIZONTAL_ALIGN_CENTER);
                 const Label& label = hex_state.label_pool.Get();
-                (void)TTF_SetTextWrapWidth(label, static_cast<i32>(camera.scale));
+                label.SetWrapWidth(camera.scale);
                 label.SetFont(font_attack);
 
                 if (can_attack) {
@@ -465,7 +465,7 @@ struct HexSystem {
                     label.SetText(std::format("no movement\n{} < {}", hex_state.pseudo_states.unit_selection->move_min, MOVE_COST_ATTACK));
                 }
                 const float2 screen_f = static_cast<float2>(screen);
-                (void)TTF_DrawRendererText(label, screen_f.x - camera.scale * 0.5F, screen_f.y - pt * 0.5F);
+                label.Draw(float2 { screen_f.x - camera.scale * 0.5F, screen_f.y - pt * 0.5F });
 
                 break;
         }

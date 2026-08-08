@@ -16,45 +16,11 @@ import pce.std;
 import pce.math;
 
 export namespace hex {
-struct Texture : LogLifetimeWithCount<Texture> {
-    explicit Texture(const AbsolutePath& path) : texture(IMG_LoadTexture(Singleton::Get<WindowState>().renderer, path.string().c_str())) {
-        if (texture.Get()) {
-            Logger().Created("Texture {} {}", texture->w, texture->h);
-        } else {
-            Logger().Created("Texture FAILED to load: {}", path.string());
-        }
-    }
-    [[nodiscard]] b8 FailedLoading() const { return texture.Get() == nullptr; }
-    operator SDL_Texture*() const { return texture.Get(); }
-
-private:
-    struct CloseTexture {
-        void operator()(SDL_Texture* texture) const {
-            if (texture) {
-                Logger().Destroyed("SDL_Texture destroyed {} {}", texture->w, texture->h);
-                SDL_DestroyTexture(texture);
-            }
-        }
-    };
-    UniquePointer<SDL_Texture, CloseTexture> texture;
-};
 struct DestroyText {
     void operator()(TTF_Text* text) const {
         Logger().Destroyed("TTF_Text");
         TTF_DestroyText(text);
     }
-};
-struct Label {
-    UniquePointer<TTF_Text, DestroyText> ttf_text { nullptr };
-    [[nodiscard]] Label(TTF_Font* font = nullptr, const String& text = { }) : ttf_text { TTF_CreateText(Singleton::Get<WindowState>().text_engine, font, text.c_str(), text.size()) } { }
-    operator TTF_Text*() const { return ttf_text.Get(); }
-    void SetFont(TTF_Font* font) const { (void)TTF_SetTextFont(ttf_text.Get(), font); }
-    void SetText(const String& string) const { (void)TTF_SetTextString(ttf_text.Get(), string.c_str(), string.size()); }
-};
-struct SurfaceLabel {
-    UniquePointer<TTF_Text, DestroyText> ttf_text { TTF_CreateText(Singleton::Get<WindowState>().surface_text_engine, nullptr, "", 0) };
-    operator TTF_Text*() const { return ttf_text.Get(); }
-    void SetText(const String& string) const { TTF_SetTextString(ttf_text.Get(), string.c_str(), string.size()); }
 };
 struct AABB {
     float2 point;
@@ -149,6 +115,49 @@ struct Color {
     [[nodiscard]] constexpr Color WithAlpha(const f32 a) const { return Color { r, g, b, static_cast<u8>(a * 255.0F) }; }
 };
 static_assert(sizeof(Color) == sizeof(SDL_Color));
+
+struct Texture : LogLifetimeWithCount<Texture> {
+    explicit Texture(const AbsolutePath& path) : texture(IMG_LoadTexture(Singleton::Get<WindowState>().renderer, path.string().c_str())) {
+        if (texture.Get()) {
+            Logger().Created("Texture {} {}", texture->w, texture->h);
+        } else {
+            Logger().Created("Texture FAILED to load: {}", path.string());
+        }
+    }
+    [[nodiscard]] b8 FailedLoading() const { return texture.Get() == nullptr; }
+    operator SDL_Texture*() const { return texture.Get(); }
+    void SetColor(const Color color) const {
+        (void)SDL_SetTextureColorMod(texture.Get(), color.r, color.g, color.b);
+        (void)SDL_SetTextureAlphaMod(texture.Get(), color.a);
+    }
+
+private:
+    struct CloseTexture {
+        void operator()(SDL_Texture* texture) const {
+            if (texture) {
+                Logger().Destroyed("SDL_Texture destroyed {} {}", texture->w, texture->h);
+                SDL_DestroyTexture(texture);
+            }
+        }
+    };
+    UniquePointer<SDL_Texture, CloseTexture> texture;
+};
+
+struct Label {
+    UniquePointer<TTF_Text, DestroyText> ttf_text { nullptr };
+    [[nodiscard]] Label(TTF_Font* font = nullptr, const String& text = { }) : ttf_text { TTF_CreateText(Singleton::Get<WindowState>().text_engine, font, text.c_str(), text.size()) } { }
+    operator TTF_Text*() const { return ttf_text.Get(); }
+    void SetFont(TTF_Font* font) const { (void)TTF_SetTextFont(ttf_text.Get(), font); }
+    void SetText(const String& string) const { (void)TTF_SetTextString(ttf_text.Get(), string.c_str(), string.size()); }
+    void SetColor(const Color color) const { (void)TTF_SetTextColor(ttf_text.Get(), color.r, color.g, color.b, color.a); }
+    void SetWrapWidth(const f32 width) const { (void)TTF_SetTextWrapWidth(ttf_text.Get(), static_cast<i32>(width)); }
+    void Draw(const float2 position) const { (void)TTF_DrawRendererText(ttf_text.Get(), position.x, position.y); }
+};
+struct SurfaceLabel {
+    UniquePointer<TTF_Text, DestroyText> ttf_text { TTF_CreateText(Singleton::Get<WindowState>().surface_text_engine, nullptr, "", 0) };
+    operator TTF_Text*() const { return ttf_text.Get(); }
+    void SetText(const String& string) const { TTF_SetTextString(ttf_text.Get(), string.c_str(), string.size()); }
+};
 
 struct Vertex {
     float2 position;

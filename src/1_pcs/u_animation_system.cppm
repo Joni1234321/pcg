@@ -59,7 +59,7 @@ struct ParticleSystem {
         (void)SDL_SetRenderDrawColor(Singleton::Get<WindowState>().renderer, color.r, color.g, color.b, color.a);
         for (ParticleEmitter& emitter : globalData.Get<ParticleEmitter>()) {
             for (Particle& particle : emitter.particles.items | std::ranges::views::reverse) {
-                TTF_DrawRendererText(particle.text, particle.position.x, particle.position.y);
+                particle.text.Draw(particle.position);
                 particle.position += emitter.velocity * float2 { delta_time };
                 if (current_ms - particle.start > particle.duration) { emitter.particles.SwapBackErase(particle); }
             }

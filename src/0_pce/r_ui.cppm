@@ -35,9 +35,8 @@ inline void DrawRect(const WindowState& window_state, const AABB area, const Col
 
 inline b8 DrawTexture(const WindowState& window_state, const HandleOptional<Texture> texture_handle, const AABB area, const Color color) {
     if (!texture_handle.IsValid()) { return false; }
-    SDL_Texture* texture = globalData[texture_handle.GetHandle()];
-    (void)SDL_SetTextureColorMod(texture, color.r, color.g, color.b);
-    (void)SDL_SetTextureAlphaMod(texture, color.a);
+    Texture& texture = globalData[texture_handle.GetHandle()];
+    texture.SetColor(color);
     (void)SDL_RenderTexture(window_state.renderer, texture, nullptr, area);
     return true;
 }
@@ -46,9 +45,9 @@ inline void DrawText(const ui::Font& font, const Label& label, const AABB area, 
     if (color.a == 0) { return; }
     TTF_SetFontWrapAlignment(font, static_cast<TTF_HorizontalAlignment>(alignment));
     label.SetFont(font);
-    (void)TTF_SetTextColor(label, color.r, color.g, color.b, color.a);
-    (void)TTF_SetTextWrapWidth(label, area.size.x);
-    (void)TTF_DrawRendererText(label, area.point.x, area.point.y);
+    label.SetColor(color);
+    label.SetWrapWidth(area.size.x);
+    label.Draw(area.point);
 }
 
 inline void DrawColorBox(const WindowState& window_state, const ui::Font& font, const Label& label, const AABBWithPadding& area_with_padding, const ColorBox& color_box, const TextAlignment alignment = TextAlignment::RIGHT) {
