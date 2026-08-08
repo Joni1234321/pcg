@@ -34,6 +34,7 @@ public:
     [[nodiscard]] constexpr operator TTF_Font*() const { return font.Get(); }
     [[nodiscard]] FontSize GetSize() const { return static_cast<FontSize>(TTF_GetFontSize(font.Get())); }
     void SetWrapAlignment(const TextAlignment alignment) const { (void)TTF_SetFontWrapAlignment(font.Get(), static_cast<TTF_HorizontalAlignment>(alignment)); }
+    void SetOutline(const i32 outline) const { (void)TTF_SetFontOutline(font.Get(), outline); }
 };
 class FontCollection {
     AbsolutePath font_path_normal_courier { };

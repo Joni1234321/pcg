@@ -59,6 +59,13 @@ struct ParticleSystem {
         (void)SDL_SetRenderDrawColor(Singleton::Get<WindowState>().renderer, color.r, color.g, color.b, color.a);
         for (ParticleEmitter& emitter : globalData.Get<ParticleEmitter>()) {
             for (Particle& particle : emitter.particles.items | std::ranges::views::reverse) {
+                TTF_Font* font = TTF_GetTextFont(particle.text);
+                const i32 outline = static_cast<i32>(TTF_GetFontSize(font) * 0.04F) + 1;
+                particle.text.SetColor(colors::COLOR_BLACK);
+                (void)TTF_SetFontOutline(font, outline);
+                particle.text.Draw(particle.position - float2 { static_cast<f32>(outline) });
+                (void)TTF_SetFontOutline(font, 0);
+                particle.text.SetColor(colors::COLOR_WHITE);
                 particle.text.Draw(particle.position);
                 particle.position += emitter.velocity * float2 { delta_time };
                 if (current_ms - particle.start > particle.duration) { emitter.particles.SwapBackErase(particle); }

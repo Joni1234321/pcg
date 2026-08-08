@@ -118,10 +118,12 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
     const float2 color_box_padding = counter_size * float2 { 0.01F };
 
     const ui::FontSize pt_22 = static_cast<ui::FontSize>(counter_size.y * 0.22F);
+    const ui::FontSize pt_16 = static_cast<ui::FontSize>(counter_size.y * 0.16F);
     const ui::FontSize pt_12 = static_cast<ui::FontSize>(counter_size.y * 0.12F);
     const ui::FontSize pt_10 = static_cast<ui::FontSize>(counter_size.y * 0.10F);
     const ui::FontSize pt_08 = static_cast<ui::FontSize>(counter_size.y * 0.08F);
     const Optional<std::reference_wrapper<const ui::Font>> font_22_opt = pt_22 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_22));
+    const Optional<std::reference_wrapper<const ui::Font>> font_16_opt = pt_16 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_16));
     const Optional<std::reference_wrapper<const ui::Font>> font_12_opt = pt_12 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCourier(static_cast<ui::FontSizes>(pt_12));
     const Optional<std::reference_wrapper<const ui::Font>> font_10_opt = pt_10 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_10));
     const Optional<std::reference_wrapper<const ui::Font>> font_08_opt = pt_08 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCourier(static_cast<ui::FontSizes>(pt_08));
@@ -153,7 +155,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             const ui::ColorBox color_box_name_div { .color_fill = counter.stack[0].color_icon, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_BLACK };
             DrawColorBox(window_state, font_10_opt.value(), counter.label_name_div, area_name_div, color_box_name_div);
 
-            const ui::AABBWithPadding area_name_sub { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.02F }, counter_size * float2 { 0.97F, 0.12F }), .padding = color_box_padding };
+            const ui::AABBWithPadding area_name_sub { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.35F }, counter_size * float2 { 0.97F, 0.12F }), .padding = color_box_padding };
             const ui::ColorBox color_box_name_sub { .color_text = colors::COLOR_BLACK };
             DrawColorBox(window_state, font_10_opt.value(), counter.label_name_sub, area_name_sub, color_box_name_sub);
         } else {
@@ -185,22 +187,24 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         }
 
         if (font_12_opt.has_value()) {
-            const ui::AABBWithPadding area_steps { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.82F, 0.56F }, counter_size * float2 { 0.14F }), .padding = color_box_padding };
+            const ui::AABBWithPadding area_steps { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.82F, 0.38F }, counter_size * float2 { 0.14F }), .padding = color_box_padding };
             const ui::ColorBox color_box_steps { .color_fill = colors::COLOR_WHITE_SMOKE, .color_stroke = colors::COLOR_ORANGE, .color_text = colors::COLOR_BLACK };
             DrawColorBox(window_state, font_12_opt.value(), counter.label_steps, area_steps, color_box_steps);
         }
 
+        const ui::ColorBox color_box_move = MoveTypeToColorBox(MoveTypeUnitIcon(counter.icon));
+
         if (font_22_opt.has_value()) {
-            const ui::ColorBox color_box_move = MoveTypeToColorBox(MoveTypeUnitIcon(counter.icon));
-
-            const ui::AABBWithPadding area_move_allowance { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.725F }, counter_size * float2 { 0.25F }), .padding = color_box_padding };
-            DrawColorBox(window_state, font_22_opt.value(), counter.label_move_allowance, area_move_allowance, color_box_move);
-
             const ui::AABBWithPadding area_dmg { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.725F }, counter_size * float2 { 0.25F }), .padding = color_box_padding };
             DrawColorBox(window_state, font_22_opt.value(), counter.label_dmg, area_dmg, color_box_move);
+        }
 
-            const ui::AABBWithPadding area_dmg_ranged { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.43F }, counter_size * float2 { 0.25F }), .padding = color_box_padding };
-            DrawColorBox(window_state, font_22_opt.value(), counter.label_dmg_ranged, area_dmg_ranged, RangedTypeToColorBox(RangedTypeUnitIcon(counter.icon)));
+        if (font_16_opt.has_value()) {
+            const ui::AABBWithPadding area_move_allowance { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.795F }, counter_size * float2 { 0.18F }), .padding = color_box_padding };
+            DrawColorBox(window_state, font_16_opt.value(), counter.label_move_allowance, area_move_allowance, color_box_move);
+
+            const ui::AABBWithPadding area_dmg_ranged { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.43F }, counter_size * float2 { 0.18F }), .padding = color_box_padding };
+            DrawColorBox(window_state, font_16_opt.value(), counter.label_dmg_ranged, area_dmg_ranged, RangedTypeToColorBox(RangedTypeUnitIcon(counter.icon)));
         }
     }
 }
