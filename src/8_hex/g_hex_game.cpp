@@ -165,6 +165,7 @@ void arcade::RunHex() {
     // after SDL is dead, causing an access violation (0xC0000005).
     hex_state.counters.Destroy();
     hex_state.label_pool.Destroy();
+    globalData.Get<ParticleEmitter>().clear();
     globalData.Get<NodeTree>().clear();
 }
 } // namespace hex

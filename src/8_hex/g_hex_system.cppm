@@ -16,9 +16,11 @@ import pce.sdl;
 import pce.collections;
 import pce.colors;
 import pce.logger;
+import pce.strong;
 
 import pcs.input;
 import pcs.camera;
+import pcs.animation;
 
 import hex.hex;
 import hex.types;
@@ -29,9 +31,10 @@ import hex.render;
 namespace hex {
 using namespace hex::ui;
 using namespace hex::math;
+
 [[nodiscard]] b8 AxialIsEnemy(const HexState& hex_state, const int2 axial) { return hex_state.units_by_axial.contains(axial) && !std::ranges::contains(hex_state.units_by_axial.at(axial) | hex_state.units.handle_to_view(), hex_state.player_tag, &Unit::tag); }
-[[nodiscard]] b8 AxialIsEnemyOrZoc(const HexState& hex_state, const int2 axial) {
-    return AxialIsEnemy(hex_state, axial) || std::ranges::any_of(HEX_AXIAL_NEIGHBOURS, [&](const int2 axial_offset) -> b8 { return AxialIsEnemy(hex_state, axial + axial_offset); });
+[[nodiscard]] b8 AxialIsEnemyZoc (const HexState& hex_state, const int2 axial) {
+    return std::ranges::any_of(HEX_AXIAL_NEIGHBOURS, [&](const int2 axial_offset) -> b8 { return AxialIsEnemy(hex_state, axial + axial_offset); });
 }
 [[nodiscard]] u8 AxialAdjecentEnemyControl(const HexState& hex_state, const int2 axial) {
     return std::ranges::count_if(HEX_AXIAL_NEIGHBOURS, [&](const int2 axial_offset) -> b8 { return hex_state.hex_map.Contains(axial + axial_offset) && hex_state.hex_map[axial + axial_offset].owner.tag != hex_state.player_tag; });
@@ -59,7 +62,7 @@ List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start
             if (!hex_state.hex_map.Contains(axial_next) || AxialIsEnemy(hex_state, axial_next)) { continue; }
 
             const Hex& hex = hex_state.hex_map[axial_next];
-            const u32 cost_conquer = (hex.owner.tag != hex_state.player_tag) + hex.owner.contested + AxialIsEnemyOrZoc(hex_state, axial_next) + (AxialAdjecentEnemyControl(hex_state, axial_next) > 0) * 1U;
+            const u32 cost_conquer = (hex.owner.tag != hex_state.player_tag) + hex.owner.contested + AxialIsEnemyZoc(hex_state, axial_next) + (AxialAdjecentEnemyControl(hex_state, axial_next) > 0) * 1U;
             const RoadLevel road_level = static_cast<RoadLevel>(hex_state.hex_map[current.axial].roads.Test(edge));
             const b8 has_road = road_level != RoadLevel::ROAD_LEVEL_NONE;
             const MoveCost move_cost_terrain = has_road ? MovementCostRoad(road_level) : MoveCostTerrain(hex.terrain_type, hex.terrain_feature);
@@ -162,6 +165,8 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
 
 export namespace hex {
 struct HexSystem {
+    Handle<ParticleEmitter> particle_emitter { globalData.Create<ParticleEmitter>(ParticleEmitter { float2 { 0.0F, -60.0F } }) };
+
     void operator()() const {
         const WindowState& window_state = Singleton::Get<WindowState>();
         const CameraState& camera = Singleton::Get<CameraState>();
@@ -301,7 +306,7 @@ struct HexSystem {
                         for (const int2 offset : HEX_AXIAL_NEIGHBOURS) {
                             const int2 axial_neighbour = step->axial + offset;
                             if (!hex_state.hex_map.Contains(axial_neighbour)) { continue; }
-                            if (!AxialIsEnemyOrZoc(hex_state, axial_neighbour)) {
+                            if (!AxialIsEnemy(hex_state, axial_neighbour) && !AxialIsEnemyZoc(hex_state, axial_neighbour)) {
                                 Hex& hex_neighbour = hex_state.hex_map[axial_neighbour];
                                 if (hex_neighbour.owner.tag != hex_state.player_tag) { hex_neighbour.owner = HexOwner { .tag = hex_state.player_tag, .contested = true }; } // conquer
                             }
@@ -367,22 +372,26 @@ struct HexSystem {
 
                 i8 diff = units_attacker[0].dmg - units_defender[0].dmg;
                 u8 roll = Rand2D6();
-                u8 roll_mod = math::SaturatingAdd(roll, diff);
+                u8 roll_mod = SaturatingAdd(roll, diff);
+
+                Particle& particle_roll = globalData[particle_emitter].particles.items.EmplaceBack(Particle { .position = camera.WorldToScreen(HexAxialToWorld(axial_battle)), .duration = miliseconds32 { 1500U } });
+                (void)TTF_SetTextFont(particle_roll.text, font_collection.GetFontBoldCompact(FontSizes::h1));
+                particle_roll.text.SetText(std::format("{}", roll_mod));
 
                 // 50 / 50 whether they retreat. grouped in 2 after
-                if (roll <= 4) {
+                if (roll_mod <= 4) {
                     battle_outcome.defender_retreat = DefenderRetreat::DEFENDER_HOLDS;
                     battle_outcome.attacker_step_loss = 2;
-                } else if (roll <= 6) {
+                } else if (roll_mod <= 6) {
                     battle_outcome.defender_retreat = DefenderRetreat::DEFENDER_HOLDS;
                     battle_outcome.attacker_step_loss = 1;
-                } else if (roll <= 8) {
+                } else if (roll_mod <= 8) {
                     battle_outcome.defender_retreat = DefenderRetreat::DEFENDER_RETREAT;
                     battle_outcome.attacker_step_loss = 1;
-                } else if (roll <= 10) {
+                } else if (roll_mod <= 10) {
                     battle_outcome.defender_retreat = DefenderRetreat::DEFENDER_RETREAT;
                     battle_outcome.attacker_step_loss = 1;
-                } else if (roll <= 12) {
+                } else if (roll_mod <= 12) {
                     battle_outcome.defender_retreat = DefenderRetreat::DEFENDER_ROUT;
                     battle_outcome.defender_step_loss = 1;
                 } else {

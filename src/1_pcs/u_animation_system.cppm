@@ -40,7 +40,7 @@ struct AnimationSystem {
 // then the particlesystem will push it upwards until it expires
 struct Particle {
     float2 position { 0.0F, 0.0F };
-    std::unique_ptr<TTF_Text, DestroyText> text { nullptr };
+    Label text { };
     miliseconds32 duration { 0U };
     miliseconds32 start { TimeNowMS() };
 };
@@ -59,7 +59,7 @@ struct ParticleSystem {
         (void)SDL_SetRenderDrawColor(Singleton::Get<WindowState>().renderer, color.r, color.g, color.b, color.a);
         for (ParticleEmitter& emitter : globalData.Get<ParticleEmitter>()) {
             for (Particle& particle : emitter.particles.items | std::ranges::views::reverse) {
-                TTF_DrawRendererText(particle.text.get(), particle.position.x, particle.position.y);
+                TTF_DrawRendererText(particle.text, particle.position.x, particle.position.y);
                 particle.position += emitter.velocity * float2 { delta_time };
                 if (current_ms - particle.start > particle.duration) { emitter.particles.SwapBackErase(particle); }
             }
