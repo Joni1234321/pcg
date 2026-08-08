@@ -85,7 +85,10 @@ fetchcontent_declare(SDL3_image
                      GIT_TAG "release-3.4.4" EXCLUDE_FROM_ALL)
 fetchcontent_makeavailable(SDL3 SDL3_ttf SDL3_image)
 
-add_executable(pcg src/pcg.cpp src/8_hex/g_hex_game.cpp src/1_pcs/t_debug_system.cpp)
+add_executable(pcg src/pcg.cpp
+               src/8_hex/g_hex_game.cpp
+               src/1_pcs/r_ui_node.cpp
+               src/1_pcs/t_debug_system.cpp)
 set_property(TARGET pcg PROPERTY CXX_MODULE_STD ON)
 target_sources(pcg
                PRIVATE

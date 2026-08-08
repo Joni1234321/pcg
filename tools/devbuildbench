@@ -98,6 +98,8 @@ if ((DO_BUILD)); then
 	# -k 0: SDL's windres edges fail sporadically under load, don't lose the whole measurement over it
 	CCACHE_DISABLE=1 ninja -C "$BUILD_DIR" -k 0 ${JOBS:+-j "$JOBS"} ${TARGET:+"$TARGET"} || BUILD_FAILED=1
 	WALL=$(awk -v a="$START" -v b="$(date +%s.%N)" 'BEGIN{printf "%.2f", b-a}')
+	# ninja recompacts its log now and then, which invalidates the line offset
+	(($(wc -l <"$BUILD_DIR/.ninja_log") < SKIP)) && SKIP=0
 	((BUILD_FAILED)) && echo "warning: some edges failed, report covers what did compile" >&2
 fi
 
@@ -189,8 +191,9 @@ def merge(tus, key):
 traces = sorted(p for p in build_dir.rglob("*.json") if p.name.endswith(TRACE_SUFFIXES))
 tus = [t for t in (parse_trace(p) for p in traces) if t]
 edges = parse_ninja_log()
-obj = {o: s for o, s in edges.items() if o.endswith((".o", ".pcm"))}
-other = sum(s for o, s in edges.items() if not o.endswith((".o", ".pcm")))
+COMPILED = (".o", ".obj", ".pcm", ".bmi")
+obj = {o: s for o, s in edges.items() if o.endswith(COMPILED)}
+other = sum(s for o, s in edges.items() if not o.endswith(COMPILED))
 
 print(f"\n=== compile benchmark ({build_dir.relative_to(root)}) ===")
 if wall:
