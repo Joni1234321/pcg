@@ -168,4 +168,7 @@ struct Vertex {
     [[nodiscard]] constexpr operator SDL_Vertex() const { return *reinterpret_cast<const SDL_Vertex*>(this); }
 };
 static_assert(sizeof(Vertex) == sizeof(SDL_Vertex));
+
+inline b8 SDL_RenderGeometry(SDL_Renderer* renderer, SDL_Texture* texture, const Span<const Vertex> vertices, const Span<const i32> indices) { return SDL_RenderGeometry(renderer, texture, reinterpret_cast<const SDL_Vertex*>(vertices.data()), vertices.size(), indices.data(), indices.size()); }
+inline b8 SDL_RenderGeometry(SDL_Renderer* renderer, SDL_Texture* texture, const Span<const Vertex> vertices) { return SDL_RenderGeometry(renderer, texture, reinterpret_cast<const SDL_Vertex*>(vertices.data()), vertices.size(), nullptr, 0); }
 } // namespace hex

@@ -1,7 +1,6 @@
 module;
 
 #include <cassert>
-#include "SDL3/SDL.h"
 
 export module hex.render;
 
@@ -11,6 +10,7 @@ import pce.globals;
 import pce.window_state;
 import pce.assets;
 import pce.sdl;
+import pce.ui;
 import pcs.camera;
 import pce.colors;
 import pce.std;
@@ -24,7 +24,7 @@ inline void VertHexAppend(List<Vertex>& vertecies, const f32 hex_size, const flo
     Array<float2, HEX_CORNERS> points { };
     for (u32 i = 0; i < HEX_CORNERS; i++) { points[i] = hex_screen + HEX_ANGLE[i] * float2 { hex_size }; }
     for (u32 i = 0; i < HEX_CORNERS; i++) {
-        vertecies.EmplaceBack(hex_screen, hex_color_inner.value_or(colors::ColorMul(hex_color, 1.2F)));
+        vertecies.EmplaceBack(hex_screen, hex_color_inner.value_or(colors::ColorMul(hex_color, 1.0F)));
         vertecies.EmplaceBack(points[i], hex_color);
         vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color);
     }
@@ -102,7 +102,7 @@ inline void VertObbAppend(List<Vertex>& vertices, const OBB& obb, const ColorF c
             case TerrainType::TERRAIN_TYPE_MOUNTAIN: return Color { 92U, 92U, 100U };
             case TerrainType::TERRAIN_TYPE_SNOW: return Color { 198U, 204U, 212U };
         }
-    } else {
+    } else if constexpr (TERRAIN_SCHEME == MapStyle::HOI4_PAPER) {
         switch (terrain) {
             case TerrainType::TERRAIN_TYPE_DEEP_OCEAN: return Color { 88U, 112U, 142U };
             case TerrainType::TERRAIN_TYPE_OCEAN: return Color { 130U, 158U, 184U };
@@ -112,6 +112,16 @@ inline void VertObbAppend(List<Vertex>& vertices, const OBB& obb, const ColorF c
             case TerrainType::TERRAIN_TYPE_MOUNTAIN: return Color { 152U, 138U, 116U };
             case TerrainType::TERRAIN_TYPE_SNOW: return Color { 232U, 226U, 210U };
         }
+    } else {
+        switch (terrain) { // bright washed-out paper, one warm hue family, the counters carry the contrast
+            case TerrainType::TERRAIN_TYPE_DEEP_OCEAN: return Color { 191U, 205U, 214U };
+            case TerrainType::TERRAIN_TYPE_OCEAN: return Color { 211U, 223U, 229U };
+            case TerrainType::TERRAIN_TYPE_BEACH: return Color { 242U, 233U, 210U };
+            case TerrainType::TERRAIN_TYPE_GRASS: return Color { 231U, 231U, 209U };
+            case TerrainType::TERRAIN_TYPE_HILL: return Color { 209U, 213U, 187U };
+            case TerrainType::TERRAIN_TYPE_MOUNTAIN: return Color { 210U, 206U, 196U };
+            case TerrainType::TERRAIN_TYPE_SNOW: return Color { 249U, 248U, 244U };
+        }
     }
     std::unreachable();
 }
@@ -120,6 +130,34 @@ inline void VertObbAppend(List<Vertex>& vertices, const OBB& obb, const ColorF c
         case CountryTag::TAG_GER: return colors::COLOR_WG_GER_BG;
         case CountryTag::TAG_SOV: return colors::COLOR_WG_SOV_BG;
         case CountryTag::TAG_USA: return colors::COLOR_WG_USA_BG;
+        case CountryTag::TAG_NONE: return colors::COLOR_WHITE;
+    }
+    assert(false);
+    std::unreachable();
+}
+[[nodiscard]] constexpr Color CountryBranchToColor(const CountryTag tag, const UnitBranch branch) {
+    switch (tag) {
+        case CountryTag::TAG_GER:
+            switch (branch) { // feldgrau, panzer black, elite brass
+                case UnitBranch::BRANCH_INFANTRY: return Color::FromHsl(95.0F, 0.10F, 0.33F);
+                case UnitBranch::BRANCH_ARMOR: return Color::FromHsl(95.0F, 0.10F, 0.15F);
+                case UnitBranch::BRANCH_GUARD: return Color::FromHsl(42.0F, 0.28F, 0.30F);
+            }
+            break;
+        case CountryTag::TAG_SOV:
+            switch (branch) { // russet, deep tank red, guards banner crimson
+                case UnitBranch::BRANCH_INFANTRY: return Color::FromHsl(15.0F, 0.45F, 0.30F);
+                case UnitBranch::BRANCH_ARMOR: return Color::FromHsl(0.0F, 0.55F, 0.24F);
+                case UnitBranch::BRANCH_GUARD: return Color::FromHsl(352.0F, 0.65F, 0.36F);
+            }
+            break;
+        case CountryTag::TAG_USA:
+            switch (branch) { // slate navy, dark navy, elite steel blue
+                case UnitBranch::BRANCH_INFANTRY: return Color::FromHsl(215.0F, 0.35F, 0.32F);
+                case UnitBranch::BRANCH_ARMOR: return Color::FromHsl(215.0F, 0.50F, 0.18F);
+                case UnitBranch::BRANCH_GUARD: return Color::FromHsl(202.0F, 0.45F, 0.40F);
+            }
+            break;
         case CountryTag::TAG_NONE: return colors::COLOR_WHITE;
     }
     assert(false);
@@ -161,9 +199,6 @@ struct TerrainFeatureTextureStack {
     TerrainFeatureTextures terrain_features_silhouettes { "terrain/terrain-silhouettes" };
     TerrainFeatureTextures terrain_features_icons { "terrain/terrain-icons" };
 };
-inline b8 SDL_RenderGeometry(SDL_Renderer* renderer, SDL_Texture* texture, const Span<const Vertex> vertices, const Span<const i32> indices) { return SDL_RenderGeometry(renderer, texture, reinterpret_cast<const SDL_Vertex*>(vertices.data()), vertices.size(), indices.data(), indices.size()); }
-inline b8 SDL_RenderGeometry(SDL_Renderer* renderer, SDL_Texture* texture, const Span<const Vertex> vertices) { return SDL_RenderGeometry(renderer, texture, reinterpret_cast<const SDL_Vertex*>(vertices.data()), vertices.size(), nullptr, 0); }
-
 void AppendCountryBorders(HexState& hex_state, const CameraState& camera) {
     for (u32 i = 0; i < hex_state.hex_map.Size(); i++) {
         const Hex& hex = hex_state.hex_map.data[i];
@@ -229,7 +264,7 @@ void AppendCountryBorders(HexState& hex_state, const CameraState& camera) {
     }
 }
 void AppendTerrainFeatures(HexState& hex_state, const CameraState& camera) {
-    SDL_Renderer* renderer = Singleton::Get<WindowState>().renderer;
+    const WindowState& window_state = Singleton::Get<WindowState>();
     const TerrainFeatureTextureStack& stack = Singleton::Get<TerrainFeatureTextureStack>();
     const TerrainFeatureTextures& textures = TERRAIN_FEATURE_THEME == TerrainStyle::TERRAIN_STYLE_ICONS ? stack.terrain_features_icons : stack.terrain_features_silhouettes;
     for (u32 i = 0U; i < hex_state.hex_map.Size(); i++) {
@@ -237,14 +272,10 @@ void AppendTerrainFeatures(HexState& hex_state, const CameraState& camera) {
         if (hex.terrain_feature != TerrainFeature::TERRAIN_FEATURE_GRASSLAND) {
             const HandleOptional<Texture> texture_handle = textures.ForFeature(hex.terrain_feature);
             if (texture_handle.IsValid()) {
-                SDL_Texture* texture = hex::globalData[texture_handle.GetHandle()];
-                const Color color = TerrainFeatureToTint(hex.terrain_feature);
-                (void)SDL_SetTextureColorMod(texture, color.r, color.g, color.b);
                 const int2 axial = hex_state.hex_map.IndexToAxial(i);
                 const float2 screen_local_jitter = HexTileJitter(axial) * float2 { FEATURE_POSITION_JITTER * camera.scale };
                 const float2 screen = camera.WorldToScreen(HexAxialToWorld(axial)) + screen_local_jitter;
-                const AABB screen_area = AABB::FromCenter(screen, float2 { camera.scale * 1.1F });
-                (void)SDL_RenderTexture(renderer, texture, nullptr, screen_area);
+                ui::DrawTexture(window_state, texture_handle.GetHandle(), AABB::FromCenter(screen, float2 { camera.scale * 1.1F }), TerrainFeatureToTint(hex.terrain_feature));
             }
         }
     }

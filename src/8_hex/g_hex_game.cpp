@@ -73,7 +73,7 @@ void HexStateUpdateOOB(HexState& hex_state) {
 } // namespace
 
 void arcade::RunHex() {
-    Singleton::Get<WindowState>().clear_color = Color::FromHsl(180.0F, 0.5F, 0.20F);
+    Singleton::Get<WindowState>().clear_color = TABLE_THEME == TableStyle::TABLE_STYLE_SEA_GREEN ? Color::FromHsl(180.0F, 0.5F, 0.20F) : Color::FromHsl(42.0F, 0.12F, 0.66F);
 
     HexState& hex_state = Singleton::Get<HexState>();
 

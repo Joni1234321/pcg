@@ -30,12 +30,10 @@ inline void DrawRect(const WindowState& window_state, const AABB area, const Col
     (void)SDL_RenderFillRect(window_state.renderer, area);
 }
 
-inline b8 DrawTexture(const WindowState& window_state, const HandleOptional<Texture> texture_handle, const AABB area, const Color color) {
-    if (!texture_handle.IsValid()) { return false; }
-    Texture& texture = globalData[texture_handle.GetHandle()];
+inline void DrawTexture(const WindowState& window_state, const Handle<Texture> texture_handle, const AABB area, const Color color) {
+    Texture& texture = globalData[texture_handle];
     texture.SetColor(color);
     (void)SDL_RenderTexture(window_state.renderer, texture, nullptr, area);
-    return true;
 }
 
 inline void DrawText(const ui::Font& font, const Label& label, const AABB area, const Color color, const TextAlignment alignment = TextAlignment::RIGHT) {

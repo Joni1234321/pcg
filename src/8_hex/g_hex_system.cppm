@@ -16,6 +16,8 @@ import pce.collections;
 import pce.colors;
 import pce.logger;
 import pce.strong;
+import pce.assets;
+import pce.ui;
 
 import pcs.input;
 import pcs.camera;
@@ -110,7 +112,7 @@ void UnitToCounterAppend(HexState& hex_state) {
             for (; i < hex_state.pseudo_states.unit_selection->unit_handles.size(); i++) {
                 const Handle<Unit> unit_handle_selected = hex_state.pseudo_states.unit_selection->unit_handles[i];
                 const Unit& unit_selected = hex_state.units[unit_handle_selected];
-                counter.stack[i] = Counter { .color_background = CountryTagToColor(unit_selected.tag), .color_icon = unit_selected.color, .color_border = colors::COLOR_HEX_SELECT };
+                counter.stack[i] = Counter { .color_background = CountryBranchToColor(unit_selected.tag, hex_state.unit_formations[unit_selected.formation].branch), .color_icon = unit_selected.color, .color_border = colors::COLOR_HEX_SELECT };
             }
 
             // only color for rest
@@ -118,14 +120,14 @@ void UnitToCounterAppend(HexState& hex_state) {
                 const Handle<Unit> unit_handle = unit_handles[j];
                 if (hex_state.pseudo_states.unit_selection->unit_handles.Contains(unit_handle)) { continue; }
                 const Unit& unit = hex_state.units[unit_handle];
-                counter.stack[i++] = Counter { .color_background = CountryTagToColor(unit.tag), .color_icon = unit.color, .color_border = colors::COLOR_YELLOW };
+                counter.stack[i++] = Counter { .color_background = CountryBranchToColor(unit.tag, hex_state.unit_formations[unit.formation].branch), .color_icon = unit.color, .color_border = colors::COLOR_YELLOW };
             }
         } else {
             // drawing plain
             for (u32 i = 0; i < counters_on_hex; i++) {
                 const Handle<Unit> unit_handle = unit_handles[i];
                 const Unit& unit = hex_state.units[unit_handle];
-                counter.stack[i] = Counter { .color_background = CountryTagToColor(unit.tag), .color_icon = unit.color, .color_border = colors::COLOR_BLACK };
+                counter.stack[i] = Counter { .color_background = CountryBranchToColor(unit.tag, hex_state.unit_formations[unit.formation].branch), .color_icon = unit.color, .color_border = colors::COLOR_BLACK };
                 dmg += unit.dmg;
                 dmg_ranged += unit.dmg_ranged;
                 steps += unit.steps;
@@ -167,6 +169,8 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
 export namespace hex {
 struct HexSystem {
     Handle<ParticleEmitter> particle_emitter { globalData.Create<ParticleEmitter>(ParticleEmitter { float2 { 0.0F, -60.0F } }) };
+    Handle<Texture> table_texture { globalData.Create<Texture>(Asset("other/table.jpg")) };
+    HandleOptional<Texture> marble_texture { globalData.Create<Texture>(Asset("other/marble.jpg")) };
 
     void operator()() const {
         const WindowState& window_state = Singleton::Get<WindowState>();
@@ -174,6 +178,14 @@ struct HexSystem {
         const InputState& input_state = Singleton::Get<InputState>();
         const FontCollection& font_collection = Singleton::Get<FontCollection>();
         HexState& hex_state = Singleton::Get<HexState>();
+
+        // render table background, world-anchored so it pans and zooms with the map
+        if constexpr (TABLE_THEME == TableStyle::TABLE_STYLE_TEXTURE) {
+            constexpr f32 TABLE_MARGIN = 6.0F;
+            const float2 screen_min = camera.WorldToScreen(camera.map_world_min - float2 { TABLE_MARGIN });
+            const float2 screen_max = camera.WorldToScreen(camera.map_world_max + float2 { TABLE_MARGIN });
+            (void)ui::DrawTexture(window_state, table_texture, AABB::FromPoint(screen_min, screen_max - screen_min), colors::COLOR_WHITE);
+        }
 
         // precompute
         hex_state.label_pool.Clear();
@@ -217,7 +229,7 @@ struct HexSystem {
             const int2 axial = hex_state.hex_map.IndexToAxial(i);
             const float2 world = HexAxialToWorld(axial);
             Color color = TerrainToColorScheme(hex.terrain_type);
-            VertHexAppend(hex_state.verts, camera.scale * 0.9F, camera.WorldToScreen(world), color);
+            VertHexAppend(hex_state.verts, camera.scale * 0.97F, camera.WorldToScreen(world), color);
             if (hex.owner.contested) { VertHexAppend(hex_state.verts, camera.scale * 0.70F, camera.WorldToScreen(world), color.Mul(0.80F)); }
         }
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);

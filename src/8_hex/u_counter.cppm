@@ -167,7 +167,10 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         const AABB area_icon = area_icon_border.WithPadding(float2 { camera.scale / 40.0F });
         // const Color color_icon = counter.stack[0].color_icon;
         constexpr Color color_icon = colors::COLOR_WHITE;
-        if (!ui::DrawTexture(window_state, counter_textures.ForIcon(counter.icon), area_icon, color_icon)) {
+        const HandleOptional<Texture> texture_icon = counter_textures.ForIcon(counter.icon);
+        if (texture_icon.IsValid()) {
+            ui::DrawTexture(window_state, texture_icon.GetHandle(), area_icon, color_icon);
+        } else {
             ui::DrawRect(window_state, area_icon, color_icon);
             if (font_22_opt.has_value()) {
                 const AABB area_placeholder = AABB::FromPoint(counter_top_left + float2 { 0.0F, counter_size.y * 0.4F - static_cast<f32>(pt_22) * 0.3F }, counter_size);

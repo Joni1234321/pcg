@@ -19,6 +19,7 @@ enum class TerrainFeature : u8 { TERRAIN_FEATURE_GRASSLAND, TERRAIN_FEATURE_FIEL
 
 enum class Echelon : u8 { ECHELON_SQUAD, ECHELON_PLATOON, ECHELON_COMPANY, ECHELON_BATTALION, ECHELON_REGIMENT, ECHELON_BRIGADE, ECHELON_DIVISION, ECHELON_CORPS, ECHELON_ARMY };
 enum class UnitIcon : u8 { ICON_INF, ICON_ART, ICON_HQ, ICON_TANK, ICON_ENGINEER };
+enum class UnitBranch : u8 { BRANCH_INFANTRY, BRANCH_ARMOR, BRANCH_GUARD };
 enum class RoadLevel : u8 { ROAD_LEVEL_NONE, ROAD_LEVEL_TRACK, ROAD_LEVEL_SECONDARY, ROAD_LEVEL_PRIMARY };
 enum class MoveType : u8 { MOVE_LEG, MOVE_TAC, MOVE_TRUCK };
 enum class RangedType : u8 { RANGED_NONE, RANGED_DEFENSE, RANGED_ATTACK };
@@ -28,10 +29,12 @@ enum class ActivationState : u8  { TURN_HQ_ACTIVATE, TURN_HQ_LOGISTIC, TURN_HQ_O
 enum class ExecutePhase : u8  { EXECUTE_IDLE, EXECUTE_MOVE, EXECUTE_ATTACK  };
 
 enum class CounterStyle : u8 { COUNTER_STYLE_NIEHORSTER, COUNTER_STYLE_NIEHORSTER_BIG, COUNTER_STYLE_REAL };
-enum class MapStyle : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER };
+enum class MapStyle : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER, FADED_LINEN };
 enum class TerrainStyle : u8 { TERRAIN_STYLE_SILHOUETTES, TERRAIN_STYLE_ICONS };
+enum class TableStyle : u8 { TABLE_STYLE_TEXTURE, TABLE_STYLE_SEA_GREEN, TABLE_STYLE_LINEN };
 
-constexpr MapStyle TERRAIN_SCHEME = MapStyle::SLATE_TABLE;
+constexpr MapStyle TERRAIN_SCHEME = MapStyle::FADED_LINEN;
+constexpr TableStyle TABLE_THEME = TableStyle::TABLE_STYLE_SEA_GREEN;
 constexpr TerrainStyle TERRAIN_FEATURE_THEME = TerrainStyle::TERRAIN_STYLE_ICONS;
 constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_NIEHORSTER;
 
@@ -109,6 +112,7 @@ struct UnitFlavor {
 struct Unit;
 struct UnitFormation {
     CountryTag tag { };
+    UnitBranch branch { };
     Echelon echelon { };
     UnitName name { };
     Color color { };
