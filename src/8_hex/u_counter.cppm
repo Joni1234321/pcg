@@ -45,21 +45,22 @@ export namespace hex {
     }
     std::unreachable();
 }
+constexpr f32 TEXT_SHADOW_STRENGTH = 1.0F;
 
 [[nodiscard]] constexpr ui::ColorBox MoveTypeToColorBox(const MoveType move_type) {
     switch (move_type) {
-        case MoveType::MOVE_LEG: return ui::ColorBox { .color_fill = colors::COLOR_SOFT_BLUE, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_BLACK };
-        case MoveType::MOVE_TAC: return ui::ColorBox { .color_fill = colors::COLOR_RED, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_WHITE };
-        case MoveType::MOVE_TRUCK: return ui::ColorBox { .color_fill = colors::COLOR_SEA_GREEN, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_WHITE };
+        case MoveType::MOVE_LEG: return ui::ColorBox { .color_text = colors::COLOR_WHITE, .color_text_shadow = colors::COLOR_BLACK.WithAlpha(TEXT_SHADOW_STRENGTH) };
+        case MoveType::MOVE_TAC: return ui::ColorBox { .color_text = colors::COLOR_RED, .color_text_shadow = colors::COLOR_BLACK.WithAlpha(TEXT_SHADOW_STRENGTH) };
+        case MoveType::MOVE_TRUCK: return ui::ColorBox { .color_text = colors::COLOR_BLACK, .color_text_shadow = colors::COLOR_WHITE.WithAlpha(TEXT_SHADOW_STRENGTH) };
     }
     std::unreachable();
 }
 
 [[nodiscard]] constexpr ui::ColorBox RangedTypeToColorBox(const RangedType ranged_type) {
     switch (ranged_type) {
-        case RangedType::RANGED_NONE: return ui::ColorBox { .color_fill = colors::COLOR_CLEAR, .color_stroke = colors::COLOR_CLEAR, .color_text = colors::COLOR_CLEAR };
-        case RangedType::RANGED_DEFENSE: return ui::ColorBox { .color_fill = colors::COLOR_BLACK, .color_stroke = colors::COLOR_ASH_GRAY, .color_text = colors::COLOR_WHITE };
-        case RangedType::RANGED_ATTACK: return ui::ColorBox { .color_fill = colors::COLOR_RED, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_WHITE };
+        case RangedType::RANGED_NONE: return ui::ColorBox { };
+        case RangedType::RANGED_DEFENSE: return ui::ColorBox { .color_text = colors::COLOR_BLACK, .color_text_shadow = colors::COLOR_WHITE.WithAlpha(TEXT_SHADOW_STRENGTH) };
+        case RangedType::RANGED_ATTACK: return ui::ColorBox { .color_text = colors::COLOR_RED, .color_text_shadow = colors::COLOR_BLACK.WithAlpha(TEXT_SHADOW_STRENGTH) };
     }
     std::unreachable();
 }
@@ -130,7 +131,6 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         const float2 counter_center = camera.WorldToScreen(world);
         const float2 counter_top_left = counter_center - counter_size * float2 { 0.5F };
 
-        b8 shadow_drawn = false;
         for (i32 i = static_cast<i32>(counter.stack.size()) - 1; i >= 0; i--) {
             const Counter& counter_stack = counter.stack[static_cast<u32>(i)];
             if (counter_stack.color_icon.a == 0) { continue; }
@@ -142,10 +142,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             const AABB area_counter = AABB::FromCenter(counter_center + float2 { OFFSET_STACK * counter_size.x * static_cast<f32>(i) }, counter_size);
             constexpr Color COLOR_SHADOW = colors::COLOR_BLACK.WithAlpha(0.15F);
 
-            if (!shadow_drawn) {
-                ui::DrawRect(window_state, area_counter.WithOffset(float2 { OFFSET_SHADOW * counter_size.x }), COLOR_SHADOW);
-                shadow_drawn = true;
-            }
+            ui::DrawRect(window_state, area_counter.WithOffset(float2 { OFFSET_SHADOW * counter_size.x }), COLOR_SHADOW);
             ui::DrawRect(window_state, area_counter, counter_stack.color_border);
             ui::DrawRect(window_state, area_counter.WithPadding(float2 { BORDER_THICKNESS * counter_size.x }), counter_stack.color_background);
         }

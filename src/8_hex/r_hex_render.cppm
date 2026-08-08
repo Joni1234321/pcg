@@ -152,24 +152,24 @@ inline void VertObbAppend(List<Vertex>& vertices, const OBB& obb, const ColorF c
 [[nodiscard]] constexpr Color CountryBranchToColor(const CountryTag tag, const UnitBranch branch) {
     switch (tag) {
         case CountryTag::TAG_GER:
-            switch (branch) { // strength at a glance: infantry light, armor near black, guard loud
-                case UnitBranch::BRANCH_INFANTRY: return Color::FromHsl(95.0F, 0.12F, 0.44F);
-                case UnitBranch::BRANCH_ARMOR: return Color::FromHsl(95.0F, 0.10F, 0.10F);
-                case UnitBranch::BRANCH_GUARD: return Color::FromHsl(45.0F, 0.55F, 0.45F);
+            switch (branch) { // darker = stronger: infantry bright, guard vivid mid, armor black
+                case UnitBranch::BRANCH_INFANTRY: return Color::FromHsl(95.0F, 0.03F, 0.60F);
+                case UnitBranch::BRANCH_ARMOR: return Color::FromHsl(95.0F, 0.03F, 0.09F);
+                case UnitBranch::BRANCH_GUARD: return Color::FromHsl(45.0F, 0.60F, 0.42F);
             }
             break;
         case CountryTag::TAG_SOV:
             switch (branch) {
-                case UnitBranch::BRANCH_INFANTRY: return Color::FromHsl(16.0F, 0.55F, 0.40F);
-                case UnitBranch::BRANCH_ARMOR: return Color::FromHsl(0.0F, 0.65F, 0.16F);
-                case UnitBranch::BRANCH_GUARD: return Color::FromHsl(352.0F, 0.80F, 0.48F);
+                case UnitBranch::BRANCH_INFANTRY: return Color::FromHsl(16.0F, 0.60F, 0.55F);
+                case UnitBranch::BRANCH_ARMOR: return Color::FromHsl(0.0F, 0.60F, 0.12F);
+                case UnitBranch::BRANCH_GUARD: return Color::FromHsl(352.0F, 0.75F, 0.38F);
             }
             break;
         case CountryTag::TAG_USA:
             switch (branch) {
-                case UnitBranch::BRANCH_INFANTRY: return Color::FromHsl(215.0F, 0.35F, 0.42F);
-                case UnitBranch::BRANCH_ARMOR: return Color::FromHsl(215.0F, 0.55F, 0.12F);
-                case UnitBranch::BRANCH_GUARD: return Color::FromHsl(202.0F, 0.60F, 0.50F);
+                case UnitBranch::BRANCH_INFANTRY: return Color::FromHsl(215.0F, 0.40F, 0.58F);
+                case UnitBranch::BRANCH_ARMOR: return Color::FromHsl(215.0F, 0.50F, 0.10F);
+                case UnitBranch::BRANCH_GUARD: return Color::FromHsl(202.0F, 0.65F, 0.40F);
             }
             break;
         case CountryTag::TAG_NONE: return colors::COLOR_WHITE;

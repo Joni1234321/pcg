@@ -17,6 +17,7 @@ struct ColorBox {
     Color color_fill { };
     Color color_stroke { };
     Color color_text { };
+    Color color_text_shadow { };
 };
 
 struct AABBWithPadding {
@@ -52,6 +53,7 @@ inline void DrawColorBox(const WindowState& window_state, const ui::Font& font, 
     DrawRect(window_state, area_fill, color_box.color_fill);
 
     const AABB area_text = AABB::FromPoint(float2 { area_fill.point.x, area_with_padding.area.point.y }, area_fill.size);
+    if (color_box.color_text_shadow.a != 0) { DrawText(font, label, area_text.WithOffset(float2 { static_cast<f32>(font.GetSize()) * 0.04F }), color_box.color_text_shadow, alignment); }
     DrawText(font, label, area_text, color_box.color_text, alignment);
 }
 
