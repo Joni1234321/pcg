@@ -97,6 +97,7 @@ target_sources(pcg
                src/0_pce/g_globals.cppm
                src/0_pce/r_window.cppm
                src/0_pce/r_window_state.cppm
+               src/0_pce/r_ui.cppm
                src/0_pce/u_algorithm.cppm
                src/0_pce/u_assets.cppm
                src/0_pce/u_collections.cppm
@@ -108,12 +109,12 @@ target_sources(pcg
                src/0_pce/u_table.cppm
                src/0_pce/u_sdl.cppm
                src/0_pce/u_types.cppm
+               src/0_pce/u_util.cppm
 
                # systems
                src/1_pcs/i_input_system.cppm
                src/1_pcs/r_camera_system.cppm
                src/1_pcs/r_render.cppm
-               src/1_pcs/r_ui.cppm
                src/1_pcs/r_ui_node.cppm
                src/1_pcs/r_ui_node_data.cppm
                src/1_pcs/t_debug_system.cppm
@@ -126,6 +127,7 @@ target_sources(pcg
                src/8_hex/g_hex_terrain_generation.cppm
                src/8_hex/g_hex_scenarios.cppm
                src/8_hex/g_hex_types.cppm
+               src/8_hex/g_hex_system.cppm
                src/8_hex/r_hex_render.cppm
                src/8_hex/u_counter.cppm
                src/8_hex/u_hex.cppm

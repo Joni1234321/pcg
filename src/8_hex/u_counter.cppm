@@ -1,8 +1,5 @@
 module;
 
-#include <SDL3/SDL_render.h>
-#include <SDL3_ttf/SDL_ttf.h>
-
 export module hex.counter;
 
 import std;
@@ -14,7 +11,7 @@ import pce.assets;
 import pce.font;
 import pce.sdl;
 import pcs.camera;
-import pcs.ui;
+import pce.ui;
 import pce.collections;
 import pce.colors;
 
@@ -180,7 +177,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
 
         if (font_08_opt.has_value()) {
             const AABB area_echelon = area_icon_border.WithOffset(float2 { 0.0F, 0.03F * counter_size.y });
-            DrawText(font_08_opt.value(), counter.label_echelon, area_echelon, colors::COLOR_BLACK, TTF_HORIZONTAL_ALIGN_CENTER);
+            DrawText(font_08_opt.value(), counter.label_echelon, area_echelon, colors::COLOR_BLACK, TextAlignment::CENTER);
         }
 
         if (font_12_opt.has_value()) {

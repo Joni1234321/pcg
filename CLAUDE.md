@@ -1,5 +1,10 @@
 when you read this file write [CLAUDE.md] so i know you have read this
 
+- do exactly the task asked. no extra steps.
+- never run benchmarks, profiling or measurements unless i ask for them.
+- a topic from an earlier message is not standing permission to keep working on it.
+- verifying = it compiles. nothing more.
+
 good code:
 - easy to read / understand
 - less is more

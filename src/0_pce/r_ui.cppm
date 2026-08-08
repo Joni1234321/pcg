@@ -3,7 +3,7 @@ module;
 #include <SDL3/SDL_render.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-export module pcs.ui;
+export module pce.ui;
 
 import std;
 
@@ -15,6 +15,9 @@ import pce.sdl;
 import pce.colors;
 
 export namespace hex {
+
+enum class TextAlignment : u8 { LEFT, CENTER, RIGHT };
+static_assert(static_cast<i32>(TextAlignment::LEFT) == TTF_HORIZONTAL_ALIGN_LEFT && static_cast<i32>(TextAlignment::CENTER) == TTF_HORIZONTAL_ALIGN_CENTER && static_cast<i32>(TextAlignment::RIGHT) == TTF_HORIZONTAL_ALIGN_RIGHT);
 
 struct ColorBox {
     Color color_fill { };
@@ -42,16 +45,16 @@ inline b8 DrawTexture(const WindowState& window_state, const HandleOptional<Text
     return true;
 }
 
-inline void DrawText(const ui::Font& font, const Label& label, const AABB area, const Color color, const TTF_HorizontalAlignment alignment = TTF_HORIZONTAL_ALIGN_RIGHT) {
+inline void DrawText(const ui::Font& font, const Label& label, const AABB area, const Color color, const TextAlignment alignment = TextAlignment::RIGHT) {
     if (color.a == 0) { return; }
-    TTF_SetFontWrapAlignment(font, alignment);
+    TTF_SetFontWrapAlignment(font, static_cast<TTF_HorizontalAlignment>(alignment));
     (void)TTF_SetTextFont(label, font);
     (void)TTF_SetTextColor(label, color.r, color.g, color.b, color.a);
     (void)TTF_SetTextWrapWidth(label, area.size.x);
     (void)TTF_DrawRendererText(label, area.point.x, area.point.y);
 }
 
-inline void DrawColorBox(const WindowState& window_state, const ui::Font& font, const Label& label, const AABBWithPadding& area_with_padding, const ColorBox& color_box, const TTF_HorizontalAlignment alignment = TTF_HORIZONTAL_ALIGN_RIGHT) {
+inline void DrawColorBox(const WindowState& window_state, const ui::Font& font, const Label& label, const AABBWithPadding& area_with_padding, const ColorBox& color_box, const TextAlignment alignment = TextAlignment::RIGHT) {
     const AABB area_fill = area_with_padding.area.WithPadding(area_with_padding.padding);
 
     DrawRect(window_state, area_with_padding.area, color_box.color_stroke);

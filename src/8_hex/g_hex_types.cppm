@@ -7,6 +7,7 @@ import std;
 import pce.sdl;
 import pce.collections;
 import pce.std;
+import pce.math;
 
 import hex.hex;
 
@@ -99,6 +100,11 @@ struct UnitToe {
     u8 steps { };
 };
 using UnitName = Array<char, 10>;
+[[nodiscard]] String UnitNameToString(const UnitName& name) { return std::string(name.begin(), std::ranges::find(name, '\0')); }
+void UnitNameSet(UnitName& name, const String& text) {
+    name = { };
+    std::memcpy(name.data(), text.c_str(), math::Min(text.size(), static_cast<u32>(name.size())));
+}
 struct UnitFlavor {
     UnitName name { };
     Color color { };
