@@ -111,16 +111,16 @@ constexpr Color COLOR_HEX_SELECT { 224U, 168U, 24U }; // amber gold
 constexpr Color COLOR_ROAD_TAN { 196U, 168U, 120U };
 constexpr Color COLOR_ROAD_CASING_BROWN { 48U, 32U, 18U };
 constexpr Color COLOR_ROAD_GREY { 70U, 65U, 58U };
-constexpr Color COLOR_RIVER_BLUE { 78U, 138U, 196U };
-constexpr Color COLOR_RIVER_DEEP_BLUE { 22U, 52U, 92U };
-constexpr Color COLOR_RIVER_HIGHLIGHT_BLUE { 168U, 206U, 236U };
+constexpr Color COLOR_RIVER_BLUE { 132U, 162U, 188U };
+constexpr Color COLOR_RIVER_DEEP_BLUE { 92U, 114U, 138U };
+constexpr Color COLOR_RIVER_HIGHLIGHT_BLUE { 198U, 216U, 230U };
 
-constexpr Color COLOR_FEATURE_CITY { 140U, 25U, 25U };
-constexpr Color COLOR_FEATURE_VILLAGE { 120U, 75U, 45U };
-constexpr Color COLOR_FEATURE_WOODED_LIGHT { 150U, 180U, 70U };
-constexpr Color COLOR_FEATURE_WOODED_HEAVY { 20U, 70U, 30U };
-constexpr Color COLOR_FEATURE_FIELD { 205U, 175U, 95U };
-constexpr Color COLOR_FEATURE_MARSH { 95U, 115U, 85U };
+constexpr Color COLOR_FEATURE_CITY { 146U, 62U, 52U };
+constexpr Color COLOR_FEATURE_VILLAGE { 132U, 92U, 62U };
+constexpr Color COLOR_FEATURE_WOODED_LIGHT { 128U, 148U, 96U };
+constexpr Color COLOR_FEATURE_WOODED_HEAVY { 82U, 108U, 78U };
+constexpr Color COLOR_FEATURE_FIELD { 198U, 174U, 112U };
+constexpr Color COLOR_FEATURE_MARSH { 112U, 126U, 102U };
 
 constexpr f32 COUNTRY_LUMINANCE = 0.3F;
 constexpr Color COLOR_WG_GER_BG = Color::FromHsl(90.0F, 0.20F, COUNTRY_LUMINANCE);

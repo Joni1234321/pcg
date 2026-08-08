@@ -24,7 +24,7 @@ inline void VertHexAppend(List<Vertex>& vertecies, const f32 hex_size, const flo
     Array<float2, HEX_CORNERS> points { };
     for (u32 i = 0; i < HEX_CORNERS; i++) { points[i] = hex_screen + HEX_ANGLE[i] * float2 { hex_size }; }
     for (u32 i = 0; i < HEX_CORNERS; i++) {
-        vertecies.EmplaceBack(hex_screen, hex_color_inner.value_or(colors::ColorMul(hex_color, 0.8F)));
+        vertecies.EmplaceBack(hex_screen, hex_color_inner.value_or(colors::ColorMul(hex_color, 0.97F)));
         vertecies.EmplaceBack(points[i], hex_color);
         vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color);
     }
@@ -152,24 +152,24 @@ inline void VertObbAppend(List<Vertex>& vertices, const OBB& obb, const ColorF c
 [[nodiscard]] constexpr Color CountryBranchToColor(const CountryTag tag, const UnitBranch branch) {
     switch (tag) {
         case CountryTag::TAG_GER:
-            switch (branch) { // feldgrau, panzer black, elite brass
-                case UnitBranch::BRANCH_INFANTRY: return Color::FromHsl(95.0F, 0.10F, 0.33F);
-                case UnitBranch::BRANCH_ARMOR: return Color::FromHsl(95.0F, 0.10F, 0.15F);
-                case UnitBranch::BRANCH_GUARD: return Color::FromHsl(42.0F, 0.28F, 0.30F);
+            switch (branch) { // strength at a glance: infantry light, armor near black, guard loud
+                case UnitBranch::BRANCH_INFANTRY: return Color::FromHsl(95.0F, 0.12F, 0.44F);
+                case UnitBranch::BRANCH_ARMOR: return Color::FromHsl(95.0F, 0.10F, 0.10F);
+                case UnitBranch::BRANCH_GUARD: return Color::FromHsl(45.0F, 0.55F, 0.45F);
             }
             break;
         case CountryTag::TAG_SOV:
-            switch (branch) { // russet, deep tank red, guards banner crimson
-                case UnitBranch::BRANCH_INFANTRY: return Color::FromHsl(15.0F, 0.45F, 0.30F);
-                case UnitBranch::BRANCH_ARMOR: return Color::FromHsl(0.0F, 0.55F, 0.24F);
-                case UnitBranch::BRANCH_GUARD: return Color::FromHsl(352.0F, 0.65F, 0.36F);
+            switch (branch) {
+                case UnitBranch::BRANCH_INFANTRY: return Color::FromHsl(16.0F, 0.55F, 0.40F);
+                case UnitBranch::BRANCH_ARMOR: return Color::FromHsl(0.0F, 0.65F, 0.16F);
+                case UnitBranch::BRANCH_GUARD: return Color::FromHsl(352.0F, 0.80F, 0.48F);
             }
             break;
         case CountryTag::TAG_USA:
-            switch (branch) { // slate navy, dark navy, elite steel blue
-                case UnitBranch::BRANCH_INFANTRY: return Color::FromHsl(215.0F, 0.35F, 0.32F);
-                case UnitBranch::BRANCH_ARMOR: return Color::FromHsl(215.0F, 0.50F, 0.18F);
-                case UnitBranch::BRANCH_GUARD: return Color::FromHsl(202.0F, 0.45F, 0.40F);
+            switch (branch) {
+                case UnitBranch::BRANCH_INFANTRY: return Color::FromHsl(215.0F, 0.35F, 0.42F);
+                case UnitBranch::BRANCH_ARMOR: return Color::FromHsl(215.0F, 0.55F, 0.12F);
+                case UnitBranch::BRANCH_GUARD: return Color::FromHsl(202.0F, 0.60F, 0.50F);
             }
             break;
         case CountryTag::TAG_NONE: return colors::COLOR_WHITE;

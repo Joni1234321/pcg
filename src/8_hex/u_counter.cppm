@@ -130,18 +130,22 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         const float2 counter_center = camera.WorldToScreen(world);
         const float2 counter_top_left = counter_center - counter_size * float2 { 0.5F };
 
+        b8 shadow_drawn = false;
         for (i32 i = static_cast<i32>(counter.stack.size()) - 1; i >= 0; i--) {
             const Counter& counter_stack = counter.stack[static_cast<u32>(i)];
             if (counter_stack.color_icon.a == 0) { continue; }
 
             constexpr f32 OFFSET_STACK = 1.0F / 16.0F;
-            constexpr f32 OFFSET_SHADOW = OFFSET_STACK * 0.15F;
-            constexpr f32 BORDER_THICKNESS = OFFSET_STACK * 0.30F;
+            constexpr f32 OFFSET_SHADOW = OFFSET_STACK / 3;
+            constexpr f32 BORDER_THICKNESS = OFFSET_STACK / 6;
 
             const AABB area_counter = AABB::FromCenter(counter_center + float2 { OFFSET_STACK * counter_size.x * static_cast<f32>(i) }, counter_size);
-            constexpr Color COLOR_SHADOW = colors::ColorWithAlpha(colors::COLOR_BLACK, 0.5F);
+            constexpr Color COLOR_SHADOW = colors::COLOR_BLACK.WithAlpha(0.15F);
 
-            ui::DrawRect(window_state, area_counter.WithOffset(float2 { OFFSET_SHADOW * counter_size.x }), COLOR_SHADOW);
+            if (!shadow_drawn) {
+                ui::DrawRect(window_state, area_counter.WithOffset(float2 { OFFSET_SHADOW * counter_size.x }), COLOR_SHADOW);
+                shadow_drawn = true;
+            }
             ui::DrawRect(window_state, area_counter, counter_stack.color_border);
             ui::DrawRect(window_state, area_counter.WithPadding(float2 { BORDER_THICKNESS * counter_size.x }), counter_stack.color_background);
         }

@@ -214,7 +214,7 @@ struct HexSystem {
 
         // render out-of-map filler hexes, a fixed border ring around the map
         {
-            constexpr Color COLOR_OUT_OF_MAP = Color::FromHsl(42.0F, 0.06F, 0.8F);
+            constexpr Color COLOR_OUT_OF_MAP = Color::FromHsl(42.0F, 0.05F, 0.74F);
             constexpr i32 FILLER_RING = 10;
             const int2 map_size = static_cast<int2>(hex_state.hex_map.map_size);
             for (i32 y = -FILLER_RING; y < map_size.y + FILLER_RING; y++) {
