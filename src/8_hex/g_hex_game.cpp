@@ -46,33 +46,11 @@ void HexStateUpdateOOB(HexState& hex_state) {
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'P',
     };
     f32 hue_next = 0.0F;
-    u32 number_army = 1;
-    u32 number_corps = 15;
-    u32 number_div = 100;
 
     for (u32 i = 0; i < hex_state.unit_formations.size(); i++) {
         const Handle<UnitFormation> formation_handle = hex_state.unit_formations.IndexToHandle(i);
         UnitFormation& formation = hex_state.unit_formations[formation_handle];
 
-        // formation designation, "333rd"
-        String name_formation;
-        switch (formation.echelon) {
-            case Echelon::ECHELON_REGIMENT: {
-                u32 regiment_number = 0;
-                switch (formation.tag) {
-                    case CountryTag::TAG_GER: regiment_number = Rand(200U, 500U); break;
-                    case CountryTag::TAG_SOV: regiment_number = Rand(600U, 900U); break;
-                    default: regiment_number = Rand(200U, 999U); break;
-                }
-                name_formation = std::format("{}{}", regiment_number, NumberToOrdinal(regiment_number));
-                break;
-            }
-            case Echelon::ECHELON_DIVISION: ++number_div; name_formation = std::format("{}{}", number_div, NumberToOrdinal(number_div)); break;
-            case Echelon::ECHELON_CORPS: ++number_corps; name_formation = std::format("{}{}", number_corps, NumberToOrdinal(number_corps)); break;
-            case Echelon::ECHELON_ARMY: ++number_army; name_formation = std::format("{}{}", number_army, NumberToOrdinal(number_army)); break;
-            default: name_formation = "dtc"; break;
-        }
-        UnitNameSet(formation.name, name_formation);
         formation.color = Color::FromHsl(hue_next, 0.5F, 0.5F);
         hue_next = std::fmod(hue_next + 37.0F, 360.0F);
 

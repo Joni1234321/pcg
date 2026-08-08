@@ -202,6 +202,13 @@ struct HexSystem {
 
         // render pseudo states
         if (hex_state.pseudo_states.axial_hover) { VertHexAppend(hex_state.verts, camera.scale, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover.value())), colors::COLOR_HEX_HOVER); }
+        if (hex_state.pseudo_states.unit_selection) {
+            // draw formation
+            const Handle<UnitFormation> formation = hex_state.units[hex_state.pseudo_states.unit_selection->unit_handles[0]].formation;
+            for (const Unit& unit_member : hex_state.units_by_formation[formation] | hex_state.units.handle_to_view()) {
+                VertHexAppend(hex_state.verts, camera.scale * 0.98F, camera.WorldToScreen(HexAxialToWorld(unit_member.axial)), hex_state.unit_formations[formation].color);
+            }
+        }
         if (hex_state.pseudo_states.axial_select) { VertHexAppend(hex_state.verts, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select.value())), colors::COLOR_HEX_SELECT); }
 
         // render map
@@ -234,10 +241,9 @@ struct HexSystem {
             };
             for (const Handle<Unit>& unit_handle : hex_state.pseudo_states.unit_selection.value().unit_handles) {
                 const Unit& unit = hex_state.units[unit_handle];
-                for (const Handle<Unit>& unit_handle_member : hex_state.units_by_formation[unit.formation]) {
-                    if (unit_handle_member == unit_handle) { continue; }
-                    const Unit& unit_member = hex_state.units[unit_handle_member];
-                    draw_line(unit_member.icon == UnitIcon::ICON_HQ ? colors::COLOR_RED : colors::COLOR_LIGHT_SKY_BLUE, unit.axial, unit_member.axial);
+                for (const Unit& unit_member : hex_state.units_by_formation[unit.formation] | hex_state.units.handle_to_view()) {
+                    if (unit_member.icon != UnitIcon::ICON_HQ || unit_member.axial == unit.axial) { continue; }
+                    draw_line(colors::COLOR_RED, unit.axial, unit_member.axial);
                 }
             }
         }
