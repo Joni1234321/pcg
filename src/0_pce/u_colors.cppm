@@ -105,8 +105,8 @@ constexpr Color COLOR_ASH_GRAY { 124U, 124U, 124U };
 
 constexpr Color COLOR_DARK_GREEN { 0U, 110U, 60U };
 constexpr Color COLOR_MAP_BACKGROUND = Color::FromHsl(40.0F, 0.50F, 0.2F);
-constexpr Color COLOR_HEX_HOVER { 190U, 205U, 175U };
-constexpr Color COLOR_HEX_SELECT { 210U, 165U, 30U };
+constexpr Color COLOR_HEX_HOVER { 70U, 64U, 52U };    // dark warm ink, reads on the bright paper map
+constexpr Color COLOR_HEX_SELECT { 224U, 168U, 24U }; // amber gold
 
 constexpr Color COLOR_ROAD_TAN { 196U, 168U, 120U };
 constexpr Color COLOR_ROAD_CASING_BROWN { 48U, 32U, 18U };

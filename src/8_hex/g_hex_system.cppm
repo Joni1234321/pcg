@@ -212,16 +212,19 @@ struct HexSystem {
         hex_state.player_tag = hex_state.pseudo_states.unit_selection.has_value() ? hex_state.units[hex_state.pseudo_states.unit_selection->unit_handles[0]].tag : CountryTag::TAG_GER;
         hex_state.player_action = PlayerAction::PLAYER_ACTION_NONE;
 
-        // render pseudo states
-        if (hex_state.pseudo_states.axial_hover) { VertHexAppend(hex_state.verts, camera.scale, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover.value())), colors::COLOR_HEX_HOVER); }
-        if (hex_state.pseudo_states.unit_selection) {
-            // draw formation
-            const Handle<UnitFormation> formation = hex_state.units[hex_state.pseudo_states.unit_selection->unit_handles[0]].formation;
-            for (const Unit& unit_member : hex_state.units_by_formation[formation] | hex_state.units.handle_to_view()) {
-                VertHexAppend(hex_state.verts, camera.scale * 0.98F, camera.WorldToScreen(HexAxialToWorld(unit_member.axial)), hex_state.unit_formations[formation].color);
+        // render out-of-map filler hexes, a fixed border ring around the map
+        {
+            constexpr Color COLOR_OUT_OF_MAP = Color::FromHsl(42.0F, 0.06F, 0.8F);
+            constexpr i32 FILLER_RING = 10;
+            const int2 map_size = static_cast<int2>(hex_state.hex_map.map_size);
+            for (i32 y = -FILLER_RING; y < map_size.y + FILLER_RING; y++) {
+                for (i32 x = -FILLER_RING; x < map_size.x + FILLER_RING; x++) {
+                    const int2 axial = HexOffsetToAxial({ x, y });
+                    if (hex_state.hex_map.Contains(axial)) { continue; }
+                    VertHexAppend(hex_state.verts, camera.scale * 0.97F, camera.WorldToScreen(HexAxialToWorld(axial)), COLOR_OUT_OF_MAP);
+                }
             }
         }
-        if (hex_state.pseudo_states.axial_select) { VertHexAppend(hex_state.verts, camera.scale * 0.95F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select.value())), colors::COLOR_HEX_SELECT); }
 
         // render map
         for (u32 i = 0; i < hex_state.hex_map.Size(); i++) {
@@ -232,6 +235,17 @@ struct HexSystem {
             VertHexAppend(hex_state.verts, camera.scale * 0.97F, camera.WorldToScreen(world), color);
             if (hex.owner.contested) { VertHexAppend(hex_state.verts, camera.scale * 0.70F, camera.WorldToScreen(world), color.Mul(0.80F)); }
         }
+
+        // render pseudo states as rings on top of the map
+        if (hex_state.pseudo_states.axial_hover) { VertHexRingAppend(hex_state.verts, camera.scale, camera.scale * 0.88F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover.value())), colors::COLOR_HEX_HOVER); }
+        if (hex_state.pseudo_states.unit_selection) {
+            // draw formation
+            const Handle<UnitFormation> formation = hex_state.units[hex_state.pseudo_states.unit_selection->unit_handles[0]].formation;
+            for (const Unit& unit_member : hex_state.units_by_formation[formation] | hex_state.units.handle_to_view()) {
+                VertHexRingAppend(hex_state.verts, camera.scale * 0.98F, camera.scale * 0.86F, camera.WorldToScreen(HexAxialToWorld(unit_member.axial)), hex_state.unit_formations[formation].color);
+            }
+        }
+        if (hex_state.pseudo_states.axial_select) { VertHexRingAppend(hex_state.verts, camera.scale * 0.88F, camera.scale * 0.76F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_select.value())), colors::COLOR_HEX_SELECT); }
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
         hex_state.verts.clear();
 

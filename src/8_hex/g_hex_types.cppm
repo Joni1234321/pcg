@@ -34,7 +34,7 @@ enum class TerrainStyle : u8 { TERRAIN_STYLE_SILHOUETTES, TERRAIN_STYLE_ICONS };
 enum class TableStyle : u8 { TABLE_STYLE_TEXTURE, TABLE_STYLE_SEA_GREEN, TABLE_STYLE_LINEN };
 
 constexpr MapStyle TERRAIN_SCHEME = MapStyle::FADED_LINEN;
-constexpr TableStyle TABLE_THEME = TableStyle::TABLE_STYLE_SEA_GREEN;
+constexpr TableStyle TABLE_THEME = TableStyle::TABLE_STYLE_LINEN;
 constexpr TerrainStyle TERRAIN_FEATURE_THEME = TerrainStyle::TERRAIN_STYLE_ICONS;
 constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_NIEHORSTER;
 

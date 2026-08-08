@@ -24,9 +24,23 @@ inline void VertHexAppend(List<Vertex>& vertecies, const f32 hex_size, const flo
     Array<float2, HEX_CORNERS> points { };
     for (u32 i = 0; i < HEX_CORNERS; i++) { points[i] = hex_screen + HEX_ANGLE[i] * float2 { hex_size }; }
     for (u32 i = 0; i < HEX_CORNERS; i++) {
-        vertecies.EmplaceBack(hex_screen, hex_color_inner.value_or(colors::ColorMul(hex_color, 1.0F)));
+        vertecies.EmplaceBack(hex_screen, hex_color_inner.value_or(colors::ColorMul(hex_color, 0.8F)));
         vertecies.EmplaceBack(points[i], hex_color);
         vertecies.EmplaceBack(points[(i + 1) % HEX_CORNERS], hex_color);
+    }
+}
+inline void VertHexRingAppend(List<Vertex>& vertecies, const f32 hex_size_outer, const f32 hex_size_inner, const float2 hex_screen, const ColorF hex_color) {
+    for (u32 i = 0; i < HEX_CORNERS; i++) {
+        const float2 outer_a = hex_screen + HEX_ANGLE[i] * float2 { hex_size_outer };
+        const float2 outer_b = hex_screen + HEX_ANGLE[(i + 1) % HEX_CORNERS] * float2 { hex_size_outer };
+        const float2 inner_a = hex_screen + HEX_ANGLE[i] * float2 { hex_size_inner };
+        const float2 inner_b = hex_screen + HEX_ANGLE[(i + 1) % HEX_CORNERS] * float2 { hex_size_inner };
+        vertecies.EmplaceBack(outer_a, hex_color);
+        vertecies.EmplaceBack(outer_b, hex_color);
+        vertecies.EmplaceBack(inner_b, hex_color);
+        vertecies.EmplaceBack(outer_a, hex_color);
+        vertecies.EmplaceBack(inner_b, hex_color);
+        vertecies.EmplaceBack(inner_a, hex_color);
     }
 }
 inline void VertAabbAppend(List<Vertex>& vertices, const AABB& aabb, const ColorF color) {
