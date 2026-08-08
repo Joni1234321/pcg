@@ -102,6 +102,7 @@ void UnitToCounterAppend(HexState& hex_state) {
         b8 axial_is_selected = hex_state.pseudo_states.unit_selection.has_value() && hex_state.pseudo_states.axial_select == axial_unit;
         if (axial_is_selected) {
             dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
+            dmg_ranged = hex_state.pseudo_states.unit_selection->dmg_ranged_sum;
             move = hex_state.pseudo_states.unit_selection->move_min;
             steps = hex_state.pseudo_states.unit_selection->steps;
             // drawing selected
@@ -126,8 +127,9 @@ void UnitToCounterAppend(HexState& hex_state) {
                 const Unit& unit = hex_state.units[unit_handle];
                 counter.stack[i] = Counter { .color_background = CountryTagToColor(unit.tag), .color_icon = unit.color, .color_border = colors::COLOR_BLACK };
                 dmg += unit.dmg;
+                dmg_ranged += unit.dmg_ranged;
                 steps += unit.steps;
-                move = math::Max(static_cast<u32>(unit.move), move);
+                move = Max(static_cast<u32>(unit.move), move);
             }
         }
 
@@ -184,6 +186,7 @@ struct HexSystem {
         if (hex_state.pseudo_states.unit_selection.has_value()) {
             const auto unit_selection = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
             hex_state.pseudo_states.unit_selection->dmg_sum = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::dmg), u32 { 0 }, std::plus { });
+            hex_state.pseudo_states.unit_selection->dmg_ranged_sum = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::dmg_ranged), u32 { 0 }, std::plus { });
             hex_state.pseudo_states.unit_selection->steps = std::ranges::fold_left(unit_selection | std::views::transform(&Unit::steps), u32 { 0 }, std::plus { });
             const auto [move_min, move_max] = std::ranges::minmax(unit_selection | std::views::transform(&Unit::move), std::less { });
             hex_state.pseudo_states.unit_selection->move_min = move_min;

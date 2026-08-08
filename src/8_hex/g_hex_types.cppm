@@ -137,6 +137,7 @@ struct UnitGroup {
     List<Handle<Unit>> unit_handles { };
     u32 steps { };
     u32 dmg_sum { };
+    u32 dmg_ranged_sum { };
     u32 move_min { };
     u32 move_max { };
 };
