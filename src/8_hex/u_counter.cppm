@@ -193,7 +193,7 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         }
 
         const ui::ColorBox color_box_move = MoveTypeToColorBox(MoveTypeUnitIcon(counter.icon));
-        const ui::ColorBox color_box_ranged = RangedTypeToColorBox(RangedTypeUnitIcon(counter.icon));
+        const ui::ColorBox color_box_ranged = RangedTypeToColorBox(counter.ranged_type);
 
         if (font_22_opt.has_value()) {
             const ui::AABBWithPadding area_dmg { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.725F }, counter_size * float2 { 0.25F }), .padding = color_box_padding };

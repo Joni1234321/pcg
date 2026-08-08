@@ -71,6 +71,7 @@ struct Counter {
 struct CounterStack {
     int2 axial { };
     UnitIcon icon { };
+    RangedType ranged_type { };
     Array<Counter, 12> stack { };
     Label label_echelon { };
     Label label_name_div { };
@@ -125,9 +126,10 @@ struct Unit {
 
     // unit formation
     Handle<UnitFormation> formation;
+    Echelon echelon { };
     CountryTag tag { };
     UnitIcon icon { };
-    Echelon echelon { };
+    RangedType ranged_type { };
 
     // unit stats
     u8 move { };

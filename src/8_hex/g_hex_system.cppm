@@ -140,6 +140,7 @@ void UnitToCounterAppend(HexState& hex_state) {
         const Unit& unit_largest_echelon = hex_state.units[unit_handle_largest_echelon];
 
         counter.icon = unit_largest_echelon.icon;
+        counter.ranged_type = unit_largest_echelon.ranged_type;
         counter.label_echelon.SetText(std::format("{}", EchelonToString(unit_largest_echelon.echelon)));
         counter.label_icon_placeholder.SetText(UnitIconToString(unit_largest_echelon.icon));
         counter.label_dmg.SetText(std::format("{}", dmg));
@@ -394,8 +395,15 @@ struct HexSystem {
                     u8 defender_step_loss;
                 } battle_outcome;
 
-                i8 diff = units_attacker[0].dmg - units_defender[0].dmg;
-                u8 roll = Rand2D6();
+                Hex& hex_battle = hex_state.hex_map[axial_battle];
+                Unit& unit_attacker = units_attacker[0];
+                Unit& unit_defender = units_defender[0];
+                UnitFormation& formation_attacker = hex_state.unit_formations[unit_attacker.formation];
+                UnitFormation& formation_defender = hex_state.unit_formations[unit_defender.formation];
+                u8 dmg_attacker = unit_attacker.dmg + std::ranges::contains(formation_attacker.support | hex_state.units.handle_to_view(), RangedType::RANGED_ATTACK, &Unit::ranged_type) - formation_attacker.prepared_defense + (unit_attacker.ranged_type == RangedType::RANGED_ATTACK);
+                u8 dmg_defender = unit_defender.dmg + !std::ranges::contains(formation_defender.support | hex_state.units.handle_to_view(), RangedType::RANGED_NONE, &Unit::ranged_type) + (units_defender.size() > 2 ? -2 : units_defender.size() == 2) + (hex_battle.terrain_type != TerrainType::TERRAIN_TYPE_GRASS) + (unit_defender.ranged_type == RangedType::RANGED_ATTACK) * (hex_battle.terrain_feature == TerrainFeature::TERRAIN_FEATURE_CITY ? -3 : (hex_battle.terrain_type == TerrainType::TERRAIN_TYPE_GRASS) * 2);
+                i8 diff = dmg_attacker - dmg_defender;
+                u8 roll = RandD6() + RandD6();
                 u8 roll_mod = SaturatingAdd(roll, diff);
 
                 // 50 / 50 whether they retreat. grouped in 2 after
@@ -423,7 +431,7 @@ struct HexSystem {
                 units_defender[0].steps = SaturatingSub(units_defender[0].steps, battle_outcome.defender_step_loss);
                 units_attacker[0].move = SaturatingSub(units_attacker[0].move, MOVE_COST_ATTACK);
 
-                globalData[particle_emitter].particles.items.EmplaceBack(Particle { .position = camera.WorldToScreen(HexAxialToWorld(axial_battle)), .text = Label { font_collection.GetFontBoldCourier(FontSizes::h1), std::format("{} [{}]\nA{} D{}\n{}", roll_mod, roll, battle_outcome.attacker_step_loss, battle_outcome.defender_step_loss, battle_outcome.defender_retreat) }, .duration = miliseconds32 { 1500U } });
+                globalData[particle_emitter].particles.items.EmplaceBack(Particle { .position = camera.WorldToScreen(HexAxialToWorld(axial_battle)), .text = Label { font_collection.GetFontBoldCourier(FontSizes::h1), std::format("{} [{:+}]\nA{} D{}\n{}", roll_mod, dmg_attacker - dmg_defender, battle_outcome.attacker_step_loss, battle_outcome.defender_step_loss, battle_outcome.defender_retreat) }, .duration = miliseconds32 { 1500U } });
 
                 switch (battle_outcome.defender_retreat) {
                     case DefenderRetreat::DEFENDER_HOLDS:
@@ -467,7 +475,7 @@ struct HexSystem {
                 (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
                 hex_state.verts.clear();
 
-                const f32 pt = camera.scale * 0.1F;
+                const f32 pt = camera.scale * 0.2F;
                 if (static_cast<FontSize>(pt) < FONT_MIN_SIZE) { break; }
                 const Font& font_attack = font_collection.GetFontBoldCompact(static_cast<FontSizes>(pt));
                 font_attack.SetWrapAlignment(TextAlignment::CENTER);
@@ -480,7 +488,7 @@ struct HexSystem {
                     auto units_defender = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()] | hex_state.units.handle_to_view();
                     const u32 dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
                     const u32 def = std::ranges::fold_left(units_defender | std::views::transform(&Unit::dmg), 0U, std::plus { });
-                    label.SetText(std::format("{}", dmg - def));
+                    label.SetText(std::format("{:+}", dmg - def));
                 } else if (attacker_is_hq) {
                     label.SetText("hq cannot attack");
                 } else if (!within_range) {

@@ -37,9 +37,10 @@ Handle<Unit> HexStateSpawnUnit(HexState& hex_state, const UnitSpawnCmd& unit_spa
     const int2 axial = HexOffsetToAxial(offset);
     return hex_state.units.EmplaceBack(Unit { .axial = axial,
                                               .formation = unit_spawn_cmd.formation,
+                                              .echelon = unit_spawn_cmd.echelon,
                                               .tag = hex_state.unit_formations[unit_spawn_cmd.formation].tag,
                                               .icon = unit_spawn_cmd.icon,
-                                              .echelon = unit_spawn_cmd.echelon,
+                                              .ranged_type = RangedTypeUnitIcon(unit_spawn_cmd.icon),
                                               .move = unit_toe.move,
                                               .dmg = unit_toe.dmg,
                                               .dmg_ranged = unit_toe.dmg_ranged,
