@@ -1,7 +1,6 @@
 module;
 
 #include "SDL3/SDL_keycode.h"
-#include "SDL3_ttf/SDL_ttf.h"
 
 export module hex.system;
 
@@ -339,7 +338,7 @@ struct HexSystem {
                 const f32 pt = camera.scale * 0.3F;
                 if (static_cast<FontSize>(pt) < FONT_MIN_SIZE) { break; }
                 const Font& font_movement = font_collection.GetFontBoldCompact(static_cast<FontSizes>(pt));
-                TTF_SetFontWrapAlignment(font_movement, TTF_HORIZONTAL_ALIGN_CENTER);
+                font_movement.SetWrapAlignment(TextAlignment::CENTER);
                 for (AxialAndCost cost_and_axial : axial_path) {
                     const float2 world = HexAxialToWorld(cost_and_axial.axial);
                     const float2 screen = camera.WorldToScreen(world);
@@ -374,8 +373,6 @@ struct HexSystem {
                 u8 roll = Rand2D6();
                 u8 roll_mod = SaturatingAdd(roll, diff);
 
-                globalData[particle_emitter].particles.items.EmplaceBack(Particle { .position = camera.WorldToScreen(HexAxialToWorld(axial_battle)), .text = Label { font_collection.GetFontBoldCompact(FontSizes::h1), std::format("{} [{}]", roll_mod, roll) }, .duration = miliseconds32 { 1500U } });
-
                 // 50 / 50 whether they retreat. grouped in 2 after
                 if (roll_mod <= 4) {
                     battle_outcome.defender_retreat = DefenderRetreat::DEFENDER_HOLDS;
@@ -397,9 +394,11 @@ struct HexSystem {
                     battle_outcome.defender_step_loss = 2;
                 }
 
-                units_attacker[0].steps = math::SaturatingSub(units_attacker[0].steps, battle_outcome.attacker_step_loss);
-                units_defender[0].steps = math::SaturatingSub(units_defender[0].steps, battle_outcome.defender_step_loss);
-                units_attacker[0].move = math::SaturatingSub(units_attacker[0].move, MOVE_COST_ATTACK);
+                units_attacker[0].steps = SaturatingSub(units_attacker[0].steps, battle_outcome.attacker_step_loss);
+                units_defender[0].steps = SaturatingSub(units_defender[0].steps, battle_outcome.defender_step_loss);
+                units_attacker[0].move = SaturatingSub(units_attacker[0].move, MOVE_COST_ATTACK);
+
+                globalData[particle_emitter].particles.items.EmplaceBack(Particle { .position = camera.WorldToScreen(HexAxialToWorld(axial_battle)), .text = Label { font_collection.GetFontBoldCourier(FontSizes::h1), std::format("{} [{}]\nA{} D{}\n{}", roll_mod, roll, battle_outcome.attacker_step_loss, battle_outcome.defender_step_loss, battle_outcome.defender_retreat) }, .duration = miliseconds32 { 1500U } });
 
                 switch (battle_outcome.defender_retreat) {
                     case DefenderRetreat::DEFENDER_HOLDS:
@@ -446,7 +445,7 @@ struct HexSystem {
                 const f32 pt = camera.scale * 0.1F;
                 if (static_cast<FontSize>(pt) < FONT_MIN_SIZE) { break; }
                 const Font& font_attack = font_collection.GetFontBoldCompact(static_cast<FontSizes>(pt));
-                TTF_SetFontWrapAlignment(font_attack, TTF_HORIZONTAL_ALIGN_CENTER);
+                font_attack.SetWrapAlignment(TextAlignment::CENTER);
                 const Label& label = hex_state.label_pool.Get();
                 label.SetWrapWidth(camera.scale);
                 label.SetFont(font_attack);
@@ -464,8 +463,7 @@ struct HexSystem {
                 } else if (!attacker_has_movement) {
                     label.SetText(std::format("no movement\n{} < {}", hex_state.pseudo_states.unit_selection->move_min, MOVE_COST_ATTACK));
                 }
-                const float2 screen_f = static_cast<float2>(screen);
-                label.Draw(float2 { screen_f.x - camera.scale * 0.5F, screen_f.y - pt * 0.5F });
+                label.Draw(float2 { screen.x - camera.scale * 0.5F, screen.y - pt * 0.5F });
 
                 break;
         }

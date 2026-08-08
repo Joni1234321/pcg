@@ -11,10 +11,7 @@ import pce.window_state;
 import pce.font;
 import pce.sdl;
 
-export namespace hex {
-
-enum class TextAlignment : u8 { LEFT, CENTER, RIGHT };
-static_assert(static_cast<i32>(TextAlignment::LEFT) == TTF_HORIZONTAL_ALIGN_LEFT && static_cast<i32>(TextAlignment::CENTER) == TTF_HORIZONTAL_ALIGN_CENTER && static_cast<i32>(TextAlignment::RIGHT) == TTF_HORIZONTAL_ALIGN_RIGHT);
+export namespace hex::ui {
 
 struct ColorBox {
     Color color_fill { };
@@ -43,7 +40,7 @@ inline b8 DrawTexture(const WindowState& window_state, const HandleOptional<Text
 
 inline void DrawText(const ui::Font& font, const Label& label, const AABB area, const Color color, const TextAlignment alignment = TextAlignment::RIGHT) {
     if (color.a == 0) { return; }
-    TTF_SetFontWrapAlignment(font, static_cast<TTF_HorizontalAlignment>(alignment));
+    font.SetWrapAlignment(alignment);
     label.SetFont(font);
     label.SetColor(color);
     label.SetWrapWidth(area.size.x);
