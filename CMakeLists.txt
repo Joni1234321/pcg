@@ -113,6 +113,7 @@ target_sources(pcg
                src/1_pcs/i_input_system.cppm
                src/1_pcs/r_camera_system.cppm
                src/1_pcs/r_render.cppm
+               src/1_pcs/r_ui.cppm
                src/1_pcs/r_ui_node.cppm
                src/1_pcs/r_ui_node_data.cppm
                src/1_pcs/t_debug_system.cppm
@@ -126,7 +127,6 @@ target_sources(pcg
                src/8_hex/g_hex_scenarios.cppm
                src/8_hex/g_hex_types.cppm
                src/8_hex/r_hex_render.cppm
-               src/8_hex/r_hex_ui.cppm
                src/8_hex/u_counter.cppm
                src/8_hex/u_hex.cppm
 

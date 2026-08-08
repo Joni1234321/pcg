@@ -14,13 +14,13 @@ import pce.assets;
 import pce.font;
 import pce.sdl;
 import pcs.camera;
+import pcs.ui;
 import pce.collections;
 import pce.colors;
 
 import hex.hex;
 import hex.types;
 import hex.terrain;
-import hex.ui;
 
 export namespace hex {
 [[nodiscard]] constexpr String EchelonToString(const Echelon echelon) {
@@ -142,105 +142,64 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             constexpr f32 BORDER_THICKNESS = OFFSET_STACK * 0.30F;
 
             const AABB area_counter = AABB::FromCenter(counter_center + float2 { OFFSET_STACK * counter_size.x * static_cast<f32>(i) }, counter_size);
-
-            const AABB area_shadow = area_counter.WithOffset(float2 { OFFSET_SHADOW * counter_size.x });
             constexpr Color COLOR_SHADOW = colors::ColorWithAlpha(colors::COLOR_BLACK, 0.5F);
-            (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_SHADOW.r, COLOR_SHADOW.g, COLOR_SHADOW.b, COLOR_SHADOW.a);
-            (void)SDL_RenderFillRect(window_state.renderer, area_shadow);
 
-            (void)SDL_SetRenderDrawColor(window_state.renderer, counter_stack.color_border.r, counter_stack.color_border.g, counter_stack.color_border.b, counter_stack.color_border.a);
-            (void)SDL_RenderFillRect(window_state.renderer, area_counter);
-
-            const AABB area_background = area_counter.WithPadding(float2 { BORDER_THICKNESS * counter_size.x });
-            (void)SDL_SetRenderDrawColor(window_state.renderer, counter_stack.color_background.r, counter_stack.color_background.g, counter_stack.color_background.b, counter_stack.color_background.a);
-            (void)SDL_RenderFillRect(window_state.renderer, area_background);
+            DrawRect(window_state, area_counter.WithOffset(float2 { OFFSET_SHADOW * counter_size.x }), COLOR_SHADOW);
+            DrawRect(window_state, area_counter, counter_stack.color_border);
+            DrawRect(window_state, area_counter.WithPadding(float2 { BORDER_THICKNESS * counter_size.x }), counter_stack.color_background);
         }
 
         // div
         if (font_10_opt.has_value()) {
-            const ColorBoxCmd color_box_cmd_name_div {
-                .font = font_10_opt.value(), .label = counter.label_name_div,
-                .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.09F }, counter_size * float2 { 1.0F, 0.25F }), .padding = color_box_padding,
-                .colors = { .color_fill = counter.stack[0].color_icon, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_BLACK } };
-            DrawColorBox(window_state, color_box_cmd_name_div);
+            const AABBWithPadding area_name_div { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.09F }, counter_size * float2 { 1.0F, 0.25F }), .padding = color_box_padding };
+            const ColorBox color_box_name_div { .color_fill = counter.stack[0].color_icon, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_BLACK };
+            DrawColorBox(window_state, font_10_opt.value(), counter.label_name_div, area_name_div, color_box_name_div);
 
-            const ColorBoxCmd color_box_cmd_name_sub {
-                .font = font_10_opt.value(), .label = counter.label_name_sub,
-                .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.02F }, counter_size * float2 { 0.97F, 0.12F }), .padding = color_box_padding,
-                .colors = { .color_text = colors::COLOR_BLACK } };
-            DrawColorBox(window_state, color_box_cmd_name_sub);
+            const AABBWithPadding area_name_sub { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.02F }, counter_size * float2 { 0.97F, 0.12F }), .padding = color_box_padding };
+            const ColorBox color_box_name_sub { .color_text = colors::COLOR_BLACK };
+            DrawColorBox(window_state, font_10_opt.value(), counter.label_name_sub, area_name_sub, color_box_name_sub);
         } else {
-            AABB area_div = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.09F }, counter_size * float2 { 1.0F, 0.5F });
-            Color color = counter.stack[0].color_icon;
-            (void)SDL_SetRenderDrawColor(window_state.renderer, color.r, color.g, color.b, color.a);
-            (void)SDL_RenderFillRect(window_state.renderer, area_div);
+            const AABB area_div = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.09F }, counter_size * float2 { 1.0F, 0.5F });
+            DrawRect(window_state, area_div, counter.stack[0].color_icon);
         }
 
         // icon
         const AABB area_icon_border = AABB::FromPoint(counter_top_left, counter_size * float2 { 0.6F, 0.4F }).WithOffset(counter_size * float2 { 0.02F });
-        constexpr Color COLOR_ICON_BORDER { colors::COLOR_BLACK };
-        (void)SDL_SetRenderDrawColor(window_state.renderer, COLOR_ICON_BORDER.r, COLOR_ICON_BORDER.g, COLOR_ICON_BORDER.b, COLOR_ICON_BORDER.a);
-        // (void)SDL_RenderFillRect(window_state.renderer, area_icon_border);
+        // DrawRect(window_state, area_icon_border, colors::COLOR_BLACK);
 
         const AABB area_icon = area_icon_border.WithPadding(float2 { camera.scale / 40.0F });
         // const Color color_icon = counter.stack[0].color_icon;
-        const Color color_icon = colors::COLOR_WHITE;
-        const HandleOptional<Texture> texture_handle = counter_textures.ForIcon(counter.icon);
-        SDL_Texture* icon_texture = texture_handle.IsValid() ? globalData[texture_handle.GetHandle()] : nullptr;
-        if (icon_texture) {
-            (void)SDL_SetTextureColorMod(icon_texture, color_icon.r, color_icon.g, color_icon.b);
-            (void)SDL_SetTextureAlphaMod(icon_texture, color_icon.a);
-            (void)SDL_RenderTexture(window_state.renderer, icon_texture, nullptr, area_icon);
-        } else {
-            (void)SDL_SetRenderDrawColor(window_state.renderer, color_icon.r, color_icon.g, color_icon.b, color_icon.a);
-            (void)SDL_RenderFillRect(window_state.renderer, area_icon);
+        constexpr Color color_icon = colors::COLOR_WHITE;
+        if (!DrawTexture(window_state, counter_textures.ForIcon(counter.icon), area_icon, color_icon)) {
+            DrawRect(window_state, area_icon, color_icon);
             if (font_22_opt.has_value()) {
-                const ui::Font& font_22 = font_22_opt.value();
-                (void)TTF_SetTextFont(counter.label_icon_placeholder, font_22);
-                (void)TTF_SetTextColorFloat(counter.label_icon_placeholder, 0.0F, 0.0F, 0.0F, 1.0F);
-                (void)TTF_SetTextWrapWidth(counter.label_icon_placeholder, static_cast<i32>(counter_size.x));
-                (void)TTF_DrawRendererText(counter.label_icon_placeholder, counter_top_left.x, counter_top_left.y + counter_size.y * 0.4F - static_cast<f32>(pt_22) * 0.3F);
+                const AABB area_placeholder = AABB::FromPoint(counter_top_left + float2 { 0.0F, counter_size.y * 0.4F - static_cast<f32>(pt_22) * 0.3F }, counter_size);
+                DrawText(font_22_opt.value(), counter.label_icon_placeholder, area_placeholder, colors::COLOR_BLACK);
             }
         }
 
         if (font_08_opt.has_value()) {
-            const ui::Font& font_08 = font_08_opt.value();
-
-            TTF_SetFontWrapAlignment(font_08, TTF_HORIZONTAL_ALIGN_CENTER);
-            (void)TTF_SetTextColorFloat(counter.label_echelon, 0.0F, 0.0F, 0.0F, 1.0F);
-            (void)TTF_SetTextFont(counter.label_echelon, font_08);
-            (void)TTF_SetTextWrapWidth(counter.label_echelon, area_icon_border.size.x);
-            (void)TTF_DrawRendererText(counter.label_echelon, area_icon_border.point.x, area_icon_border.point.y + 0.03F * counter_size.y);
+            const AABB area_echelon = area_icon_border.WithOffset(float2 { 0.0F, 0.03F * counter_size.y });
+            DrawText(font_08_opt.value(), counter.label_echelon, area_echelon, colors::COLOR_BLACK, TTF_HORIZONTAL_ALIGN_CENTER);
         }
 
         if (font_12_opt.has_value()) {
-            const ColorBoxCmd color_box_cmd_steps {
-                .font = font_12_opt.value(), .label = counter.label_steps,
-                .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.82F, 0.56F }, counter_size * float2 { 0.14F }), .padding = color_box_padding,
-                .colors = { .color_fill = colors::COLOR_WHITE_SMOKE, .color_stroke = colors::COLOR_ORANGE, .color_text = colors::COLOR_BLACK } };
-            DrawColorBox(window_state, color_box_cmd_steps);
+            const AABBWithPadding area_steps { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.82F, 0.56F }, counter_size * float2 { 0.14F }), .padding = color_box_padding };
+            const ColorBox color_box_steps { .color_fill = colors::COLOR_WHITE_SMOKE, .color_stroke = colors::COLOR_ORANGE, .color_text = colors::COLOR_BLACK };
+            DrawColorBox(window_state, font_12_opt.value(), counter.label_steps, area_steps, color_box_steps);
         }
 
         if (font_22_opt.has_value()) {
             const ColorBox color_box_move = MoveTypeToColorBox(MoveTypeUnitIcon(counter.icon));
 
-            const ColorBoxCmd color_box_cmd_move_allowance {
-                .font = font_22_opt.value(), .label = counter.label_move_allowance,
-                .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.725F }, counter_size * float2 { 0.25F }), .padding = color_box_padding,
-                .colors = color_box_move };
-            DrawColorBox(window_state, color_box_cmd_move_allowance);
+            const AABBWithPadding area_move_allowance { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.725F }, counter_size * float2 { 0.25F }), .padding = color_box_padding };
+            DrawColorBox(window_state, font_22_opt.value(), counter.label_move_allowance, area_move_allowance, color_box_move);
 
-            const ColorBoxCmd color_box_cmd_dmg {
-                .font = font_22_opt.value(), .label = counter.label_dmg,
-                .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.725F }, counter_size * float2 { 0.25F }), .padding = color_box_padding,
-                .colors = color_box_move };
-            DrawColorBox(window_state, color_box_cmd_dmg);
+            const AABBWithPadding area_dmg { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.725F }, counter_size * float2 { 0.25F }), .padding = color_box_padding };
+            DrawColorBox(window_state, font_22_opt.value(), counter.label_dmg, area_dmg, color_box_move);
 
-            const ColorBoxCmd color_box_cmd_dmg_ranged {
-                .font = font_22_opt.value(), .label = counter.label_dmg_ranged,
-                .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.43F }, counter_size * float2 { 0.25F }), .padding = color_box_padding,
-                .colors = RangedTypeToColorBox(RangedTypeUnitIcon(counter.icon)) };
-            DrawColorBox(window_state, color_box_cmd_dmg_ranged);
+            const AABBWithPadding area_dmg_ranged { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.43F }, counter_size * float2 { 0.25F }), .padding = color_box_padding };
+            DrawColorBox(window_state, font_22_opt.value(), counter.label_dmg_ranged, area_dmg_ranged, RangedTypeToColorBox(RangedTypeUnitIcon(counter.icon)));
         }
     }
 }
