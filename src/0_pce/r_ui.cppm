@@ -45,7 +45,7 @@ inline b8 DrawTexture(const WindowState& window_state, const HandleOptional<Text
 inline void DrawText(const ui::Font& font, const Label& label, const AABB area, const Color color, const TextAlignment alignment = TextAlignment::RIGHT) {
     if (color.a == 0) { return; }
     TTF_SetFontWrapAlignment(font, static_cast<TTF_HorizontalAlignment>(alignment));
-    (void)TTF_SetTextFont(label, font);
+    label.SetFont(font);
     (void)TTF_SetTextColor(label, color.r, color.g, color.b, color.a);
     (void)TTF_SetTextWrapWidth(label, area.size.x);
     (void)TTF_DrawRendererText(label, area.point.x, area.point.y);

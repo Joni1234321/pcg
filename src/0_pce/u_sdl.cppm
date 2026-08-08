@@ -45,9 +45,11 @@ struct DestroyText {
     }
 };
 struct Label {
-    UniquePointer<TTF_Text, DestroyText> ttf_text { TTF_CreateText(Singleton::Get<WindowState>().text_engine, nullptr, "", 0) };
+    UniquePointer<TTF_Text, DestroyText> ttf_text { nullptr };
+    [[nodiscard]] Label(TTF_Font* font = nullptr, const String& text = { }) : ttf_text { TTF_CreateText(Singleton::Get<WindowState>().text_engine, font, text.c_str(), text.size()) } { }
     operator TTF_Text*() const { return ttf_text.Get(); }
-    void SetText(const String& string) const { TTF_SetTextString(ttf_text.Get(), string.c_str(), string.size()); }
+    void SetFont(TTF_Font* font) const { (void)TTF_SetTextFont(ttf_text.Get(), font); }
+    void SetText(const String& string) const { (void)TTF_SetTextString(ttf_text.Get(), string.c_str(), string.size()); }
 };
 struct SurfaceLabel {
     UniquePointer<TTF_Text, DestroyText> ttf_text { TTF_CreateText(Singleton::Get<WindowState>().surface_text_engine, nullptr, "", 0) };

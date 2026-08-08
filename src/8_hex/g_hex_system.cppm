@@ -347,7 +347,7 @@ struct HexSystem {
                     const Label& label = hex_state.label_pool.Get();
                     const String string_distance = std::format("{}", cost_and_axial.cost);
                     (void)TTF_SetTextWrapWidth(label, static_cast<i32>(camera.scale));
-                    (void)TTF_SetTextFont(label, font_movement);
+                    label.SetFont(font_movement);
                     label.SetText(string_distance);
                     (void)TTF_DrawRendererText(label, screen.x - camera.scale * 0.5F, screen.y - pt * 0.5F);
                 }
@@ -374,9 +374,7 @@ struct HexSystem {
                 u8 roll = Rand2D6();
                 u8 roll_mod = SaturatingAdd(roll, diff);
 
-                Particle& particle_roll = globalData[particle_emitter].particles.items.EmplaceBack(Particle { .position = camera.WorldToScreen(HexAxialToWorld(axial_battle)), .duration = miliseconds32 { 1500U } });
-                (void)TTF_SetTextFont(particle_roll.text, font_collection.GetFontBoldCompact(FontSizes::h1));
-                particle_roll.text.SetText(std::format("{}", roll_mod));
+                globalData[particle_emitter].particles.items.EmplaceBack(Particle { .position = camera.WorldToScreen(HexAxialToWorld(axial_battle)), .text = Label { font_collection.GetFontBoldCompact(FontSizes::h1), std::format("{}", roll_mod) }, .duration = miliseconds32 { 1500U } });
 
                 // 50 / 50 whether they retreat. grouped in 2 after
                 if (roll_mod <= 4) {
@@ -451,7 +449,7 @@ struct HexSystem {
                 TTF_SetFontWrapAlignment(font_attack, TTF_HORIZONTAL_ALIGN_CENTER);
                 const Label& label = hex_state.label_pool.Get();
                 (void)TTF_SetTextWrapWidth(label, static_cast<i32>(camera.scale));
-                (void)TTF_SetTextFont(label, font_attack);
+                label.SetFont(font_attack);
 
                 if (can_attack) {
                     auto units_attacker = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
