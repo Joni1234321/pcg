@@ -160,6 +160,11 @@ export using float3 = Vec3<f32>;
 export constexpr u8 U8_MAX = std::numeric_limits<u8>::max();
 export constexpr u32 U32_MAX = std::numeric_limits<u32>::max();
 
+export struct Stat {
+    u8 current;
+    u8 max;
+};
+
 export template <class T, class U> concept Derived = std::is_base_of_v<U, T>;
 
 export struct Entity {

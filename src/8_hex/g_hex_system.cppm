@@ -1,5 +1,7 @@
 module;
 
+#include <cassert>
+
 #include "SDL3/SDL_keycode.h"
 
 export module hex.system;
@@ -165,6 +167,95 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
     }
     return PlayerAction::PLAYER_ACTION_NONE;
 }
+
+[[nodiscard]] TurnHqState HexSystemTurnHqLogic (HexState& hex_state) {
+    b8 initalize = hex_state.turn_hq_state_changed;
+    switch (hex_state.turn_hq_state) {
+        case TurnHqState::TURN_HQ_NONE: {
+            return TurnHqState::TURN_HQ_START;
+        }
+        case TurnHqState::TURN_HQ_START: {
+            if (initalize) {
+                const u32 drawn_index = Rand(hex_state.unit_formations_left.size());
+                hex_state.unit_formation_active = hex_state.unit_formations_left[drawn_index];
+                hex_state.unit_formations_left.swap_back(drawn_index);
+                Logger().Log("[STATE] Turn HQ: Drawn {}", hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()].name);
+            }
+
+            // do some animation
+            // wait for it to complete
+            return TurnHqState::TURN_HQ_ACTIVATE;
+        }
+        case TurnHqState::TURN_HQ_ACTIVATE: {
+            return TurnHqState::TURN_HQ_LOGISTIC;
+        }
+        case TurnHqState::TURN_HQ_LOGISTIC: {
+            return TurnHqState::TURN_HQ_OBJ_PLACEMENT;
+        }
+        case TurnHqState::TURN_HQ_OBJ_PLACEMENT: {
+            return TurnHqState::TURN_HQ_EXECUTE;
+        }
+        case TurnHqState::TURN_HQ_EXECUTE: {
+            return TurnHqState::TURN_HQ_CLEAN;
+        }
+        case TurnHqState::TURN_HQ_CLEAN: {
+            return TurnHqState::TURN_HQ_ISOLATION;
+        }
+        case TurnHqState::TURN_HQ_ISOLATION: {
+            return TurnHqState::TURN_HQ_END;
+        }
+        case TurnHqState::TURN_HQ_END: {
+            if (hex_state.unit_formations_left.empty()) {
+                return TurnHqState::TURN_HQ_NONE;
+            }
+            // hex_state
+            return TurnHqState::TURN_HQ_START;
+        }
+        default: std::unreachable();
+    }
+}
+
+[[nodiscard]] TurnState HexSystemTurnLogic (HexState& hex_state) {
+    b8 initalize = hex_state.turn_state_changed;
+    switch (hex_state.turn_state) {
+        case TurnState::TURN_NONE: {
+            return TurnState::TURN_START;
+        }
+        case TurnState::TURN_START: {
+            if (initalize) {
+                hex_state.turn_number++;
+                assert(hex_state.unit_formations_left.empty());
+                hex_state.unit_formations_left.clear();
+                for (u32 i = 0; i < hex_state.unit_formations.size(); i++) { hex_state.unit_formations_left.push_back(hex_state.unit_formations.IndexToHandle(i)); }
+            }
+            return TurnState::TURN_REINFORCEMENT;
+        }
+        case TurnState::TURN_REINFORCEMENT: {
+            // weather
+            // air points
+            // repl
+            // rein
+            return TurnState::TURN_ASSIGNMENT;
+        }
+        case TurnState::TURN_ASSIGNMENT: {
+            // support
+            return TurnState::TURN_HQ_ACTIVATE;
+        }
+        case TurnState::TURN_HQ_ACTIVATE: {
+            TurnHqState turn_hq_state_next = HexSystemTurnHqLogic(hex_state);
+            if (turn_hq_state_next != hex_state.turn_hq_state) {
+                Logger().Log("[STATE] Turn HQ: {} -> {}", hex_state.turn_hq_state, turn_hq_state_next);
+                hex_state.turn_hq_state = turn_hq_state_next;
+                hex_state.turn_hq_state_changed = true;
+            }
+            return hex_state.turn_hq_state == TurnHqState::TURN_HQ_NONE ? TurnState::TURN_END : TurnState::TURN_HQ_ACTIVATE;
+        }
+        case TurnState::TURN_END: {
+            return TurnState::TURN_START;
+        }
+        default: std::unreachable();
+    }
+}
 } // namespace hex
 
 export namespace hex {
@@ -277,8 +368,14 @@ struct HexSystem {
         UnitToCounterAppend(hex_state);
         RenderCounters(hex_state.counters);
 
-
         // logic and render
+        TurnState turn_state_next = HexSystemTurnLogic(hex_state);
+        if (turn_state_next != hex_state.turn_state) {
+            Logger().Log("[STATE] Turn: {} -> {}", hex_state.turn_state, turn_state_next);
+            hex_state.turn_state = turn_state_next;
+            hex_state.turn_state_changed = true;
+        }
+
         hex_state.player_action = GetPlayerAction(hex_state);
         switch (hex_state.player_action) {
             case PlayerAction::PLAYER_ACTION_NONE: break;

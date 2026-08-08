@@ -57,10 +57,6 @@ constexpr f32 RIVER_WIDTH = 0.13F;
 constexpr f32 RIVER_CASING_EXTRA = 0.05F;
 constexpr f32 RIVER_HIGHLIGHT_WIDTH = RIVER_WIDTH * 0.35F;
 
-struct Stat {
-    u8 current;
-    u8 max;
-};
 struct MoveCost {
     u8 leg { };
     u8 tac { };
@@ -194,8 +190,11 @@ struct HexState {
     UnorderedMap<Handle<UnitFormation>, List<Handle<Unit>>> units_by_formation { };
 
     // turn state
+    u8 turn_number { 0 };
     TurnState turn_state { TurnState::TURN_NONE };
+    b8 turn_state_changed;
     TurnHqState turn_hq_state { TurnHqState::TURN_HQ_NONE };
+    b8 turn_hq_state_changed;
     HandleOptional<UnitFormation> unit_formation_active { };
     List<Handle<UnitFormation>> unit_formations_left { };
 
@@ -205,6 +204,38 @@ struct HexState {
     List<Vertex> verts { };
 };
 } // namespace hex
+
+template <> struct std::formatter<hex::TurnState> : std::formatter<hex::String> {
+    auto format(const hex::TurnState turn_state, std::format_context& ctx) const {
+        hex::String name;
+        switch (turn_state) {
+            case hex::TurnState::TURN_NONE: name = "TURN_NONE"; break;
+            case hex::TurnState::TURN_START: name = "TURN_START"; break;
+            case hex::TurnState::TURN_REINFORCEMENT: name = "TURN_REINFORCEMENT"; break;
+            case hex::TurnState::TURN_ASSIGNMENT: name = "TURN_ASSIGNMENT"; break;
+            case hex::TurnState::TURN_HQ_ACTIVATE: name = "TURN_HQ_ACTIVATE"; break;
+            case hex::TurnState::TURN_END: name = "TURN_END"; break;
+        }
+        return std::formatter<hex::String>::format(name, ctx);
+    }
+};
+template <> struct std::formatter<hex::TurnHqState> : std::formatter<hex::String> {
+    auto format(const hex::TurnHqState turn_hq_state, std::format_context& ctx) const {
+        hex::String name;
+        switch (turn_hq_state) {
+            case hex::TurnHqState::TURN_HQ_NONE: name = "TURN_HQ_NONE"; break;
+            case hex::TurnHqState::TURN_HQ_START: name = "TURN_HQ_START"; break;
+            case hex::TurnHqState::TURN_HQ_ACTIVATE: name = "TURN_HQ_ACTIVATE"; break;
+            case hex::TurnHqState::TURN_HQ_LOGISTIC: name = "TURN_HQ_LOGISTIC"; break;
+            case hex::TurnHqState::TURN_HQ_OBJ_PLACEMENT: name = "TURN_HQ_OBJ_PLACEMENT"; break;
+            case hex::TurnHqState::TURN_HQ_EXECUTE: name = "TURN_HQ_EXECUTE"; break;
+            case hex::TurnHqState::TURN_HQ_CLEAN: name = "TURN_HQ_CLEAN"; break;
+            case hex::TurnHqState::TURN_HQ_ISOLATION: name = "TURN_HQ_ISOLATION"; break;
+            case hex::TurnHqState::TURN_HQ_END: name = "TURN_HQ_END"; break;
+        }
+        return std::formatter<hex::String>::format(name, ctx);
+    }
+};
 
 export template <> struct std::hash<hex::AxialAndEdge> {
     usize operator()(const hex::AxialAndEdge& axial_and_edge) const noexcept {
