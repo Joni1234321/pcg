@@ -480,7 +480,7 @@ struct HexSystem {
                     auto units_defender = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()] | hex_state.units.handle_to_view();
                     const u32 dmg = hex_state.pseudo_states.unit_selection->dmg_sum;
                     const u32 def = std::ranges::fold_left(units_defender | std::views::transform(&Unit::dmg), 0U, std::plus { });
-                    label.SetText(std::format("{}->{}", dmg, def));
+                    label.SetText(std::format("{}", dmg - def));
                 } else if (attacker_is_hq) {
                     label.SetText("hq cannot attack");
                 } else if (!within_range) {

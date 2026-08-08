@@ -18,7 +18,6 @@ struct ColorBox {
     Color color_stroke { };
     Color color_text { };
     Color color_text_shadow { };
-    Color color_text_outline { };
 };
 
 struct AABBWithPadding {
@@ -38,7 +37,7 @@ inline void DrawTexture(const WindowState& window_state, const Handle<Texture> t
     (void)SDL_RenderTexture(window_state.renderer, texture, nullptr, area);
 }
 
-inline void DrawText(const ui::Font& font, const Label& label, const AABB area, const Color color, const TextAlignment alignment = TextAlignment::RIGHT) {
+inline void DrawText(const Font& font, const Label& label, const AABB area, const Color color, const TextAlignment alignment = TextAlignment::RIGHT) {
     if (color.a == 0) { return; }
     font.SetWrapAlignment(alignment);
     label.SetFont(font);
@@ -47,20 +46,14 @@ inline void DrawText(const ui::Font& font, const Label& label, const AABB area, 
     label.Draw(area.point);
 }
 
-inline void DrawColorBox(const WindowState& window_state, const ui::Font& font, const Label& label, const AABBWithPadding& area_with_padding, const ColorBox& color_box, const TextAlignment alignment = TextAlignment::RIGHT) {
-    const AABB area_fill = area_with_padding.area.WithPadding(area_with_padding.padding);
+inline void DrawColorBox(const WindowState& window_state, const Font& font, const Label& label, const AABBWithPadding& area_with_padding, const ColorBox& color_box, const TextAlignment alignment = TextAlignment::RIGHT) {
+    const AABB area_fill = area_with_padding.area.WithPadding( area_with_padding.padding);
 
     DrawRect(window_state, area_with_padding.area, color_box.color_stroke);
     DrawRect(window_state, area_fill, color_box.color_fill);
 
     const AABB area_text = AABB::FromPoint(float2 { area_fill.point.x, area_with_padding.area.point.y }, area_fill.size);
     if (color_box.color_text_shadow.a != 0) { DrawText(font, label, area_text.WithOffset(float2 { static_cast<f32>(font.GetSize()) * 0.04F }), color_box.color_text_shadow, alignment); }
-    if (color_box.color_text_outline.a != 0) {
-        const i32 outline = static_cast<i32>(static_cast<f32>(font.GetSize()) * 0.04F) + 1;
-        font.SetOutline(outline);
-        DrawText(font, label, area_text.WithOffset(float2 { -static_cast<f32>(outline) }), color_box.color_text_outline, alignment);
-        font.SetOutline(0);
-    }
     DrawText(font, label, area_text, color_box.color_text, alignment);
 }
 

@@ -50,7 +50,7 @@ constexpr f32 TEXT_SHADOW_STRENGTH = 1.0F;
 [[nodiscard]] constexpr ui::ColorBox MoveTypeToColorBox(const MoveType move_type) {
     switch (move_type) {
         case MoveType::MOVE_LEG: return ui::ColorBox { .color_text = colors::COLOR_WHITE, .color_text_shadow = colors::COLOR_BLACK.WithAlpha(TEXT_SHADOW_STRENGTH) };
-        case MoveType::MOVE_TAC: return ui::ColorBox { .color_text = colors::COLOR_RED, .color_text_shadow = colors::COLOR_BLACK.WithAlpha(TEXT_SHADOW_STRENGTH) };
+        case MoveType::MOVE_TAC: return ui::ColorBox { .color_text = colors::COLOR_RED, .color_text_shadow = colors::COLOR_WHITE.WithAlpha(TEXT_SHADOW_STRENGTH) };
         case MoveType::MOVE_TRUCK: return ui::ColorBox { .color_text = colors::COLOR_BLACK, .color_text_shadow = colors::COLOR_WHITE.WithAlpha(TEXT_SHADOW_STRENGTH) };
     }
     std::unreachable();
@@ -58,9 +58,9 @@ constexpr f32 TEXT_SHADOW_STRENGTH = 1.0F;
 
 [[nodiscard]] constexpr ui::ColorBox RangedTypeToColorBox(const RangedType ranged_type) {
     switch (ranged_type) {
-        case RangedType::RANGED_NONE: return ui::ColorBox { };
+        case RangedType::RANGED_NONE: return ui::ColorBox { .color_text = colors::COLOR_WHITE, .color_text_shadow = colors::COLOR_BLACK.WithAlpha(TEXT_SHADOW_STRENGTH) };
         case RangedType::RANGED_DEFENSE: return ui::ColorBox { .color_text = colors::COLOR_BLACK, .color_text_shadow = colors::COLOR_WHITE.WithAlpha(TEXT_SHADOW_STRENGTH) };
-        case RangedType::RANGED_ATTACK: return ui::ColorBox { .color_text = colors::COLOR_RED, .color_text_shadow = colors::COLOR_BLACK.WithAlpha(TEXT_SHADOW_STRENGTH) };
+        case RangedType::RANGED_ATTACK: return ui::ColorBox { .color_text = colors::COLOR_RED, .color_text_shadow = colors::COLOR_WHITE.WithAlpha(TEXT_SHADOW_STRENGTH) };
     }
     std::unreachable();
 }
@@ -187,24 +187,25 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         }
 
         if (font_12_opt.has_value()) {
-            const ui::AABBWithPadding area_steps { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.82F, 0.38F }, counter_size * float2 { 0.14F }), .padding = color_box_padding };
+            const ui::AABBWithPadding area_steps { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.82F, 0.5F }, counter_size * float2 { 0.14F }), .padding = color_box_padding };
             const ui::ColorBox color_box_steps { .color_fill = colors::COLOR_WHITE_SMOKE, .color_stroke = colors::COLOR_ORANGE, .color_text = colors::COLOR_BLACK };
             DrawColorBox(window_state, font_12_opt.value(), counter.label_steps, area_steps, color_box_steps);
         }
 
         const ui::ColorBox color_box_move = MoveTypeToColorBox(MoveTypeUnitIcon(counter.icon));
+        const ui::ColorBox color_box_ranged = RangedTypeToColorBox(RangedTypeUnitIcon(counter.icon));
 
         if (font_22_opt.has_value()) {
             const ui::AABBWithPadding area_dmg { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.725F }, counter_size * float2 { 0.25F }), .padding = color_box_padding };
-            DrawColorBox(window_state, font_22_opt.value(), counter.label_dmg, area_dmg, color_box_move);
+            DrawColorBox(window_state, font_22_opt.value(), counter.label_dmg, area_dmg, color_box_ranged, ui::TextAlignment::LEFT);
+
+            const ui::AABBWithPadding area_move_allowance { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.725F }, counter_size * float2 { 0.25F }), .padding = color_box_padding };
+            DrawColorBox(window_state, font_22_opt.value(), counter.label_move_allowance, area_move_allowance, color_box_move);
         }
 
         if (font_16_opt.has_value()) {
-            const ui::AABBWithPadding area_move_allowance { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.795F }, counter_size * float2 { 0.18F }), .padding = color_box_padding };
-            DrawColorBox(window_state, font_16_opt.value(), counter.label_move_allowance, area_move_allowance, color_box_move);
-
-            const ui::AABBWithPadding area_dmg_ranged { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.43F }, counter_size * float2 { 0.18F }), .padding = color_box_padding };
-            DrawColorBox(window_state, font_16_opt.value(), counter.label_dmg_ranged, area_dmg_ranged, RangedTypeToColorBox(RangedTypeUnitIcon(counter.icon)));
+            const ui::AABBWithPadding area_dmg_ranged { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.545F }, counter_size * float2 { 0.18F }), .padding = color_box_padding };
+            DrawColorBox(window_state, font_16_opt.value(), counter.label_dmg_ranged, area_dmg_ranged, color_box_ranged);
         }
     }
 }
