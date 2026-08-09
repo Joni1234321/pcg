@@ -331,31 +331,36 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                 const UnitFormation& unit_formation = hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()];
                 assert(unit_formation.activation_result != ActivationResult::ACTIVATE_NONE);
                 obj_markers_left = unit_formation.activation_result == ActivationResult::ACTIVATE_FULL ? 2 : 1;
-                hex_state.objective_markers.clear();
             }
 
-            constexpr i32 OBJ_MARKER_RANGE = 2;
-            auto append_marker_area = [&](const int2 axial_marker) -> void {
-                for (i32 dq = -OBJ_MARKER_RANGE; dq <= OBJ_MARKER_RANGE; dq++) {
-                    for (i32 dr = Max(-OBJ_MARKER_RANGE, -dq - OBJ_MARKER_RANGE); dr <= Min(OBJ_MARKER_RANGE, -dq + OBJ_MARKER_RANGE); dr++) {
-                        const int2 axial = axial_marker + int2 { dq, dr };
-                        if (!hex_state.hex_map.Contains(axial)) { continue; }
-                        VertHexRingAppend(hex_state.verts, camera.scale, camera.scale * 0.88F, camera.WorldToScreen(HexAxialToWorld(axial)), colors::COLOR_YELLOW);
-                    }
-                }
-                VertHexAppend(hex_state.verts, camera.scale * 0.5F, camera.WorldToScreen(HexAxialToWorld(axial_marker)), colors::COLOR_YELLOW);
-            };
-
-            for (const int2 axial_marker : hex_state.objective_markers) { append_marker_area(axial_marker); }
+            u32 hover_marker_count = 0;
             if (obj_markers_left > 0 && hex_state.pseudo_states.axial_hover.has_value()) {
-                append_marker_area(hex_state.pseudo_states.axial_hover.value());
+                const int2 axial_hover = hex_state.pseudo_states.axial_hover.value();
+                hover_marker_count = std::ranges::count(hex_state.objective_markers_axials, axial_hover);
+                VertObjectiveMarkerAreaAppend(hex_state, camera, axial_hover, hover_marker_count > 0 ? colors::COLOR_ORANGE : colors::COLOR_YELLOW);
                 if (input_state.left_mouse_down) {
-                    hex_state.objective_markers.push_back(hex_state.pseudo_states.axial_hover.value());
+                    hex_state.objective_markers_axials.push_back(axial_hover);
                     obj_markers_left--;
                 }
             }
             (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
             hex_state.verts.clear();
+
+            // hovering an existing marker upgrades it
+            if (hover_marker_count > 0) {
+                const float2 screen = camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover.value()));
+                const f32 pt = camera.scale * 0.35F;
+                if (static_cast<FontSize>(pt) >= FONT_MIN_SIZE) {
+                    const Font& font_upgrade = font_collection.GetFontBoldCompact(static_cast<FontSizes>(pt));
+                    font_upgrade.SetWrapAlignment(TextAlignment::CENTER);
+                    const Label& label_upgrade = hex_state.label_pool.Get();
+                    label_upgrade.SetWrapWidth(camera.scale * 2.0F);
+                    label_upgrade.SetFont(font_upgrade);
+                    label_upgrade.SetColor(colors::COLOR_ORANGE);
+                    label_upgrade.SetText(std::format("obj {:+}", hover_marker_count));
+                    label_upgrade.Draw(float2 { screen.x - camera.scale, screen.y - camera.scale * 0.9F - pt });
+                }
+            }
 
             return obj_markers_left == 0 ? TurnHqState::TURN_HQ_EXECUTE : TurnHqState::TURN_HQ_OBJ_PLACEMENT;
         }
@@ -370,6 +375,8 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
         }
         case TurnHqState::TURN_HQ_END: {
             hex_state.unit_formation_active.Reset();
+            hex_state.objective_markers_axials.clear();
+
             if (hex_state.unit_formations_left.empty()) {
                 return TurnHqState::TURN_HQ_NONE;
             }
@@ -527,6 +534,12 @@ struct HexSystem {
                     draw_line(colors::COLOR_RED, unit.axial, unit_member.axial);
                 }
             }
+        }
+
+        // render objective markers
+        for (const int2 axial_marker : hex_state.objective_markers_axials) {
+            const b8 is_double = std::ranges::count(hex_state.objective_markers_axials, axial_marker) > 1;
+            VertObjectiveMarkerAreaAppend(hex_state, camera, axial_marker, is_double ? colors::COLOR_ORANGE : colors::COLOR_YELLOW);
         }
 
         // render it all

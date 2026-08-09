@@ -158,7 +158,7 @@ struct HexState {
     miliseconds32 turn_hq_state_time { 0U };
     HandleOptional<UnitFormation> unit_formation_active { };
     List<Handle<UnitFormation>> unit_formations_left { };
-    List<int2> objective_markers { };
+    List<int2> objective_markers_axials { };
 
     // per frame
     Pool<CounterStack> counters { };

@@ -12,8 +12,10 @@ import pce.assets;
 import pce.sdl;
 import pce.ui;
 import pcs.camera;
+import pcs.easing;
 import pce.colors;
 import pce.std;
+import pce.strong;
 import hex.hex;
 import hex.enums;
 import hex.types;
@@ -43,6 +45,27 @@ inline void VertHexRingAppend(List<Vertex>& vertecies, const f32 hex_size_outer,
         vertecies.EmplaceBack(inner_b, hex_color);
         vertecies.EmplaceBack(inner_a, hex_color);
     }
+}
+inline void VertObjectiveMarkerAppend(List<Vertex>& vertecies, const f32 hex_size, const float2 hex_screen, const Color hex_color) {
+    constexpr u32 OBJ_MARKER_PULSE_MS = 1400U;
+    const f32 pulse = EaseOutCubic(static_cast<f32>(TimeNowMS().value % OBJ_MARKER_PULSE_MS) / static_cast<f32>(OBJ_MARKER_PULSE_MS));
+    VertHexRingAppend(vertecies, hex_size * math::Lerp(0.45F, 1.0F, pulse), hex_size * math::Lerp(0.38F, 0.93F, pulse), hex_screen, hex_color.WithAlpha(1.0F - pulse));
+    VertHexAppend(vertecies, hex_size * 0.45F, hex_screen, colors::COLOR_BLACK);
+    VertHexAppend(vertecies, hex_size * 0.36F, hex_screen, hex_color);
+    VertHexAppend(vertecies, hex_size * 0.14F, hex_screen, colors::COLOR_BLACK);
+}
+inline void VertObjectiveMarkerAreaAppend(HexState& hex_state, const CameraState& camera, const int2 axial_marker, const Color color) {
+    constexpr i32 OBJ_MARKER_RANGE = 2;
+    for (i32 dq = -OBJ_MARKER_RANGE; dq <= OBJ_MARKER_RANGE; dq++) {
+        for (i32 dr = math::Max(-OBJ_MARKER_RANGE, -dq - OBJ_MARKER_RANGE); dr <= math::Min(OBJ_MARKER_RANGE, -dq + OBJ_MARKER_RANGE); dr++) {
+            const int2 axial = axial_marker + int2 { dq, dr };
+            if (!hex_state.hex_map.Contains(axial)) { continue; }
+            const float2 screen = camera.WorldToScreen(HexAxialToWorld(axial));
+            VertHexAppend(hex_state.verts, camera.scale * 0.97F, screen, color.WithAlpha(0.12F));
+            if (HexAxialDistance(axial_marker, axial) == OBJ_MARKER_RANGE) { VertHexRingAppend(hex_state.verts, camera.scale, camera.scale * 0.9F, screen, color.WithAlpha(0.7F)); }
+        }
+    }
+    VertObjectiveMarkerAppend(hex_state.verts, camera.scale, camera.WorldToScreen(HexAxialToWorld(axial_marker)), color);
 }
 inline void VertAabbAppend(List<Vertex>& vertices, const AABB& aabb, const ColorF color) {
     const Array<float2, 4> points { {
