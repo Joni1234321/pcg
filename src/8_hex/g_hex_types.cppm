@@ -80,6 +80,7 @@ struct UnitFormation {
     i8 fatigue { };
     List<Handle<Unit>> support { };
     Stat artillery { };
+    ActivationResult activation_result { };
 };
 struct Unit {
     int2 axial { };
@@ -157,6 +158,7 @@ struct HexState {
     miliseconds32 turn_hq_state_time { 0U };
     HandleOptional<UnitFormation> unit_formation_active { };
     List<Handle<UnitFormation>> unit_formations_left { };
+    List<int2> objective_markers { };
 
     // per frame
     Pool<CounterStack> counters { };

@@ -159,6 +159,7 @@ void UnitToCounterAppend(HexState& hex_state) {
 PlayerAction GetPlayerAction(const HexState& hex_state) {
     const InputState& input_state = Singleton::Get<InputState>();
 
+    if (hex_state.turn_hq_state == TurnHqState::TURN_HQ_OBJ_PLACEMENT) { return PlayerAction::PLAYER_ACTION_NONE; }
     if (hex_state.pseudo_states.axial_hover.has_value()) {
         // unit selection
         if (input_state.left_mouse_down) { return hex_state.units_by_axial.contains(hex_state.pseudo_states.axial_hover.value()) ? PlayerAction::PLAYER_ACTION_SELECT : PlayerAction::PLAYER_ACTION_DESELECT; }
@@ -171,6 +172,8 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
 }
 
 [[nodiscard]] TurnHqState HexSystemTurnHqLogic (HexState& hex_state) {
+    const CameraState& camera = Singleton::Get<CameraState>();
+    const InputState& input_state = Singleton::Get<InputState>();
     const WindowState& window_state = Singleton::Get<WindowState>();
     const FontCollection& font_collection = Singleton::Get<FontCollection>();
 
@@ -253,12 +256,9 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
             return AnimationSystem::IsRunning(reel_animation_chain) ? TurnHqState::TURN_HQ_START : TurnHqState::TURN_HQ_ACTIVATE;
         }
         case TurnHqState::TURN_HQ_ACTIVATE: {
-
-
             return TurnHqState::TURN_HQ_LOGISTIC;
         }
         case TurnHqState::TURN_HQ_LOGISTIC: {
-            static ActivationResult activation_result;
             static i8 activation_roll_mod;
             static i8 activation_modifiers;
             UnitFormation& unit_formation = hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()];
@@ -275,11 +275,12 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                     const f32 focus_bottom = area_snafu_roll.point.y + area_snafu_roll.size.y + 35.0F;
                     DrawRect(window_state, AABB::FromPoint(float2 { 0.0F, focus_top }, float2 { screen_size.x, focus_bottom - focus_top }), colors::COLOR_BLACK.WithAlpha(0.85F));
 
-                    DrawFormationCounter(window_state, hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()], area_counter_showcase, hex_state.label_pool);
+                    const UnitFormation& unit_formation = hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()];
+                    DrawFormationCounter(window_state, unit_formation, area_counter_showcase, hex_state.label_pool);
 
                     const Font& font_snafu_roll = font_collection.GetFontBoldCourier(FontSizes::massive);
                     const Label& label_snafu_roll = hex_state.label_pool.Get();
-                    label_snafu_roll.SetText(std::format("{}\n{} [{:+}]", activation_result, activation_roll_mod, activation_modifiers));
+                    label_snafu_roll.SetText(std::format("{}\n{} [{:+}]", unit_formation.activation_result, activation_roll_mod, activation_modifiers));
                     DrawText(font_snafu_roll, label_snafu_roll, area_snafu_roll.WithOffset(float2 { 3.0F }), colors::COLOR_BLACK, TextAlignment::CENTER);
                     DrawText(font_snafu_roll, label_snafu_roll, area_snafu_roll, colors::COLOR_WHITE, TextAlignment::CENTER);
                 },
@@ -291,16 +292,16 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                 activation_roll_mod = activation_roll + activation_modifiers;
 
                 if (activation_roll_mod <= 2) {
-                    activation_result = ActivationResult::ACTIVATE_NONE;
+                    unit_formation.activation_result = ActivationResult::ACTIVATE_NONE;
                 }
                 else if (activation_roll_mod <= 6) {
-                    activation_result = ActivationResult::ACTIVATE_HALF;
+                    unit_formation.activation_result = ActivationResult::ACTIVATE_HALF;
                 }
                 else {
-                    activation_result = ActivationResult::ACTIVATE_FULL;
+                    unit_formation.activation_result = ActivationResult::ACTIVATE_FULL;
                 }
 
-                switch (activation_result) {
+                switch (unit_formation.activation_result) {
                     case ActivationResult::ACTIVATE_NONE: {
                         if (unit_formation.fatigue > 0) {
                             unit_formation.fatigue--;
@@ -322,10 +323,41 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                 AnimationSystem::StartAnimation(snafu_roll_animation);
             }
             if (AnimationSystem::IsRunning(snafu_roll_animation)) { return TurnHqState::TURN_HQ_LOGISTIC; }
-            return activation_result == ActivationResult::ACTIVATE_NONE ? TurnHqState::TURN_HQ_END : TurnHqState::TURN_HQ_OBJ_PLACEMENT;
+            return unit_formation.activation_result == ActivationResult::ACTIVATE_NONE ? TurnHqState::TURN_HQ_END : TurnHqState::TURN_HQ_OBJ_PLACEMENT;
         }
         case TurnHqState::TURN_HQ_OBJ_PLACEMENT: {
-            return TurnHqState::TURN_HQ_EXECUTE;
+            static u8 obj_markers_left;
+            if (initalize) {
+                const UnitFormation& unit_formation = hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()];
+                assert(unit_formation.activation_result != ActivationResult::ACTIVATE_NONE);
+                obj_markers_left = unit_formation.activation_result == ActivationResult::ACTIVATE_FULL ? 2 : 1;
+                hex_state.objective_markers.clear();
+            }
+
+            constexpr i32 OBJ_MARKER_RANGE = 2;
+            auto append_marker_area = [&](const int2 axial_marker) -> void {
+                for (i32 dq = -OBJ_MARKER_RANGE; dq <= OBJ_MARKER_RANGE; dq++) {
+                    for (i32 dr = Max(-OBJ_MARKER_RANGE, -dq - OBJ_MARKER_RANGE); dr <= Min(OBJ_MARKER_RANGE, -dq + OBJ_MARKER_RANGE); dr++) {
+                        const int2 axial = axial_marker + int2 { dq, dr };
+                        if (!hex_state.hex_map.Contains(axial)) { continue; }
+                        VertHexRingAppend(hex_state.verts, camera.scale, camera.scale * 0.88F, camera.WorldToScreen(HexAxialToWorld(axial)), colors::COLOR_YELLOW);
+                    }
+                }
+                VertHexAppend(hex_state.verts, camera.scale * 0.5F, camera.WorldToScreen(HexAxialToWorld(axial_marker)), colors::COLOR_YELLOW);
+            };
+
+            for (const int2 axial_marker : hex_state.objective_markers) { append_marker_area(axial_marker); }
+            if (obj_markers_left > 0 && hex_state.pseudo_states.axial_hover.has_value()) {
+                append_marker_area(hex_state.pseudo_states.axial_hover.value());
+                if (input_state.left_mouse_down) {
+                    hex_state.objective_markers.push_back(hex_state.pseudo_states.axial_hover.value());
+                    obj_markers_left--;
+                }
+            }
+            (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
+            hex_state.verts.clear();
+
+            return obj_markers_left == 0 ? TurnHqState::TURN_HQ_EXECUTE : TurnHqState::TURN_HQ_OBJ_PLACEMENT;
         }
         case TurnHqState::TURN_HQ_EXECUTE: {
             return TurnHqState::TURN_HQ_CLEAN;
