@@ -160,14 +160,15 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
     const InputState& input_state = Singleton::Get<InputState>();
 
     if (hex_state.pseudo_states.axial_hover.has_value()) {
-        // unit selection, only the active formation can be selected
+        // unit selection, only the active formation and its hq can be selected
         if (input_state.left_mouse_down) {
             const int2 axial_hover = hex_state.pseudo_states.axial_hover.value();
             const b8 hover_active_formation = hex_state.units_by_axial.contains(axial_hover) && hex_state.units[hex_state.units_by_axial.at(axial_hover)[0]].formation == hex_state.unit_formation_active.GetHandle();
-            return hover_active_formation ? PlayerAction::PLAYER_ACTION_SELECT : PlayerAction::PLAYER_ACTION_DESELECT;
+            const b8 hover_active_hq = axial_hover == hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()].axial_hq;
+            return hover_active_formation || hover_active_hq ? PlayerAction::PLAYER_ACTION_SELECT : PlayerAction::PLAYER_ACTION_DESELECT;
         }
-        if (hex_state.pseudo_states.unit_selection.has_value()) {
-            if (AxialIsEnemy(hex_state, hex_state.pseudo_states.axial_hover.value())) { return input_state.right_mouse_down ? PlayerAction::PLAYER_ACTION_ATTACK_CLICK : PlayerAction::PLAYER_ACTION_ATTACK_HOVER; }
+        if (hex_state.pseudo_states.unit_selection.has_value() || hex_state.pseudo_states.hq_select.IsValid()) {
+            if (AxialIsEnemy(hex_state, hex_state.pseudo_states.axial_hover.value())) { return hex_state.pseudo_states.unit_selection.has_value() ? (input_state.right_mouse_down ? PlayerAction::PLAYER_ACTION_ATTACK_CLICK : PlayerAction::PLAYER_ACTION_ATTACK_HOVER) : PlayerAction::PLAYER_ACTION_NONE; }
             if (hex_state.pseudo_states.axial_hover != hex_state.pseudo_states.axial_select) { return input_state.right_mouse_down ? PlayerAction::PLAYER_ACTION_MOVE_CLICK : PlayerAction::PLAYER_ACTION_MOVE_HOVER; }
         }
     }
@@ -313,11 +314,13 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                     }
                     case ActivationResult::ACTIVATE_HALF: {
                         unit_formation.artillery.current = unit_formation.artillery.max;
+                        unit_formation.move.current = Ceil(unit_formation.move.max / 2.0F);
                         for (Unit& unit_member : hex_state.units_by_formation[hex_state.unit_formation_active.GetHandle()] | hex_state.units.handle_to_view()) { unit_member.move.current = Ceil(unit_member.move.max / 2.0F); }
                         break;
                     }
                     case ActivationResult::ACTIVATE_FULL: {
                         unit_formation.artillery.current = Ceil(unit_formation.artillery.max / 2.0F);
+                        unit_formation.move.current = unit_formation.move.max;
                         for (Unit& unit_member : hex_state.units_by_formation[hex_state.unit_formation_active.GetHandle()] | hex_state.units.handle_to_view()) { unit_member.move.current = unit_member.move.max; }
                         break;
                     }
@@ -340,7 +343,9 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
             if (obj_markers_left > 0 && hex_state.pseudo_states.axial_hover.has_value()) {
                 const int2 axial_hover = hex_state.pseudo_states.axial_hover.value();
                 hover_marker_count = std::ranges::count(hex_state.objective_markers_axials, axial_hover);
-                VertObjectiveMarkerAreaAppend(hex_state, camera, axial_hover, hover_marker_count > 0 ? colors::COLOR_ORANGE : colors::COLOR_YELLOW);
+                const Color color_marker = hover_marker_count > 0 ? colors::COLOR_ORANGE : colors::COLOR_YELLOW;
+                VertHexAreaAppend(hex_state, camera, axial_hover, OBJ_MARKER_RANGE, color_marker);
+                VertObjectiveMarkerAppend(hex_state.verts, camera.scale, camera.WorldToScreen(HexAxialToWorld(axial_hover)), color_marker);
                 if (input_state.left_mouse_down) {
                     hex_state.objective_markers_axials.push_back(axial_hover);
                     obj_markers_left--;
@@ -372,6 +377,15 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
             switch (hex_state.player_action) {
                 case PlayerAction::PLAYER_ACTION_NONE: break;
                 case PlayerAction::PLAYER_ACTION_SELECT: {
+                    const b8 hover_active_formation = hex_state.units_by_axial.contains(hex_state.pseudo_states.axial_hover.value()) && hex_state.units[hex_state.units_by_axial.at(hex_state.pseudo_states.axial_hover.value())[0]].formation == hex_state.unit_formation_active.GetHandle();
+                    if (!hover_active_formation) {
+                        // hq selected
+                        hex_state.pseudo_states.hq_select = hex_state.unit_formation_active.GetHandle();
+                        hex_state.pseudo_states.unit_selection = std::nullopt;
+                        hex_state.pseudo_states.axial_select = hex_state.pseudo_states.axial_hover;
+                        break;
+                    }
+                    hex_state.pseudo_states.hq_select.Reset();
                     const b8 select_new = hex_state.pseudo_states.axial_select != hex_state.pseudo_states.axial_hover;
                     hex_state.pseudo_states.axial_select = hex_state.pseudo_states.axial_hover;
                     const List<Handle<Unit>>& unit_handles = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()];
@@ -389,9 +403,22 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                 case PlayerAction::PLAYER_ACTION_DESELECT: {
                     hex_state.pseudo_states.axial_select = std::nullopt;
                     hex_state.pseudo_states.unit_selection = std::nullopt;
+                    hex_state.pseudo_states.hq_select.Reset();
                     break;
                 }
                 case PlayerAction::PLAYER_ACTION_MOVE_CLICK: {
+                    if (hex_state.pseudo_states.hq_select.IsValid()) {
+                        UnitFormation& formation_hq = hex_state.unit_formations[hex_state.pseudo_states.hq_select.GetHandle()];
+                        List<AxialAndCost> axial_path = HexAxialPathAStar(hex_state, formation_hq.axial_hq, hex_state.pseudo_states.axial_hover.value(), MoveType::MOVE_TRUCK, formation_hq.move.current);
+                        const List<AxialAndCost>::iterator it = std::ranges::upper_bound(axial_path, static_cast<u32>(formation_hq.move.current), std::less { }, &AxialAndCost::cost);
+                        if (it != axial_path.begin()) {
+                            const AxialAndCost& cost_and_axial_end = *std::prev(it);
+                            formation_hq.axial_hq = cost_and_axial_end.axial;
+                            formation_hq.move.current -= cost_and_axial_end.cost;
+                            hex_state.pseudo_states.axial_select = cost_and_axial_end.axial;
+                        }
+                        break;
+                    }
                     // movement https://www.redblobgames.com/grids/hexagons/#distances
                     const int2 axial_start = hex_state.pseudo_states.axial_select.value();
                     const int2 axial_hover = hex_state.pseudo_states.axial_hover.value();
@@ -428,14 +455,21 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                     break;
                 }
                 case PlayerAction::PLAYER_ACTION_MOVE_HOVER: {
-                    auto units_selected = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
-                    const u32 units_selected_movement = std::ranges::min(units_selected | std::views::transform(&Unit::move) | std::views::transform(&Stat::current));
-                    const List<AxialAndCost> axial_path = HexAxialPathAStar(hex_state, hex_state.pseudo_states.axial_select.value(), hex_state.pseudo_states.axial_hover.value(), MoveType::MOVE_LEG, units_selected_movement);
+                    u32 move_allowance = 0;
+                    MoveType move_type = MoveType::MOVE_LEG;
+                    if (hex_state.pseudo_states.hq_select.IsValid()) {
+                        move_allowance = hex_state.unit_formations[hex_state.pseudo_states.hq_select.GetHandle()].move.current;
+                        move_type = MoveType::MOVE_TRUCK;
+                    } else {
+                        auto units_selected = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
+                        move_allowance = std::ranges::min(units_selected | std::views::transform(&Unit::move) | std::views::transform(&Stat::current));
+                    }
+                    const List<AxialAndCost> axial_path = HexAxialPathAStar(hex_state, hex_state.pseudo_states.axial_select.value(), hex_state.pseudo_states.axial_hover.value(), move_type, move_allowance);
                     for (const AxialAndCost cost_and_axial : axial_path) {
                         const float2 world = HexAxialToWorld(cost_and_axial.axial);
                         const float2 screen = camera.WorldToScreen(world);
 
-                        const Color movement_color = cost_and_axial.cost > units_selected_movement ? colors::COLOR_BLACK : colors::COLOR_RUBY_RED;
+                        const Color movement_color = cost_and_axial.cost > move_allowance ? colors::COLOR_BLACK : colors::COLOR_RUBY_RED;
                         VertHexAppend(hex_state.verts, camera.scale * 0.25F, screen, movement_color);
                     }
                     (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
@@ -461,9 +495,8 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                 }
                 case PlayerAction::PLAYER_ACTION_ATTACK_CLICK: {
                     const b8 within_range = std::ranges::all_of(hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view(), [&](const Unit& unit) -> b8 { return HexAxialDistance(unit.axial, hex_state.pseudo_states.axial_hover.value()) == 1; });
-                    const b8 attacker_is_hq = std::ranges::contains(hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view(), UnitIcon::ICON_HQ, &Unit::icon);
                     const b8 within_objective = std::ranges::any_of(hex_state.objective_markers_axials, [&](const int2 axial_marker) -> b8 { return HexAxialDistance(axial_marker, hex_state.pseudo_states.axial_hover.value()) <= OBJ_MARKER_RANGE; });
-                    const b8 can_attack = hex_state.pseudo_states.unit_selection->move_min > MOVE_COST_ATTACK && within_range && !attacker_is_hq && within_objective;
+                    const b8 can_attack = hex_state.pseudo_states.unit_selection->move_min > MOVE_COST_ATTACK && within_range && within_objective;
                     if (!can_attack) { break; }
 
                     auto units_attacker = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
@@ -544,10 +577,9 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                 }
                 case PlayerAction::PLAYER_ACTION_ATTACK_HOVER:
                     const b8 within_range = std::ranges::all_of(hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view(), [&](const Unit& unit) -> b8 { return HexAxialDistance(unit.axial, hex_state.pseudo_states.axial_hover.value()) == 1; });
-                    const b8 attacker_is_hq = std::ranges::contains(hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view(), UnitIcon::ICON_HQ, &Unit::icon);
                     const b8 attacker_has_movement = hex_state.pseudo_states.unit_selection->move_min > MOVE_COST_ATTACK;
                     const b8 within_objective = std::ranges::any_of(hex_state.objective_markers_axials, [&](const int2 axial_marker) -> b8 { return HexAxialDistance(axial_marker, hex_state.pseudo_states.axial_hover.value()) <= OBJ_MARKER_RANGE; });
-                    const b8 can_attack = attacker_has_movement && within_range && !attacker_is_hq && within_objective;
+                    const b8 can_attack = attacker_has_movement && within_range && within_objective;
 
                     const float2 world = HexAxialToWorld(hex_state.pseudo_states.axial_hover.value());
                     const float2 screen = camera.WorldToScreen(world);
@@ -576,8 +608,6 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                         const i32 def = std::ranges::fold_left(units_defender | std::views::transform(&Unit::dmg), 0U, std::plus { });
 
                         label.SetText(std::format("{:+}", dmg - def));
-                    } else if (attacker_is_hq) {
-                        label.SetText("hq cannot attack");
                     } else if (!within_range) {
                         label.SetText("can only attack adjecent units");
                     } else if (!within_objective) {
@@ -594,14 +624,15 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
             return space_pressed ? TurnHqState::TURN_HQ_CLEAN : TurnHqState::TURN_HQ_EXECUTE;
         }
         case TurnHqState::TURN_HQ_CLEAN: {
+            hex_state.unit_formation_active.Reset();
+            hex_state.objective_markers_axials.clear();
             return TurnHqState::TURN_HQ_ISOLATION;
         }
         case TurnHqState::TURN_HQ_ISOLATION: {
+
             return TurnHqState::TURN_HQ_END;
         }
         case TurnHqState::TURN_HQ_END: {
-            hex_state.unit_formation_active.Reset();
-            hex_state.objective_markers_axials.clear();
 
             if (hex_state.unit_formations_left.empty()) {
                 return TurnHqState::TURN_HQ_NONE;
@@ -737,6 +768,15 @@ struct HexSystem {
 
         // render pseudo states
         if (hex_state.pseudo_states.axial_hover) { VertHexRingAppend(hex_state.verts, camera.scale, camera.scale * 0.88F, camera.WorldToScreen(HexAxialToWorld(hex_state.pseudo_states.axial_hover.value())), colors::COLOR_HEX_HOVER); }
+
+        // hovering an hq shows its command range
+        if (hex_state.pseudo_states.axial_hover) {
+            for (u32 i = 0; i < hex_state.unit_formations.size(); i++) {
+                const UnitFormation& formation = hex_state.unit_formations[hex_state.unit_formations.IndexToHandle(i)];
+                if (formation.axial_hq != hex_state.pseudo_states.axial_hover.value()) { continue; }
+                VertHexAreaAppend(hex_state, camera, formation.axial_hq, formation.command_radius, formation.color);
+            }
+        }
         if (hex_state.unit_formation_active.IsValid()) {
             // highlight the active formation
             const Handle<UnitFormation> formation = hex_state.unit_formation_active.GetHandle();
@@ -754,17 +794,17 @@ struct HexSystem {
             };
             for (const Handle<Unit>& unit_handle : hex_state.pseudo_states.unit_selection.value().unit_handles) {
                 const Unit& unit = hex_state.units[unit_handle];
-                for (const Unit& unit_member : hex_state.units_by_formation[unit.formation] | hex_state.units.handle_to_view()) {
-                    if (unit_member.icon != UnitIcon::ICON_HQ || unit_member.axial == unit.axial) { continue; }
-                    draw_line(colors::COLOR_RED, unit.axial, unit_member.axial);
-                }
+                const int2 axial_hq = hex_state.unit_formations[unit.formation].axial_hq;
+                if (axial_hq != unit.axial) { draw_line(colors::COLOR_RED, unit.axial, axial_hq); }
             }
         }
 
         // render objective markers
         for (const int2 axial_marker : hex_state.objective_markers_axials) {
             const b8 is_double = std::ranges::count(hex_state.objective_markers_axials, axial_marker) > 1;
-            VertObjectiveMarkerAreaAppend(hex_state, camera, axial_marker, is_double ? colors::COLOR_ORANGE : colors::COLOR_YELLOW);
+            const Color color_marker = is_double ? colors::COLOR_ORANGE : colors::COLOR_YELLOW;
+            VertHexAreaAppend(hex_state, camera, axial_marker, OBJ_MARKER_RANGE, color_marker);
+            VertObjectiveMarkerAppend(hex_state.verts, camera.scale, camera.WorldToScreen(HexAxialToWorld(axial_marker)), color_marker);
         }
 
         // render it all
@@ -775,6 +815,12 @@ struct HexSystem {
         hex_state.counters.Clear();
         UnitToCounterAppend(hex_state);
         RenderCounters(hex_state.counters);
+
+        // render hq formation counters
+        for (u32 i = 0; i < hex_state.unit_formations.size(); i++) {
+            const UnitFormation& formation = hex_state.unit_formations[hex_state.unit_formations.IndexToHandle(i)];
+            DrawHqCounter(window_state, formation, AABB::FromCenter(camera.WorldToScreen(HexAxialToWorld(formation.axial_hq)), float2 { camera.scale * 1.1F }), hex_state.label_pool);
+        }
 
         // logic and render
         if (TimeNowMS() - hex_state.turn_state_time >= TURN_STATE_DELAY) {

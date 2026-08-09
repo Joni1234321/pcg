@@ -54,17 +54,17 @@ inline void VertObjectiveMarkerAppend(List<Vertex>& vertecies, const f32 hex_siz
     VertHexAppend(vertecies, hex_size * 0.36F, hex_screen, hex_color);
     VertHexAppend(vertecies, hex_size * 0.14F, hex_screen, colors::COLOR_BLACK);
 }
-inline void VertObjectiveMarkerAreaAppend(HexState& hex_state, const CameraState& camera, const int2 axial_marker, const Color color) {
-    for (i32 dq = -OBJ_MARKER_RANGE; dq <= OBJ_MARKER_RANGE; dq++) {
-        for (i32 dr = math::Max(-OBJ_MARKER_RANGE, -dq - OBJ_MARKER_RANGE); dr <= math::Min(OBJ_MARKER_RANGE, -dq + OBJ_MARKER_RANGE); dr++) {
-            const int2 axial = axial_marker + int2 { dq, dr };
+// honeycomb fill within radius, stronger ring on the boundary
+inline void VertHexAreaAppend(HexState& hex_state, const CameraState& camera, const int2 axial_center, const i32 radius, const Color color) {
+    for (i32 dq = -radius; dq <= radius; dq++) {
+        for (i32 dr = math::Max(-radius, -dq - radius); dr <= math::Min(radius, -dq + radius); dr++) {
+            const int2 axial = axial_center + int2 { dq, dr };
             if (!hex_state.hex_map.Contains(axial)) { continue; }
             const float2 screen = camera.WorldToScreen(HexAxialToWorld(axial));
             VertHexAppend(hex_state.verts, camera.scale * 0.97F, screen, color.WithAlpha(0.12F));
-            if (HexAxialDistance(axial_marker, axial) == OBJ_MARKER_RANGE) { VertHexRingAppend(hex_state.verts, camera.scale, camera.scale * 0.9F, screen, color.WithAlpha(0.7F)); }
+            if (HexAxialDistance(axial_center, axial) == radius) { VertHexRingAppend(hex_state.verts, camera.scale, camera.scale * 0.9F, screen, color.WithAlpha(0.7F)); }
         }
     }
-    VertObjectiveMarkerAppend(hex_state.verts, camera.scale, camera.WorldToScreen(HexAxialToWorld(axial_marker)), color);
 }
 inline void VertAabbAppend(List<Vertex>& vertices, const AABB& aabb, const ColorF color) {
     const Array<float2, 4> points { {

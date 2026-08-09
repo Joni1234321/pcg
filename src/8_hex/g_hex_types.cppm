@@ -79,6 +79,10 @@ struct UnitFormation {
     UnitName name { };
     UnitNameFull name_full { };
     Color color { };
+
+    int2 axial_hq { };
+    u8 command_radius;
+    Stat move { };
     b8 prepared_defense { };
     i8 fatigue { };
     List<Handle<Unit>> support { };
@@ -122,6 +126,7 @@ struct PseudoStates {
     Optional<int2> axial_hover { };
     Optional<int2> axial_select { };
     Optional<UnitGroup> unit_selection { };
+    HandleOptional<UnitFormation> hq_select { };
 };
 struct AxialAndCost {
     int2 axial { };

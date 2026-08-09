@@ -185,6 +185,67 @@ inline void DrawFormationCounter(const WindowState& window_state, const UnitForm
     }
 }
 
+// on-map hq counter: country color body, division name bar on top, hq icon centered, range and artillery below
+inline void DrawHqCounter(const WindowState& window_state, const UnitFormation& formation, const AABB& area, Pool<Label>& label_pool) {
+    const ui::FontCollection& font_collection = Singleton::Get<ui::FontCollection>();
+
+    ui::DrawRect(window_state, area.WithOffset(float2 { OFFSET_SHADOW * area.size.x }), colors::COLOR_BLACK.WithAlpha(0.15F));
+    ui::DrawRect(window_state, area, colors::COLOR_BLACK);
+    ui::DrawRect(window_state, area.WithPadding(float2 { BORDER_THICKNESS * area.size.x }), CountryBranchToColor(formation.tag, formation.branch));
+
+    constexpr f32 NAME_PADDING = 0.05F;
+    const AABB area_name = AABB::FromPoint(area.point + area.size * float2 { NAME_PADDING }, float2 { area.size.x * (1.0F - 2.0F * NAME_PADDING), area.size.y * 0.22F });
+    ui::DrawRect(window_state, area_name, colors::COLOR_BLACK);
+    ui::DrawRect(window_state, area_name.WithPadding(float2 { BORDER_THICKNESS * area.size.x }), formation.color);
+    const ui::FontSize pt_name = static_cast<ui::FontSize>(area.size.y * 0.12F);
+    if (pt_name >= ui::FONT_MIN_SIZE) {
+        const Label& label_name = label_pool.Get();
+        label_name.SetText(UnitNameToString(formation.name));
+        DrawText(font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_name)), label_name, area_name, colors::COLOR_BLACK, ui::TextAlignment::CENTER);
+    }
+
+    // hq icon smack in the middle
+    const AABB area_icon = AABB::FromCenter(area.point + area.size * float2 { 0.5F, 0.46F }, area.size * float2 { 0.44F, 0.30F });
+    const HandleOptional<Texture> texture_hq = CounterStyleToTextures(COUNTER_THEME).headquarters;
+    if (texture_hq.IsValid()) {
+        ui::DrawTexture(window_state, texture_hq.GetHandle(), area_icon, colors::COLOR_WHITE);
+    } else {
+        ui::DrawRect(window_state, area_icon, colors::COLOR_WHITE);
+    }
+
+    // stat row: command range, artillery shells
+    const ui::FontSize pt_stat = static_cast<ui::FontSize>(area.size.y * 0.14F);
+    const ui::FontSize pt_stat_header = static_cast<ui::FontSize>(area.size.y * 0.08F);
+    if (pt_stat >= ui::FONT_MIN_SIZE) {
+        constexpr f32 STAT_WIDTH = 0.30F;
+        constexpr f32 STAT_HEADER_Y = 0.64F;
+        constexpr f32 STAT_HEADER_HEIGHT = 0.09F;
+        constexpr f32 STAT_BOX_Y = 0.74F;
+        constexpr f32 STAT_BOX_HEIGHT = 0.18F;
+        constexpr f32 STAT_X_RANGE = 0.16F;
+        constexpr f32 STAT_X_ARTILLERY = 0.54F;
+        const ui::Font& font_stat = font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_stat));
+        const float2 stat_box_padding { area.size.x * 0.01F };
+        const ui::ColorBox color_box_stat { .color_fill = colors::COLOR_WHITE_SMOKE, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_BLACK };
+
+        if (pt_stat_header >= ui::FONT_MIN_SIZE) {
+            const ui::Font& font_stat_header = font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_stat_header));
+            const Label& label_range_header = label_pool.Get();
+            label_range_header.SetText("range");
+            DrawText(font_stat_header, label_range_header, AABB::FromPoint(area.point + area.size * float2 { STAT_X_RANGE, STAT_HEADER_Y }, area.size * float2 { STAT_WIDTH, STAT_HEADER_HEIGHT }), colors::COLOR_BLACK, ui::TextAlignment::CENTER);
+        }
+        const Label& label_range = label_pool.Get();
+        label_range.SetText(std::format("{}", formation.command_radius));
+        DrawColorBox(window_state, font_stat, label_range, ui::AABBWithPadding { .area = AABB::FromPoint(area.point + area.size * float2 { STAT_X_RANGE, STAT_BOX_Y }, area.size * float2 { STAT_WIDTH, STAT_BOX_HEIGHT }), .padding = stat_box_padding }, color_box_stat, ui::TextAlignment::CENTER);
+
+        const HandleOptional<Texture> texture_artillery = CounterStyleToTextures(COUNTER_THEME).artillery;
+        if (texture_artillery.IsValid()) { ui::DrawTexture(window_state, texture_artillery.GetHandle(), AABB::FromPoint(area.point + area.size * float2 { STAT_X_ARTILLERY + STAT_WIDTH * 0.25F, STAT_HEADER_Y }, area.size * float2 { STAT_WIDTH * 0.5F, STAT_HEADER_HEIGHT }), colors::COLOR_WHITE); }
+        const Label& label_artillery = label_pool.Get();
+        label_artillery.SetText(std::format("{}", formation.artillery.current));
+        DrawColorBox(window_state, font_stat, label_artillery, ui::AABBWithPadding { .area = AABB::FromPoint(area.point + area.size * float2 { STAT_X_ARTILLERY, STAT_BOX_Y }, area.size * float2 { STAT_WIDTH, STAT_BOX_HEIGHT }), .padding = stat_box_padding }, color_box_stat, ui::TextAlignment::CENTER);
+    }
+}
+
 inline void RenderCounters(const Pool<CounterStack>& counters) {
     const CameraState& camera = Singleton::Get<CameraState>();
     const WindowState& window_state = Singleton::Get<WindowState>();
