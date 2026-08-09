@@ -5,6 +5,7 @@ export module hex.counter;
 import std;
 
 import pce.std;
+import pce.math;
 import pce.globals;
 import pce.window_state;
 import pce.assets;
@@ -119,7 +120,7 @@ struct CounterTextureStack {
     std::unreachable();
 }
 
-// rough division counter placeholder: country color body, echelon on top, name band in formation color
+// rough division counter placeholder: country color body, full name bar in formation color on top
 inline void DrawFormationCounter(const WindowState& window_state, const UnitFormation& formation, const AABB& area, Pool<Label>& label_pool) {
     const ui::FontCollection& font_collection = Singleton::Get<ui::FontCollection>();
 
@@ -127,20 +128,59 @@ inline void DrawFormationCounter(const WindowState& window_state, const UnitForm
     ui::DrawRect(window_state, area, colors::COLOR_BLACK);
     ui::DrawRect(window_state, area.WithPadding(float2 { BORDER_THICKNESS * area.size.x }), CountryBranchToColor(formation.tag, formation.branch));
 
-    const ui::FontSize pt_echelon = static_cast<ui::FontSize>(area.size.y * 0.14F);
-    if (pt_echelon >= ui::FONT_MIN_SIZE) {
-        const Label& label_echelon = label_pool.Get();
-        label_echelon.SetText(EchelonToString(formation.echelon));
-        DrawText(font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_echelon)), label_echelon, AABB::FromPoint(area.point + area.size * float2 { 0.0F, 0.06F }, area.size * float2 { 1.0F, 0.2F }), colors::COLOR_BLACK, ui::TextAlignment::CENTER);
-    }
-
-    const AABB area_name = AABB::FromPoint(area.point + area.size * float2 { 0.05F, 0.62F }, area.size * float2 { 0.9F, 0.28F });
-    ui::DrawRect(window_state, area_name, formation.color);
-    const ui::FontSize pt_name = static_cast<ui::FontSize>(area.size.y * 0.10F);
+    constexpr f32 NAME_PADDING = 0.05F;
+    const AABB area_name = AABB::FromPoint(area.point + area.size * float2 { NAME_PADDING }, float2 { area.size.x * (1.0F - 2.0F * NAME_PADDING), area.size.y * 0.40F });
+    ui::DrawRect(window_state, area_name, colors::COLOR_BLACK);
+    ui::DrawRect(window_state, area_name.WithPadding(float2 { BORDER_THICKNESS * area.size.x }), formation.color);
+    const ui::FontSize pt_name = static_cast<ui::FontSize>(area.size.y * 0.13F);
     if (pt_name >= ui::FONT_MIN_SIZE) {
         const Label& label_name = label_pool.Get();
-        label_name.SetText(UnitNameToString(formation.name));
-        DrawText(font_collection.GetFontBoldCourier(static_cast<ui::FontSizes>(pt_name)), label_name, area_name, colors::COLOR_BLACK, ui::TextAlignment::CENTER);
+        label_name.SetText(UnitNameToString(formation.name_full));
+        DrawText(font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_name)), label_name, area_name, colors::COLOR_BLACK, ui::TextAlignment::CENTER);
+    }
+
+    // stat row: fatigue, artillery max, prepared defense
+    const ui::FontSize pt_stat = static_cast<ui::FontSize>(area.size.y * 0.10F);
+    const ui::FontSize pt_stat_header = math::Max(static_cast<ui::FontSize>(area.size.y * 0.05F), ui::FONT_MIN_SIZE);
+    if (pt_stat >= ui::FONT_MIN_SIZE) {
+        constexpr f32 STAT_WIDTH = 0.22F;
+        constexpr f32 STAT_HEADER_Y = 0.49F;
+        constexpr f32 STAT_HEADER_HEIGHT = 0.08F;
+        constexpr f32 STAT_BOX_Y = 0.58F;
+        constexpr f32 STAT_BOX_HEIGHT = 0.15F;
+        constexpr f32 STAT_X_FATIGUE = 0.08F;
+        constexpr f32 STAT_X_ARTILLERY = 0.39F;
+        constexpr f32 STAT_X_DEFENSE = 0.70F;
+        const ui::Font& font_stat = font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_stat));
+        const ui::Font& font_stat_header = font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_stat_header));
+        const float2 stat_box_padding { area.size.x * 0.01F };
+        const ui::ColorBox color_box_stat { .color_fill = colors::COLOR_WHITE_SMOKE, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_BLACK };
+
+        const Label& label_fatigue_header = label_pool.Get();
+        label_fatigue_header.SetText("fatigue");
+        DrawText(font_stat_header, label_fatigue_header, AABB::FromPoint(area.point + area.size * float2 { STAT_X_FATIGUE, STAT_HEADER_Y }, area.size * float2 { STAT_WIDTH, STAT_HEADER_HEIGHT }), colors::COLOR_BLACK, ui::TextAlignment::CENTER);
+        const Label& label_fatigue = label_pool.Get();
+        label_fatigue.SetText(std::format("{}", formation.fatigue));
+        DrawColorBox(window_state, font_stat, label_fatigue, ui::AABBWithPadding { .area = AABB::FromPoint(area.point + area.size * float2 { STAT_X_FATIGUE, STAT_BOX_Y }, area.size * float2 { STAT_WIDTH, STAT_BOX_HEIGHT }), .padding = stat_box_padding }, color_box_stat, ui::TextAlignment::CENTER);
+
+        const HandleOptional<Texture> texture_artillery = CounterStyleToTextures(COUNTER_THEME).artillery;
+        if (texture_artillery.IsValid()) { ui::DrawTexture(window_state, texture_artillery.GetHandle(), AABB::FromPoint(area.point + area.size * float2 { STAT_X_ARTILLERY + STAT_WIDTH * 0.25F, STAT_HEADER_Y }, area.size * float2 { STAT_WIDTH * 0.5F, STAT_HEADER_HEIGHT }), colors::COLOR_WHITE); }
+        const Label& label_artillery = label_pool.Get();
+        label_artillery.SetText(std::format("{}", formation.artillery.max));
+        DrawColorBox(window_state, font_stat, label_artillery, ui::AABBWithPadding { .area = AABB::FromPoint(area.point + area.size * float2 { STAT_X_ARTILLERY, STAT_BOX_Y }, area.size * float2 { STAT_WIDTH, STAT_BOX_HEIGHT }), .padding = stat_box_padding }, color_box_stat, ui::TextAlignment::CENTER);
+
+        const Label& label_defense_header = label_pool.Get();
+        label_defense_header.SetText("defense");
+        DrawText(font_stat_header, label_defense_header, AABB::FromPoint(area.point + area.size * float2 { STAT_X_DEFENSE, STAT_HEADER_Y }, area.size * float2 { STAT_WIDTH, STAT_HEADER_HEIGHT }), colors::COLOR_BLACK, ui::TextAlignment::CENTER);
+        const Label& label_defense = label_pool.Get();
+        label_defense.SetText(formation.prepared_defense ? "yes" : "no");
+        DrawColorBox(window_state, font_stat, label_defense, ui::AABBWithPadding { .area = AABB::FromPoint(area.point + area.size * float2 { STAT_X_DEFENSE, STAT_BOX_Y }, area.size * float2 { STAT_WIDTH, STAT_BOX_HEIGHT }), .padding = stat_box_padding }, color_box_stat, ui::TextAlignment::CENTER);
+    }
+
+    // decorative trim
+    for (u32 i = 0; i < 3U; i++) {
+        const f32 stripe_y = 0.775F + 0.055F * static_cast<f32>(i);
+        ui::DrawRect(window_state, AABB::FromPoint(area.point + area.size * float2 { NAME_PADDING, stripe_y }, float2 { area.size.x * (1.0F - 2.0F * NAME_PADDING), area.size.y * 0.018F }), formation.color);
     }
 }
 

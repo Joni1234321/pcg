@@ -42,8 +42,8 @@ constexpr TerrainStyle TERRAIN_FEATURE_THEME = TerrainStyle::TERRAIN_STYLE_ICONS
 constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_NIEHORSTER;
 
 constexpr miliseconds32 TURN_STATE_DELAY { 100U };
-constexpr miliseconds32 TURN_HQ_DRAW_DURATION { 3000U };
-constexpr miliseconds32 TURN_HQ_SHOW_DURATION { 1500U };
+constexpr miliseconds32 TURN_HQ_DRAW_DURATION { 1000U };
+constexpr miliseconds32 TURN_HQ_SHOW_DURATION { 1000U };
 constexpr u32 HQ_DRAW_REEL_LANDING = 24U;
 constexpr u32 HQ_DRAW_REEL_SIZE = HQ_DRAW_REEL_LANDING + 21U; // 20 counters visible past the landing so the wheel never looks empty
 
@@ -110,8 +110,14 @@ struct UnitToe {
     u8 steps { };
 };
 using UnitName = Array<char, 10>;
+using UnitNameFull = Array<char, 24>;
 [[nodiscard]] String UnitNameToString(const UnitName& name) { return std::string(name.begin(), std::ranges::find(name, '\0')); }
+[[nodiscard]] String UnitNameToString(const UnitNameFull& name) { return std::string(name.begin(), std::ranges::find(name, '\0')); }
 void UnitNameSet(UnitName& name, const String& text) {
+    name = { };
+    std::memcpy(name.data(), text.c_str(), math::Min(text.size(), static_cast<u32>(name.size())));
+}
+void UnitNameSet(UnitNameFull& name, const String& text) {
     name = { };
     std::memcpy(name.data(), text.c_str(), math::Min(text.size(), static_cast<u32>(name.size())));
 }
@@ -125,6 +131,7 @@ struct UnitFormation {
     UnitBranch branch { };
     Echelon echelon { };
     UnitName name { };
+    UnitNameFull name_full { };
     Color color { };
     b8 prepared_defense { };
     u8 fatigue { };

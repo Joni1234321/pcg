@@ -14,6 +14,7 @@ import pcs.node;
 import pcs.debug;
 import pcs.tick;
 import pcs.animation;
+import pcs.easing;
 import pcs.orchestra;
 
 import pce.colors;
@@ -135,9 +136,10 @@ struct GameFrame : Frame, LogLifetimeWithCount<GameFrame> {
 
     Handle<Animation> planet_animation = AnimationSystem::Register(AnimationDesc { .action = [this](const f32 t) -> void {
                                                                                       static constexpr u32 PLANET_PADDING_START = 10U;
-                                                                                      const u32 padding_value = PLANET_PADDING_START + static_cast<u32>((1 - t) * PLANET_BORDER_SIZE);
+                                                                                      const f32 eased = EaseInOutSine(t);
+                                                                                      const u32 padding_value = PLANET_PADDING_START + static_cast<u32>((1 - eased) * PLANET_BORDER_SIZE);
                                                                                       globalData[tree].styles[planet].padding = uint4 { padding_value, padding_value, padding_value, padding_value };
-                                                                                      globalData[tree].styles[planet].background_color = colors::ColorLighten(colors::COLOR_CYAN, t);
+                                                                                      globalData[tree].styles[planet].background_color = colors::ColorLighten(colors::COLOR_CYAN, eased);
                                                                                       Singleton::Get<UIFlags>() & UIFlags::planet;
                                                                                   },
                                                                                    .duration = miliseconds32 { 400U },
