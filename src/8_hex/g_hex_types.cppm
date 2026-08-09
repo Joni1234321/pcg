@@ -134,7 +134,7 @@ struct UnitFormation {
     UnitNameFull name_full { };
     Color color { };
     b8 prepared_defense { };
-    u8 fatigue { };
+    i8 fatigue { };
     List<Handle<Unit>> support { };
     Stat artillery { };
 };

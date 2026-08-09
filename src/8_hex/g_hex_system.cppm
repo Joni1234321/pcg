@@ -211,7 +211,6 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                     .action = [&hex_state, &window_state](const f32 t) -> void {
                         const float2 screen_size { static_cast<f32>(window_state.screen_size.x), static_cast<f32>(window_state.screen_size.y) };
                         DrawRect(window_state, AABB { .point = float2 { 0.0F }, .size = screen_size }, colors::COLOR_BLACK.WithAlpha(0.55F));
-//
                         const f32 t_pop = Min(t * static_cast<f32>(TURN_HQ_SHOW_DURATION.value) / 200.0F, 1.0F);
                         const f32 showcase_size = CARD_SIZE * (1.2F + 1.3F * EaseOutCubic(t_pop));
                         const AABB area_showcase = AABB::FromCenter(screen_size * float2 { 0.5F }, float2 { showcase_size });
@@ -235,9 +234,51 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
             return AnimationSystem::IsRunning(reel_animation_chain) ? TurnHqState::TURN_HQ_START : TurnHqState::TURN_HQ_ACTIVATE;
         }
         case TurnHqState::TURN_HQ_ACTIVATE: {
+
+
             return TurnHqState::TURN_HQ_LOGISTIC;
         }
         case TurnHqState::TURN_HQ_LOGISTIC: {
+            enum class ActivationResult { ACTIVATE_NONE, ACTIVATE_PARTIAL, ACTIVATE_FULL };
+            static ActivationResult activation_result;
+            UnitFormation& unit_formation = hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()];
+            if (initalize) {
+                const i8 activation_modifiers = - unit_formation.fatigue - unit_formation.prepared_defense;
+                const i8 activation_roll = RandD6() + RandD6();
+                const i8 activation_roll_mod = activation_roll + activation_modifiers;
+
+                if (activation_roll_mod <= 2) {
+                    activation_result = ActivationResult::ACTIVATE_NONE;
+                }
+                else if (activation_roll_mod <= 6) {
+                    activation_result = ActivationResult::ACTIVATE_PARTIAL;
+                }
+                else {
+                    activation_result = ActivationResult::ACTIVATE_FULL;
+                }
+
+                // display the snafu roll. Both roll and result as an animation
+
+                switch (activation_result) {
+                    case ActivationResult::ACTIVATE_NONE: {
+                        if (unit_formation.fatigue > 0) {
+                            unit_formation.fatigue--;
+                        }
+                        return TurnHqState::TURN_HQ_END;
+                    }
+                    case ActivationResult::ACTIVATE_PARTIAL: {
+                        unit_formation.artillery.current = unit_formation.artillery.max;
+                        // for all units in formation set move to half of max (round up)
+                        break;
+                    }
+                    case ActivationResult::ACTIVATE_FULL: {
+                        unit_formation.artillery.current = Ceil(unit_formation.artillery.max / 2.0F);
+                        // for all units in formatiuon set move to max
+                        break;
+                    }
+                    default: std::unreachable();
+                }
+            }
             return TurnHqState::TURN_HQ_OBJ_PLACEMENT;
         }
         case TurnHqState::TURN_HQ_OBJ_PLACEMENT: {
