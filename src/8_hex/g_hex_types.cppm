@@ -87,7 +87,9 @@ struct UnitFormation {
     i8 fatigue { };
     List<Handle<Unit>> support { };
     Stat artillery { };
+
     ActivationResult activation_result { };
+    ActivationFatigueActions activation_fatigue_actions { };
 };
 struct Unit {
     int2 axial { };

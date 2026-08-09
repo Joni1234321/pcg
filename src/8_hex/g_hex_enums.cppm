@@ -27,6 +27,7 @@ enum class TurnHqState : u8 { TURN_HQ_NONE, TURN_HQ_START, TURN_HQ_ACTIVATE, TUR
 enum class ExecutePhase : u8 { EXECUTE_IDLE, EXECUTE_MOVE, EXECUTE_ATTACK };
 enum class DefenderRetreat : u8 { DEFENDER_HOLDS, DEFENDER_RETREAT, DEFENDER_ROUT };
 enum class ActivationResult : u8 { ACTIVATE_NONE, ACTIVATE_HALF, ACTIVATE_FULL };
+enum class ActivationFatigueActions : u8 { ACTIVATION_DID_NOTHING = 0, ACTIVATION_DID_OBJ = 1, ACTIVATION_DID_SECOND_ACTIVATION = 2, ACTIVATION_DID_ATTACK = 3};
 
 enum class CounterStyle : u8 { COUNTER_STYLE_NIEHORSTER, COUNTER_STYLE_NIEHORSTER_BIG, COUNTER_STYLE_REAL };
 enum class MapStyle : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER, FADED_LINEN };
@@ -110,6 +111,18 @@ template <> struct std::formatter<hex::DefenderRetreat> : std::formatter<hex::St
             case hex::DefenderRetreat::DEFENDER_HOLDS: name = "DEFENDER_HOLDS"; break;
             case hex::DefenderRetreat::DEFENDER_RETREAT: name = "DEFENDER_RETREAT"; break;
             case hex::DefenderRetreat::DEFENDER_ROUT: name = "DEFENDER_ROUT"; break;
+        }
+        return std::formatter<hex::String>::format(name, ctx);
+    }
+};
+template <> struct std::formatter<hex::ActivationFatigueActions> : std::formatter<hex::String> {
+    auto format(const hex::ActivationFatigueActions activation_fatigue_actions, std::format_context& ctx) const {
+        hex::String name;
+        switch (activation_fatigue_actions) {
+            case hex::ActivationFatigueActions::ACTIVATION_DID_NOTHING: name = "NOTHING"; break;
+            case hex::ActivationFatigueActions::ACTIVATION_DID_OBJ: name = "OBJ"; break;
+            case hex::ActivationFatigueActions::ACTIVATION_DID_SECOND_ACTIVATION: name = "SECOND ACTIVATION"; break;
+            case hex::ActivationFatigueActions::ACTIVATION_DID_ATTACK: name = "ATTACK"; break;
         }
         return std::formatter<hex::String>::format(name, ctx);
     }

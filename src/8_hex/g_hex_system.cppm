@@ -44,6 +44,16 @@ using namespace hex::math;
 [[nodiscard]] u8 AxialAdjecentEnemyControl(const HexState& hex_state, const int2 axial) {
     return std::ranges::count_if(HEX_AXIAL_NEIGHBOURS, [&](const int2 axial_offset) -> b8 { return hex_state.hex_map.Contains(axial + axial_offset) && hex_state.hex_map[axial + axial_offset].owner.tag != hex_state.player_tag; });
 }
+void HqOverrun(HexState& hex_state, const int2 axial) {
+    for (u32 i = 0; i < hex_state.unit_formations.size(); i++) {
+        UnitFormation& formation = hex_state.unit_formations[hex_state.unit_formations.IndexToHandle(i)];
+        if (formation.tag != hex_state.player_tag && formation.axial_hq == axial) {
+            formation.axial_hq += formation.tag == CountryTag::TAG_GER ? int2 { -3, 0 } : int2 { 3, 0 };
+            formation.fatigue = 1;
+            formation.prepared_defense = false;
+        }
+    }
+}
 List<AxialAndCost> HexAxialPathAStar(HexState& hex_state, const int2 axial_start, const int2 axial_end, const MoveType movement, const u32 move_allowance) {
     List<AxialAndCost> axial_path;
     auto cmp = [](const AxialAndCost& a, const AxialAndCost& b) -> ::b8 { return a.cost > b.cost; };
@@ -249,6 +259,7 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
             if (initalize) {
                 const u32 drawn_index = Rand(hex_state.unit_formations_left.size());
                 hex_state.unit_formation_active = hex_state.unit_formations_left[drawn_index];
+                hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()].activation_fatigue_actions = ActivationFatigueActions::ACTIVATION_DID_NOTHING;
                 Logger().Log("[STATE] Turn HQ: Drawn {}", UnitNameToString(hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()].name));
 
                 unit_formation_reel.clear();
@@ -349,6 +360,8 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                 if (input_state.left_mouse_down) {
                     hex_state.objective_markers_axials.push_back(axial_hover);
                     obj_markers_left--;
+                    UnitFormation& unit_formation = hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()];
+                    unit_formation.activation_fatigue_actions = Max(unit_formation.activation_fatigue_actions, ActivationFatigueActions::ACTIVATION_DID_OBJ);
                 }
             }
             (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
@@ -434,6 +447,7 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                                 Particle { .position = camera.WorldToScreen(HexAxialToWorld(step->axial)), .text = Label { font_collection.GetFontBoldCourier(FontSizes::h5), MoveTypeToString(MoveTypeUnitIcon(units_selected[0].icon)) }, .duration = miliseconds32 { 1000U } });
                             Hex& hex_center = hex_state.hex_map[step->axial];
                             if (hex_center.owner.tag != hex_state.player_tag) { hex_center.owner = HexOwner { .tag = hex_state.player_tag, .contested = true }; } // conquer
+                            HqOverrun(hex_state, step->axial);
                             // zone of control
                             for (const int2 offset : HEX_AXIAL_NEIGHBOURS) {
                                 const int2 axial_neighbour = step->axial + offset;
@@ -514,7 +528,8 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                     Unit& unit_defender = units_defender[0];
                     UnitFormation& formation_attacker = hex_state.unit_formations[unit_attacker.formation];
                     UnitFormation& formation_defender = hex_state.unit_formations[unit_defender.formation];
-                    u8 dmg_attacker = unit_attacker.dmg + std::ranges::contains(formation_attacker.support | hex_state.units.handle_to_view(), RangedType::RANGED_ATTACK, &Unit::ranged_type) - formation_attacker.prepared_defense + (unit_attacker.ranged_type == RangedType::RANGED_ATTACK);
+                    const b8 within_objective_double = std::ranges::any_of(hex_state.objective_markers_axials, [&](const int2 axial_marker) -> b8 { return std::ranges::count(hex_state.objective_markers_axials, axial_marker) > 1 && HexAxialDistance(axial_marker, axial_battle) <= OBJ_MARKER_RANGE; });
+                    u8 dmg_attacker = unit_attacker.dmg + std::ranges::contains(formation_attacker.support | hex_state.units.handle_to_view(), RangedType::RANGED_ATTACK, &Unit::ranged_type) - formation_attacker.prepared_defense + (unit_attacker.ranged_type == RangedType::RANGED_ATTACK) + within_objective_double;
                     u8 dmg_defender = unit_defender.dmg + !std::ranges::contains(formation_defender.support | hex_state.units.handle_to_view(), RangedType::RANGED_NONE, &Unit::ranged_type) + (units_defender.size() > 2 ? -2 : units_defender.size() == 2) + (hex_battle.terrain_type != TerrainType::TERRAIN_TYPE_GRASS) +
                                       (unit_defender.ranged_type == RangedType::RANGED_ATTACK) * (hex_battle.terrain_feature == TerrainFeature::TERRAIN_FEATURE_CITY ? -3 : (hex_battle.terrain_type == TerrainType::TERRAIN_TYPE_GRASS) * 2) +
                                       hex_battle.river_edges.Test(HexAxialEdgeNeighbor(axial_battle, units_attacker[0].axial));
@@ -546,6 +561,7 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                     unit_attacker.steps.current = SaturatingSub(unit_attacker.steps.current, battle_outcome.attacker_step_loss);
                     unit_defender.steps.current = SaturatingSub(unit_defender.steps.current, battle_outcome.defender_step_loss);
                     unit_attacker.move.current = SaturatingSub(unit_attacker.move.current, MOVE_COST_ATTACK);
+                    formation_attacker.activation_fatigue_actions = Max(formation_attacker.activation_fatigue_actions, ActivationFatigueActions::ACTIVATION_DID_ATTACK);
 
                     globalData[hex_state.particle_emitter].particles.items.EmplaceBack(
                         Particle { .position = camera.WorldToScreen(HexAxialToWorld(axial_battle)),
@@ -571,6 +587,7 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                     if (battle_outcome.defender_retreat != DefenderRetreat::DEFENDER_HOLDS) {
                         if (hex_state.hex_map[axial_battle].owner.tag != hex_state.player_tag) { hex_state.hex_map[axial_battle].owner = HexOwner { .tag = hex_state.player_tag, .contested = true }; } // conquer
                         units_attacker[0].axial = axial_battle;
+                        HqOverrun(hex_state, axial_battle);
                     }
 
                     break;
@@ -624,15 +641,49 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
             return space_pressed ? TurnHqState::TURN_HQ_CLEAN : TurnHqState::TURN_HQ_EXECUTE;
         }
         case TurnHqState::TURN_HQ_CLEAN: {
-            hex_state.unit_formation_active.Reset();
             hex_state.objective_markers_axials.clear();
             return TurnHqState::TURN_HQ_ISOLATION;
         }
         case TurnHqState::TURN_HQ_ISOLATION: {
+            static i8 isolation_roll;
+            static Handle<Animation> isolation_roll_animation = AnimationSystem::Register(AnimationDesc {
+                .action = [&hex_state, &window_state](const f32) -> void {
+                    const FontCollection& font_collection = Singleton::Get<FontCollection>();
+                    const float2 screen_size { static_cast<f32>(window_state.screen_size.x), static_cast<f32>(window_state.screen_size.y) };
+                    constexpr f32 COUNTER_SHOWCASE_SIZE = 300.0F;
+                    const AABB area_counter_showcase = AABB::FromCenter(float2 { screen_size.x * 0.5F, screen_size.y * 0.4F }, float2 { COUNTER_SHOWCASE_SIZE });
+                    const AABB area_isolation_roll = AABB::FromPoint(float2 { 0.0F, area_counter_showcase.point.y + area_counter_showcase.size.y + 20.0F }, float2 { screen_size.x, static_cast<f32>(FontSizes::massive) * 2.0F });
 
+                    DrawRect(window_state, AABB { .point = float2 { 0.0F }, .size = screen_size }, colors::COLOR_BLACK.WithAlpha(0.55F));
+                    const f32 focus_top = area_counter_showcase.point.y - 35.0F;
+                    const f32 focus_bottom = area_isolation_roll.point.y + area_isolation_roll.size.y + 35.0F;
+                    DrawRect(window_state, AABB::FromPoint(float2 { 0.0F, focus_top }, float2 { screen_size.x, focus_bottom - focus_top }), colors::COLOR_BLACK.WithAlpha(0.85F));
+
+                    const UnitFormation& unit_formation = hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()];
+                    DrawFormationCounter(window_state, unit_formation, area_counter_showcase, hex_state.label_pool);
+
+                    const Font& font_isolation_roll = font_collection.GetFontBoldCourier(FontSizes::massive);
+                    const Label& label_isolation_roll = hex_state.label_pool.Get();
+                    const b8 gained_fatigue = isolation_roll <= static_cast<i8>(unit_formation.activation_fatigue_actions);
+                    label_isolation_roll.SetText(std::format("{}\n{} [{}] roll {}", gained_fatigue ? "FATIGUE +1" : "NO FATIGUE", unit_formation.activation_fatigue_actions, static_cast<i8>(unit_formation.activation_fatigue_actions), isolation_roll));
+                    DrawText(font_isolation_roll, label_isolation_roll, area_isolation_roll.WithOffset(float2 { 3.0F }), colors::COLOR_BLACK, TextAlignment::CENTER);
+                    DrawText(font_isolation_roll, label_isolation_roll, area_isolation_roll, colors::COLOR_WHITE, TextAlignment::CENTER);
+                },
+                .duration = TURN_HQ_SHOW_DURATION,
+                .state = AnimationState::persistent_stopped });
+            if (initalize) {
+                UnitFormation& unit_formation = hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()];
+                isolation_roll = RandD6();
+                if (isolation_roll <= static_cast<i8>(unit_formation.activation_fatigue_actions)) {
+                    unit_formation.fatigue++;
+                }
+                AnimationSystem::StartAnimation(isolation_roll_animation);
+            }
+            if (AnimationSystem::IsRunning(isolation_roll_animation)) { return TurnHqState::TURN_HQ_ISOLATION; }
             return TurnHqState::TURN_HQ_END;
         }
         case TurnHqState::TURN_HQ_END: {
+            hex_state.unit_formation_active.Reset();
 
             if (hex_state.unit_formations_left.empty()) {
                 return TurnHqState::TURN_HQ_NONE;
