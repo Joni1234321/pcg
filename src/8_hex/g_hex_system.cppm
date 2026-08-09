@@ -179,7 +179,7 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                 const u32 drawn_index = Rand(hex_state.unit_formations_left.size());
                 hex_state.unit_formation_active = hex_state.unit_formations_left[drawn_index];
                 hex_state.unit_formations_left.swap_back(drawn_index);
-                Logger().Log("[STATE] Turn HQ: Drawn {}", hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()].name);
+                Logger().Log("[STATE] Turn HQ: Drawn {}", UnitNameToString(hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()].name));
             }
 
             // do some animation
@@ -205,6 +205,7 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
             return TurnHqState::TURN_HQ_END;
         }
         case TurnHqState::TURN_HQ_END: {
+            hex_state.unit_formation_active.Reset();
             if (hex_state.unit_formations_left.empty()) {
                 return TurnHqState::TURN_HQ_NONE;
             }
@@ -242,11 +243,13 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
             return TurnState::TURN_HQ_ACTIVATE;
         }
         case TurnState::TURN_HQ_ACTIVATE: {
+            if (TimeNowMS() - hex_state.turn_hq_state_time < TURN_STATE_DELAY) { return TurnState::TURN_HQ_ACTIVATE; }
             TurnHqState turn_hq_state_next = HexSystemTurnHqLogic(hex_state);
             if (turn_hq_state_next != hex_state.turn_hq_state) {
                 Logger().Log("[STATE] Turn HQ: {} -> {}", hex_state.turn_hq_state, turn_hq_state_next);
                 hex_state.turn_hq_state = turn_hq_state_next;
                 hex_state.turn_hq_state_changed = true;
+                hex_state.turn_hq_state_time = TimeNowMS();
             }
             return hex_state.turn_hq_state == TurnHqState::TURN_HQ_NONE ? TurnState::TURN_END : TurnState::TURN_HQ_ACTIVATE;
         }
@@ -369,11 +372,14 @@ struct HexSystem {
         RenderCounters(hex_state.counters);
 
         // logic and render
-        TurnState turn_state_next = HexSystemTurnLogic(hex_state);
-        if (turn_state_next != hex_state.turn_state) {
-            Logger().Log("[STATE] Turn: {} -> {}", hex_state.turn_state, turn_state_next);
-            hex_state.turn_state = turn_state_next;
-            hex_state.turn_state_changed = true;
+        if (TimeNowMS() - hex_state.turn_state_time >= TURN_STATE_DELAY) {
+            TurnState turn_state_next = HexSystemTurnLogic(hex_state);
+            if (turn_state_next != hex_state.turn_state) {
+                Logger().Log("[STATE] Turn: {} -> {}", hex_state.turn_state, turn_state_next);
+                hex_state.turn_state = turn_state_next;
+                hex_state.turn_state_changed = true;
+                hex_state.turn_state_time = TimeNowMS();
+            }
         }
 
         hex_state.player_action = GetPlayerAction(hex_state);
@@ -461,6 +467,7 @@ struct HexSystem {
                     const String string_distance = std::format("{}", cost_and_axial.cost);
                     label.SetWrapWidth(camera.scale);
                     label.SetFont(font_movement);
+                    label.SetColor(colors::COLOR_WHITE);
                     label.SetText(string_distance);
                     label.Draw(float2 { screen.x - camera.scale * 0.5F, screen.y - pt * 0.5F });
                 }
@@ -572,6 +579,7 @@ struct HexSystem {
                 const Label& label = hex_state.label_pool.Get();
                 label.SetWrapWidth(camera.scale);
                 label.SetFont(font_attack);
+                label.SetColor(colors::COLOR_WHITE);
 
                 if (can_attack) {
                     auto units_attacker = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
@@ -590,6 +598,40 @@ struct HexSystem {
                 label.Draw(float2 { screen.x - camera.scale * 0.5F, screen.y - pt * 0.5F });
 
                 break;
+        }
+
+        // turn status ui, top right
+        {
+            const Font& font_status = font_collection.GetFontNormalCourier(FontSizes::body);
+            constexpr f32 STATUS_CELL_WIDTH = 200.0F;
+            constexpr f32 STATUS_LINE_HEIGHT = 20.0F;
+            constexpr f32 STATUS_PADDING = 10.0F;
+            const AABB area_status = AABB::FromPoint(float2 { static_cast<f32>(window_state.screen_size.x) - STATUS_CELL_WIDTH * 4.0F - STATUS_PADDING * 2.0F, static_cast<f32>(window_state.screen_size.y) - STATUS_LINE_HEIGHT - STATUS_PADDING * 2.0F }, float2 { STATUS_CELL_WIDTH * 4.0F + STATUS_PADDING * 2.0F, STATUS_LINE_HEIGHT + STATUS_PADDING * 2.0F });
+            const auto cell_area = [&](const u32 cell) -> AABB { return AABB::FromPoint(area_status.point + float2 { STATUS_PADDING + STATUS_CELL_WIDTH * static_cast<f32>(cell), STATUS_PADDING }, float2 { STATUS_CELL_WIDTH, STATUS_LINE_HEIGHT }); };
+            DrawRect(window_state, area_status, CountryBranchToColor(CountryTag::TAG_GER, UnitBranch::BRANCH_INFANTRY));
+
+            const Label& label_turn_number = hex_state.label_pool.Get();
+            label_turn_number.SetText(std::format("Turn {}", hex_state.turn_number));
+            DrawText(font_status, label_turn_number, cell_area(0), colors::COLOR_BLACK, TextAlignment::LEFT);
+
+            const Label& label_turn_state = hex_state.label_pool.Get();
+            label_turn_state.SetText(std::format("{}", hex_state.turn_state));
+            DrawText(font_status, label_turn_state, cell_area(1), colors::COLOR_BLACK, TextAlignment::LEFT);
+
+            if (hex_state.turn_state == TurnState::TURN_HQ_ACTIVATE) {
+                const Label& label_turn_hq_state = hex_state.label_pool.Get();
+                label_turn_hq_state.SetText(std::format("{}", hex_state.turn_hq_state));
+                DrawText(font_status, label_turn_hq_state, cell_area(3), colors::COLOR_BLACK, TextAlignment::LEFT);
+
+                if (hex_state.unit_formation_active.IsValid()) {
+                    const UnitFormation& formation_active = hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()];
+                    DrawRect(window_state, cell_area(2), formation_active.color);
+                    const Label& label_formation = hex_state.label_pool.Get();
+                    label_formation.SetText(UnitNameToString(formation_active.name));
+                    DrawText(font_status, label_formation, cell_area(2), colors::COLOR_BLACK, TextAlignment::LEFT);
+                }
+            }
+
         }
 
         // debug

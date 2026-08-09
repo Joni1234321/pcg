@@ -7,6 +7,7 @@ import std;
 import pce.sdl;
 import pce.collections;
 import pce.std;
+import pce.strong;
 import pce.math;
 
 import hex.hex;
@@ -39,6 +40,8 @@ constexpr MapStyle TERRAIN_SCHEME = MapStyle::FADED_LINEN;
 constexpr TableStyle TABLE_THEME = TableStyle::TABLE_STYLE_LINEN;
 constexpr TerrainStyle TERRAIN_FEATURE_THEME = TerrainStyle::TERRAIN_STYLE_ICONS;
 constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_NIEHORSTER;
+
+constexpr miliseconds32 TURN_STATE_DELAY { 500U };
 
 constexpr u8 MOVE_POINT = 15U;
 constexpr u8 MOVE_COST_ATTACK = 1U;
@@ -194,8 +197,10 @@ struct HexState {
     u8 turn_number { 0 };
     TurnState turn_state { TurnState::TURN_NONE };
     b8 turn_state_changed;
+    miliseconds32 turn_state_time { 0U };
     TurnHqState turn_hq_state { TurnHqState::TURN_HQ_NONE };
     b8 turn_hq_state_changed;
+    miliseconds32 turn_hq_state_time { 0U };
     HandleOptional<UnitFormation> unit_formation_active { };
     List<Handle<UnitFormation>> unit_formations_left { };
 
