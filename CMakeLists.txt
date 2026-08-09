@@ -146,6 +146,11 @@ target_sources(pcg
 #               src/g_minimal.cpp
 )
 
+if (WIN32 OR MINGW OR MSYS)
+    enable_language(RC)
+    target_sources(pcg PRIVATE resources/pcg.rc)
+endif ()
+
 target_link_libraries(pcg
                       PRIVATE SDL3::SDL3
                       PRIVATE SDL3_ttf::SDL3_ttf
@@ -201,6 +206,11 @@ if (WIN32 OR MINGW OR MSYS OR CMAKE_SYSTEM_NAME STREQUAL "MSYS")
         list(APPEND PCG_RUNTIME_SEARCH_DIRS "${CMAKE_PREFIX_PATH}/bin")
     endif ()
 
+    # SDL3_image loads its jpeg codec with SDL_LoadObject at runtime, so it never
+    # shows up in the import-table scan. Without it every .jpg texture fails to
+    # load on machines that don't have msys64 on PATH.
+    set(PCG_RUNTIME_LOADED_DLLS "libjpeg-8.dll")
+
     # Dev convenience: do the same bundling into the build dir so double-click
     # works straight from build/xd/.
     #
@@ -219,6 +229,7 @@ if (WIN32 OR MINGW OR MSYS OR CMAKE_SYSTEM_NAME STREQUAL "MSYS")
                     -DEXECUTABLE=$<TARGET_FILE:pcg>
                     -DOUTPUT_DIR=$<TARGET_FILE_DIR:pcg>
                     "-DSEARCH_DIRS=${PCG_RUNTIME_SEARCH_DIRS}"
+                    "-DEXTRA_DLLS=${PCG_RUNTIME_LOADED_DLLS}"
                     "-DSTAMP=${CMAKE_CURRENT_BINARY_DIR}/pcg_runtime_dlls.stamp"
                     "-DTRIGGER_FILES=${PCG_BUNDLE_TRIGGERS}"
                     -P "${CMAKE_SOURCE_DIR}/cmake/bundle_runtime_deps.cmake"
@@ -245,6 +256,7 @@ if (WIN32 OR MINGW OR MSYS OR CMAKE_SYSTEM_NAME STREQUAL "MSYS")
         set(EXECUTABLE  \"\${CMAKE_INSTALL_PREFIX}/$<TARGET_FILE_NAME:pcg>\")
         set(OUTPUT_DIR  \"\${CMAKE_INSTALL_PREFIX}\")
         set(SEARCH_DIRS \"${PCG_RUNTIME_SEARCH_DIRS}\")
+        set(EXTRA_DLLS  \"${PCG_RUNTIME_LOADED_DLLS}\")
         include(\"${CMAKE_SOURCE_DIR}/cmake/bundle_runtime_deps.cmake\")
     ")
 endif ()

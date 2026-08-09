@@ -211,13 +211,13 @@ struct TerrainFeatureTextures {
     HandleOptional<Texture> marsh;
 
     explicit TerrainFeatureTextures(const RelativePath& dir) {
-        grassland = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "grassland.png"));
-        field = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "field.png"));
-        city = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "city.png"));
+        // grassland = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "grassland.png"));
+        // field = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "field.png"));
+        // city = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "city.png"));
         village = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "village.png"));
         wooded_lightly = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "wooded-lightly.png"));
         wooded_heavy = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "wooded-heavy.png"));
-        marsh = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "marsh.png"));
+        // marsh = hex::globalData.Create<hex::Texture>(hex::Asset(dir / "marsh.png"));
     }
     [[nodiscard]] HandleOptional<Texture> ForFeature(const TerrainFeature feature) const {
         switch (feature) {

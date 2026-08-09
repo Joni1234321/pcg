@@ -2,6 +2,7 @@ module;
 
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_log.h>
+#include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
 export module pce.r_window;
@@ -35,6 +36,10 @@ struct Window {
         if (!TTF_Init()) {
             SDL_Log("SDL_ttf failed (%s)", SDL_GetError());
             SDL_Quit();
+        }
+        if (SDL_Surface* icon = IMG_Load(Asset("icon.png").string().c_str())) {
+            SDL_SetWindowIcon(window_state.window, icon);
+            SDL_DestroySurface(icon);
         }
         SDL_SetRenderDrawBlendMode(window_state.renderer, SDL_BLENDMODE_BLEND);
         window_state.text_engine = TTF_CreateRendererTextEngine(window_state.renderer);

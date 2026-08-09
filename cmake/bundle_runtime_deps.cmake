@@ -5,6 +5,8 @@
 #   EXECUTABLE     .exe to scan
 #   OUTPUT_DIR     destination folder
 #   SEARCH_DIRS    ;-separated list of dirs to look in (compiler bin, etc.)
+#   EXTRA_DLLS     optional; dll names loaded at runtime via SDL_LoadObject —
+#                  invisible to the import scan. Resolved against SEARCH_DIRS.
 #   STAMP          optional; skip the scan while newer than every TRIGGER_FILES
 #   TRIGGER_FILES  optional; ;-separated inputs that invalidate STAMP
 
@@ -28,16 +30,32 @@ if (STAMP AND EXISTS "${STAMP}")
     endif ()
 endif ()
 
+set(_extra "")
+foreach (_name IN LISTS EXTRA_DLLS)
+    set(_found "_found-NOTFOUND")
+    find_file(_found "${_name}" PATHS ${SEARCH_DIRS} NO_DEFAULT_PATH)
+    if (_found)
+        list(APPEND _extra "${_found}")
+    else ()
+        message(WARNING "bundle_runtime_deps: extra dll ${_name} not found in: ${SEARCH_DIRS}")
+    endif ()
+endforeach ()
+
+set(_modules_arg "")
+if (_extra)
+    set(_modules_arg MODULES ${_extra})
+endif ()
 file(GET_RUNTIME_DEPENDENCIES
      RESOLVED_DEPENDENCIES_VAR   _resolved
      UNRESOLVED_DEPENDENCIES_VAR _unresolved
      EXECUTABLES "${EXECUTABLE}"
+     ${_modules_arg}
      DIRECTORIES ${SEARCH_DIRS}
      PRE_EXCLUDE_REGEXES  "api-ms-.*" "ext-ms-.*"
      POST_EXCLUDE_REGEXES ".*[Ss]ystem32/.*\\.[Dd][Ll][Ll]" ".*SysWOW64/.*\\.[Dd][Ll][Ll]"
 )
 
-foreach (_dll IN LISTS _resolved)
+foreach (_dll IN LISTS _resolved _extra)
     file(COPY "${_dll}" DESTINATION "${OUTPUT_DIR}" FOLLOW_SYMLINK_CHAIN)
 endforeach ()
 
