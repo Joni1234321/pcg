@@ -17,6 +17,7 @@ import pce.collections;
 import pce.colors;
 
 import hex.hex;
+import hex.enums;
 import hex.types;
 import hex.terrain;
 import hex.render;

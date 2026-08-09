@@ -15,6 +15,7 @@ import pcs.camera;
 import pce.colors;
 import pce.std;
 import hex.hex;
+import hex.enums;
 import hex.types;
 import pce.collections;
 import pce.math;

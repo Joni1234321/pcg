@@ -27,6 +27,7 @@ import pcs.animation;
 import pcs.easing;
 
 import hex.hex;
+import hex.enums;
 import hex.types;
 import hex.terrain;
 import hex.counter;
@@ -171,8 +172,26 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
 
 [[nodiscard]] TurnHqState HexSystemTurnHqLogic (HexState& hex_state) {
     const WindowState& window_state = Singleton::Get<WindowState>();
+    const FontCollection& font_collection = Singleton::Get<FontCollection>();
 
     b8 initalize = hex_state.turn_hq_state_changed;
+
+    // hq phase title, top center, with the active formation counter under it
+    if (hex_state.turn_hq_state != TurnHqState::TURN_HQ_NONE) {
+        const Font& font_title = font_collection.GetFontBoldCompact(FontSizes::title);
+        const Label& label_title = hex_state.label_pool.Get();
+        label_title.SetText(std::format("{}", hex_state.turn_hq_state));
+        const AABB area_title = AABB::FromPoint(float2 { 0.0F, static_cast<f32>(window_state.screen_size.y) * 0.06F }, float2 { static_cast<f32>(window_state.screen_size.x), static_cast<f32>(FontSizes::title) });
+        DrawText(font_title, label_title, area_title.WithOffset(float2 { 3.0F }), colors::COLOR_BLACK, TextAlignment::CENTER);
+        DrawText(font_title, label_title, area_title, colors::COLOR_WHITE, TextAlignment::CENTER);
+
+        if (hex_state.unit_formation_active.IsValid()) {
+            constexpr f32 COUNTER_ACTIVE_SIZE = 120.0F;
+            const AABB area_counter_active = AABB::FromCenter(float2 { static_cast<f32>(window_state.screen_size.x) * 0.5F, area_title.point.y + area_title.size.y + static_cast<f32>(FontSizes::h1) * 2.0F + COUNTER_ACTIVE_SIZE * 0.5F + 20.0F }, float2 { COUNTER_ACTIVE_SIZE });
+            DrawFormationCounter(window_state, hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()], area_counter_active, hex_state.label_pool);
+        }
+    }
+
     switch (hex_state.turn_hq_state) {
         case TurnHqState::TURN_HQ_NONE: {
             return TurnHqState::TURN_HQ_START;
@@ -239,47 +258,71 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
             return TurnHqState::TURN_HQ_LOGISTIC;
         }
         case TurnHqState::TURN_HQ_LOGISTIC: {
-            enum class ActivationResult { ACTIVATE_NONE, ACTIVATE_PARTIAL, ACTIVATE_FULL };
             static ActivationResult activation_result;
+            static i8 activation_roll_mod;
+            static i8 activation_modifiers;
             UnitFormation& unit_formation = hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()];
+            static Handle<Animation> snafu_roll_animation = AnimationSystem::Register(AnimationDesc {
+                .action = [&hex_state, &window_state](const f32) -> void {
+                    const FontCollection& font_collection = Singleton::Get<FontCollection>();
+                    const float2 screen_size { static_cast<f32>(window_state.screen_size.x), static_cast<f32>(window_state.screen_size.y) };
+                    constexpr f32 COUNTER_SHOWCASE_SIZE = 300.0F;
+                    const AABB area_counter_showcase = AABB::FromCenter(float2 { screen_size.x * 0.5F, screen_size.y * 0.4F }, float2 { COUNTER_SHOWCASE_SIZE });
+                    const AABB area_snafu_roll = AABB::FromPoint(float2 { 0.0F, area_counter_showcase.point.y + area_counter_showcase.size.y + 20.0F }, float2 { screen_size.x, static_cast<f32>(FontSizes::massive) * 2.0F });
+
+                    DrawRect(window_state, AABB { .point = float2 { 0.0F }, .size = screen_size }, colors::COLOR_BLACK.WithAlpha(0.55F));
+                    const f32 focus_top = area_counter_showcase.point.y - 35.0F;
+                    const f32 focus_bottom = area_snafu_roll.point.y + area_snafu_roll.size.y + 35.0F;
+                    DrawRect(window_state, AABB::FromPoint(float2 { 0.0F, focus_top }, float2 { screen_size.x, focus_bottom - focus_top }), colors::COLOR_BLACK.WithAlpha(0.85F));
+
+                    DrawFormationCounter(window_state, hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()], area_counter_showcase, hex_state.label_pool);
+
+                    const Font& font_snafu_roll = font_collection.GetFontBoldCourier(FontSizes::massive);
+                    const Label& label_snafu_roll = hex_state.label_pool.Get();
+                    label_snafu_roll.SetText(std::format("{}\n{} [{:+}]", activation_result, activation_roll_mod, activation_modifiers));
+                    DrawText(font_snafu_roll, label_snafu_roll, area_snafu_roll.WithOffset(float2 { 3.0F }), colors::COLOR_BLACK, TextAlignment::CENTER);
+                    DrawText(font_snafu_roll, label_snafu_roll, area_snafu_roll, colors::COLOR_WHITE, TextAlignment::CENTER);
+                },
+                .duration = TURN_HQ_SHOW_DURATION,
+                .state = AnimationState::persistent_stopped });
             if (initalize) {
-                const i8 activation_modifiers = - unit_formation.fatigue - unit_formation.prepared_defense;
+                activation_modifiers = - unit_formation.fatigue - unit_formation.prepared_defense;
                 const i8 activation_roll = RandD6() + RandD6();
-                const i8 activation_roll_mod = activation_roll + activation_modifiers;
+                activation_roll_mod = activation_roll + activation_modifiers;
 
                 if (activation_roll_mod <= 2) {
                     activation_result = ActivationResult::ACTIVATE_NONE;
                 }
                 else if (activation_roll_mod <= 6) {
-                    activation_result = ActivationResult::ACTIVATE_PARTIAL;
+                    activation_result = ActivationResult::ACTIVATE_HALF;
                 }
                 else {
                     activation_result = ActivationResult::ACTIVATE_FULL;
                 }
-
-                // display the snafu roll. Both roll and result as an animation
 
                 switch (activation_result) {
                     case ActivationResult::ACTIVATE_NONE: {
                         if (unit_formation.fatigue > 0) {
                             unit_formation.fatigue--;
                         }
-                        return TurnHqState::TURN_HQ_END;
+                        break;
                     }
-                    case ActivationResult::ACTIVATE_PARTIAL: {
+                    case ActivationResult::ACTIVATE_HALF: {
                         unit_formation.artillery.current = unit_formation.artillery.max;
-                        // for all units in formation set move to half of max (round up)
+                        for (Unit& unit_member : hex_state.units_by_formation[hex_state.unit_formation_active.GetHandle()] | hex_state.units.handle_to_view()) { unit_member.move.current = Ceil(unit_member.move.max / 2.0F); }
                         break;
                     }
                     case ActivationResult::ACTIVATE_FULL: {
                         unit_formation.artillery.current = Ceil(unit_formation.artillery.max / 2.0F);
-                        // for all units in formatiuon set move to max
+                        for (Unit& unit_member : hex_state.units_by_formation[hex_state.unit_formation_active.GetHandle()] | hex_state.units.handle_to_view()) { unit_member.move.current = unit_member.move.max; }
                         break;
                     }
                     default: std::unreachable();
                 }
+                AnimationSystem::StartAnimation(snafu_roll_animation);
             }
-            return TurnHqState::TURN_HQ_OBJ_PLACEMENT;
+            if (AnimationSystem::IsRunning(snafu_roll_animation)) { return TurnHqState::TURN_HQ_LOGISTIC; }
+            return activation_result == ActivationResult::ACTIVATE_NONE ? TurnHqState::TURN_HQ_END : TurnHqState::TURN_HQ_OBJ_PLACEMENT;
         }
         case TurnHqState::TURN_HQ_OBJ_PLACEMENT: {
             return TurnHqState::TURN_HQ_EXECUTE;
@@ -712,22 +755,6 @@ struct HexSystem {
             const Label& label_turn_state = hex_state.label_pool.Get();
             label_turn_state.SetText(std::format("{}", hex_state.turn_state));
             DrawText(font_status, label_turn_state, cell_area(1), colors::COLOR_BLACK, TextAlignment::LEFT);
-        }
-
-        // hq phase title, top center, with the active formation counter under it
-        if (hex_state.turn_state == TurnState::TURN_HQ_ACTIVATE && hex_state.turn_hq_state != TurnHqState::TURN_HQ_NONE) {
-            const Font& font_title = font_collection.GetFontBoldCompact(FontSizes::title);
-            const Label& label_title = hex_state.label_pool.Get();
-            label_title.SetText(std::format("{}", hex_state.turn_hq_state));
-            const AABB area_title = AABB::FromPoint(float2 { 0.0F, static_cast<f32>(window_state.screen_size.y) * 0.06F }, float2 { static_cast<f32>(window_state.screen_size.x), static_cast<f32>(FontSizes::title) });
-            DrawText(font_title, label_title, area_title.WithOffset(float2 { 3.0F }), colors::COLOR_BLACK, TextAlignment::CENTER);
-            DrawText(font_title, label_title, area_title, colors::COLOR_WHITE, TextAlignment::CENTER);
-
-            if (hex_state.unit_formation_active.IsValid()) {
-                constexpr f32 COUNTER_ACTIVE_SIZE = 120.0F;
-                const AABB area_counter_active = AABB::FromCenter(float2 { static_cast<f32>(window_state.screen_size.x) * 0.5F, area_title.point.y + area_title.size.y + COUNTER_ACTIVE_SIZE * 0.5F + 20.0F }, float2 { COUNTER_ACTIVE_SIZE });
-                DrawFormationCounter(window_state, hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()], area_counter_active, hex_state.label_pool);
-            }
         }
 
         // debug

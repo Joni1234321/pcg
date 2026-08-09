@@ -10,6 +10,7 @@ import pce.std;
 import pce.math;
 
 import hex.hex;
+import hex.enums;
 import hex.types;
 
 export namespace hex {

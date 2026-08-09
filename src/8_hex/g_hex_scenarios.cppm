@@ -10,6 +10,7 @@ import pce.std;
 import pce.collections;
 
 import hex.hex;
+import hex.enums;
 import hex.types;
 import hex.terrain;
 import hex.terrain.generation;
