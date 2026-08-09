@@ -41,7 +41,11 @@ constexpr TableStyle TABLE_THEME = TableStyle::TABLE_STYLE_LINEN;
 constexpr TerrainStyle TERRAIN_FEATURE_THEME = TerrainStyle::TERRAIN_STYLE_ICONS;
 constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_NIEHORSTER;
 
-constexpr miliseconds32 TURN_STATE_DELAY { 500U };
+constexpr miliseconds32 TURN_STATE_DELAY { 100U };
+constexpr miliseconds32 TURN_HQ_DRAW_DURATION { 3000U };
+constexpr miliseconds32 TURN_HQ_SHOW_DURATION { 1500U };
+constexpr u32 HQ_DRAW_REEL_SIZE = 28U;
+constexpr u32 HQ_DRAW_REEL_LANDING = 24U;
 
 constexpr u8 MOVE_POINT = 15U;
 constexpr u8 MOVE_COST_ATTACK = 1U;

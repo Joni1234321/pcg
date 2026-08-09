@@ -175,16 +175,47 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
             return TurnHqState::TURN_HQ_START;
         }
         case TurnHqState::TURN_HQ_START: {
+            static List<Handle<UnitFormation>> unit_formation_reel;
             if (initalize) {
                 const u32 drawn_index = Rand(hex_state.unit_formations_left.size());
                 hex_state.unit_formation_active = hex_state.unit_formations_left[drawn_index];
                 hex_state.unit_formations_left.swap_back(drawn_index);
                 Logger().Log("[STATE] Turn HQ: Drawn {}", UnitNameToString(hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()].name));
+
+                unit_formation_reel.clear();
+                for (u32 i = 0; i < HQ_DRAW_REEL_SIZE; i++) { unit_formation_reel.push_back(hex_state.unit_formations.IndexToHandle(Rand(hex_state.unit_formations.size()))); }
+                unit_formation_reel[HQ_DRAW_REEL_LANDING] = hex_state.unit_formation_active.GetHandle();
             }
 
-            // do some animation
-            // wait for it to complete
-            return TurnHqState::TURN_HQ_ACTIVATE;
+            // hq draw reel, case-opening style: counters scroll past a center marker and decelerate onto the drawn formation, then it is shown big center screen
+            const WindowState& window_state = Singleton::Get<WindowState>();
+            constexpr f32 CARD_SIZE = 120.0F;
+            const miliseconds32 elapsed = TimeNowMS() - hex_state.turn_hq_state_time;
+            if (elapsed < TURN_HQ_DRAW_DURATION) {
+                constexpr f32 CARD_ADVANCE = CARD_SIZE + 14.0F;
+                constexpr f32 STRIP_HEIGHT = CARD_SIZE + 44.0F;
+                const float2 strip_center { static_cast<f32>(window_state.screen_size.x) * 0.5F, static_cast<f32>(window_state.screen_size.y) * 0.28F };
+                const f32 strip_width = static_cast<f32>(window_state.screen_size.x) * 0.62F;
+                const AABB area_strip = AABB::FromCenter(strip_center, float2 { strip_width, STRIP_HEIGHT });
+                DrawRect(window_state, area_strip, colors::COLOR_BLACK.WithAlpha(0.8F));
+
+                const f32 t = static_cast<f32>(elapsed.value) / static_cast<f32>(TURN_HQ_DRAW_DURATION.value);
+                const f32 eased = 1.0F - Pow(1.0F - t, 4.0F); // fast spin, hard deceleration
+                const f32 scroll = eased * CARD_ADVANCE * static_cast<f32>(HQ_DRAW_REEL_LANDING);
+
+                for (u32 i = 0; i < unit_formation_reel.size(); i++) {
+                    const f32 card_x = strip_center.x + CARD_ADVANCE * static_cast<f32>(i) - scroll;
+                    if (card_x < area_strip.point.x + CARD_SIZE * 0.5F || card_x > area_strip.point.x + strip_width - CARD_SIZE * 0.5F) { continue; }
+                    const UnitFormation& formation = hex_state.unit_formations[unit_formation_reel[i]];
+                    DrawFormationCounter(window_state, formation, AABB::FromCenter(float2 { card_x, strip_center.y }, float2 { CARD_SIZE }), hex_state.label_pool);
+                }
+
+                DrawRect(window_state, AABB::FromCenter(strip_center, float2 { 4.0F, STRIP_HEIGHT }), colors::COLOR_YELLOW.WithAlpha(0.9F));
+            } else {
+                const float2 screen_center { static_cast<f32>(window_state.screen_size.x) * 0.5F, static_cast<f32>(window_state.screen_size.y) * 0.5F };
+                DrawFormationCounter(window_state, hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()], AABB::FromCenter(screen_center, float2 { CARD_SIZE * 2.0F }), hex_state.label_pool);
+            }
+            return elapsed < TURN_HQ_DRAW_DURATION + TURN_HQ_SHOW_DURATION ? TurnHqState::TURN_HQ_START : TurnHqState::TURN_HQ_ACTIVATE;
         }
         case TurnHqState::TURN_HQ_ACTIVATE: {
             return TurnHqState::TURN_HQ_LOGISTIC;
@@ -250,6 +281,9 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                 hex_state.turn_hq_state = turn_hq_state_next;
                 hex_state.turn_hq_state_changed = true;
                 hex_state.turn_hq_state_time = TimeNowMS();
+            }
+            else {
+                hex_state.turn_hq_state_changed = false;
             }
             return hex_state.turn_hq_state == TurnHqState::TURN_HQ_NONE ? TurnState::TURN_END : TurnState::TURN_HQ_ACTIVATE;
         }
@@ -379,6 +413,9 @@ struct HexSystem {
                 hex_state.turn_state = turn_state_next;
                 hex_state.turn_state_changed = true;
                 hex_state.turn_state_time = TimeNowMS();
+            }
+            else {
+                hex_state.turn_state_changed = false;
             }
         }
 

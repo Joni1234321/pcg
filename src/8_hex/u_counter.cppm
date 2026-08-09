@@ -18,6 +18,7 @@ import pce.colors;
 import hex.hex;
 import hex.types;
 import hex.terrain;
+import hex.render;
 
 export namespace hex {
 [[nodiscard]] constexpr String EchelonToString(const Echelon echelon) {
@@ -55,6 +56,9 @@ export namespace hex {
 }
 
 constexpr f32 TEXT_SHADOW_STRENGTH = 1.0F;
+constexpr f32 OFFSET_STACK = 1.0F / 16.0F;
+constexpr f32 OFFSET_SHADOW = OFFSET_STACK / 3;
+constexpr f32 BORDER_THICKNESS = OFFSET_STACK / 6;
 
 [[nodiscard]] constexpr ui::ColorBox MoveTypeToColorBox(const MoveType move_type) {
     switch (move_type) {
@@ -115,6 +119,25 @@ struct CounterTextureStack {
     std::unreachable();
 }
 
+// rough division counter placeholder: country color body, echelon on top, name band in formation color
+inline void DrawFormationCounter(const WindowState& window_state, const UnitFormation& formation, const AABB& area, Pool<Label>& label_pool) {
+    const ui::FontCollection& font_collection = Singleton::Get<ui::FontCollection>();
+
+    ui::DrawRect(window_state, area.WithOffset(float2 { OFFSET_SHADOW * area.size.x }), colors::COLOR_BLACK.WithAlpha(0.15F));
+    ui::DrawRect(window_state, area, colors::COLOR_BLACK);
+    ui::DrawRect(window_state, area.WithPadding(float2 { BORDER_THICKNESS * area.size.x }), CountryBranchToColor(formation.tag, formation.branch));
+
+    const Label& label_echelon = label_pool.Get();
+    label_echelon.SetText(EchelonToString(formation.echelon));
+    DrawText(font_collection.GetFontBoldCompact(ui::FontSizes::h5), label_echelon, AABB::FromPoint(area.point + area.size * float2 { 0.0F, 0.06F }, area.size * float2 { 1.0F, 0.2F }), colors::COLOR_BLACK, ui::TextAlignment::CENTER);
+
+    const AABB area_name = AABB::FromPoint(area.point + area.size * float2 { 0.05F, 0.62F }, area.size * float2 { 0.9F, 0.28F });
+    ui::DrawRect(window_state, area_name, formation.color);
+    const Label& label_name = label_pool.Get();
+    label_name.SetText(UnitNameToString(formation.name));
+    DrawText(font_collection.GetFontBoldCourier(ui::FontSizes::body), label_name, area_name, colors::COLOR_BLACK, ui::TextAlignment::CENTER);
+}
+
 inline void RenderCounters(const Pool<CounterStack>& counters) {
     const CameraState& camera = Singleton::Get<CameraState>();
     const WindowState& window_state = Singleton::Get<WindowState>();
@@ -145,10 +168,6 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         for (i32 i = static_cast<i32>(counter.stack.size()) - 1; i >= 0; i--) {
             const Counter& counter_stack = counter.stack[static_cast<u32>(i)];
             if (counter_stack.color_icon.a == 0) { continue; }
-
-            constexpr f32 OFFSET_STACK = 1.0F / 16.0F;
-            constexpr f32 OFFSET_SHADOW = OFFSET_STACK / 3;
-            constexpr f32 BORDER_THICKNESS = OFFSET_STACK / 6;
 
             const AABB area_counter = AABB::FromCenter(counter_center + float2 { OFFSET_STACK * counter_size.x * static_cast<f32>(i) }, counter_size);
             constexpr Color COLOR_SHADOW = colors::COLOR_BLACK.WithAlpha(0.15F);
