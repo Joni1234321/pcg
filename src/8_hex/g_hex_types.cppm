@@ -44,8 +44,8 @@ constexpr CounterStyle COUNTER_THEME = CounterStyle::COUNTER_STYLE_NIEHORSTER;
 constexpr miliseconds32 TURN_STATE_DELAY { 100U };
 constexpr miliseconds32 TURN_HQ_DRAW_DURATION { 3000U };
 constexpr miliseconds32 TURN_HQ_SHOW_DURATION { 1500U };
-constexpr u32 HQ_DRAW_REEL_SIZE = 28U;
 constexpr u32 HQ_DRAW_REEL_LANDING = 24U;
+constexpr u32 HQ_DRAW_REEL_SIZE = HQ_DRAW_REEL_LANDING + 21U; // 20 counters visible past the landing so the wheel never looks empty
 
 constexpr u8 MOVE_POINT = 15U;
 constexpr u8 MOVE_COST_ATTACK = 1U;
@@ -233,15 +233,15 @@ template <> struct std::formatter<hex::TurnHqState> : std::formatter<hex::String
     auto format(const hex::TurnHqState turn_hq_state, std::format_context& ctx) const {
         hex::String name;
         switch (turn_hq_state) {
-            case hex::TurnHqState::TURN_HQ_NONE: name = "TURN_HQ_NONE"; break;
-            case hex::TurnHqState::TURN_HQ_START: name = "TURN_HQ_START"; break;
-            case hex::TurnHqState::TURN_HQ_ACTIVATE: name = "TURN_HQ_ACTIVATE"; break;
-            case hex::TurnHqState::TURN_HQ_LOGISTIC: name = "TURN_HQ_LOGISTIC"; break;
-            case hex::TurnHqState::TURN_HQ_OBJ_PLACEMENT: name = "TURN_HQ_OBJ_PLACEMENT"; break;
-            case hex::TurnHqState::TURN_HQ_EXECUTE: name = "TURN_HQ_EXECUTE"; break;
-            case hex::TurnHqState::TURN_HQ_CLEAN: name = "TURN_HQ_CLEAN"; break;
-            case hex::TurnHqState::TURN_HQ_ISOLATION: name = "TURN_HQ_ISOLATION"; break;
-            case hex::TurnHqState::TURN_HQ_END: name = "TURN_HQ_END"; break;
+            case hex::TurnHqState::TURN_HQ_NONE: name = "None"; break;
+            case hex::TurnHqState::TURN_HQ_START: name = "Formation Draw"; break;
+            case hex::TurnHqState::TURN_HQ_ACTIVATE: name = "Activation"; break;
+            case hex::TurnHqState::TURN_HQ_LOGISTIC: name = "Logistics"; break;
+            case hex::TurnHqState::TURN_HQ_OBJ_PLACEMENT: name = "Objective Placement"; break;
+            case hex::TurnHqState::TURN_HQ_EXECUTE: name = "Execution"; break;
+            case hex::TurnHqState::TURN_HQ_CLEAN: name = "Clean Up"; break;
+            case hex::TurnHqState::TURN_HQ_ISOLATION: name = "Isolation"; break;
+            case hex::TurnHqState::TURN_HQ_END: name = "End"; break;
         }
         return std::formatter<hex::String>::format(name, ctx);
     }

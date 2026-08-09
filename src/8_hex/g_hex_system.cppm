@@ -24,6 +24,7 @@ import pce.ui;
 import pcs.input;
 import pcs.camera;
 import pcs.animation;
+import pcs.easing;
 
 import hex.hex;
 import hex.types;
@@ -179,41 +180,46 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
             if (initalize) {
                 const u32 drawn_index = Rand(hex_state.unit_formations_left.size());
                 hex_state.unit_formation_active = hex_state.unit_formations_left[drawn_index];
-                hex_state.unit_formations_left.swap_back(drawn_index);
                 Logger().Log("[STATE] Turn HQ: Drawn {}", UnitNameToString(hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()].name));
 
                 unit_formation_reel.clear();
-                for (u32 i = 0; i < HQ_DRAW_REEL_SIZE; i++) { unit_formation_reel.push_back(hex_state.unit_formations.IndexToHandle(Rand(hex_state.unit_formations.size()))); }
+                for (u32 i = 0; i < HQ_DRAW_REEL_SIZE; i++) { unit_formation_reel.push_back(hex_state.unit_formations_left[Rand(hex_state.unit_formations_left.size())]); }
                 unit_formation_reel[HQ_DRAW_REEL_LANDING] = hex_state.unit_formation_active.GetHandle();
+                hex_state.unit_formations_left.swap_back(drawn_index);
             }
 
             // hq draw reel, case-opening style: counters scroll past a center marker and decelerate onto the drawn formation, then it is shown big center screen
             const WindowState& window_state = Singleton::Get<WindowState>();
-            constexpr f32 CARD_SIZE = 120.0F;
+            constexpr f32 CARD_SIZE = 180.0F;
+            const float2 screen_size { static_cast<f32>(window_state.screen_size.x), static_cast<f32>(window_state.screen_size.y) };
+            DrawRect(window_state, AABB { .point = float2 { 0.0F }, .size = screen_size }, colors::COLOR_BLACK.WithAlpha(0.55F));
+
             const miliseconds32 elapsed = TimeNowMS() - hex_state.turn_hq_state_time;
             if (elapsed < TURN_HQ_DRAW_DURATION) {
-                constexpr f32 CARD_ADVANCE = CARD_SIZE + 14.0F;
-                constexpr f32 STRIP_HEIGHT = CARD_SIZE + 44.0F;
-                const float2 strip_center { static_cast<f32>(window_state.screen_size.x) * 0.5F, static_cast<f32>(window_state.screen_size.y) * 0.28F };
-                const f32 strip_width = static_cast<f32>(window_state.screen_size.x) * 0.62F;
-                const AABB area_strip = AABB::FromCenter(strip_center, float2 { strip_width, STRIP_HEIGHT });
-                DrawRect(window_state, area_strip, colors::COLOR_BLACK.WithAlpha(0.8F));
+                constexpr f32 CARD_ADVANCE = CARD_SIZE + 18.0F;
+                constexpr f32 STRIP_HEIGHT = CARD_SIZE + 70.0F;
+                const float2 strip_center { screen_size.x * 0.5F, screen_size.y * 0.4F };
+                DrawRect(window_state, AABB::FromCenter(strip_center, float2 { screen_size.x, STRIP_HEIGHT }), colors::COLOR_BLACK.WithAlpha(0.85F));
 
                 const f32 t = static_cast<f32>(elapsed.value) / static_cast<f32>(TURN_HQ_DRAW_DURATION.value);
-                const f32 eased = 1.0F - Pow(1.0F - t, 4.0F); // fast spin, hard deceleration
-                const f32 scroll = eased * CARD_ADVANCE * static_cast<f32>(HQ_DRAW_REEL_LANDING);
+                const f32 scroll = EaseOutQuart(t) * CARD_ADVANCE * static_cast<f32>(HQ_DRAW_REEL_LANDING);
 
                 for (u32 i = 0; i < unit_formation_reel.size(); i++) {
                     const f32 card_x = strip_center.x + CARD_ADVANCE * static_cast<f32>(i) - scroll;
-                    if (card_x < area_strip.point.x + CARD_SIZE * 0.5F || card_x > area_strip.point.x + strip_width - CARD_SIZE * 0.5F) { continue; }
+                    if (Abs(card_x - strip_center.x) > screen_size.x * 0.5F + CARD_SIZE) { continue; }
                     const UnitFormation& formation = hex_state.unit_formations[unit_formation_reel[i]];
-                    DrawFormationCounter(window_state, formation, AABB::FromCenter(float2 { card_x, strip_center.y }, float2 { CARD_SIZE }), hex_state.label_pool);
+                    const f32 proximity = Max(0.0F, 1.0F - Abs(card_x - strip_center.x) / CARD_ADVANCE);
+                    DrawFormationCounter(window_state, formation, AABB::FromCenter(float2 { card_x, strip_center.y }, float2 { CARD_SIZE * (1.0F + 0.2F * proximity) }), hex_state.label_pool);
                 }
 
-                DrawRect(window_state, AABB::FromCenter(strip_center, float2 { 4.0F, STRIP_HEIGHT }), colors::COLOR_YELLOW.WithAlpha(0.9F));
+                DrawRect(window_state, AABB::FromCenter(strip_center, float2 { 20.0F, STRIP_HEIGHT }), colors::COLOR_YELLOW.WithAlpha(0.25F));
+                DrawRect(window_state, AABB::FromCenter(strip_center, float2 { 4.0F, STRIP_HEIGHT }), colors::COLOR_YELLOW);
             } else {
-                const float2 screen_center { static_cast<f32>(window_state.screen_size.x) * 0.5F, static_cast<f32>(window_state.screen_size.y) * 0.5F };
-                DrawFormationCounter(window_state, hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()], AABB::FromCenter(screen_center, float2 { CARD_SIZE * 2.0F }), hex_state.label_pool);
+                const f32 t_pop = Min(static_cast<f32>((elapsed - TURN_HQ_DRAW_DURATION).value) / 200.0F, 1.0F);
+                const f32 showcase_size = CARD_SIZE * (1.2F + 1.3F * EaseOutCubic(t_pop));
+                const AABB area_showcase = AABB::FromCenter(screen_size * float2 { 0.5F }, float2 { showcase_size });
+                DrawRect(window_state, area_showcase.WithPadding(float2 { -8.0F }), colors::COLOR_YELLOW);
+                DrawFormationCounter(window_state, hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()], area_showcase, hex_state.label_pool);
             }
             return elapsed < TURN_HQ_DRAW_DURATION + TURN_HQ_SHOW_DURATION ? TurnHqState::TURN_HQ_START : TurnHqState::TURN_HQ_ACTIVATE;
         }
@@ -637,13 +643,13 @@ struct HexSystem {
                 break;
         }
 
-        // turn status ui, top right
+        // turn status ui, bottom right, with the active formation counter above it
         {
             const Font& font_status = font_collection.GetFontNormalCourier(FontSizes::body);
             constexpr f32 STATUS_CELL_WIDTH = 200.0F;
             constexpr f32 STATUS_LINE_HEIGHT = 20.0F;
             constexpr f32 STATUS_PADDING = 10.0F;
-            const AABB area_status = AABB::FromPoint(float2 { static_cast<f32>(window_state.screen_size.x) - STATUS_CELL_WIDTH * 4.0F - STATUS_PADDING * 2.0F, static_cast<f32>(window_state.screen_size.y) - STATUS_LINE_HEIGHT - STATUS_PADDING * 2.0F }, float2 { STATUS_CELL_WIDTH * 4.0F + STATUS_PADDING * 2.0F, STATUS_LINE_HEIGHT + STATUS_PADDING * 2.0F });
+            const AABB area_status = AABB::FromPoint(float2 { static_cast<f32>(window_state.screen_size.x) - STATUS_CELL_WIDTH * 2.0F - STATUS_PADDING * 2.0F, static_cast<f32>(window_state.screen_size.y) - STATUS_LINE_HEIGHT - STATUS_PADDING * 2.0F }, float2 { STATUS_CELL_WIDTH * 2.0F + STATUS_PADDING * 2.0F, STATUS_LINE_HEIGHT + STATUS_PADDING * 2.0F });
             const auto cell_area = [&](const u32 cell) -> AABB { return AABB::FromPoint(area_status.point + float2 { STATUS_PADDING + STATUS_CELL_WIDTH * static_cast<f32>(cell), STATUS_PADDING }, float2 { STATUS_CELL_WIDTH, STATUS_LINE_HEIGHT }); };
             DrawRect(window_state, area_status, CountryBranchToColor(CountryTag::TAG_GER, UnitBranch::BRANCH_INFANTRY));
 
@@ -654,21 +660,22 @@ struct HexSystem {
             const Label& label_turn_state = hex_state.label_pool.Get();
             label_turn_state.SetText(std::format("{}", hex_state.turn_state));
             DrawText(font_status, label_turn_state, cell_area(1), colors::COLOR_BLACK, TextAlignment::LEFT);
+        }
 
-            if (hex_state.turn_state == TurnState::TURN_HQ_ACTIVATE) {
-                const Label& label_turn_hq_state = hex_state.label_pool.Get();
-                label_turn_hq_state.SetText(std::format("{}", hex_state.turn_hq_state));
-                DrawText(font_status, label_turn_hq_state, cell_area(3), colors::COLOR_BLACK, TextAlignment::LEFT);
+        // hq phase title, top center, with the active formation counter under it
+        if (hex_state.turn_state == TurnState::TURN_HQ_ACTIVATE && hex_state.turn_hq_state != TurnHqState::TURN_HQ_NONE) {
+            const Font& font_title = font_collection.GetFontBoldCompact(FontSizes::title);
+            const Label& label_title = hex_state.label_pool.Get();
+            label_title.SetText(std::format("{}", hex_state.turn_hq_state));
+            const AABB area_title = AABB::FromPoint(float2 { 0.0F, static_cast<f32>(window_state.screen_size.y) * 0.06F }, float2 { static_cast<f32>(window_state.screen_size.x), static_cast<f32>(FontSizes::title) });
+            DrawText(font_title, label_title, area_title.WithOffset(float2 { 3.0F }), colors::COLOR_BLACK, TextAlignment::CENTER);
+            DrawText(font_title, label_title, area_title, colors::COLOR_WHITE, TextAlignment::CENTER);
 
-                if (hex_state.unit_formation_active.IsValid()) {
-                    const UnitFormation& formation_active = hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()];
-                    DrawRect(window_state, cell_area(2), formation_active.color);
-                    const Label& label_formation = hex_state.label_pool.Get();
-                    label_formation.SetText(UnitNameToString(formation_active.name));
-                    DrawText(font_status, label_formation, cell_area(2), colors::COLOR_BLACK, TextAlignment::LEFT);
-                }
+            if (hex_state.unit_formation_active.IsValid()) {
+                constexpr f32 COUNTER_ACTIVE_SIZE = 120.0F;
+                const AABB area_counter_active = AABB::FromCenter(float2 { static_cast<f32>(window_state.screen_size.x) * 0.5F, area_title.point.y + area_title.size.y + COUNTER_ACTIVE_SIZE * 0.5F + 20.0F }, float2 { COUNTER_ACTIVE_SIZE });
+                DrawFormationCounter(window_state, hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()], area_counter_active, hex_state.label_pool);
             }
-
         }
 
         // debug

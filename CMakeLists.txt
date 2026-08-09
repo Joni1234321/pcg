@@ -120,6 +120,7 @@ target_sources(pcg
                src/1_pcs/t_debug_system.cppm
                src/1_pcs/t_tick_system.cppm
                src/1_pcs/u_animation_system.cppm
+               src/1_pcs/u_easing.cppm
                src/1_pcs/u_orchestra.cppm
 
                # hex

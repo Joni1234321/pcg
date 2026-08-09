@@ -127,15 +127,21 @@ inline void DrawFormationCounter(const WindowState& window_state, const UnitForm
     ui::DrawRect(window_state, area, colors::COLOR_BLACK);
     ui::DrawRect(window_state, area.WithPadding(float2 { BORDER_THICKNESS * area.size.x }), CountryBranchToColor(formation.tag, formation.branch));
 
-    const Label& label_echelon = label_pool.Get();
-    label_echelon.SetText(EchelonToString(formation.echelon));
-    DrawText(font_collection.GetFontBoldCompact(ui::FontSizes::h5), label_echelon, AABB::FromPoint(area.point + area.size * float2 { 0.0F, 0.06F }, area.size * float2 { 1.0F, 0.2F }), colors::COLOR_BLACK, ui::TextAlignment::CENTER);
+    const ui::FontSize pt_echelon = static_cast<ui::FontSize>(area.size.y * 0.14F);
+    if (pt_echelon >= ui::FONT_MIN_SIZE) {
+        const Label& label_echelon = label_pool.Get();
+        label_echelon.SetText(EchelonToString(formation.echelon));
+        DrawText(font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_echelon)), label_echelon, AABB::FromPoint(area.point + area.size * float2 { 0.0F, 0.06F }, area.size * float2 { 1.0F, 0.2F }), colors::COLOR_BLACK, ui::TextAlignment::CENTER);
+    }
 
     const AABB area_name = AABB::FromPoint(area.point + area.size * float2 { 0.05F, 0.62F }, area.size * float2 { 0.9F, 0.28F });
     ui::DrawRect(window_state, area_name, formation.color);
-    const Label& label_name = label_pool.Get();
-    label_name.SetText(UnitNameToString(formation.name));
-    DrawText(font_collection.GetFontBoldCourier(ui::FontSizes::body), label_name, area_name, colors::COLOR_BLACK, ui::TextAlignment::CENTER);
+    const ui::FontSize pt_name = static_cast<ui::FontSize>(area.size.y * 0.10F);
+    if (pt_name >= ui::FONT_MIN_SIZE) {
+        const Label& label_name = label_pool.Get();
+        label_name.SetText(UnitNameToString(formation.name));
+        DrawText(font_collection.GetFontBoldCourier(static_cast<ui::FontSizes>(pt_name)), label_name, area_name, colors::COLOR_BLACK, ui::TextAlignment::CENTER);
+    }
 }
 
 inline void RenderCounters(const Pool<CounterStack>& counters) {

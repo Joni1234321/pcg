@@ -13,6 +13,7 @@ import pce.sdl;
 import pce.globals;
 import pce.window_state;
 import pcs.tick;
+import pcs.easing;
 import pce.colors;
 
 export namespace hex {
@@ -79,9 +80,6 @@ struct ParticleSystem {
     }
 };
 
-inline f32 EaseInSine(const f32 t) { return 1.0F - math::Cos(t * math::PI * 0.5F); }
-inline f32 EaseOutSine(const f32 t) { return 1.0F - math::Sin(t * math::PI * 0.5F); }
-inline f32 EaseInOutSine(const f32 t) { return -(math::Cos(math::PI * t) - 1.0F) * 0.5F; }
 inline Handle<Animation> AnimationSystem::Register(const AnimationDesc& animation_desc) {
     const Animation animation { .action = animation_desc.action, .start = TimeNowMS(), .duration = animation_desc.duration, .state = animation_desc.state };
     HandleList<Animation>& animations = globalData.Get<Animation>();
