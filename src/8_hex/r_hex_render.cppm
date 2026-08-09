@@ -55,7 +55,6 @@ inline void VertObjectiveMarkerAppend(List<Vertex>& vertecies, const f32 hex_siz
     VertHexAppend(vertecies, hex_size * 0.14F, hex_screen, colors::COLOR_BLACK);
 }
 inline void VertObjectiveMarkerAreaAppend(HexState& hex_state, const CameraState& camera, const int2 axial_marker, const Color color) {
-    constexpr i32 OBJ_MARKER_RANGE = 2;
     for (i32 dq = -OBJ_MARKER_RANGE; dq <= OBJ_MARKER_RANGE; dq++) {
         for (i32 dr = math::Max(-OBJ_MARKER_RANGE, -dq - OBJ_MARKER_RANGE); dr <= math::Min(OBJ_MARKER_RANGE, -dq + OBJ_MARKER_RANGE); dr++) {
             const int2 axial = axial_marker + int2 { dq, dr };

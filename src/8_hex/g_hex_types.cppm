@@ -9,6 +9,9 @@ import pce.collections;
 import pce.std;
 import pce.strong;
 import pce.math;
+import pce.globals;
+
+import pcs.animation;
 
 import hex.hex;
 import hex.enums;
@@ -141,6 +144,7 @@ struct HexState {
     CountryTag player_tag;
     HandleList<Unit> units { };
     HandleList<UnitFormation> unit_formations { };
+    Handle<ParticleEmitter> particle_emitter { globalData.Create<ParticleEmitter>(ParticleEmitter { float2 { 0.0F, -60.0F } }) };
 
     // per frame
     PlayerAction player_action { };

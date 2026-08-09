@@ -50,6 +50,8 @@ constexpr u8 MOVE_COST_ATTACK_PLANNED = 2U;
 constexpr u8 MOVE_COST_STOP = 100U;       // enter, then movement ends
 constexpr u8 MOVE_COST_PROHIBITED = 200U; // stays above STOP + any hexside cost
 
+constexpr i32 OBJ_MARKER_RANGE = 2;
+
 constexpr f32 BORDER_INNER_RADIUS = 0.90F;
 constexpr f32 BORDER_TEETH_DEPTH = 0.12F;
 constexpr f32 BORDER_TEETH_HALF = 0.18F;
