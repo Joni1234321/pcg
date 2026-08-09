@@ -28,6 +28,7 @@ enum class PlayerAction : u8 { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_
 enum class TurnState : u8 { TURN_NONE, TURN_START, TURN_REINFORCEMENT, TURN_ASSIGNMENT, TURN_HQ_ACTIVATE, TURN_END };
 enum class TurnHqState : u8 { TURN_HQ_NONE, TURN_HQ_START, TURN_HQ_ACTIVATE, TURN_HQ_LOGISTIC, TURN_HQ_OBJ_PLACEMENT, TURN_HQ_EXECUTE, TURN_HQ_CLEAN, TURN_HQ_ISOLATION, TURN_HQ_END };
 enum class ExecutePhase : u8 { EXECUTE_IDLE, EXECUTE_MOVE, EXECUTE_ATTACK };
+enum class DefenderRetreat : u8 { DEFENDER_HOLDS, DEFENDER_RETREAT, DEFENDER_ROUT };
 
 enum class CounterStyle : u8 { COUNTER_STYLE_NIEHORSTER, COUNTER_STYLE_NIEHORSTER_BIG, COUNTER_STYLE_REAL };
 enum class MapStyle : u8 { CIV_VIBRANT, SLATE_TABLE, HOI4_PAPER, FADED_LINEN };
@@ -232,6 +233,17 @@ template <> struct std::formatter<hex::TurnHqState> : std::formatter<hex::String
             case hex::TurnHqState::TURN_HQ_CLEAN: name = "TURN_HQ_CLEAN"; break;
             case hex::TurnHqState::TURN_HQ_ISOLATION: name = "TURN_HQ_ISOLATION"; break;
             case hex::TurnHqState::TURN_HQ_END: name = "TURN_HQ_END"; break;
+        }
+        return std::formatter<hex::String>::format(name, ctx);
+    }
+};
+template <> struct std::formatter<hex::DefenderRetreat> : std::formatter<hex::String> {
+    auto format(const hex::DefenderRetreat defender_retreat, std::format_context& ctx) const {
+        hex::String name;
+        switch (defender_retreat) {
+            case hex::DefenderRetreat::DEFENDER_HOLDS: name = "DEFENDER_HOLDS"; break;
+            case hex::DefenderRetreat::DEFENDER_RETREAT: name = "DEFENDER_RETREAT"; break;
+            case hex::DefenderRetreat::DEFENDER_ROUT: name = "DEFENDER_ROUT"; break;
         }
         return std::formatter<hex::String>::format(name, ctx);
     }

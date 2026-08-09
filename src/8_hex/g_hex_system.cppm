@@ -475,7 +475,6 @@ struct HexSystem {
                 auto units_attacker = hex_state.pseudo_states.unit_selection->unit_handles | hex_state.units.handle_to_view();
                 auto units_defender = hex_state.units_by_axial[hex_state.pseudo_states.axial_hover.value()] | hex_state.units.handle_to_view();
 
-                enum class DefenderRetreat : u8 { DEFENDER_HOLDS, DEFENDER_RETREAT, DEFENDER_ROUT };
                 struct BattleOutcome {
                     DefenderRetreat defender_retreat;
                     u8 attacker_step_loss;
