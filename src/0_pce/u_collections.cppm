@@ -41,7 +41,7 @@ public:
     }
     UniquePointer& operator=(UniquePointer&& other) noexcept {
         if (this == &other) { return *this; }
-        pointer = other.pointer;
+        Reset(std::exchange(other.pointer, nullptr));
         destructor = std::move(other.destructor);
         return *this;
     }

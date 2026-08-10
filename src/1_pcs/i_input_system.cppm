@@ -8,7 +8,6 @@ import std;
 import pce.globals;
 import pce.collections;
 import pce.std;
-import pce.logger;
 
 export namespace hex {
 struct InputState {

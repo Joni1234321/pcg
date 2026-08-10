@@ -9,8 +9,6 @@ import pce.globals;
 import pce.window_state;
 import pcs.input;
 
-import pce.std;
-
 export namespace hex {
 struct CameraState {
     float2 world_position { -100.0F, -100.0F };
@@ -26,9 +24,9 @@ struct CameraState {
 
 struct CameraSystem {
     static constexpr f32 PAN_SPEED = 8.0F;
-    static constexpr f32 ZOOM_FACTOR = 1.2F;
-    static constexpr f32 ZOOM_MIN = 5.0F;
-    static constexpr f32 ZOOM_MAX = 200.0F;
+    static constexpr f32 ZOOM_FACTOR = 1.5F;
+    static constexpr f32 ZOOM_MIN = 3.0F;
+    static constexpr f32 ZOOM_MAX = 800.0F;
     static constexpr f32 ZOOM_LERP = 0.15F;
 
     void operator()() const {

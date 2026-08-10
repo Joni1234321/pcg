@@ -73,7 +73,7 @@ template <typename T> [[nodiscard]] constexpr f32 Min(Vec3<T> a, Vec3<T> b) { re
 template <typename T> [[nodiscard]] constexpr f32 Min(Vec4<T> a, Vec4<T> b) { return { Min(a.x, b.x), Min(a.y, b.y), Min(a.z, b.z), Min(a.w, b.w) }; }
 
 template <typename T> [[nodiscard]] constexpr T SaturatingSub(const T val, const T sub) { return val > sub ? val - sub : T { 0 }; }
-
+template <typename T> [[nodiscard]] constexpr T SaturatingAdd(const T val, const std::make_signed_t<T> mod) { return static_cast<T>(std::clamp<i64>(i64 { val } + mod, 0, std::numeric_limits<T>::max())); }
 inline float2 Rotate(float2 point, f32 theta) {
     const f32 cos = Cos(theta);
     const f32 sin = Sin(theta);
@@ -104,7 +104,6 @@ template <typename To, typename From> constexpr To& Reinterpret(From& from) { re
 [[nodiscard]] inline f32 RandF() { return static_cast<f32>(Rand()) / static_cast<f32>(U32_MAX); }
 [[nodiscard]] inline f32 RandF(const f32 min, const f32 max) { return min + RandF() * (max - min); }
 [[nodiscard]] inline u8 RandD6() { return Rand(1U, 7U); }
-[[nodiscard]] inline u8 Rand2D6() { return RandD6() + RandD6(); }
 
 template <typename Collection> Collection::key_type RandomKey(const Collection& collection) {
     if (std::empty(collection)) { throw std::runtime_error("Collection is empty!"); }

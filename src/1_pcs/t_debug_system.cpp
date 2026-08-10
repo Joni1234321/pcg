@@ -9,7 +9,6 @@ import std;
 import pcs.input;
 import pcs.tick;
 import pcs.orchestra;
-import pcs.node;
 import pcs.node_data;
 
 import pce.globals;

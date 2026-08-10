@@ -12,7 +12,6 @@ import pce.font;
 import pce.logger;
 import pce.std;
 import pce.globals;
-import pce.colors;
 import pce.sdl;
 
 export namespace hex::ui {

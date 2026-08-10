@@ -13,9 +13,11 @@ import pce.sdl;
 import pce.globals;
 import pce.window_state;
 import pcs.tick;
+import pcs.easing;
 import pce.colors;
 
 export namespace hex {
+constexpr f32 ANIMATION_SPEED = 1.0F;
 enum class AnimationState : u8 { once, recycle, repeat, persistent, persistent_stopped };
 struct AnimationDesc {
     std::function<void(f32)> action;
@@ -28,10 +30,17 @@ struct Animation {
     miliseconds32 duration;
     AnimationState state;
 };
+struct AnimationChain {
+    List<Handle<Animation>> animations;
+    u32 current { U32_MAX }; // U32_MAX = never started, animations.size() = finished
+};
 struct AnimationSystem {
     static Handle<Animation> Register(const AnimationDesc& animation_desc);
+    static Handle<AnimationChain> Register(std::initializer_list<AnimationDesc> animation_descs);
     static void StartAnimation(Handle<Animation> animation_handle);
+    static void StartAnimation(Handle<AnimationChain> animation_chain_handle);
     static b8 IsRunning(Handle<Animation> animation_handle);
+    static b8 IsRunning(Handle<AnimationChain> animation_chain_handle);
     void operator()() const;
 };
 
@@ -40,8 +49,9 @@ struct AnimationSystem {
 // then the particlesystem will push it upwards until it expires
 struct Particle {
     float2 position { 0.0F, 0.0F };
-    std::unique_ptr<TTF_Text, DestroyText> text { nullptr };
+    Label text { };
     miliseconds32 duration { 0U };
+    miliseconds32 delay { 0U };
     miliseconds32 start { TimeNowMS() };
 };
 struct ParticleEmitter {
@@ -58,19 +68,26 @@ struct ParticleSystem {
         const miliseconds32 current_ms { TimeNowMS() };
         (void)SDL_SetRenderDrawColor(Singleton::Get<WindowState>().renderer, color.r, color.g, color.b, color.a);
         for (ParticleEmitter& emitter : globalData.Get<ParticleEmitter>()) {
-            for (Particle& particle : emitter.particles.items | std::ranges::views::reverse) {
-                TTF_DrawRendererText(particle.text.get(), particle.position.x, particle.position.y);
+            for (Particle& particle : emitter.particles.items) {
+                if (current_ms - particle.start < particle.delay) { continue; }
+                TTF_Font* font = TTF_GetTextFont(particle.text);
+                const i32 outline = static_cast<i32>(TTF_GetFontSize(font) * 0.04F) + 1;
+                particle.text.SetColor(colors::COLOR_BLACK);
+                (void)TTF_SetFontOutline(font, outline);
+                particle.text.Draw(particle.position - float2 { static_cast<f32>(outline) });
+                (void)TTF_SetFontOutline(font, 0);
+                particle.text.SetColor(colors::COLOR_WHITE);
+                particle.text.Draw(particle.position);
                 particle.position += emitter.velocity * float2 { delta_time };
-                if (current_ms - particle.start > particle.duration) { emitter.particles.SwapBackErase(particle); }
+            }
+            for (Particle& particle : emitter.particles.items | std::ranges::views::reverse) {
+                if (current_ms - particle.start > particle.delay + particle.duration) { emitter.particles.SwapBackErase(particle); }
             }
             emitter.particles.ApplyErase();
         }
     }
 };
 
-inline f32 EaseInSine(const f32 t) { return 1.0F - math::Cos(t * math::PI * 0.5F); }
-inline f32 EaseOutSine(const f32 t) { return 1.0F - math::Sin(t * math::PI * 0.5F); }
-inline f32 EaseInOutSine(const f32 t) { return -(math::Cos(math::PI * t) - 1.0F) * 0.5F; }
 inline Handle<Animation> AnimationSystem::Register(const AnimationDesc& animation_desc) {
     const Animation animation { .action = animation_desc.action, .start = TimeNowMS(), .duration = animation_desc.duration, .state = animation_desc.state };
     HandleList<Animation>& animations = globalData.Get<Animation>();
@@ -78,6 +95,11 @@ inline Handle<Animation> AnimationSystem::Register(const AnimationDesc& animatio
     if (it == std::end(animations)) { return animations.PushBack(animation); }
     *it = animation;
     return animations.IteratorToHandle(it);
+}
+inline Handle<AnimationChain> AnimationSystem::Register(const std::initializer_list<AnimationDesc> animation_descs) {
+    AnimationChain animation_chain { };
+    for (const AnimationDesc& animation_desc : animation_descs) { animation_chain.animations.push_back(Register(animation_desc)); }
+    return globalData.Create<AnimationChain>(std::move(animation_chain));
 }
 inline void AnimationSystem::StartAnimation(const Handle<Animation> animation_handle) {
     Animation& animation = globalData[animation_handle];
@@ -90,6 +112,11 @@ inline void AnimationSystem::StartAnimation(const Handle<Animation> animation_ha
         case AnimationState::persistent_stopped: animation.state = AnimationState::persistent; break;
     }
 }
+inline void AnimationSystem::StartAnimation(const Handle<AnimationChain> animation_chain_handle) {
+    AnimationChain& animation_chain = globalData[animation_chain_handle];
+    animation_chain.current = 0U;
+    if (!animation_chain.animations.empty()) { StartAnimation(animation_chain.animations[0]); }
+}
 inline b8 AnimationSystem::IsRunning(const Handle<Animation> animation_handle) {
     switch (globalData[animation_handle].state) {
         case AnimationState::once:
@@ -100,10 +127,15 @@ inline b8 AnimationSystem::IsRunning(const Handle<Animation> animation_handle) {
         default: assert(false); return false; // , std::format("Unknown animation state {}", data[animation_handle].state)); return false;
     }
 }
+inline b8 AnimationSystem::IsRunning(const Handle<AnimationChain> animation_chain_handle) {
+    const AnimationChain& animation_chain = globalData[animation_chain_handle];
+    if (animation_chain.current >= animation_chain.animations.size()) { return false; }
+    return animation_chain.current + 1U < animation_chain.animations.size() || IsRunning(animation_chain.animations[animation_chain.current]);
+}
 inline void AnimationSystem::operator()() const {
     const miliseconds32 current_ms { TimeNowMS() };
     for (Animation& animation : globalData.Get<Animation>()) {
-        f32 t = static_cast<f32>((current_ms - animation.start).value) / static_cast<f32>(animation.duration.value);
+        f32 t = ANIMATION_SPEED * static_cast<f32>((current_ms - animation.start).value) / static_cast<f32>(animation.duration.value);
         switch (animation.state) {
             case AnimationState::once:
                 if (t >= 1.0F) {
@@ -121,8 +153,13 @@ inline void AnimationSystem::operator()() const {
                 break;
             case AnimationState::persistent_stopped: continue;
         }
-        const f32 value = EaseInOutSine(t);
-        animation.action(value);
+        animation.action(t);
+    }
+    for (AnimationChain& animation_chain : globalData.Get<AnimationChain>()) {
+        if (animation_chain.current >= animation_chain.animations.size()) { continue; }
+        if (IsRunning(animation_chain.animations[animation_chain.current])) { continue; }
+        animation_chain.current++;
+        if (animation_chain.current < animation_chain.animations.size()) { StartAnimation(animation_chain.animations[animation_chain.current]); }
     }
 }
 } // namespace hex

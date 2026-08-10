@@ -6,11 +6,11 @@ export module hex.scenarios;
 
 import std;
 
-import pce.sdl;
-import pce.collections;
 import pce.std;
+import pce.collections;
 
 import hex.hex;
+import hex.enums;
 import hex.types;
 import hex.terrain;
 import hex.terrain.generation;
@@ -19,19 +19,42 @@ export namespace hex {
 UnitToe UnitGetToe(UnitIcon icon) {
     switch (icon) {
         case UnitIcon::ICON_INF: return UnitToe { .move = 4 * MOVE_POINT, .dmg = 3, .dmg_ranged = 0, .steps = 6 };
-        case UnitIcon::ICON_ART: return UnitToe { .move = 4 * MOVE_POINT, .dmg = 3, .dmg_ranged = 0, .steps = static_cast<u8>(-1U) };
-        case UnitIcon::ICON_HQ: return UnitToe { .move = 8 * MOVE_POINT, .dmg = 0, .dmg_ranged = 0, .steps = static_cast<u8>(-1U) };
-        case UnitIcon::ICON_TANK: return UnitToe { .move = 16 * MOVE_POINT, .dmg = 3, .dmg_ranged = 5, .steps = 4 };
-        case UnitIcon::ICON_ENGINEER: return UnitToe { .move = 4 * MOVE_POINT, .dmg = 3, .dmg_ranged = 2, .steps = 0 };
+        case UnitIcon::ICON_ART: return UnitToe { .move = 4 * MOVE_POINT, .dmg = 3, .dmg_ranged = 0, .steps = 255U };
+        case UnitIcon::ICON_TANK: return UnitToe { .move = 16 * MOVE_POINT, .dmg = 5, .dmg_ranged = 3, .steps = 4 };
+        case UnitIcon::ICON_ENGINEER: return UnitToe { .move = 4 * MOVE_POINT, .dmg = 3, .dmg_ranged = 0, .steps = 0 };
         default: assert(false); std::unreachable();
     }
 }
 
-Handle<Unit> HexStateSpawnUnit(HexState& hex_state, const UnitFormation& unit_formation, int2 offset) {
-    const UnitToe unit_toe = UnitGetToe(unit_formation.icon);
+Handle<UnitFormation> HexStateSpawnFormation(HexState& hex_state, CountryTag tag, UnitBranch branch, Echelon echelon, const String& name, const String& name_full, int2 offset_hq) {
+    UnitFormation formation { .tag = tag, .branch = branch, .echelon = echelon, .axial_hq = HexOffsetToAxial(offset_hq) };
+    switch (branch) {
+        case UnitBranch::BRANCH_INFANTRY: formation.command_radius = 8; break;
+        case UnitBranch::BRANCH_ARMOR: formation.command_radius = 12; break;
+        default: formation.command_radius = 6; break;
+    }
+    const u8 move_hq = formation.command_radius * MOVE_POINT; // hq movement matches its command range
+    formation.move = Stat { .current = move_hq, .max = move_hq };
+    UnitNameSet(formation.name, name);
+    UnitNameSet(formation.name_full, name_full);
+    return hex_state.unit_formations.EmplaceBack(std::move(formation));
+}
+
+Handle<Unit> HexStateSpawnUnit(HexState& hex_state, const UnitSpawnCmd& unit_spawn_cmd, int2 offset) {
+    const UnitToe unit_toe = UnitGetToe(unit_spawn_cmd.icon);
     const int2 axial = HexOffsetToAxial(offset);
-    return hex_state.units.EmplaceBack(
-        Unit { .axial = axial, .parent = unit_formation.parent, .tag = unit_formation.tag, .icon = unit_formation.icon, .echelon = unit_formation.echelon, .move = unit_toe.move, .dmg = unit_toe.dmg, .dmg_ranged = unit_toe.dmg_ranged, .steps = unit_toe.steps, .name_div = { }, .color = { } });
+    return hex_state.units.EmplaceBack(Unit { .axial = axial,
+                                              .formation = unit_spawn_cmd.formation,
+                                              .echelon = unit_spawn_cmd.echelon,
+                                              .tag = hex_state.unit_formations[unit_spawn_cmd.formation].tag,
+                                              .icon = unit_spawn_cmd.icon,
+                                              .ranged_type = RangedTypeUnitIcon(unit_spawn_cmd.icon),
+                                              .move = Stat { .current = unit_toe.move, .max = unit_toe.move },
+                                              .dmg = unit_toe.dmg,
+                                              .dmg_ranged = unit_toe.dmg_ranged,
+                                              .steps = { .current = unit_toe.steps, .max = unit_toe.steps },
+                                              .name_div = { },
+                                              .color = { } });
 }
 
 void HexScenarioAi(HexState& hex_state) {
@@ -43,32 +66,35 @@ void HexScenarioAi(HexState& hex_state) {
     HexTerrainGenerateFeatures(hex_state, SEED);
     HexTerrainGenerateRoads(hex_state);
 
-    // GER: Heeresgruppe → I.Korps → Rgt → Bn
-    const Handle<Unit> ger_hgr = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_ARMY }, { 1, 2 });
-    const Handle<Unit> ger_kps = HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_hgr, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_CORPS }, { 3, 2 });
-    const Handle<Unit> ger_r7 = HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_kps, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_REGIMENT }, { 4, 1 });
-    const Handle<Unit> ger_r8 = HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_kps, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_REGIMENT }, { 5, 3 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_kps, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_TANK, .echelon = Echelon::ECHELON_BATTALION }, { 6, 2 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_kps, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_ART, .echelon = Echelon::ECHELON_BATTALION }, { 4, 2 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_r7, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 6, 1 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_r8, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 7, 3 });
+    // GER: Heeresgruppe, I.Korps
+    const Handle<UnitFormation> ger_hgr = HexStateSpawnFormation(hex_state, CountryTag::TAG_GER, UnitBranch::BRANCH_INFANTRY, Echelon::ECHELON_ARMY, "6AOK", "6. Army", { 1, 2 });
 
-    // SOV: Front → I Gds Corps → Rifle Rgts → Bns
-    const Handle<Unit> sov_frt = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_ARMY }, { 15, 3 });
-    const Handle<Unit> sov_kps = HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_frt, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_CORPS }, { 14, 3 });
-    const Handle<Unit> sov_r16 = HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_kps, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_REGIMENT }, { 12, 2 });
-    const Handle<Unit> sov_r18 = HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_kps, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_REGIMENT }, { 13, 4 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_kps, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_TANK, .echelon = Echelon::ECHELON_BATTALION }, { 11, 3 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_kps, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_ART, .echelon = Echelon::ECHELON_BATTALION }, { 13, 3 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_r16, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 10, 2 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_r18, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 11, 4 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_frt, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_REGIMENT }, { 5, 2 }); // encircled
+    const Handle<UnitFormation> ger_kps = HexStateSpawnFormation(hex_state, CountryTag::TAG_GER, UnitBranch::BRANCH_INFANTRY, Echelon::ECHELON_CORPS, "16AK", "16. Army Corps", { 3, 2 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = ger_kps, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_REGIMENT }, { 4, 1 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = ger_kps, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_REGIMENT }, { 5, 3 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = ger_kps, .icon = UnitIcon::ICON_TANK, .echelon = Echelon::ECHELON_BATTALION }, { 6, 2 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = ger_kps, .icon = UnitIcon::ICON_ART, .echelon = Echelon::ECHELON_BATTALION }, { 4, 2 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = ger_kps, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 6, 1 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = ger_kps, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 7, 3 });
 
-    // USA: 12th Army Group → V Corps → units
-    const Handle<Unit> usa_hgr = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_USA, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_ARMY }, { 17, 1 });
-    const Handle<Unit> usa_kps = HexStateSpawnUnit(hex_state, UnitFormation { .parent = usa_hgr, .tag = CountryTag::TAG_USA, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_CORPS }, { 18, 2 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = usa_kps, .tag = CountryTag::TAG_USA, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_REGIMENT }, { 18, 3 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = usa_kps, .tag = CountryTag::TAG_USA, .icon = UnitIcon::ICON_TANK, .echelon = Echelon::ECHELON_BATTALION }, { 19, 4 });
+    // SOV: Front, I Gds Corps
+    const Handle<UnitFormation> sov_frt = HexStateSpawnFormation(hex_state, CountryTag::TAG_SOV, UnitBranch::BRANCH_GUARD, Echelon::ECHELON_ARMY, "2GA", "2. Guards Army", { 15, 3 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = sov_frt, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_REGIMENT }, { 5, 2 }); // encircled
+
+    const Handle<UnitFormation> sov_kps = HexStateSpawnFormation(hex_state, CountryTag::TAG_SOV, UnitBranch::BRANCH_ARMOR, Echelon::ECHELON_CORPS, "1TK", "1. Tank Corps", { 14, 3 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = sov_kps, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_REGIMENT }, { 12, 2 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = sov_kps, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_REGIMENT }, { 13, 4 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = sov_kps, .icon = UnitIcon::ICON_TANK, .echelon = Echelon::ECHELON_BATTALION }, { 11, 3 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = sov_kps, .icon = UnitIcon::ICON_ART, .echelon = Echelon::ECHELON_BATTALION }, { 13, 3 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = sov_kps, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 10, 2 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = sov_kps, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 11, 4 });
+
+    // USA: 12th Army Group, V Corps
+    const Handle<UnitFormation> usa_hgr = HexStateSpawnFormation(hex_state, CountryTag::TAG_USA, UnitBranch::BRANCH_INFANTRY, Echelon::ECHELON_ARMY, "12AG", "12. Army Group", { 17, 1 });
+
+    const Handle<UnitFormation> usa_kps = HexStateSpawnFormation(hex_state, CountryTag::TAG_USA, UnitBranch::BRANCH_INFANTRY, Echelon::ECHELON_CORPS, "5CORPS", "5. Corps", { 18, 2 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = usa_kps, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_REGIMENT }, { 18, 3 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = usa_kps, .icon = UnitIcon::ICON_TANK, .echelon = Echelon::ECHELON_BATTALION }, { 19, 4 });
 }
 
 // 22x8 map: two independent divisions per side, div HQ over battalions
@@ -101,30 +127,30 @@ void HexScenarioDivisionClash(HexState& hex_state) {
     HexTerrainSetRoadBetween(hex_state, cities[1], villages[1], RoadLevel::ROAD_LEVEL_TRACK);
 
     // GER (attacker): pushed up against the left edge, two independent divisions
-    const Handle<Unit> ger_div1 = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_DIVISION }, { 1, 3 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div1, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 3, 0 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div1, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 3, 2 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div1, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 5, 3 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div1, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_ART, .echelon = Echelon::ECHELON_BATTALION }, { 2, 3 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div1, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_TANK, .echelon = Echelon::ECHELON_BATTALION }, { 4, 4 });
+    const Handle<UnitFormation> ger_div1 = HexStateSpawnFormation(hex_state, CountryTag::TAG_GER, UnitBranch::BRANCH_INFANTRY, Echelon::ECHELON_DIVISION, "336ID", "336. Infantry Div", { 1, 3 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = ger_div1, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 3, 0 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = ger_div1, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 3, 2 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = ger_div1, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 5, 3 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = ger_div1, .icon = UnitIcon::ICON_ART, .echelon = Echelon::ECHELON_BATTALION }, { 2, 3 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = ger_div1, .icon = UnitIcon::ICON_TANK, .echelon = Echelon::ECHELON_BATTALION }, { 4, 4 });
 
-    const Handle<Unit> ger_div2 = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_DIVISION }, { 4, 6 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div2, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 6, 4 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div2, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 4, 5 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div2, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 6, 7 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div2, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_ENGINEER, .echelon = Echelon::ECHELON_BATTALION }, { 5, 4 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = ger_div2, .tag = CountryTag::TAG_GER, .icon = UnitIcon::ICON_ENGINEER, .echelon = Echelon::ECHELON_BATTALION }, { 6, 6 });
+    const Handle<UnitFormation> ger_div2 = HexStateSpawnFormation(hex_state, CountryTag::TAG_GER, UnitBranch::BRANCH_ARMOR, Echelon::ECHELON_DIVISION, "11PZ", "11. Panzer Div", { 4, 6 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = ger_div2, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 6, 4 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = ger_div2, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 4, 5 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = ger_div2, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 6, 7 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = ger_div2, .icon = UnitIcon::ICON_ENGINEER, .echelon = Echelon::ECHELON_BATTALION }, { 5, 4 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = ger_div2, .icon = UnitIcon::ICON_ENGINEER, .echelon = Echelon::ECHELON_BATTALION }, { 6, 6 });
 
     // SOV (defender): dug in close to the attackers, two independent divisions
-    const Handle<Unit> sov_div1 = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_DIVISION }, { 10, 3 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div1, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 6, 0 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div1, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 8, 2 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div1, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 5, 1 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div1, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 7, 3 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div1, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_ART, .echelon = Echelon::ECHELON_BATTALION }, { 11, 5 });
+    const Handle<UnitFormation> sov_div1 = HexStateSpawnFormation(hex_state, CountryTag::TAG_SOV, UnitBranch::BRANCH_INFANTRY, Echelon::ECHELON_DIVISION, "119RD", "119. Rifle Div", { 10, 3 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = sov_div1, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 6, 0 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = sov_div1, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 8, 2 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = sov_div1, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 5, 1 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = sov_div1, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 7, 3 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = sov_div1, .icon = UnitIcon::ICON_ART, .echelon = Echelon::ECHELON_BATTALION }, { 11, 5 });
 
-    const Handle<Unit> sov_div2 = HexStateSpawnUnit(hex_state, UnitFormation { .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_HQ, .echelon = Echelon::ECHELON_DIVISION }, { 11, 6 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div2, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 9, 5 });
-    (void)HexStateSpawnUnit(hex_state, UnitFormation { .parent = sov_div2, .tag = CountryTag::TAG_SOV, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 9, 7 });
+    const Handle<UnitFormation> sov_div2 = HexStateSpawnFormation(hex_state, CountryTag::TAG_SOV, UnitBranch::BRANCH_INFANTRY, Echelon::ECHELON_DIVISION, "333RD", "333. Rifle Div", { 11, 6 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = sov_div2, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 9, 5 });
+    (void)HexStateSpawnUnit(hex_state, UnitSpawnCmd { .formation = sov_div2, .icon = UnitIcon::ICON_INF, .echelon = Echelon::ECHELON_BATTALION }, { 9, 7 });
 }
 } // namespace hex

@@ -85,7 +85,10 @@ fetchcontent_declare(SDL3_image
                      GIT_TAG "release-3.4.4" EXCLUDE_FROM_ALL)
 fetchcontent_makeavailable(SDL3 SDL3_ttf SDL3_image)
 
-add_executable(pcg src/pcg.cpp src/8_hex/g_hex_game.cpp src/1_pcs/t_debug_system.cpp)
+add_executable(pcg src/pcg.cpp
+               src/8_hex/g_hex_game.cpp
+               src/1_pcs/r_ui_node.cpp
+               src/1_pcs/t_debug_system.cpp)
 set_property(TARGET pcg PROPERTY CXX_MODULE_STD ON)
 target_sources(pcg
                PRIVATE
@@ -94,6 +97,7 @@ target_sources(pcg
                src/0_pce/g_globals.cppm
                src/0_pce/r_window.cppm
                src/0_pce/r_window_state.cppm
+               src/0_pce/r_ui.cppm
                src/0_pce/u_algorithm.cppm
                src/0_pce/u_assets.cppm
                src/0_pce/u_collections.cppm
@@ -105,6 +109,7 @@ target_sources(pcg
                src/0_pce/u_table.cppm
                src/0_pce/u_sdl.cppm
                src/0_pce/u_types.cppm
+               src/0_pce/u_util.cppm
 
                # systems
                src/1_pcs/i_input_system.cppm
@@ -115,13 +120,16 @@ target_sources(pcg
                src/1_pcs/t_debug_system.cppm
                src/1_pcs/t_tick_system.cppm
                src/1_pcs/u_animation_system.cppm
+               src/1_pcs/u_easing.cppm
                src/1_pcs/u_orchestra.cppm
 
                # hex
                src/8_hex/g_hex_terrain.cppm
                src/8_hex/g_hex_terrain_generation.cppm
                src/8_hex/g_hex_scenarios.cppm
+               src/8_hex/g_hex_enums.cppm
                src/8_hex/g_hex_types.cppm
+               src/8_hex/g_hex_system.cppm
                src/8_hex/r_hex_render.cppm
                src/8_hex/u_counter.cppm
                src/8_hex/u_hex.cppm
@@ -137,6 +145,11 @@ target_sources(pcg
 #               src/g_hexbattle.cpp
 #               src/g_minimal.cpp
 )
+
+if (WIN32 OR MINGW OR MSYS)
+    enable_language(RC)
+    target_sources(pcg PRIVATE resources/pcg.rc)
+endif ()
 
 target_link_libraries(pcg
                       PRIVATE SDL3::SDL3
@@ -178,7 +191,7 @@ endif ()
 
 add_custom_command(
 		TARGET pcg POST_BUILD
-		COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/assets" "$<TARGET_FILE_DIR:pcg>/assets"
+		COMMAND "${CMAKE_COMMAND}" -E copy_directory_if_different "${CMAKE_SOURCE_DIR}/assets" "$<TARGET_FILE_DIR:pcg>/assets"
 		COMMENT "Copying assets to output directory"
 		VERBATIM
 )
@@ -193,14 +206,32 @@ if (WIN32 OR MINGW OR MSYS OR CMAKE_SYSTEM_NAME STREQUAL "MSYS")
         list(APPEND PCG_RUNTIME_SEARCH_DIRS "${CMAKE_PREFIX_PATH}/bin")
     endif ()
 
+    # SDL3_image loads its jpeg codec with SDL_LoadObject at runtime, so it never
+    # shows up in the import-table scan. Without it every .jpg texture fails to
+    # load on machines that don't have msys64 on PATH.
+    set(PCG_RUNTIME_LOADED_DLLS "libjpeg-8.dll")
+
     # Dev convenience: do the same bundling into the build dir so double-click
     # works straight from build/xd/.
+    #
+    # Skip the script's ~1s scan unless a trigger is newer than the stamp;
+    # CMakeCache.txt covers reconfigures, i.e. target_link_libraries changes.
+    # Kept POST_BUILD so `ninja pcg`, which the IDEs invoke, still bundles.
+    set(PCG_BUNDLE_TRIGGERS
+        "$<TARGET_FILE:SDL3::SDL3>"
+        "$<TARGET_FILE:SDL3_ttf::SDL3_ttf>"
+        "$<TARGET_FILE:SDL3_image::SDL3_image>"
+        "${CMAKE_CURRENT_BINARY_DIR}/CMakeCache.txt")
+
     add_custom_command(
             TARGET pcg POST_BUILD
             COMMAND "${CMAKE_COMMAND}"
                     -DEXECUTABLE=$<TARGET_FILE:pcg>
                     -DOUTPUT_DIR=$<TARGET_FILE_DIR:pcg>
                     "-DSEARCH_DIRS=${PCG_RUNTIME_SEARCH_DIRS}"
+                    "-DEXTRA_DLLS=${PCG_RUNTIME_LOADED_DLLS}"
+                    "-DSTAMP=${CMAKE_CURRENT_BINARY_DIR}/pcg_runtime_dlls.stamp"
+                    "-DTRIGGER_FILES=${PCG_BUNDLE_TRIGGERS}"
                     -P "${CMAKE_SOURCE_DIR}/cmake/bundle_runtime_deps.cmake"
             COMMENT "Bundling runtime DLLs next to pcg.exe"
             VERBATIM
@@ -225,6 +256,7 @@ if (WIN32 OR MINGW OR MSYS OR CMAKE_SYSTEM_NAME STREQUAL "MSYS")
         set(EXECUTABLE  \"\${CMAKE_INSTALL_PREFIX}/$<TARGET_FILE_NAME:pcg>\")
         set(OUTPUT_DIR  \"\${CMAKE_INSTALL_PREFIX}\")
         set(SEARCH_DIRS \"${PCG_RUNTIME_SEARCH_DIRS}\")
+        set(EXTRA_DLLS  \"${PCG_RUNTIME_LOADED_DLLS}\")
         include(\"${CMAKE_SOURCE_DIR}/cmake/bundle_runtime_deps.cmake\")
     ")
 endif ()

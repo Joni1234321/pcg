@@ -6,7 +6,6 @@
 import std;
 import pce.r_window;
 import pce.logger;
-import pce.collections;
 import pce.std;
 
 namespace hex {
