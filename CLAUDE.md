@@ -15,5 +15,7 @@ good code:
 - good code locality
 - i prefer bigger more complex structs than many small. same with helper methods. rather have inlined functions and a slightly more complex method.
 - dont overly abbreviate variable names. example ColorBoxCmd cmd_dmg. should be called color_box_cmd_dmg. otherwise i cant understand it
+- names must be direct, not vague: a function/lambda name says exactly what it does. append_padded_hex_corners, not append_padded.
+- units and coordinate spaces go in the name, never in a comment: BLOB_PADDING_WORLD not BLOB_PADDING // world units. same for variables: world_point, screen_a, never bare point. a comment stating a unit is a duplicated rule that goes stale.
 - Style changes in mapping functions. edit the enum→style function, not call-site variants
 - no game-semantic booleans in draw APIs; caller resolves the color

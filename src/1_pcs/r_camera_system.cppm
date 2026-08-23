@@ -25,6 +25,7 @@ struct CameraState {
 struct CameraSystem {
     static constexpr f32 PAN_SPEED = 8.0F;
     static constexpr f32 ZOOM_FACTOR = 1.2F;
+    static constexpr f32 ZOOM_KEY_FACTOR = 1.04F;
     static constexpr f32 ZOOM_MIN = 3.0F;
     static constexpr f32 ZOOM_MAX = 800.0F;
     static constexpr f32 ZOOM_LERP = 0.15F;
@@ -47,6 +48,11 @@ struct CameraSystem {
         if (input_state.mouse_wheel_y != 0.0F) {
             camera_state.zoom_anchor_world = camera_state.ScreenToWorld(input_state.mouse_position);
             const f32 factor = input_state.mouse_wheel_y > 0.0F ? ZOOM_FACTOR : 1.0F / ZOOM_FACTOR;
+            camera_state.target_scale = math::Clamp(camera_state.target_scale * factor, ZOOM_MIN, ZOOM_MAX);
+        }
+        if (input_state.keys[SDLK_Q] != input_state.keys[SDLK_E]) {
+            camera_state.zoom_anchor_world = camera_state.ScreenToWorld(input_state.mouse_position);
+            const f32 factor = input_state.keys[SDLK_E] ? ZOOM_KEY_FACTOR : 1.0F / ZOOM_KEY_FACTOR;
             camera_state.target_scale = math::Clamp(camera_state.target_scale * factor, ZOOM_MIN, ZOOM_MAX);
         }
         if (const f32 diff = camera_state.target_scale - camera_state.scale; math::Abs(diff) > 0.01F) {

@@ -842,19 +842,46 @@ struct HexSystem {
             VertObjectiveMarkerAppend(hex_state.verts, camera.scale, camera.WorldToScreen(HexAxialToWorld(axial_marker)), color_marker);
         }
 
+        // zoomed out the counters disappear and each formation shows as an occupied-area blob
+        const b8 zoomed_out = camera.scale < FORMATION_BLOB_ZOOM;
+        if (zoomed_out) { AppendFormationBlobs(hex_state, camera); }
+
         // render it all
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
         hex_state.verts.clear();
 
-        // render units
-        hex_state.counters.Clear();
-        UnitToCounterAppend(hex_state);
-        RenderCounters(hex_state.counters);
+        if (zoomed_out) {
+            // formation name in the middle of its blob
+            const Font& font_blob = font_collection.GetFontBoldCompact(FontSizes::h4);
+            for (u32 i = 0; i < hex_state.unit_formations.size(); i++) {
+                const Handle<UnitFormation> formation_handle = hex_state.unit_formations.IndexToHandle(i);
+                const UnitFormation& formation = hex_state.unit_formations[formation_handle];
+                float2 world_sum = HexAxialToWorld(formation.axial_hq);
+                f32 world_count = 1.0F;
+                for (const Unit& unit : hex_state.units_by_formation[formation_handle] | hex_state.units.handle_to_view()) {
+                    world_sum += HexAxialToWorld(unit.axial);
+                    world_count += 1.0F;
+                }
+                const float2 screen_center = camera.WorldToScreen(world_sum * float2 { 1.0F / world_count });
+                constexpr f32 BLOB_NAME_WIDTH = 400.0F;
+                const AABB area_name = AABB::FromCenter(screen_center, float2 { BLOB_NAME_WIDTH, FontHeight(FontSizes::h4) });
+                const Label& label_name = hex_state.label_pool.Get();
+                label_name.SetText(UnitNameToString(formation.name));
+                DrawText(font_blob, label_name, area_name.WithOffset(float2 { 1.5F }), colors::COLOR_WHITE.WithAlpha(0.8F), TextAlignment::CENTER);
+                DrawText(font_blob, label_name, area_name, colors::COLOR_BLACK, TextAlignment::CENTER);
+            }
+        }
+        else {
+            // render units
+            hex_state.counters.Clear();
+            UnitToCounterAppend(hex_state);
+            RenderCounters(hex_state.counters);
 
-        // render hq formation counters
-        for (u32 i = 0; i < hex_state.unit_formations.size(); i++) {
-            const UnitFormation& formation = hex_state.unit_formations[hex_state.unit_formations.IndexToHandle(i)];
-            DrawHqCounter(window_state, formation, AABB::FromCenter(camera.WorldToScreen(HexAxialToWorld(formation.axial_hq)), float2 { camera.scale * 1.1F }), hex_state.label_pool);
+            // render hq formation counters
+            for (u32 i = 0; i < hex_state.unit_formations.size(); i++) {
+                const UnitFormation& formation = hex_state.unit_formations[hex_state.unit_formations.IndexToHandle(i)];
+                DrawHqCounter(window_state, formation, AABB::FromCenter(camera.WorldToScreen(HexAxialToWorld(formation.axial_hq)), float2 { camera.scale * 1.1F }), hex_state.label_pool);
+            }
         }
 
         // logic and render
