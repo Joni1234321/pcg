@@ -42,9 +42,12 @@ struct Window {
             SDL_DestroySurface(icon);
         }
         SDL_SetRenderDrawBlendMode(window_state.renderer, SDL_BLENDMODE_BLEND);
+        const f32 display_scale = SDL_GetWindowDisplayScale(window_state.window);
+        window_state.ui_scale = UI_SCALE * (display_scale > 0.0F ? display_scale : 1.0F);
+        (void)SDL_SetRenderScale(window_state.renderer, window_state.ui_scale, window_state.ui_scale);
         window_state.text_engine = TTF_CreateRendererTextEngine(window_state.renderer);
         window_state.surface_text_engine = TTF_CreateSurfaceTextEngine();
-        window_state.screen_size = size;
+        window_state.screen_size = uint2 { static_cast<u32>(static_cast<f32>(size.x) / window_state.ui_scale), static_cast<u32>(static_cast<f32>(size.y) / window_state.ui_scale) };
 
         Singleton::Get<ui::FontCollection>().SetFontFile(Asset(PATH_FONT_NORMAL), Asset(PATH_FONT_COURIER_BOLD), Asset(PATH_FONT_COSETTE_TITRE_REGULAR));
     }

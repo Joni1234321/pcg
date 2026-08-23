@@ -31,6 +31,7 @@ struct AABB {
     [[nodiscard]] constexpr operator const SDL_FRect*() const { return reinterpret_cast<const SDL_FRect*>(this); }
 
     [[nodiscard]] constexpr AABB WithPadding(const float2 padding) const { return FromPoint(point + padding, size - padding * float2 { 2.0F }); }
+    [[nodiscard]] constexpr b8 Contains(const float2 position) const { return position.x >= point.x && position.x <= point.x + size.x && position.y >= point.y && position.y <= point.y + size.y; }
     [[nodiscard]] constexpr AABB WithOffset(const float2 offset) const { return FromPoint(point + offset, size); }
 };
 struct OBB {

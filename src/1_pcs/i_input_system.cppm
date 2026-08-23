@@ -8,6 +8,7 @@ import std;
 import pce.globals;
 import pce.collections;
 import pce.std;
+import pce.window_state;
 
 export namespace hex {
 struct InputState {
@@ -51,6 +52,7 @@ struct InputSystem {
         }
 
         const SDL_MouseButtonFlags state = SDL_GetMouseState(&input_state.mouse_position.x, &input_state.mouse_position.y);
+        input_state.mouse_position = input_state.mouse_position * float2 { 1.0F / Singleton::Get<WindowState>().ui_scale };
         input_state.left_mouse_down = state & SDL_BUTTON_LMASK && !input_state.left_mouse;
         input_state.left_mouse_up = input_state.left_mouse && !(state & SDL_BUTTON_LMASK);
         input_state.left_mouse = state & SDL_BUTTON_LMASK;

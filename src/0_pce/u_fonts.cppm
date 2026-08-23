@@ -16,6 +16,7 @@ export namespace hex::ui {
 using FontSize = u16;
 enum class FontSizes : FontSize { body = 16U, h1 = 34U, h2 = 30U, h3 = 24U, h4 = 20U, h5 = 18U, small = 14U, tiny = 12U, title = 52U, massive = 72U };
 constexpr FontSize FONT_MIN_SIZE = 8;
+[[nodiscard]] constexpr f32 FontHeight(const FontSizes size) { return static_cast<f32>(size); }
 enum class TextAlignment : u8 { LEFT, CENTER, RIGHT };
 static_assert(static_cast<i32>(TextAlignment::LEFT) == TTF_HORIZONTAL_ALIGN_LEFT && static_cast<i32>(TextAlignment::CENTER) == TTF_HORIZONTAL_ALIGN_CENTER && static_cast<i32>(TextAlignment::RIGHT) == TTF_HORIZONTAL_ALIGN_RIGHT);
 class Font : LogLifetimeWithCount<Font> {
