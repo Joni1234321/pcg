@@ -24,6 +24,35 @@ enum class RangedType : u8 { RANGED_NONE, RANGED_DEFENSE, RANGED_ATTACK };
 enum class PlayerAction : u8 { PLAYER_ACTION_NONE, PLAYER_ACTION_SELECT, PLAYER_ACTION_DESELECT, PLAYER_ACTION_MOVE_CLICK, PLAYER_ACTION_MOVE_HOVER, PLAYER_ACTION_ATTACK_CLICK, PLAYER_ACTION_ATTACK_HOVER };
 enum class TurnState : u8 { TURN_NONE, TURN_START, TURN_REINFORCEMENT, TURN_ASSIGNMENT, TURN_HQ_ACTIVATE, TURN_END };
 enum class TurnHqState : u8 { TURN_HQ_NONE, TURN_HQ_START, TURN_HQ_ACTIVATE, TURN_HQ_LOGISTIC, TURN_HQ_OBJ_PLACEMENT, TURN_HQ_EXECUTE, TURN_HQ_CLEAN, TURN_HQ_ISOLATION, TURN_HQ_END };
+constexpr std::array TURN_STATES { TurnState::TURN_START, TurnState::TURN_REINFORCEMENT, TurnState::TURN_ASSIGNMENT, TurnState::TURN_HQ_ACTIVATE, TurnState::TURN_END };
+constexpr std::array TURN_HQ_STATES { TurnHqState::TURN_HQ_START, TurnHqState::TURN_HQ_ACTIVATE, TurnHqState::TURN_HQ_LOGISTIC, TurnHqState::TURN_HQ_OBJ_PLACEMENT, TurnHqState::TURN_HQ_EXECUTE, TurnHqState::TURN_HQ_CLEAN, TurnHqState::TURN_HQ_ISOLATION, TurnHqState::TURN_HQ_END };
+
+[[nodiscard]] constexpr const char* TurnStateToIconLabel(const TurnState turn_state) {
+    switch (turn_state) {
+        case TurnState::TURN_NONE: return "";
+        case TurnState::TURN_START: return "STR";
+        case TurnState::TURN_REINFORCEMENT: return "REI";
+        case TurnState::TURN_ASSIGNMENT: return "ASG";
+        case TurnState::TURN_HQ_ACTIVATE: return "HQ";
+        case TurnState::TURN_END: return "END";
+    }
+    return "";
+}
+
+[[nodiscard]] constexpr const char* TurnHqStateToIconLabel(const TurnHqState turn_hq_state) {
+    switch (turn_hq_state) {
+        case TurnHqState::TURN_HQ_NONE: return "";
+        case TurnHqState::TURN_HQ_START: return "DRW";
+        case TurnHqState::TURN_HQ_ACTIVATE: return "ACT";
+        case TurnHqState::TURN_HQ_LOGISTIC: return "LOG";
+        case TurnHqState::TURN_HQ_OBJ_PLACEMENT: return "OBJ";
+        case TurnHqState::TURN_HQ_EXECUTE: return "EXE";
+        case TurnHqState::TURN_HQ_CLEAN: return "CLN";
+        case TurnHqState::TURN_HQ_ISOLATION: return "ISO";
+        case TurnHqState::TURN_HQ_END: return "END";
+    }
+    return "";
+}
 enum class ExecutePhase : u8 { EXECUTE_IDLE, EXECUTE_MOVE, EXECUTE_ATTACK };
 enum class DefenderRetreat : u8 { DEFENDER_HOLDS, DEFENDER_RETREAT, DEFENDER_ROUT };
 enum class ActivationResult : u8 { ACTIVATE_NONE, ACTIVATE_HALF, ACTIVATE_FULL };

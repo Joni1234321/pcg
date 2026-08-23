@@ -193,22 +193,6 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
 
     b8 initalize = hex_state.turn_hq_state_changed;
 
-    // hq phase title, top center, with the active formation counter under it
-    if (hex_state.turn_hq_state != TurnHqState::TURN_HQ_NONE) {
-        const Font& font_title = font_collection.GetFontBoldCompact(FontSizes::title);
-        const Label& label_title = hex_state.label_pool.Get();
-        label_title.SetText(std::format("{}", hex_state.turn_hq_state));
-        const AABB area_title = AABB::FromPoint(float2 { 0.0F, static_cast<f32>(window_state.screen_size.y) * 0.06F }, float2 { static_cast<f32>(window_state.screen_size.x), static_cast<f32>(FontSizes::title) });
-        DrawText(font_title, label_title, area_title.WithOffset(float2 { 3.0F }), colors::COLOR_BLACK, TextAlignment::CENTER);
-        DrawText(font_title, label_title, area_title, colors::COLOR_WHITE, TextAlignment::CENTER);
-
-        if (hex_state.unit_formation_active.IsValid()) {
-            constexpr f32 COUNTER_ACTIVE_SIZE = 120.0F;
-            const AABB area_counter_active = AABB::FromCenter(float2 { static_cast<f32>(window_state.screen_size.x) * 0.5F, area_title.point.y + area_title.size.y + static_cast<f32>(FontSizes::h1) * 2.0F + COUNTER_ACTIVE_SIZE * 0.5F + 20.0F }, float2 { COUNTER_ACTIVE_SIZE });
-            DrawFormationCounter(window_state, hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()], area_counter_active, hex_state.label_pool);
-        }
-    }
-
     switch (hex_state.turn_hq_state) {
         case TurnHqState::TURN_HQ_NONE: {
             return TurnHqState::TURN_HQ_START;
@@ -283,7 +267,7 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                     const float2 screen_size { static_cast<f32>(window_state.screen_size.x), static_cast<f32>(window_state.screen_size.y) };
                     constexpr f32 COUNTER_SHOWCASE_SIZE = 300.0F;
                     const AABB area_counter_showcase = AABB::FromCenter(float2 { screen_size.x * 0.5F, screen_size.y * 0.4F }, float2 { COUNTER_SHOWCASE_SIZE });
-                    const AABB area_snafu_roll = AABB::FromPoint(float2 { 0.0F, area_counter_showcase.point.y + area_counter_showcase.size.y + 20.0F }, float2 { screen_size.x, static_cast<f32>(FontSizes::massive) * 2.0F });
+                    const AABB area_snafu_roll = AABB::FromPoint(float2 { 0.0F, area_counter_showcase.point.y + area_counter_showcase.size.y + 20.0F }, float2 { screen_size.x, FontHeight(FontSizes::massive) * 2.0F });
 
                     DrawRect(window_state, AABB { .point = float2 { 0.0F }, .size = screen_size }, colors::COLOR_BLACK.WithAlpha(0.55F));
                     const f32 focus_top = area_counter_showcase.point.y - 35.0F;
@@ -638,7 +622,7 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
             }
 
             const b8 space_pressed = input_state.keys_down.contains(SDLK_SPACE) && input_state.keys_down.at(SDLK_SPACE);
-            return space_pressed ? TurnHqState::TURN_HQ_CLEAN : TurnHqState::TURN_HQ_EXECUTE;
+            return space_pressed || hex_state.turn_next_pressed ? TurnHqState::TURN_HQ_CLEAN : TurnHqState::TURN_HQ_EXECUTE;
         }
         case TurnHqState::TURN_HQ_CLEAN: {
             hex_state.objective_markers_axials.clear();
@@ -652,7 +636,7 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                     const float2 screen_size { static_cast<f32>(window_state.screen_size.x), static_cast<f32>(window_state.screen_size.y) };
                     constexpr f32 COUNTER_SHOWCASE_SIZE = 300.0F;
                     const AABB area_counter_showcase = AABB::FromCenter(float2 { screen_size.x * 0.5F, screen_size.y * 0.4F }, float2 { COUNTER_SHOWCASE_SIZE });
-                    const AABB area_isolation_roll = AABB::FromPoint(float2 { 0.0F, area_counter_showcase.point.y + area_counter_showcase.size.y + 20.0F }, float2 { screen_size.x, static_cast<f32>(FontSizes::massive) * 2.0F });
+                    const AABB area_isolation_roll = AABB::FromPoint(float2 { 0.0F, area_counter_showcase.point.y + area_counter_showcase.size.y + 20.0F }, float2 { screen_size.x, FontHeight(FontSizes::massive) * 2.0F });
 
                     DrawRect(window_state, AABB { .point = float2 { 0.0F }, .size = screen_size }, colors::COLOR_BLACK.WithAlpha(0.55F));
                     const f32 focus_top = area_counter_showcase.point.y - 35.0F;
@@ -887,23 +871,72 @@ struct HexSystem {
             }
         }
 
-        // turn status ui, bottom right, with the active formation counter above it
+        // rts style bottom bar: turn info left, stacked phase icon rows center, portrait and next button right
         {
-            const Font& font_status = font_collection.GetFontNormalCourier(FontSizes::body);
-            constexpr f32 STATUS_CELL_WIDTH = 200.0F;
-            constexpr f32 STATUS_LINE_HEIGHT = 20.0F;
-            constexpr f32 STATUS_PADDING = 10.0F;
-            const AABB area_status = AABB::FromPoint(float2 { static_cast<f32>(window_state.screen_size.x) - STATUS_CELL_WIDTH * 2.0F - STATUS_PADDING * 2.0F, static_cast<f32>(window_state.screen_size.y) - STATUS_LINE_HEIGHT - STATUS_PADDING * 2.0F }, float2 { STATUS_CELL_WIDTH * 2.0F + STATUS_PADDING * 2.0F, STATUS_LINE_HEIGHT + STATUS_PADDING * 2.0F });
-            const auto cell_area = [&](const u32 cell) -> AABB { return AABB::FromPoint(area_status.point + float2 { STATUS_PADDING + STATUS_CELL_WIDTH * static_cast<f32>(cell), STATUS_PADDING }, float2 { STATUS_CELL_WIDTH, STATUS_LINE_HEIGHT }); };
-            DrawRect(window_state, area_status, CountryBranchToColor(CountryTag::TAG_GER, UnitBranch::BRANCH_INFANTRY));
+            hex_state.turn_next_pressed = false;
 
+            const Font& font_bar = font_collection.GetFontBoldCourier(FontSizes::h4);
+            const Font& font_bar_small = font_collection.GetFontNormalCourier(FontSizes::h5);
+            const Font& font_icon = font_collection.GetFontBoldCourier(FontSizes::small);
+            const Font& font_icon_dim = font_collection.GetFontNormalCourier(FontSizes::small);
+            constexpr f32 BAR_HEIGHT = 106.0F;
+            constexpr f32 BAR_PADDING = 12.0F;
+            constexpr f32 BAR_INFO_WIDTH = 280.0F;
+            constexpr f32 ICON_SIZE = 38.0F;
+            constexpr f32 ICON_GAP = 6.0F;
+            constexpr f32 BUTTON_WIDTH = 140.0F;
+            constexpr f32 PORTRAIT_SIZE = 200.0F;
+            const float2 screen_size { static_cast<f32>(window_state.screen_size.x), static_cast<f32>(window_state.screen_size.y) };
+            const AABB area_bar = AABB::FromPoint(float2 { 0.0F, screen_size.y - BAR_HEIGHT }, float2 { screen_size.x, BAR_HEIGHT });
+            DrawRect(window_state, area_bar, CountryBranchToColor(CountryTag::TAG_GER, UnitBranch::BRANCH_INFANTRY));
+            DrawRect(window_state, AABB::FromPoint(area_bar.point, float2 { screen_size.x, 3.0F }), colors::COLOR_BLACK);
+
+            // active hq portrait slot, big and fixed in the bottom left, rising above the bar
+            const AABB area_portrait = AABB::FromPoint(float2 { BAR_PADDING, screen_size.y - BAR_PADDING - PORTRAIT_SIZE }, float2 { PORTRAIT_SIZE });
+            DrawRect(window_state, area_portrait.WithPadding(float2 { -3.0F }), colors::COLOR_BLACK);
+            DrawRect(window_state, area_portrait, CountryBranchToColor(CountryTag::TAG_GER, UnitBranch::BRANCH_INFANTRY));
+            if (hex_state.unit_formation_active.IsValid()) {
+                DrawFormationCounter(window_state, hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()], area_portrait.WithPadding(float2 { 8.0F }), hex_state.label_pool);
+            }
+
+            const f32 info_x = BAR_PADDING * 2.0F + PORTRAIT_SIZE + 3.0F;
             const Label& label_turn_number = hex_state.label_pool.Get();
             label_turn_number.SetText(std::format("Turn {}", hex_state.turn_number));
-            DrawText(font_status, label_turn_number, cell_area(0), colors::COLOR_BLACK, TextAlignment::LEFT);
+            DrawText(font_bar, label_turn_number, AABB::FromPoint(float2 { info_x, area_bar.point.y + BAR_PADDING + 6.0F }, float2 { BAR_INFO_WIDTH, FontHeight(FontSizes::h4) }), colors::COLOR_BLACK, TextAlignment::LEFT);
 
-            const Label& label_turn_state = hex_state.label_pool.Get();
-            label_turn_state.SetText(std::format("{}", hex_state.turn_state));
-            DrawText(font_status, label_turn_state, cell_area(1), colors::COLOR_BLACK, TextAlignment::LEFT);
+            const Label& label_phase_name = hex_state.label_pool.Get();
+            if (hex_state.turn_hq_state != TurnHqState::TURN_HQ_NONE) { label_phase_name.SetText(std::format("{}", hex_state.turn_hq_state)); }
+            else { label_phase_name.SetText(std::format("{}", hex_state.turn_state)); }
+            DrawText(font_bar_small, label_phase_name, AABB::FromPoint(float2 { info_x, area_bar.point.y + BAR_PADDING + 6.0F + FontHeight(FontSizes::h4) + 8.0F }, float2 { BAR_INFO_WIDTH, FontHeight(FontSizes::h5) }), colors::COLOR_BLACK, TextAlignment::LEFT);
+
+            const auto draw_phase_icon = [&](const float2 icon_point, const char* icon_text, const b8 active) -> void {
+                const AABB area_icon = AABB::FromPoint(icon_point, float2 { ICON_SIZE });
+                DrawRect(window_state, area_icon.WithPadding(float2 { -3.0F }), active ? colors::COLOR_YELLOW : colors::COLOR_BLACK.WithAlpha(0.35F));
+                DrawRect(window_state, area_icon, active ? colors::COLOR_LIGHT_GRAY : colors::COLOR_DARK_GRAY);
+                const Label& label_icon = hex_state.label_pool.Get();
+                label_icon.SetText(std::format("{}", icon_text));
+                DrawText(active ? font_icon : font_icon_dim, label_icon, AABB::FromPoint(icon_point + float2 { 0.0F, (ICON_SIZE - FontHeight(FontSizes::small)) * 0.5F }, float2 { ICON_SIZE, FontHeight(FontSizes::small) }), active ? colors::COLOR_BLACK : colors::COLOR_MID_GRAY, TextAlignment::CENTER);
+            };
+            const f32 icons_x = info_x + BAR_INFO_WIDTH;
+            const f32 row_turn_y = area_bar.point.y + BAR_PADDING;
+            const f32 row_hq_y = row_turn_y + ICON_SIZE + ICON_GAP;
+            for (u32 i = 0; i < TURN_STATES.size(); i++) { draw_phase_icon(float2 { icons_x + (ICON_SIZE + ICON_GAP) * static_cast<f32>(i), row_turn_y }, TurnStateToIconLabel(TURN_STATES[i]), TURN_STATES[i] == hex_state.turn_state); }
+            for (u32 i = 0; i < TURN_HQ_STATES.size(); i++) { draw_phase_icon(float2 { icons_x + (ICON_SIZE + ICON_GAP) * static_cast<f32>(i), row_hq_y }, TurnHqStateToIconLabel(TURN_HQ_STATES[i]), TURN_HQ_STATES[i] == hex_state.turn_hq_state); }
+
+            // action button, only shown in phases where pressing it does something
+            if (hex_state.turn_hq_state == TurnHqState::TURN_HQ_EXECUTE && hex_state.unit_formation_active.IsValid()) {
+                const AABB area_action_button = AABB::FromPoint(float2 { screen_size.x - BAR_PADDING - BUTTON_WIDTH, area_bar.point.y + BAR_PADDING }, float2 { BUTTON_WIDTH, BAR_HEIGHT - BAR_PADDING * 2.0F });
+                const b8 action_hovered = area_action_button.Contains(input_state.mouse_position);
+                DrawRect(window_state, area_action_button.WithPadding(float2 { -3.0F }), colors::COLOR_BLACK);
+                DrawRect(window_state, area_action_button, action_hovered ? colors::COLOR_WHITE : colors::COLOR_LIGHT_GRAY);
+                u32 units_with_move = 0;
+                for (const Unit& unit : hex_state.units_by_formation[hex_state.unit_formation_active.GetHandle()] | hex_state.units.handle_to_view()) { units_with_move += unit.move.current > 0; }
+                const Label& label_action_button = hex_state.label_pool.Get();
+                label_action_button.SetText(std::format("SKIP REST\n{} LEFT", units_with_move));
+                const f32 action_text_height = FontHeight(FontSizes::h4) * 2.0F;
+                DrawText(font_bar, label_action_button, AABB::FromPoint(float2 { area_action_button.point.x, area_action_button.point.y + (area_action_button.size.y - action_text_height) * 0.5F }, float2 { BUTTON_WIDTH, action_text_height }), colors::COLOR_BLACK, TextAlignment::CENTER);
+                if (action_hovered && input_state.left_mouse_down) { hex_state.turn_next_pressed = true; }
+            }
         }
 
         // debug

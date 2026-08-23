@@ -167,6 +167,7 @@ struct HexState {
     TurnHqState turn_hq_state { TurnHqState::TURN_HQ_NONE };
     b8 turn_hq_state_changed;
     miliseconds32 turn_hq_state_time { 0U };
+    b8 turn_next_pressed { false };
     HandleOptional<UnitFormation> unit_formation_active { };
     List<Handle<UnitFormation>> unit_formations_left { };
     List<int2> objective_markers_axials { };
