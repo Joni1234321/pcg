@@ -318,10 +318,11 @@ void AppendTerrainFeatures(HexState& hex_state, const CameraState& camera) {
     }
 }
 
-// blob per formation enclosing all its units
-void AppendFormationBlobs(HexState& hex_state, const CameraState& camera) {
+// blob per formation enclosing all its units, returns the hovered formation
+HandleOptional<UnitFormation> AppendFormationBlobs(HexState& hex_state, const CameraState& camera, const f32 alpha, const HandleOptional<UnitFormation> formation_highlight, const Optional<float2> world_hover) {
     constexpr f32 BLOB_PADDING_WORLD = 1.35F;
     constexpr f32 BLOB_OUTLINE_WIDTH_WORLD = 0.18F;
+    HandleOptional<UnitFormation> formation_hovered { };
     for (u32 i = 0; i < hex_state.unit_formations.size(); i++) {
         const Handle<UnitFormation> formation_handle = hex_state.unit_formations.IndexToHandle(i);
         const UnitFormation& formation = hex_state.unit_formations[formation_handle];
@@ -334,26 +335,16 @@ void AppendFormationBlobs(HexState& hex_state, const CameraState& camera) {
         append_padded_hex_corners(formation.axial_hq);
         for (const Unit& unit : hex_state.units_by_formation[formation_handle] | hex_state.units.handle_to_view()) { append_padded_hex_corners(unit.axial); }
 
-        // convex hull, monotone chain
-        std::ranges::sort(world_points, [](const float2 a, const float2 b) { return a.x < b.x || (a.x == b.x && a.y < b.y); });
-        List<float2> world_hull { };
-        for (u32 pass = 0; pass < 2; pass++) {
-            const usize pass_start = world_hull.size();
-            for (const float2 world_point : world_points) {
-                while (world_hull.size() >= pass_start + 2 && math::Cross(world_hull[world_hull.size() - 1] - world_hull[world_hull.size() - 2], world_point - world_hull[world_hull.size() - 2]) <= 0.0F) { world_hull.pop_back(); }
-                world_hull.push_back(world_point);
-            }
-            world_hull.pop_back();
-            std::ranges::reverse(world_points);
-        }
+        const List<float2> world_hull = polygon::ConvexHull(std::move(world_points));
         if (world_hull.size() < 3) { continue; }
+        const float2 world_centroid = polygon::Centroid(world_hull);
 
-        float2 world_centroid { };
-        for (const float2 world_point : world_hull) { world_centroid += world_point; }
-        world_centroid = world_centroid * float2 { 1.0F / static_cast<f32>(world_hull.size()) };
+        const b8 hovered = (formation_highlight.IsValid() && formation_highlight.GetHandle() == formation_handle) || (world_hover.has_value() && polygon::Contains(world_hull, world_hover.value()));
+        if (hovered) { formation_hovered = formation_handle; }
 
-        const ColorF color_fill = static_cast<ColorF>(formation.color.WithAlpha(0.20F));
-        const ColorF color_outline = static_cast<ColorF>(formation.color);
+        const f32 outline_width_world = BLOB_OUTLINE_WIDTH_WORLD * (hovered ? 1.6F : 1.0F);
+        const ColorF color_fill = static_cast<ColorF>(formation.color.WithAlpha((hovered ? 0.40F : 0.20F) * alpha));
+        const ColorF color_outline = static_cast<ColorF>(formation.color.WithAlpha(hovered ? 1.0F : alpha));
         const float2 screen_centroid = camera.WorldToScreen(world_centroid);
         for (u32 v = 0; v < world_hull.size(); v++) {
             const float2 world_a = world_hull[v];
@@ -365,11 +356,11 @@ void AppendFormationBlobs(HexState& hex_state, const CameraState& camera) {
             hex_state.verts.EmplaceBack(screen_a, color_fill);
             hex_state.verts.EmplaceBack(screen_b, color_fill);
 
-            // boundary line as a ring segment, inner vertices pulled toward the centroid so joins are seamless
+            // boundary ring segment
             const float2 inward_a = world_centroid - world_a;
             const float2 inward_b = world_centroid - world_b;
-            const float2 world_inner_a = world_a + inward_a * float2 { BLOB_OUTLINE_WIDTH_WORLD / math::Hypot(inward_a) };
-            const float2 world_inner_b = world_b + inward_b * float2 { BLOB_OUTLINE_WIDTH_WORLD / math::Hypot(inward_b) };
+            const float2 world_inner_a = world_a + inward_a * float2 { outline_width_world / math::Hypot(inward_a) };
+            const float2 world_inner_b = world_b + inward_b * float2 { outline_width_world / math::Hypot(inward_b) };
             const float2 screen_inner_a = camera.WorldToScreen(world_inner_a);
             const float2 screen_inner_b = camera.WorldToScreen(world_inner_b);
             hex_state.verts.EmplaceBack(screen_a, color_outline);
@@ -380,6 +371,7 @@ void AppendFormationBlobs(HexState& hex_state, const CameraState& camera) {
             hex_state.verts.EmplaceBack(screen_inner_a, color_outline);
         }
     }
+    return formation_hovered;
 }
 
 void AppendRoadMesh(HexState& hex_state, const CameraState& camera) {

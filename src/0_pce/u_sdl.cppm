@@ -7,6 +7,7 @@ module;
 
 export module pce.sdl;
 
+import std;
 import pce.globals;
 import pce.window_state;
 import pce.assets;
@@ -34,6 +35,41 @@ struct AABB {
     [[nodiscard]] constexpr b8 Contains(const float2 position) const { return position.x >= point.x && position.x <= point.x + size.x && position.y >= point.y && position.y <= point.y + size.y; }
     [[nodiscard]] constexpr AABB WithOffset(const float2 offset) const { return FromPoint(point + offset, size); }
 };
+namespace polygon {
+// convex hull, monotone chain
+[[nodiscard]] inline List<float2> ConvexHull(List<float2> points) {
+    std::ranges::sort(points, [](const float2 a, const float2 b) { return a.x < b.x || (a.x == b.x && a.y < b.y); });
+    List<float2> hull { };
+    for (u32 pass = 0; pass < 2; pass++) {
+        const usize pass_start = hull.size();
+        for (const float2 point : points) {
+            while (hull.size() >= pass_start + 2 && math::Cross(hull[hull.size() - 1] - hull[hull.size() - 2], point - hull[hull.size() - 2]) <= 0.0F) { hull.pop_back(); }
+            hull.push_back(point);
+        }
+        hull.pop_back();
+        std::ranges::reverse(points);
+    }
+    return hull;
+}
+
+[[nodiscard]] inline b8 Contains(const List<float2>& polygon, const float2 point) {
+    b8 all_left = true;
+    b8 all_right = true;
+    for (u32 v = 0; v < polygon.size(); v++) {
+        const f32 side = math::Cross(polygon[(v + 1U) % polygon.size()] - polygon[v], point - polygon[v]);
+        all_left = all_left && side >= 0.0F;
+        all_right = all_right && side <= 0.0F;
+    }
+    return all_left || all_right;
+}
+
+[[nodiscard]] inline float2 Centroid(const List<float2>& polygon) {
+    float2 sum { };
+    for (const float2 point : polygon) { sum += point; }
+    return sum * float2 { 1.0F / static_cast<f32>(polygon.size()) };
+}
+} // namespace polygon
+
 struct OBB {
     float2 center;
     float2 size;

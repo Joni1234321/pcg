@@ -842,9 +842,28 @@ struct HexSystem {
             VertObjectiveMarkerAppend(hex_state.verts, camera.scale, camera.WorldToScreen(HexAxialToWorld(axial_marker)), color_marker);
         }
 
-        // zoomed out the counters disappear and each formation shows as an occupied-area blob
+        // formation blobs, hovering one highlights the whole formation
+        constexpr f32 BLOB_ALPHA_ZOOMED_IN = 0.35F;
         const b8 zoomed_out = camera.scale < FORMATION_BLOB_ZOOM;
-        if (zoomed_out) { AppendFormationBlobs(hex_state, camera); }
+        HandleOptional<UnitFormation> formation_hover { };
+        if (!zoomed_out && hex_state.pseudo_states.axial_hover) {
+            const int2 axial_hover = hex_state.pseudo_states.axial_hover.value();
+            const auto axial_hover_units = hex_state.units_by_axial.find(axial_hover);
+            if (axial_hover_units != hex_state.units_by_axial.end() && axial_hover_units->second.size() > 0) { formation_hover = hex_state.units[axial_hover_units->second[0]].formation; }
+            for (u32 i = 0; i < hex_state.unit_formations.size(); i++) {
+                const Handle<UnitFormation> formation_handle = hex_state.unit_formations.IndexToHandle(i);
+                if (hex_state.unit_formations[formation_handle].axial_hq == axial_hover) { formation_hover = formation_handle; }
+            }
+        }
+        const Optional<float2> world_hover = zoomed_out ? Optional<float2> { camera.ScreenToWorld(input_state.mouse_position) } : Optional<float2> { };
+        formation_hover = AppendFormationBlobs(hex_state, camera, zoomed_out ? 1.0F : BLOB_ALPHA_ZOOMED_IN, formation_hover, world_hover);
+        if (formation_hover.IsValid()) {
+            const UnitFormation& formation_hovered = hex_state.unit_formations[formation_hover.GetHandle()];
+            VertHexRingAppend(hex_state.verts, camera.scale * 0.98F, camera.scale * 0.86F, camera.WorldToScreen(HexAxialToWorld(formation_hovered.axial_hq)), formation_hovered.color);
+            for (const Unit& unit : hex_state.units_by_formation[formation_hover.GetHandle()] | hex_state.units.handle_to_view()) {
+                VertHexRingAppend(hex_state.verts, camera.scale * 0.98F, camera.scale * 0.86F, camera.WorldToScreen(HexAxialToWorld(unit.axial)), formation_hovered.color);
+            }
+        }
 
         // render it all
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
