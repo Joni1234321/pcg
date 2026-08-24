@@ -54,7 +54,7 @@ inline void VertObjectiveMarkerAppend(List<Vertex>& vertecies, const f32 hex_siz
     VertHexAppend(vertecies, hex_size * 0.36F, hex_screen, hex_color);
     VertHexAppend(vertecies, hex_size * 0.14F, hex_screen, colors::COLOR_BLACK);
 }
-// honeycomb fill within radius, stronger ring on the boundary
+// honeycomb fill within radius, stronger border around the total area
 inline void VertHexAreaAppend(HexState& hex_state, const CameraState& camera, const int2 axial_center, const i32 radius, const Color color) {
     for (i32 dq = -radius; dq <= radius; dq++) {
         for (i32 dr = math::Max(-radius, -dq - radius); dr <= math::Min(radius, -dq + radius); dr++) {
@@ -62,7 +62,21 @@ inline void VertHexAreaAppend(HexState& hex_state, const CameraState& camera, co
             if (!hex_state.hex_map.Contains(axial)) { continue; }
             const float2 screen = camera.WorldToScreen(HexAxialToWorld(axial));
             VertHexAppend(hex_state.verts, camera.scale * 0.97F, screen, color.WithAlpha(0.12F));
-            if (HexAxialDistance(axial_center, axial) == radius) { VertHexRingAppend(hex_state.verts, camera.scale, camera.scale * 0.9F, screen, color.WithAlpha(0.7F)); }
+            for (u32 side = 0; side < HEX_CORNERS; side++) {
+                const int2 axial_neighbour = axial + HEX_AXIAL_NEIGHBOURS[side];
+                if (HexAxialDistance(axial_center, axial_neighbour) <= radius && hex_state.hex_map.Contains(axial_neighbour)) { continue; }
+                const ColorF color_border = static_cast<ColorF>(color.WithAlpha(0.7F));
+                const float2 screen_outer_a = screen + HEX_ANGLE[side] * float2 { camera.scale };
+                const float2 screen_outer_b = screen + HEX_ANGLE[(side + 1U) % HEX_CORNERS] * float2 { camera.scale };
+                const float2 screen_inner_a = screen + HEX_ANGLE[side] * float2 { camera.scale * 0.9F };
+                const float2 screen_inner_b = screen + HEX_ANGLE[(side + 1U) % HEX_CORNERS] * float2 { camera.scale * 0.9F };
+                hex_state.verts.EmplaceBack(screen_inner_a, color_border);
+                hex_state.verts.EmplaceBack(screen_inner_b, color_border);
+                hex_state.verts.EmplaceBack(screen_outer_b, color_border);
+                hex_state.verts.EmplaceBack(screen_inner_a, color_border);
+                hex_state.verts.EmplaceBack(screen_outer_b, color_border);
+                hex_state.verts.EmplaceBack(screen_outer_a, color_border);
+            }
         }
     }
 }
@@ -318,24 +332,27 @@ void AppendTerrainFeatures(HexState& hex_state, const CameraState& camera) {
     }
 }
 
+// blob polygon around every unit of the formation, in world space
+[[nodiscard]] inline List<float2> FormationBlobHull(HexState& hex_state, const Handle<UnitFormation> formation_handle) {
+    constexpr f32 BLOB_PADDING_WORLD = 1.35F;
+    List<float2> world_points { };
+    const auto append_padded_hex_corners = [&](const int2 axial) -> void {
+        for (u32 corner = 0; corner < HEX_CORNERS; corner++) { world_points.push_back(HexAxialToWorld(axial) + HEX_ANGLE[corner] * float2 { BLOB_PADDING_WORLD }); }
+    };
+    append_padded_hex_corners(hex_state.unit_formations[formation_handle].axial_hq);
+    for (const Unit& unit : hex_state.units_by_formation[formation_handle] | hex_state.units.handle_to_view()) { append_padded_hex_corners(unit.axial); }
+    return polygon::ConvexHull(std::move(world_points));
+}
+
 // blob per formation enclosing all its units, returns the hovered formation
 HandleOptional<UnitFormation> AppendFormationBlobs(HexState& hex_state, const CameraState& camera, const f32 alpha, const HandleOptional<UnitFormation> formation_highlight, const Optional<float2> world_hover) {
-    constexpr f32 BLOB_PADDING_WORLD = 1.35F;
     constexpr f32 BLOB_OUTLINE_WIDTH_WORLD = 0.18F;
     HandleOptional<UnitFormation> formation_hovered { };
     for (u32 i = 0; i < hex_state.unit_formations.size(); i++) {
         const Handle<UnitFormation> formation_handle = hex_state.unit_formations.IndexToHandle(i);
         const UnitFormation& formation = hex_state.unit_formations[formation_handle];
 
-        // pad every occupied hex with a ring of corner points, the convex hull of all of them is the blob
-        List<float2> world_points { };
-        const auto append_padded_hex_corners = [&](const int2 axial) -> void {
-            for (u32 corner = 0; corner < HEX_CORNERS; corner++) { world_points.push_back(HexAxialToWorld(axial) + HEX_ANGLE[corner] * float2 { BLOB_PADDING_WORLD }); }
-        };
-        append_padded_hex_corners(formation.axial_hq);
-        for (const Unit& unit : hex_state.units_by_formation[formation_handle] | hex_state.units.handle_to_view()) { append_padded_hex_corners(unit.axial); }
-
-        const List<float2> world_hull = polygon::ConvexHull(std::move(world_points));
+        const List<float2> world_hull = FormationBlobHull(hex_state, formation_handle);
         if (world_hull.size() < 3) { continue; }
         const float2 world_centroid = polygon::Centroid(world_hull);
 

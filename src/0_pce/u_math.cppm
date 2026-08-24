@@ -63,6 +63,7 @@ template <typename T> [[nodiscard]] constexpr f32 Hypot(Vec2<T> v) { return Hypo
 template <typename T> [[nodiscard]] constexpr f32 Hypot(Vec3<T> v) { return Hypot(v.x, v.y, v.z); }
 template <typename T> [[nodiscard]] constexpr f32 Hypot(Vec4<T> v) { return Hypot(v.x, v.y, v.z, v.w); }
 template <typename T> [[nodiscard]] constexpr f32 Cross(Vec2<T> a, Vec2<T> b) { return a.x * b.y - a.y * b.x; }
+template <typename T> [[nodiscard]] constexpr f32 Dot(Vec2<T> a, Vec2<T> b) { return a.x * b.x + a.y * b.y; }
 template <typename T> [[nodiscard]] constexpr f32 LengthSq(Vec2<T> v) { return v.x * v.x + v.y * v.y; }
 template <typename T> [[nodiscard]] constexpr f32 LengthSq(Vec3<T> v) { return v.x * v.x + v.y * v.y + v.z * v.z; }
 template <typename T> [[nodiscard]] constexpr f32 LengthSq(Vec4<T> v) { return v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w; }

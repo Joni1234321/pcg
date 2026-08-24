@@ -865,6 +865,46 @@ struct HexSystem {
             }
         }
 
+        // zoomed out an occupied hex gets a 45 degree hatch fill clipped to the tile
+        if (zoomed_out) {
+            constexpr f32 HATCH_DIAGONAL = 0.7071F;
+            constexpr f32 HATCH_SPACING_LOCAL = 0.28F;
+            constexpr f32 HATCH_TILE_RADIUS_LOCAL = 0.97F;
+            const float2 local_hatch_dir { HATCH_DIAGONAL, -HATCH_DIAGONAL };
+            const float2 local_hatch_perp { HATCH_DIAGONAL, HATCH_DIAGONAL };
+            const auto hatch_t_range_in_hex = [&](const float2 local_mid) -> Optional<float2> {
+                f32 t_min = -2.0F;
+                f32 t_max = 2.0F;
+                for (u32 e = 0; e < HEX_CORNERS; e++) {
+                    const float2 local_a = HEX_ANGLE[e] * float2 { HATCH_TILE_RADIUS_LOCAL };
+                    const float2 local_edge = HEX_ANGLE[(e + 1U) % HEX_CORNERS] * float2 { HATCH_TILE_RADIUS_LOCAL } - local_a;
+                    const f32 winding = math::Cross(local_edge, float2 { } - local_a) > 0.0F ? 1.0F : -1.0F;
+                    const f32 denom = math::Cross(local_edge, local_hatch_dir) * winding;
+                    const f32 num = math::Cross(local_edge, local_mid - local_a) * winding;
+                    if (math::Abs(denom) < 0.0001F) {
+                        if (num < 0.0F) { return std::nullopt; }
+                        continue;
+                    }
+                    const f32 t_hit = -num / denom;
+                    if (denom > 0.0F) { t_min = Max(t_min, t_hit); } else { t_max = Min(t_max, t_hit); }
+                }
+                return t_min < t_max ? Optional<float2> { float2 { t_min, t_max } } : std::nullopt;
+            };
+            for (const auto& [axial, unit_handles] : hex_state.units_by_axial) {
+                if (unit_handles.size() == 0) { continue; }
+                const float2 screen_hex = camera.WorldToScreen(HexAxialToWorld(axial));
+                const ColorF color_hatch = static_cast<ColorF>(hex_state.unit_formations[hex_state.units[unit_handles[0]].formation].color);
+                for (i32 k = -static_cast<i32>(1.0F / HATCH_SPACING_LOCAL); k <= static_cast<i32>(1.0F / HATCH_SPACING_LOCAL); k++) {
+                    const float2 local_mid = local_hatch_perp * float2 { static_cast<f32>(k) * HATCH_SPACING_LOCAL };
+                    const Optional<float2> t_range = hatch_t_range_in_hex(local_mid);
+                    if (!t_range) { continue; }
+                    const float2 screen_start = screen_hex + (local_mid + local_hatch_dir * float2 { t_range->x }) * float2 { camera.scale };
+                    const float2 screen_end = screen_hex + (local_mid + local_hatch_dir * float2 { t_range->y }) * float2 { camera.scale };
+                    VertObbAppend(hex_state.verts, OBB::BetweenPoints(screen_start, screen_end, camera.scale * 0.07F), color_hatch);
+                }
+            }
+        }
+
         // render it all
         (void)SDL_RenderGeometry(window_state.renderer, nullptr, hex_state.verts);
         hex_state.verts.clear();

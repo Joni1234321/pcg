@@ -63,6 +63,32 @@ namespace polygon {
     return all_left || all_right;
 }
 
+// separating axis test, both polygons must be convex
+[[nodiscard]] inline b8 Overlaps(const List<float2>& polygon_a, const List<float2>& polygon_b) {
+    const auto separated_on_any_axis_of = [](const List<float2>& axis_polygon, const List<float2>& a, const List<float2>& b) -> b8 {
+        for (u32 v = 0; v < axis_polygon.size(); v++) {
+            const float2 edge = axis_polygon[(v + 1U) % axis_polygon.size()] - axis_polygon[v];
+            const float2 axis { -edge.y, edge.x };
+            f32 min_a = std::numeric_limits<f32>::max();
+            f32 max_a = std::numeric_limits<f32>::lowest();
+            for (const float2 point : a) {
+                min_a = math::Min(min_a, math::Dot(axis, point));
+                max_a = math::Max(max_a, math::Dot(axis, point));
+            }
+            f32 min_b = std::numeric_limits<f32>::max();
+            f32 max_b = std::numeric_limits<f32>::lowest();
+            for (const float2 point : b) {
+                min_b = math::Min(min_b, math::Dot(axis, point));
+                max_b = math::Max(max_b, math::Dot(axis, point));
+            }
+            if (max_a < min_b || max_b < min_a) { return true; }
+        }
+        return false;
+    };
+    if (polygon_a.size() == 0 || polygon_b.size() == 0) { return false; }
+    return !separated_on_any_axis_of(polygon_a, polygon_a, polygon_b) && !separated_on_any_axis_of(polygon_b, polygon_a, polygon_b);
+}
+
 [[nodiscard]] inline float2 Centroid(const List<float2>& polygon) {
     float2 sum { };
     for (const float2 point : polygon) { sum += point; }
