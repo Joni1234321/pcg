@@ -890,8 +890,14 @@ struct HexSystem {
                 }
                 return t_min < t_max ? Optional<float2> { float2 { t_min, t_max } } : std::nullopt;
             };
+            const auto axial_is_hq = [&](const int2 axial) -> b8 {
+                for (u32 i = 0; i < hex_state.unit_formations.size(); i++) {
+                    if (hex_state.unit_formations[hex_state.unit_formations.IndexToHandle(i)].axial_hq == axial) { return true; }
+                }
+                return false;
+            };
             for (const auto& [axial, unit_handles] : hex_state.units_by_axial) {
-                if (unit_handles.size() == 0) { continue; }
+                if (unit_handles.size() == 0 || axial_is_hq(axial)) { continue; }
                 const float2 screen_hex = camera.WorldToScreen(HexAxialToWorld(axial));
                 const ColorF color_hatch = static_cast<ColorF>(hex_state.unit_formations[hex_state.units[unit_handles[0]].formation].color);
                 for (i32 k = -static_cast<i32>(1.0F / HATCH_SPACING_LOCAL); k <= static_cast<i32>(1.0F / HATCH_SPACING_LOCAL); k++) {
@@ -928,6 +934,15 @@ struct HexSystem {
                 label_name.SetText(UnitNameToString(formation.name));
                 DrawText(font_blob, label_name, area_name.WithOffset(float2 { 1.5F }), colors::COLOR_WHITE.WithAlpha(0.8F), TextAlignment::CENTER);
                 DrawText(font_blob, label_name, area_name, colors::COLOR_BLACK, TextAlignment::CENTER);
+
+                // hq hex gets a label instead of hatching
+                const f32 pt_hq = camera.scale * 0.5F;
+                if (static_cast<FontSize>(pt_hq) >= FONT_MIN_SIZE) {
+                    const AABB area_hq = AABB::FromCenter(camera.WorldToScreen(HexAxialToWorld(formation.axial_hq)), float2 { camera.scale * 2.0F, pt_hq });
+                    const Label& label_hq = hex_state.label_pool.Get();
+                    label_hq.SetText("HQ");
+                    DrawText(font_collection.GetFontBoldCompact(static_cast<FontSizes>(pt_hq)), label_hq, area_hq, colors::COLOR_BLACK, TextAlignment::CENTER);
+                }
             }
         }
         else {

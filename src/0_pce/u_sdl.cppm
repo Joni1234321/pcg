@@ -172,6 +172,10 @@ struct Color {
         };
     }
     [[nodiscard]] constexpr Color Mul(const f32 factor) const { return Color { static_cast<u8>(r * factor), static_cast<u8>(g * factor), static_cast<u8>(b * factor), a }; }
+    [[nodiscard]] constexpr Color WithSaturation(const f32 factor) const {
+        const f32 gray = 0.299F * static_cast<f32>(r) + 0.587F * static_cast<f32>(g) + 0.114F * static_cast<f32>(b);
+        return Color { static_cast<u8>(gray + (static_cast<f32>(r) - gray) * factor), static_cast<u8>(gray + (static_cast<f32>(g) - gray) * factor), static_cast<u8>(gray + (static_cast<f32>(b) - gray) * factor), a };
+    }
     [[nodiscard]] constexpr operator SDL_Color() const { return *reinterpret_cast<const SDL_Color*>(this); }
     constexpr static f32 TO_FCOLOR = 1.0F / 255.0F;
     [[nodiscard]] constexpr operator ColorF() const { return ColorF { r * TO_FCOLOR, g * TO_FCOLOR, b * TO_FCOLOR, a * TO_FCOLOR }; }

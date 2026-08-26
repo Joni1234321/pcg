@@ -360,8 +360,9 @@ HandleOptional<UnitFormation> AppendFormationBlobs(HexState& hex_state, const Ca
         if (hovered) { formation_hovered = formation_handle; }
 
         const f32 outline_width_world = BLOB_OUTLINE_WIDTH_WORLD * (hovered ? 1.6F : 1.0F);
-        const ColorF color_fill = static_cast<ColorF>(formation.color.WithAlpha((hovered ? 0.40F : 0.20F) * alpha));
-        const ColorF color_outline = static_cast<ColorF>(formation.color.WithAlpha(hovered ? 1.0F : alpha));
+        const Color color_blob = hovered ? formation.color : formation.color.WithSaturation(0.35F);
+        const ColorF color_fill = static_cast<ColorF>(color_blob.WithAlpha((hovered ? 0.40F : 0.20F) * alpha));
+        const ColorF color_outline = static_cast<ColorF>(color_blob.WithAlpha(hovered ? 1.0F : alpha));
         const float2 screen_centroid = camera.WorldToScreen(world_centroid);
         for (u32 v = 0; v < world_hull.size(); v++) {
             const float2 world_a = world_hull[v];
