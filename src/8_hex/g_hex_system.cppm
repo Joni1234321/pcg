@@ -341,6 +341,13 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                 const Color color_marker = hover_marker_count > 0 ? colors::COLOR_ORANGE : colors::COLOR_YELLOW;
                 VertHexAreaAppend(hex_state, camera, axial_hover, OBJ_MARKER_RANGE, color_marker);
                 VertObjectiveMarkerAppend(hex_state.verts, camera.scale, camera.WorldToScreen(HexAxialToWorld(axial_hover)), color_marker);
+
+                // fat war-map arrow from the active blob to the objective being placed
+                const List<float2> world_hull = FormationBlobHull(hex_state, hex_state.unit_formation_active.GetHandle());
+                if (world_hull.size() >= 3) {
+                    const ColorF color_arrow = static_cast<ColorF>(hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()].color.WithAlpha(0.6F));
+                    VertFatArrowAppend(hex_state.verts, camera, polygon::Centroid(world_hull), HexAxialToWorld(axial_hover), color_arrow);
+                }
                 if (input_state.left_mouse_down) {
                     hex_state.objective_markers_axials.push_back(axial_hover);
                     obj_markers_left--;
@@ -862,6 +869,17 @@ struct HexSystem {
             VertHexRingAppend(hex_state.verts, camera.scale * 0.98F, camera.scale * 0.86F, camera.WorldToScreen(HexAxialToWorld(formation_hovered.axial_hq)), formation_hovered.color);
             for (const Unit& unit : hex_state.units_by_formation[formation_hover.GetHandle()] | hex_state.units.handle_to_view()) {
                 VertHexRingAppend(hex_state.verts, camera.scale * 0.98F, camera.scale * 0.86F, camera.WorldToScreen(HexAxialToWorld(unit.axial)), formation_hovered.color);
+            }
+        }
+
+        // fat war-map arrow from the active blob towards its objective markers, faint when zoomed in
+        if (hex_state.unit_formation_active.IsValid()) {
+            const Handle<UnitFormation> formation_handle = hex_state.unit_formation_active.GetHandle();
+            const List<float2> world_hull = FormationBlobHull(hex_state, formation_handle);
+            if (world_hull.size() >= 3) {
+                const float2 world_centroid = polygon::Centroid(world_hull);
+                const ColorF color_arrow = static_cast<ColorF>(hex_state.unit_formations[formation_handle].color.WithAlpha(zoomed_out ? 0.6F : 0.12F));
+                for (const int2 axial_marker : hex_state.objective_markers_axials) { VertFatArrowAppend(hex_state.verts, camera, world_centroid, HexAxialToWorld(axial_marker), color_arrow); }
             }
         }
 

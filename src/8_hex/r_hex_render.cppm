@@ -111,6 +111,33 @@ inline void VertObbAppend(List<Vertex>& vertices, const OBB& obb, const ColorF c
     vertices.EmplaceBack(Vertex { points[3], color });
 }
 
+// big fat war-map arrow: tapered shaft into a wide triangular head
+inline void VertFatArrowAppend(List<Vertex>& vertecies, const CameraState& camera, const float2 world_from, const float2 world_to, const ColorF color) {
+    constexpr f32 ARROW_HEAD_LENGTH_WORLD = 2.4F;
+    constexpr f32 ARROW_HEAD_HALF_WIDTH_WORLD = 1.6F;
+    constexpr f32 ARROW_TAIL_HALF_WIDTH_WORLD = 1.1F;
+    constexpr f32 ARROW_NECK_HALF_WIDTH_WORLD = 0.65F;
+    const float2 world_delta = world_to - world_from;
+    const f32 world_length = math::Hypot(world_delta);
+    if (world_length < ARROW_HEAD_LENGTH_WORLD * 1.5F) { return; }
+    const float2 world_dir = world_delta * float2 { 1.0F / world_length };
+    const float2 world_perp { -world_dir.y, world_dir.x };
+    const float2 world_neck = world_to - world_dir * float2 { ARROW_HEAD_LENGTH_WORLD };
+    const float2 screen_tail_a = camera.WorldToScreen(world_from + world_perp * float2 { ARROW_TAIL_HALF_WIDTH_WORLD });
+    const float2 screen_tail_b = camera.WorldToScreen(world_from - world_perp * float2 { ARROW_TAIL_HALF_WIDTH_WORLD });
+    const float2 screen_neck_a = camera.WorldToScreen(world_neck + world_perp * float2 { ARROW_NECK_HALF_WIDTH_WORLD });
+    const float2 screen_neck_b = camera.WorldToScreen(world_neck - world_perp * float2 { ARROW_NECK_HALF_WIDTH_WORLD });
+    vertecies.EmplaceBack(screen_tail_a, color);
+    vertecies.EmplaceBack(screen_tail_b, color);
+    vertecies.EmplaceBack(screen_neck_b, color);
+    vertecies.EmplaceBack(screen_tail_a, color);
+    vertecies.EmplaceBack(screen_neck_b, color);
+    vertecies.EmplaceBack(screen_neck_a, color);
+    vertecies.EmplaceBack(camera.WorldToScreen(world_neck + world_perp * float2 { ARROW_HEAD_HALF_WIDTH_WORLD }), color);
+    vertecies.EmplaceBack(camera.WorldToScreen(world_neck - world_perp * float2 { ARROW_HEAD_HALF_WIDTH_WORLD }), color);
+    vertecies.EmplaceBack(camera.WorldToScreen(world_to), color);
+}
+
 [[nodiscard]] float2 HexTileJitter(const int2 axial) {
     const u32 h = hex::noise::Hash(axial.x, axial.y);
     const f32 fx = (static_cast<f32>(h & 0xFFFFU) / 65535.0F) * 2.0F - 1.0F;
