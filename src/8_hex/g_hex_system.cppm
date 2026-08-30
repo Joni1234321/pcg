@@ -346,7 +346,8 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
                 const List<float2> world_hull = FormationBlobHull(hex_state, hex_state.unit_formation_active.GetHandle());
                 if (world_hull.size() >= 3) {
                     const ColorF color_arrow = static_cast<ColorF>(hex_state.unit_formations[hex_state.unit_formation_active.GetHandle()].color.WithAlpha(0.6F));
-                    VertFatArrowAppend(hex_state.verts, camera, polygon::Centroid(world_hull), HexAxialToWorld(axial_hover), color_arrow);
+                    const float2 world_marker = HexAxialToWorld(axial_hover);
+                    VertFatArrowAppend(hex_state.verts, camera, BlobHullExitTowards(world_hull, polygon::Centroid(world_hull), world_marker), world_marker, color_arrow);
                 }
                 if (input_state.left_mouse_down) {
                     hex_state.objective_markers_axials.push_back(axial_hover);
@@ -879,7 +880,10 @@ struct HexSystem {
             if (world_hull.size() >= 3) {
                 const float2 world_centroid = polygon::Centroid(world_hull);
                 const ColorF color_arrow = static_cast<ColorF>(hex_state.unit_formations[formation_handle].color.WithAlpha(zoomed_out ? 0.6F : 0.12F));
-                for (const int2 axial_marker : hex_state.objective_markers_axials) { VertFatArrowAppend(hex_state.verts, camera, world_centroid, HexAxialToWorld(axial_marker), color_arrow); }
+                for (const int2 axial_marker : hex_state.objective_markers_axials) {
+                    const float2 world_marker = HexAxialToWorld(axial_marker);
+                    VertFatArrowAppend(hex_state.verts, camera, BlobHullExitTowards(world_hull, world_centroid, world_marker), world_marker, color_arrow);
+                }
             }
         }
 

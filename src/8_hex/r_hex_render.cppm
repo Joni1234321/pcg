@@ -111,7 +111,7 @@ inline void VertObbAppend(List<Vertex>& vertices, const OBB& obb, const ColorF c
     vertices.EmplaceBack(Vertex { points[3], color });
 }
 
-// big fat war-map arrow: tapered shaft into a wide triangular head
+// big fat war-map arrow: tapered shaft into a wide triangular head, short arrows shrink proportionally
 inline void VertFatArrowAppend(List<Vertex>& vertecies, const CameraState& camera, const float2 world_from, const float2 world_to, const ColorF color) {
     constexpr f32 ARROW_HEAD_LENGTH_WORLD = 2.4F;
     constexpr f32 ARROW_HEAD_HALF_WIDTH_WORLD = 1.6F;
@@ -119,22 +119,24 @@ inline void VertFatArrowAppend(List<Vertex>& vertecies, const CameraState& camer
     constexpr f32 ARROW_NECK_HALF_WIDTH_WORLD = 0.65F;
     const float2 world_delta = world_to - world_from;
     const f32 world_length = math::Hypot(world_delta);
-    if (world_length < ARROW_HEAD_LENGTH_WORLD * 1.5F) { return; }
+    if (world_length < 0.001F) { return; }
+    const f32 head_length_world = math::Min(ARROW_HEAD_LENGTH_WORLD, world_length * 0.6F);
+    const f32 shrink = head_length_world / ARROW_HEAD_LENGTH_WORLD;
     const float2 world_dir = world_delta * float2 { 1.0F / world_length };
     const float2 world_perp { -world_dir.y, world_dir.x };
-    const float2 world_neck = world_to - world_dir * float2 { ARROW_HEAD_LENGTH_WORLD };
-    const float2 screen_tail_a = camera.WorldToScreen(world_from + world_perp * float2 { ARROW_TAIL_HALF_WIDTH_WORLD });
-    const float2 screen_tail_b = camera.WorldToScreen(world_from - world_perp * float2 { ARROW_TAIL_HALF_WIDTH_WORLD });
-    const float2 screen_neck_a = camera.WorldToScreen(world_neck + world_perp * float2 { ARROW_NECK_HALF_WIDTH_WORLD });
-    const float2 screen_neck_b = camera.WorldToScreen(world_neck - world_perp * float2 { ARROW_NECK_HALF_WIDTH_WORLD });
+    const float2 world_neck = world_to - world_dir * float2 { head_length_world };
+    const float2 screen_tail_a = camera.WorldToScreen(world_from + world_perp * float2 { ARROW_TAIL_HALF_WIDTH_WORLD * shrink });
+    const float2 screen_tail_b = camera.WorldToScreen(world_from - world_perp * float2 { ARROW_TAIL_HALF_WIDTH_WORLD * shrink });
+    const float2 screen_neck_a = camera.WorldToScreen(world_neck + world_perp * float2 { ARROW_NECK_HALF_WIDTH_WORLD * shrink });
+    const float2 screen_neck_b = camera.WorldToScreen(world_neck - world_perp * float2 { ARROW_NECK_HALF_WIDTH_WORLD * shrink });
     vertecies.EmplaceBack(screen_tail_a, color);
     vertecies.EmplaceBack(screen_tail_b, color);
     vertecies.EmplaceBack(screen_neck_b, color);
     vertecies.EmplaceBack(screen_tail_a, color);
     vertecies.EmplaceBack(screen_neck_b, color);
     vertecies.EmplaceBack(screen_neck_a, color);
-    vertecies.EmplaceBack(camera.WorldToScreen(world_neck + world_perp * float2 { ARROW_HEAD_HALF_WIDTH_WORLD }), color);
-    vertecies.EmplaceBack(camera.WorldToScreen(world_neck - world_perp * float2 { ARROW_HEAD_HALF_WIDTH_WORLD }), color);
+    vertecies.EmplaceBack(camera.WorldToScreen(world_neck + world_perp * float2 { ARROW_HEAD_HALF_WIDTH_WORLD * shrink }), color);
+    vertecies.EmplaceBack(camera.WorldToScreen(world_neck - world_perp * float2 { ARROW_HEAD_HALF_WIDTH_WORLD * shrink }), color);
     vertecies.EmplaceBack(camera.WorldToScreen(world_to), color);
 }
 
@@ -369,6 +371,22 @@ void AppendTerrainFeatures(HexState& hex_state, const CameraState& camera) {
     append_padded_hex_corners(hex_state.unit_formations[formation_handle].axial_hq);
     for (const Unit& unit : hex_state.units_by_formation[formation_handle] | hex_state.units.handle_to_view()) { append_padded_hex_corners(unit.axial); }
     return polygon::ConvexHull(std::move(world_points));
+}
+
+// point where the ray from world_centroid towards world_target exits the hull
+[[nodiscard]] inline float2 BlobHullExitTowards(const List<float2>& world_hull, const float2 world_centroid, const float2 world_target) {
+    const float2 world_dir = world_target - world_centroid;
+    for (u32 v = 0; v < world_hull.size(); v++) {
+        const float2 world_a = world_hull[v];
+        const float2 world_edge = world_hull[(v + 1U) % world_hull.size()] - world_a;
+        const f32 denom = math::Cross(world_dir, world_edge);
+        if (math::Abs(denom) < 0.0001F) { continue; }
+        const float2 world_offset = world_a - world_centroid;
+        const f32 t = math::Cross(world_offset, world_edge) / denom;
+        const f32 s = math::Cross(world_offset, world_dir) / denom;
+        if (t > 0.0F && s >= 0.0F && s <= 1.0F) { return world_centroid + world_dir * float2 { math::Min(t, 1.0F) }; }
+    }
+    return world_centroid;
 }
 
 // blob per formation enclosing all its units, returns the hovered formation
