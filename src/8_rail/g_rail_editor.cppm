@@ -41,6 +41,7 @@ constexpr f32 TERRAIN_TEXTURE_MAX_CAMERA_SCALE = 6.0F;
 constexpr u32 TERRAIN_TEXTURE_HEXES_PER_DRAW = 16384U;
 constexpr float2 TERRAIN_TEXTURE_WORLD_MARGIN { HEX_SPACING.x * 0.5F, 1.0F };
 constexpr f32 MINIMAP_WIDTH = 300.0F;
+constexpr f32 CITY_LABEL_MIN_CAMERA_SCALE = 10.0F;
 constexpr f32 MINIMAP_SCREEN_MARGIN = 10.0F;
 constexpr Color COLOR_MINIMAP_BORDER { 30U, 30U, 30U };
 constexpr Color COLOR_MINIMAP_VIEW { 255U, 255U, 255U };
@@ -524,12 +525,16 @@ struct RailEditorSystem {
         (void)SDL_RenderRect(renderer, &minimap_view_rect);
         (void)SDL_SetRenderDrawColor(renderer, COLOR_MINIMAP_BORDER.r, COLOR_MINIMAP_BORDER.g, COLOR_MINIMAP_BORDER.b, COLOR_MINIMAP_BORDER.a);
         (void)SDL_RenderRect(renderer, &minimap_rect);
+        const auto on_screen = [screen_size](const float2 screen) { return screen.x > -screen_size.x * 0.1F && screen.y > -screen_size.y * 0.1F && screen.x < screen_size.x * 1.1F && screen.y < screen_size.y * 1.1F; };
         for (u32 i = 0; i < document.water_labels.size(); i++) {
+            const float2 screen = camera.WorldToScreen(HexAxialToWorld(document.water_labels[i].axial));
+            if (!on_screen(screen)) { continue; }
             water_labels[i].SetColor(COLOR_WATER_LABEL);
-            water_labels[i].Draw(camera.WorldToScreen(HexAxialToWorld(document.water_labels[i].axial)) - float2 { 0.0F, static_cast<f32>(FontSizes::body) * 0.5F });
+            water_labels[i].Draw(screen - float2 { 0.0F, static_cast<f32>(FontSizes::body) * 0.5F });
         }
-        for (u32 i = 0; i < cities.size(); i++) {
+        for (u32 i = 0; i < cities.size() && camera.scale >= CITY_LABEL_MIN_CAMERA_SCALE; i++) {
             const float2 screen = camera.WorldToScreen(HexAxialToWorld(cities[i].axial));
+            if (!on_screen(screen)) { continue; }
             city_labels[i].SetColor(selected_city == i ? COLOR_CITY_SELECTED : COLOR_CITY);
             city_labels[i].Draw(screen + float2 { camera.scale * 0.7F, -static_cast<f32>(FontSizes::body) * 0.5F });
         }
