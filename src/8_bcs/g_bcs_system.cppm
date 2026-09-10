@@ -737,8 +737,8 @@ PlayerAction GetPlayerAction(const HexState& hex_state) {
 
 export namespace hex {
 struct HexSystem {
-    Handle<Texture> table_texture { globalData.Create<Texture>(Asset("other/table.jpg")) };
-    HandleOptional<Texture> marble_texture { globalData.Create<Texture>(Asset("other/marble.jpg")) };
+    Handle<Texture> table_texture { globalData.Create<Texture>(Asset("bcs/table.jpg")) };
+    HandleOptional<Texture> marble_texture { globalData.Create<Texture>(Asset("bcs/marble.jpg")) };
 
     void operator()() const {
         const WindowState& window_state = Singleton::Get<WindowState>();

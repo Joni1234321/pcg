@@ -22,12 +22,15 @@ import pcs.animation;
 import pcs.orchestra;
 
 import rail.types;
+import rail.editor;
 
 using namespace hex;
 using namespace hex::ui;
 
 void arcade::RunRail() {
     Singleton::Get<WindowState>().clear_color = Color::FromHsl(42.0F, 0.12F, 0.66F);
+    Singleton::Get<CameraState>().scale = rail::EDITOR_CAMERA_SCALE;
+    Singleton::Get<CameraState>().target_scale = rail::EDITOR_CAMERA_SCALE;
 
     Orchestra orchestra { };
     orchestra.Add<DebugSystem>();
@@ -35,6 +38,8 @@ void arcade::RunRail() {
 
     orchestra.Add<InputSystem>();
     orchestra.Add<InputNodeSystem>();
+
+    orchestra.Add<rail::RailEditorSystem>();
 
     orchestra.Add<AnimationSystem>();
     orchestra.Add<ParticleSystem>();

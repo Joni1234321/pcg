@@ -1,0 +1,6 @@
+city 9 40 Saint Petersburg
+city -1 56 Moscow
+city -6 35 Kaliningrad
+city -27 64 Mykolaiv
+city -18 56 Kyiv
+city 4 69 Kazan

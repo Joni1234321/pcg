@@ -22,6 +22,7 @@ struct InputState {
     b8 right_mouse { false };
     b8 right_mouse_down { false };
     b8 right_mouse_up { false };
+    b8 middle_mouse { false };
     float2 mouse_position { };
     f32 mouse_wheel_y { 0.0F };
 };
@@ -59,6 +60,7 @@ struct InputSystem {
         input_state.right_mouse_down = state & SDL_BUTTON_RMASK && !input_state.right_mouse;
         input_state.right_mouse_up = input_state.right_mouse && !(state & SDL_BUTTON_RMASK);
         input_state.right_mouse = state & SDL_BUTTON_RMASK;
+        input_state.middle_mouse = state & SDL_BUTTON_MMASK;
     }
 };
 } // namespace hex

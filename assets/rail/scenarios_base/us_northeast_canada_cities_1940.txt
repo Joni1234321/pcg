@@ -1,0 +1,82 @@
+city 59 76 New York City
+city 14 82 Chicago
+city 30 77 Detroit
+city 54 81 Philadelphia
+city 65 54 Montreal
+city -1 99 St. Louis
+city 70 65 Boston
+city 46 88 Washington, D.C.
+city 44 68 Toronto
+city 48 85 Baltimore
+city 20 93 Cincinnati
+city 58 76 Newark
+city -46 95 Denver
+city 27 81 Toledo
+city -15 98 Kansas City
+city 33 80 Cleveland
+city 73 45 Quebec City
+city -25 112 Tulsa
+city 36 81 Youngstown
+city 63 72 New Haven
+city 34 107 Fayetteville
+city 22 76 Grand Rapids
+city 58 75 Paterson
+city 37 84 Allegheny
+city 27 108 Charlotte
+city 10 78 Madison
+city 52 76 Wilkes-Barre
+city 35 103 Durham
+city -48 117 Amarillo
+city -7 98 Columbia
+city 41 83 Johnstown
+city 53 81 Chester
+city 61 72 Danbury
+city 70 66 Brockton
+city 65 67 Holyoke
+city 18 89 Muncie
+city 41 103 Greenville
+city 15 77 Racine
+city 27 78 Ann Arbor
+city 8 91 Champaign
+city -19 112 Fayetteville
+city 5 81 Dubuque
+city 69 49 Trois-Rivières
+city -12 77 Sioux Falls
+city 62 73 Fairfield
+city 14 77 Waukesha
+city 1 70 Plymouth
+city 29 72 Bay City
+city 29 76 Pontiac
+city 14 84 Gary
+city 62 66 Troy
+city 70 52 Sherbrooke
+city 22 79 Battle Creek
+city 26 108 Gastonia
+city 63 67 Pittsfield
+city 6 75 La Crosse
+city 64 68 Westfield
+city 15 72 Appleton
+city 72 67 Barnstable
+city 60 74 White Plains
+city -6 115 Bartlett
+city 71 66 Plymouth
+city 36 80 Warren
+city 44 85 Hagerstown
+city 64 54 Westmount
+city -3 57 Grand Forks
+city 68 65 Leominster
+city -19 111 Rogers
+city 27 89 Lancaster
+city 70 64 Billerica
+city 59 75 Hackensack
+city -15 97 Leavenworth
+city 71 64 Beverly
+city -14 55 Minot
+city -16 62 Bismarck
+city 21 75 Muskegon
+city 13 69 Wausau
+city 13 83 Berwyn
+city 68 66 Marlborough
+city 57 77 Westfield
+city 66 54 Saint-Jean-sur-Richelieu
+city 0 98 Cahokia

@@ -5,7 +5,11 @@ import std;
 import pce.std;
 import pce.strong;
 
+import hex.hex;
+
 export namespace rail {
+constexpr i8 ELEVATION_MIN = -128;
+constexpr i8 ELEVATION_MAX = 127;
 
 using GoodDefineId = hex::StrongType<u32, struct GoodDefineIdTag>;
 struct GoodDefine {
@@ -44,24 +48,26 @@ struct Industry {
     IndustryDefineId id;
 };
 struct City {
-    float2 pos;
+    int2 axial;
     std::string name;
 };
 struct River {
     std::vector<float2> waypoints;
+    std::string name;
 };
 struct Building {
     float2 pos;
     BuildingDefineId id;
 };
 struct MapDefine {
-    std::vector<i8> elevation;  // grid
+    hex::HexList<i8> elevation;
     std::vector<River> rivers;
     std::vector<City> cities;
     std::vector<Industry> industries;
 };
 
 struct Map {
+    float2 size;
     std::vector<i8> elevation;  // grid
     std::vector<River> rivers;
     std::vector<City> cities;
@@ -69,6 +75,5 @@ struct Map {
     std::vector<Industry> industries;
 
     std::flat_map<GoodDefineId, std::vector<GoodInfo>> goods; // grid
-    ///
 };
 }

@@ -1,0 +1,128 @@
+city 59 76 New York City
+city 14 82 Chicago
+city 54 81 Philadelphia
+city 30 77 Detroit
+city 65 54 Montreal
+city 46 88 Washington, D.C.
+city 15 77 Milwaukee
+city 48 85 Baltimore
+city 44 68 Toronto
+city 26 88 Columbus
+city 70 65 Boston
+city -46 95 Denver
+city -1 99 St. Louis
+city 73 45 Quebec City
+city -15 98 Kansas City
+city 20 93 Cincinnati
+city 44 71 Buffalo
+city 3 70 Minneapolis
+city -25 112 Tulsa
+city 27 81 Toledo
+city 33 80 Cleveland
+city 58 76 Newark
+city 27 108 Charlotte
+city 64 54 Laval
+city 18 98 Lexington
+city 34 107 Fayetteville
+city 10 78 Madison
+city 22 76 Grand Rapids
+city 35 103 Durham
+city 65 68 Springfield
+city -48 117 Amarillo
+city 58 75 Paterson
+city -14 107 Springfield
+city 63 72 New Haven
+city 37 84 Allegheny
+city 36 81 Youngstown
+city -14 97 Independence
+city 37 110 Wilmington
+city 14 83 Hammond
+city 3 93 Springfield
+city -7 98 Columbia
+city 27 78 Ann Arbor
+city -12 77 Sioux Falls
+city 70 66 Brockton
+city 18 89 Muncie
+city 61 67 Colonie
+city 70 52 Sherbrooke
+city 61 72 Danbury
+city 52 82 Wilmington
+city 58 56 Gatineau
+city 41 103 Greenville
+city 8 91 Champaign
+city 14 84 Gary
+city -19 112 Fayetteville
+city 43 82 Altoona
+city 15 72 Appleton
+city 66 54 Saint-Jean-sur-Richelieu
+city 14 77 Waukesha
+city 1 70 Plymouth
+city 26 108 Gastonia
+city -46 94 Thornton
+city 52 76 Wilkes-Barre
+city 5 81 Dubuque
+city 69 49 Trois-Rivières
+city 62 73 Fairfield
+city 29 76 Pontiac
+city 20 117 Augusta
+city -30 75 Rapid City
+city 1 71 Edina
+city 53 81 Chester
+city 29 72 Bay City
+city 46 87 Rockville
+city 65 67 Holyoke
+city -16 62 Bismarck
+city 62 66 Troy
+city 60 74 White Plains
+city 22 79 Battle Creek
+city 71 66 Plymouth
+city -6 115 Bartlett
+city -19 111 Rogers
+city 41 83 Johnstown
+city 6 75 La Crosse
+city 13 83 Berwyn
+city -3 57 Grand Forks
+city 75 56 Lewiston
+city 45 87 Gaithersburg
+city 63 67 Pittsfield
+city 72 67 Barnstable
+city 67 52 Saint-Hyacinthe
+city 67 53 Granby
+city 84 34 Rimouski
+city 64 68 Westfield
+city 36 80 Warren
+city 45 67 Whitby
+city 59 75 Hackensack
+city -8 100 Jefferson City
+city 44 85 Hagerstown
+city 68 65 Leominster
+city 49 87 Annapolis
+city 70 64 Billerica
+city -14 55 Minot
+city 71 64 Beverly
+city 27 89 Lancaster
+city 13 69 Wausau
+city 21 75 Muskegon
+city 68 66 Marlborough
+city -15 97 Leavenworth
+city 38 105 Goldsboro
+city 90 24 Sept-Îles
+city 68 51 Drummondville
+city 14 115 Gainesville
+city 50 47 Rouyn-Noranda
+city 3 88 Galesburg
+city 57 77 Westfield
+city 32 74 Port Huron
+city 65 53 Terrebonne
+city 15 75 West Bend
+city 41 86 Cumberland
+city 30 87 Zanesville
+city 84 31 Baie-Comeau
+city 69 68 Newport
+city 70 50 Victoriaville
+city 76 55 Augusta
+city 24 103 Bristol
+city 22 89 Troy
+city 73 48 Thetford Mines
+city 60 70 Kingston
+city 0 98 Cahokia

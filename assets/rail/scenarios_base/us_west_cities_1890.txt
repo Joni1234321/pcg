@@ -1,0 +1,7 @@
+city -28 97 San Francisco
+city 76 81 Denver
+city -21 128 Los Angeles
+city 10 19 Tacoma
+city -17 109 Visalia
+city 41 77 Provo
+city -29 106 Salinas

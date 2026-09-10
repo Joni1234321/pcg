@@ -1,0 +1,11 @@
+city 59 76 New York City
+city 54 81 Philadelphia
+city 70 65 Boston
+city 34 107 Fayetteville
+city 63 72 New Haven
+city 46 88 Washington, D.C.
+city 65 54 Montreal
+city 73 45 Quebec City
+city 20 93 Cincinnati
+city 61 72 Danbury
+city 0 98 Cahokia

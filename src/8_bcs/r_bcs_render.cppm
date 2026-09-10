@@ -276,8 +276,8 @@ struct TerrainFeatureTextures {
     }
 };
 struct TerrainFeatureTextureStack {
-    TerrainFeatureTextures terrain_features_silhouettes { "terrain/terrain-silhouettes" };
-    TerrainFeatureTextures terrain_features_icons { "terrain/terrain-icons" };
+    TerrainFeatureTextures terrain_features_silhouettes { "bcs/terrain/terrain-silhouettes" };
+    TerrainFeatureTextures terrain_features_icons { "bcs/terrain/terrain-icons" };
 };
 void AppendCountryBorders(HexState& hex_state, const CameraState& camera) {
     for (u32 i = 0; i < hex_state.hex_map.Size(); i++) {

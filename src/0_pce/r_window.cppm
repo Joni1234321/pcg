@@ -16,16 +16,17 @@ import pce.font;
 import pce.sdl;
 
 export namespace hex {
-const RelativePath PATH_FONT_NORMAL { "Titillium_Web/TitilliumWeb-Regular.ttf" };
-const RelativePath PATH_FONT_TITILIUM_BOLD { "Titillium_Web/TitilliumWeb-Bold.ttf" };
-const RelativePath PATH_FONT_COURIER_REGULAR { "Courier_Prime/CourierPrime-Regular.ttf" };
-const RelativePath PATH_FONT_COURIER_BOLD { "Courier_Prime/CourierPrime-Bold.ttf" };
-const RelativePath PATH_FONT_COSETTE_TITRE_REGULAR { "Cossette_Titre/CossetteTitre-Regular.ttf" };
+const RelativePath PATH_FONT_NORMAL { "font/Titillium_Web/TitilliumWeb-Regular.ttf" };
+const RelativePath PATH_FONT_TITILIUM_BOLD { "font/Titillium_Web/TitilliumWeb-Bold.ttf" };
+const RelativePath PATH_FONT_COURIER_REGULAR { "font/Courier_Prime/CourierPrime-Regular.ttf" };
+const RelativePath PATH_FONT_COURIER_BOLD { "font/Courier_Prime/CourierPrime-Bold.ttf" };
+const RelativePath PATH_FONT_COSETTE_TITRE_REGULAR { "font/Cossette_Titre/CossetteTitre-Regular.ttf" };
+const RelativePath PATH_FONT_ICONS { "font/DejaVu/DejaVuSans.ttf" };
 struct Window {
-    explicit Window(const uint2 size) {
+    explicit Window(const uint2 size, const char* title = "Video Game") {
         constexpr u32 window_flags = SDL_WINDOW_RESIZABLE;
         WindowState& window_state = Singleton::Get<WindowState>();
-        if (!SDL_CreateWindowAndRenderer("Video Game", static_cast<i32>(size.x), static_cast<i32>(size.y), window_flags, &window_state.window, &window_state.renderer)) {
+        if (!SDL_CreateWindowAndRenderer(title, static_cast<i32>(size.x), static_cast<i32>(size.y), window_flags, &window_state.window, &window_state.renderer)) {
             SDL_Log("SDL_CreateWindowAndRenderer failed (%s)", SDL_GetError());
             SDL_Quit();
         }
@@ -49,7 +50,7 @@ struct Window {
         window_state.surface_text_engine = TTF_CreateSurfaceTextEngine();
         window_state.screen_size = uint2 { static_cast<u32>(static_cast<f32>(size.x) / window_state.ui_scale), static_cast<u32>(static_cast<f32>(size.y) / window_state.ui_scale) };
 
-        Singleton::Get<ui::FontCollection>().SetFontFile(Asset(PATH_FONT_NORMAL), Asset(PATH_FONT_COURIER_BOLD), Asset(PATH_FONT_COSETTE_TITRE_REGULAR));
+        Singleton::Get<ui::FontCollection>().SetFontFile(Asset(PATH_FONT_NORMAL), Asset(PATH_FONT_COURIER_BOLD), Asset(PATH_FONT_COSETTE_TITRE_REGULAR), Asset(PATH_FONT_ICONS));
     }
     ~Window() {
         Singleton::Get<ui::FontCollection>().Clear();

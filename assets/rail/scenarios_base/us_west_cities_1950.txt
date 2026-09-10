@@ -1,0 +1,46 @@
+city -21 128 Los Angeles
+city -28 97 San Francisco
+city -21 139 San Diego
+city 76 81 Denver
+city -21 131 Long Beach
+city 47 120 Albuquerque
+city 10 19 Tacoma
+city 74 119 Amarillo
+city -29 106 Salinas
+city -18 128 Ontario
+city -26 127 Oxnard
+city -21 127 Glendale
+city -17 109 Visalia
+city -20 130 Orange
+city -19 136 Escondido
+city -22 129 Santa Monica
+city 41 77 Provo
+city -21 130 Lakewood
+city -27 94 Vallejo
+city -24 94 Antioch
+city -26 126 Ventura
+city -24 93 Vacaville
+city -21 129 Pico Rivera
+city -26 93 Napa
+city -27 96 Richmond
+city -27 99 Fremont
+city -20 128 El Monte
+city -22 130 Carson
+city -29 101 Sunnyvale
+city -21 132 Newport Beach
+city 15 13 Everett
+city -20 139 El Cajon
+city 0 33 Hillsboro
+city -20 140 National City
+city 24 27 Kennewick
+city 46 64 Logan
+city -18 123 Lancaster
+city 103 45 Rapid City
+city -20 129 La Puente
+city 4 111 Las Vegas
+city 28 29 Walla Walla
+city 81 55 Casper
+city -17 111 Porterville
+city -28 99 Newark
+city 55 22 Missoula
+city 37 26 Lewiston

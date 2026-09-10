@@ -1,0 +1,403 @@
+city 29 61 Berlin
+city 6 44 Hamburg
+city 25 133 Vienna
+city 99 58 Warsaw
+city -24 137 Munich
+city 20 102 Prague
+city 81 69 Łódź
+city -39 80 Essen
+city -35 79 Dortmund
+city -43 126 Stuttgart
+city -36 103 Frankfurt
+city 46 7 Copenhagen
+city -6 64 Hanover
+city 9 82 Leipzig
+city -8 52 Bremen
+city 20 86 Dresden
+city -18 114 Nuremberg
+city -61 150 Zurich
+city -39 83 Wuppertal
+city 35 115 Brno
+city -37 79 Bochum
+city -43 113 Mannheim
+city -38 79 Gelsenkirchen
+city 11 90 Chemnitz
+city 56 103 Ostrava
+city -48 122 Karlsruhe
+city -45 92 Bonn
+city -40 103 Wiesbaden
+city -29 71 Münster
+city 0 66 Brunswick
+city -29 133 Augsburg
+city 14 31 Kiel
+city 7 153 Graz
+city 15 39 Lübeck
+city -36 81 Hagen
+city 76 47 Bydgoszcz
+city -18 83 Kassel
+city 71 85 Częstochowa
+city 66 93 Bytom
+city 30 35 Rostock
+city -6 88 Erfurt
+city 65 94 Zabrze
+city 9 68 Magdeburg
+city -36 78 Herne
+city -41 105 Mainz
+city -30 76 Hamm
+city -41 84 Solingen
+city -44 114 Ludwigshafen
+city -20 70 Bielefeld
+city -43 87 Leverkusen
+city -62 139 Freiburg im Breisgau
+city 7 108 Plzeň
+city -22 66 Osnabrück
+city -6 44 Bremerhaven
+city -33 66 Enschede
+city -38 107 Darmstadt
+city -69 146 Basel
+city 81 48 Toruń
+city 25 13 Odense
+city -40 84 Remscheid
+city -12 121 Regensburg
+city -13 51 Oldenburg
+city -42 115 Heidelberg
+city -27 109 Würzburg
+city 6 92 Zwickau
+city -36 77 Recklinghausen
+city -44 99 Koblenz
+city -2 68 Salzgitter
+city -35 90 Siegen
+city -33 151 Innsbruck
+city -39 120 Heilbronn
+city 3 90 Gera
+city -35 103 Offenbach am Main
+city -12 79 Göttingen
+city -36 80 Witten
+city -46 124 Pforzheim
+city -19 114 Fürth
+city -21 76 Paderborn
+city -38 132 Ulm
+city -50 114 Kaiserslautern
+city -42 87 Bergisch Gladbach
+city -11 45 Wilhelmshaven
+city 12 73 Dessau-Roßlau
+city -42 127 Esslingen am Neckar
+city 19 43 Schwerin
+city -34 81 Iserlohn
+city -40 82 Velbert
+city -18 112 Erlangen
+city 4 63 Wolfsburg
+city 20 63 Brandenburg an der Havel
+city 12 23 Flensburg
+city -58 148 Winterthur
+city -45 131 Reutlingen
+city -36 76 Marl
+city 44 108 Olomouc
+city -1 89 Jena
+city -41 124 Ludwigsburg
+city 85 96 Tarnów
+city -33 77 Lünen
+city -21 126 Ingolstadt
+city 31 90 Liberec
+city 31 74 Cottbus
+city -35 78 Castrop-Rauxel
+city 57 104 Havířov
+city 34 99 Hradec Králové
+city -30 81 Arnsberg
+city 11 35 Neumünster
+city 20 93 Ústí nad Labem
+city -56 138 Villingen-Schwenningen
+city 33 102 Pardubice
+city -14 66 Minden
+city 59 102 Karviná
+city -17 107 Bamberg
+city -22 72 Gütersloh
+city 12 121 České Budějovice
+city -36 84 Lüdenscheid
+city -43 111 Worms
+city -10 53 Delmenhorst
+city -28 66 Rheine
+city -37 77 Herten
+city 69 93 Dąbrowa Górnicza
+city -9 106 Bayreuth
+city 46 114 Zlín
+city -53 145 Constance
+city -46 130 Tübingen
+city -33 125 Aalen
+city -38 76 Dorsten
+city -18 69 Herford
+city -3 88 Weimar
+city -18 72 Detmold
+city 17 101 Kladno
+city -25 76 Lippstadt
+city 38 63 Frankfurt (Oder)
+city -44 97 Neuwied
+city 8 42 Norderstedt
+city 15 95 Most
+city -32 105 Aschaffenburg
+city -21 104 Schweinfurt
+city -15 130 Landshut
+city -38 81 Hattingen
+city 85 71 Tomaszów Mazowiecki
+city -36 125 Schwäbisch Gmünd
+city -38 127 Göppingen
+city -3 99 Hof
+city -40 144 Kempten
+city -43 90 Troisdorf
+city -54 118 Pirmasens
+city -32 78 Unna
+city 7 88 Altenburg
+city -28 74 Ahlen
+city 53 101 Opava
+city -32 80 Menden (Sauerland)
+city 18 93 Teplice
+city -34 128 Heidenheim an der Brenz
+city 6 100 Karlovy Vary
+city -49 135 Albstadt
+city -57 131 Offenburg
+city -52 126 Baden-Baden
+city -49 145 Friedrichshafen
+city -20 47 Emden
+city -45 127 Sindelfingen
+city -48 116 Neustadt an der Weinstraße
+city -13 88 Eisenach
+city 23 90 Děčín
+city -38 87 Gummersbach
+city -13 101 Coburg
+city -2 129 Passau
+city -11 114 Amberg
+city 68 93 Będzin
+city 16 73 Lutherstadt Wittenberg
+city -6 110 Weiden in der Oberpfalz
+city -32 77 Bergkamen
+city -55 143 Singen
+city -21 141 Rosenheim
+city -34 80 Schwerte
+city -68 145 Lörrach
+city -16 67 Bad Oeynhausen
+city -45 116 Speyer
+city 45 110 Přerov
+city 21 7 Vejle
+city -8 124 Straubing
+city -44 113 Frankenthal
+city -47 143 Ravensburg
+city -58 117 Sankt Ingbert
+city -41 125 Waiblingen
+city -36 141 Kaufbeuren
+city -44 91 Sankt Augustin
+city 56 105 Frýdek-Místek
+city -46 107 Bad Kreuznach
+city -25 66 Ibbenbüren
+city 19 87 Freital
+city -55 116 Homburg
+city -38 133 Neu-Ulm
+city 42 110 Prostějov
+city -57 116 Neunkirchen
+city 5 41 Elmshorn
+city -4 72 Goslar
+city 26 113 Jihlava
+city -45 120 Bruchsal
+city -32 67 Gronau
+city -24 117 Ansbach
+city -28 78 Soest
+city 13 96 Chomutov
+city -18 67 Bünde
+city 7 79 Halle-Neustadt
+city -41 113 Weinheim
+city -17 70 Lemgo
+city -51 124 Rastatt
+city -39 139 Memmingen
+city -27 75 Beckum
+city -34 76 Datteln
+city -49 118 Landau in der Pfalz
+city -17 67 Löhne
+city -24 73 Rheda-Wiedenbrück
+city -37 82 Ennepetal
+city 4 75 Aschersleben
+city -52 110 Idar-Oberstein
+city -33 73 Dülmen
+city -41 83 Mettmann
+city 32 90 Jablonec nad Nisou
+city 59 105 Třinec
+city 5 43 Pinneberg
+city -56 117 Zweibrücken
+city -59 133 Lahr/Schwarzwald
+city 5 38 Itzehoe
+city -15 67 Porta Westfalica
+city -43 91 Siegburg
+city -40 85 Wermelskirchen
+city -45 93 Königswinter
+city 10 31 Rendsburg
+city 51 93 Nysa
+city 54 70 Leszno
+city -12 94 Suhl
+city 27 96 Mladá Boleslav
+city -33 81 Hemer
+city 45 72 Nowa Sól
+city -25 135 Dachau
+city 36 15 Næstved
+city -44 125 Leonberg
+city -1 74 Wernigerode
+city 19 102 Břevnov
+city -45 91 Bornheim
+city -15 75 Höxter
+city 21 10 Fredericia
+city -41 128 Kirchheim unter Teck
+city -42 123 Bietigheim-Bissingen
+city -29 82 Meschede
+city -20 132 Freising
+city -25 71 Warendorf
+city -53 139 Tuttlingen
+city -49 123 Ettlingen
+city -38 82 Schwelm
+city -21 52 Papenburg
+city -18 71 Lage
+city -30 68 Steinfurt
+city -39 126 Schorndorf
+city 11 28 Schleswig
+city 75 72 Zduńska Wola
+city -20 116 Schwabach
+city -33 71 Coesfeld
+city -34 88 Kreuztal
+city -39 123 Backnang
+city -34 120 Schwäbisch Hall
+city -43 128 Filderstadt
+city -28 68 Emsdetten
+city 5 44 Wedel
+city 12 109 Příbram
+city -41 82 Heiligenhaus
+city -35 75 Haltern am See
+city -42 128 Nürtingen
+city 27 122 Znojmo
+city 42 117 Uherské Hradiště
+city -44 127 Leinfelden-Echterdingen
+city -9 103 Kulmbach
+city -33 84 Plettenberg
+city -27 80 Warstein
+city -51 125 Gaggenau
+city -42 137 Biberach an der Riß
+city -42 125 Kornwestheim
+city -58 129 Kehl
+city -38 129 Geislingen an der Steige
+city 27 102 Kolín
+city -9 116 Schwandorf
+city 2 74 Quedlinburg
+city -48 131 Rottenburg am Neckar
+city -5 124 Deggendorf
+city -16 110 Forchheim
+city 32 47 Neustrelitz
+city -39 98 Limburg an der Lahn
+city -56 114 Sankt Wendel
+city -40 110 Bensheim
+city -28 69 Greven
+city -16 117 Neumarkt in der Oberpfalz
+city 17 113 Tábor
+city -45 97 Andernach
+city -33 69 Ahaus
+city -25 73 Oelde
+city -50 134 Balingen
+city -35 148 Garmisch-Partenkirchen
+city -34 77 Waltrop
+city 15 94 Litvínov
+city -48 147 Lindau
+city -34 82 Altena
+city 0 103 Cheb
+city -46 95 Bad Neuenahr-Ahrweiler
+city -32 85 Lennestadt
+city -67 146 Rheinfelden
+city 38 93 Trutnov
+city -30 78 Werl
+city -31 76 Werne
+city -35 76 Oer-Erkenschwick
+city -27 137 Germering
+city -31 82 Sundern (Sauerland)
+city 6 28 Husum
+city 10 42 Ahrensburg
+city -30 85 Schmallenberg
+city 9 46 Geesthacht
+city -61 137 Emmendingen
+city -9 93 Ilmenau
+city -42 85 Leichlingen
+city -25 81 Brilon
+city -44 105 Bingen am Rhein
+city 44 113 Kroměříž
+city -13 64 Petershagen
+city -53 136 Rottweil
+city 27 78 Senftenberg
+city 19 84 Meissen
+city 58 102 Orlová
+city -2 102 Selb
+city 24 79 Lauchhammer
+city -55 135 Schramberg
+city -44 123 Mühlacker
+city -32 65 Oldenzaal
+city -38 84 Radevormwald
+city 8 45 Reinbek
+city -23 126 Neuburg an der Donau
+city 11 115 Písek
+city 44 102 Šumperk
+city 98 35 Ostróda
+city -41 118 Sinsheim
+city -38 116 Mosbach
+city -27 136 Fürstenfeldbruck
+city -31 120 Crailsheim
+city 22 136 Baden
+city 88 62 Łowicz
+city 13 28 Eckernförde
+city -33 76 Selm
+city 25 76 Finsterwalde
+city -16 64 Espelkamp
+city 52 99 Krnov
+city -57 117 Blieskastel
+city 28 116 Třebíč
+city -23 74 Rietberg
+city 53 95 Prudnik
+city -54 144 Radolfzell am Bodensee
+city -22 80 Marsberg
+city 58 101 Bohumín
+city -19 79 Warburg
+city -45 121 Bretten
+city 50 111 Vsetín
+city -34 85 Attendorn
+city -62 145 Waldshut-Tiengen
+city -16 113 Lauf an der Pegnitz
+city -43 123 Vaihingen an der Enz
+city -32 123 Ellwangen
+city -34 83 Werdohl
+city -39 119 Neckarsulm
+city -46 145 Wangen im Allgäu
+city -35 87 Olpe
+city -59 150 Uster
+city -34 89 Netphen
+city -38 85 Wipperfürth
+city -53 127 Bühl
+city -47 127 Calw
+city 39 47 Prenzlau
+city 9 83 Markkleeberg
+city -22 102 Bad Kissingen
+city -31 109 Wertheim
+city 4 33 Heide
+city -17 66 Lübbecke
+city 90 43 Brodnica
+city -48 99 Mayen
+city 0 80 Sangerhausen
+city -20 134 Erding
+city -44 93 Bad Honnef
+city -42 89 Rösrath
+city -41 88 Overath
+city 38 121 Hodonín
+city -25 67 Lengerich
+city -47 129 Herrenberg
+city -13 103 Lichtenfels
+city -24 77 Geseke
+city -16 68 Vlotho
+city -39 124 Winnenden
+city -25 110 Kitzingen
+city -43 117 Wiesloch
+city -41 134 Ehingen
+city -30 87 Bad Berleburg
+city -4 105 Marktredwitz
+city 28 109 Havlíčkův Brod
+city -56 116 Bexbach
+city -11 113 Sulzbach-Rosenberg
+city 3 101 Sokolov

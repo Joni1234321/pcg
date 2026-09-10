@@ -1,0 +1,4 @@
+city -7 34 Hiroshima
+city 63 36 Takamatsu
+city 77 53 Tokushima
+city -24 86 Uchiko-chō

@@ -42,7 +42,7 @@ struct CameraSystem {
         // mouse drag
         const float2 mouse_delta = input_state.mouse_position - camera_state.drag_last_pos;
         camera_state.drag_last_pos = input_state.mouse_position;
-        if (input_state.left_mouse | input_state.right_mouse) { camera_state.world_position -= float2 { mouse_delta }; }
+        if (input_state.middle_mouse || (input_state.keys[SDLK_LCTRL] && (input_state.left_mouse | input_state.right_mouse))) { camera_state.world_position -= float2 { mouse_delta }; }
 
         // zoom
         if (input_state.mouse_wheel_y != 0.0F) {

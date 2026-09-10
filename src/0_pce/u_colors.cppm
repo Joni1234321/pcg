@@ -15,6 +15,7 @@ constexpr ColorF ColorLighten(const ColorF color, const f32 factor) {
     auto lerp = [factor](const f32 k) -> f32 { return k + (1.0F - k) * factor; };
     return ColorF { lerp(color.r), lerp(color.g), lerp(color.b), color.a };
 }
+constexpr Color ColorLerp(const Color a, const Color b, const f32 t) { return Color { static_cast<u8>(math::Lerp<f32>(a.r, b.r, t)), static_cast<u8>(math::Lerp<f32>(a.g, b.g, t)), static_cast<u8>(math::Lerp<f32>(a.b, b.b, t)), static_cast<u8>(math::Lerp<f32>(a.a, b.a, t)) }; }
 constexpr ColorF ColorMul(const ColorF color, const f32 factor) { return ColorF { color.r * factor, color.g * factor, color.b * factor, color.a }; }
 constexpr Color ColorWithAlpha(Color color, const f32 a) {
     color.a = static_cast<u8>(a * 255U);

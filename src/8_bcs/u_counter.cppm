@@ -106,9 +106,9 @@ struct CounterTextures {
     }
 };
 struct CounterTextureStack {
-    CounterTextures counter_textures_niehorster { "counters/counter-niehorster" };
-    CounterTextures counter_textures_niehorster_big { "counters/counter-niehorster-big" };
-    CounterTextures counter_textures_real { "counters/counter-real" };
+    CounterTextures counter_textures_niehorster { "bcs/counters/counter-niehorster" };
+    CounterTextures counter_textures_niehorster_big { "bcs/counters/counter-niehorster-big" };
+    CounterTextures counter_textures_real { "bcs/counters/counter-real" };
 };
 
 [[nodiscard]] inline const CounterTextures& CounterStyleToTextures(const CounterStyle style) {
@@ -262,11 +262,6 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
     const ui::FontSize pt_12 = static_cast<ui::FontSize>(counter_size.y * 0.12F);
     const ui::FontSize pt_10 = static_cast<ui::FontSize>(counter_size.y * 0.10F);
     const ui::FontSize pt_08 = static_cast<ui::FontSize>(counter_size.y * 0.08F);
-    const Optional<std::reference_wrapper<const ui::Font>> font_22_opt = pt_22 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_22));
-    const Optional<std::reference_wrapper<const ui::Font>> font_16_opt = pt_16 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_16));
-    const Optional<std::reference_wrapper<const ui::Font>> font_12_opt = pt_12 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCourier(static_cast<ui::FontSizes>(pt_12));
-    const Optional<std::reference_wrapper<const ui::Font>> font_10_opt = pt_10 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_10));
-    const Optional<std::reference_wrapper<const ui::Font>> font_08_opt = pt_08 < ui::FONT_MIN_SIZE ? Optional<std::reference_wrapper<const ui::Font>> { std::nullopt } : font_collection.GetFontBoldCourier(static_cast<ui::FontSizes>(pt_08));
 
     for (const CounterStack& counter : counters) {
         const float2 world = HexAxialToWorld(counter.axial);
@@ -286,14 +281,14 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
         }
 
         // div
-        if (font_10_opt.has_value()) {
+        if (pt_10 >= ui::FONT_MIN_SIZE) {
             const ui::AABBWithPadding area_name_div { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.09F }, counter_size * float2 { 1.0F, 0.25F }), .padding = color_box_padding };
             const ui::ColorBox color_box_name_div { .color_fill = counter.stack[0].color_icon, .color_stroke = colors::COLOR_BLACK, .color_text = colors::COLOR_BLACK };
-            DrawColorBox(window_state, font_10_opt.value(), counter.label_name_div, area_name_div, color_box_name_div);
+            DrawColorBox(window_state, font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_10)), counter.label_name_div, area_name_div, color_box_name_div);
 
             const ui::AABBWithPadding area_name_sub { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.35F }, counter_size * float2 { 0.97F, 0.12F }), .padding = color_box_padding };
             const ui::ColorBox color_box_name_sub { .color_text = colors::COLOR_BLACK };
-            DrawColorBox(window_state, font_10_opt.value(), counter.label_name_sub, area_name_sub, color_box_name_sub);
+            DrawColorBox(window_state, font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_10)), counter.label_name_sub, area_name_sub, color_box_name_sub);
         } else {
             const AABB area_div = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.0F, 0.09F }, counter_size * float2 { 1.0F, 0.5F });
             ui::DrawRect(window_state, area_div, counter.stack[0].color_icon);
@@ -311,37 +306,37 @@ inline void RenderCounters(const Pool<CounterStack>& counters) {
             ui::DrawTexture(window_state, texture_icon.GetHandle(), area_icon, color_icon);
         } else {
             ui::DrawRect(window_state, area_icon, color_icon);
-            if (font_22_opt.has_value()) {
+            if (pt_22 >= ui::FONT_MIN_SIZE) {
                 const AABB area_placeholder = AABB::FromPoint(counter_top_left + float2 { 0.0F, counter_size.y * 0.4F - static_cast<f32>(pt_22) * 0.3F }, counter_size);
-                DrawText(font_22_opt.value(), counter.label_icon_placeholder, area_placeholder, colors::COLOR_BLACK);
+                DrawText(font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_22)), counter.label_icon_placeholder, area_placeholder, colors::COLOR_BLACK);
             }
         }
 
-        if (font_08_opt.has_value()) {
+        if (pt_08 >= ui::FONT_MIN_SIZE) {
             const AABB area_echelon = area_icon_border.WithOffset(float2 { 0.0F, 0.03F * counter_size.y });
-            DrawText(font_08_opt.value(), counter.label_echelon, area_echelon, colors::COLOR_BLACK, ui::TextAlignment::CENTER);
+            DrawText(font_collection.GetFontBoldCourier(static_cast<ui::FontSizes>(pt_08)), counter.label_echelon, area_echelon, colors::COLOR_BLACK, ui::TextAlignment::CENTER);
         }
 
-        if (font_12_opt.has_value()) {
+        if (pt_12 >= ui::FONT_MIN_SIZE) {
             const ui::AABBWithPadding area_steps { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.82F, 0.5F }, counter_size * float2 { 0.14F }), .padding = color_box_padding };
             const ui::ColorBox color_box_steps { .color_fill = colors::COLOR_WHITE_SMOKE, .color_stroke = colors::COLOR_ORANGE, .color_text = colors::COLOR_BLACK };
-            DrawColorBox(window_state, font_12_opt.value(), counter.label_steps, area_steps, color_box_steps);
+            DrawColorBox(window_state, font_collection.GetFontBoldCourier(static_cast<ui::FontSizes>(pt_12)), counter.label_steps, area_steps, color_box_steps);
         }
 
         const ui::ColorBox color_box_move = MoveTypeToColorBox(MoveTypeUnitIcon(counter.icon));
         const ui::ColorBox color_box_ranged = RangedTypeToColorBox(counter.ranged_type);
 
-        if (font_22_opt.has_value()) {
+        if (pt_22 >= ui::FONT_MIN_SIZE) {
             const ui::AABBWithPadding area_dmg { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.725F }, counter_size * float2 { 0.25F }), .padding = color_box_padding };
-            DrawColorBox(window_state, font_22_opt.value(), counter.label_dmg, area_dmg, color_box_ranged, ui::TextAlignment::LEFT);
+            DrawColorBox(window_state, font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_22)), counter.label_dmg, area_dmg, color_box_ranged, ui::TextAlignment::LEFT);
 
             const ui::AABBWithPadding area_move_allowance { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.725F }, counter_size * float2 { 0.25F }), .padding = color_box_padding };
-            DrawColorBox(window_state, font_22_opt.value(), counter.label_move_allowance, area_move_allowance, color_box_move);
+            DrawColorBox(window_state, font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_22)), counter.label_move_allowance, area_move_allowance, color_box_move);
         }
 
-        if (font_16_opt.has_value()) {
+        if (pt_16 >= ui::FONT_MIN_SIZE) {
             const ui::AABBWithPadding area_dmg_ranged { .area = AABB::FromPoint(counter_top_left + counter_size * float2 { 0.03F, 0.545F }, counter_size * float2 { 0.18F }), .padding = color_box_padding };
-            DrawColorBox(window_state, font_16_opt.value(), counter.label_dmg_ranged, area_dmg_ranged, color_box_ranged);
+            DrawColorBox(window_state, font_collection.GetFontBoldCompact(static_cast<ui::FontSizes>(pt_16)), counter.label_dmg_ranged, area_dmg_ranged, color_box_ranged);
         }
     }
 }

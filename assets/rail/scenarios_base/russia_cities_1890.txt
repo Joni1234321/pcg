@@ -1,0 +1,18 @@
+city 9 40 Saint Petersburg
+city -1 56 Moscow
+city -18 56 Kyiv
+city -6 35 Kaliningrad
+city -18 65 Kharkiv
+city 4 69 Kazan
+city -22 66 Dnipro
+city -24 75 Rostov-on-Don
+city -1 75 Samara
+city -27 64 Mykolaiv
+city 3 62 Nizhny Novgorod
+city -8 46 Minsk
+city -19 54 Zhytomyr
+city -23 62 Kropyvnytskyi
+city -13 62 Kursk
+city -5 48 Vitebsk
+city -21 63 Kremenchuk
+city 39 90 Tomsk

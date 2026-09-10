@@ -1,0 +1,3 @@
+city -13 116 Kyoto
+city -71 152 Castle town of Kagoshima
+city 73 30 Sapporo

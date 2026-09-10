@@ -1,0 +1,24 @@
+{
+ "image": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Japan_natural_location_map_with_side_map_of_the_Ryukyu_Islands.jpg",
+ "image_file": "japan.jpg",
+ "columns": 136,
+ "crop": [
+  0.19,
+  0.69,
+  0.335,
+  0.84
+ ],
+ "countries": [
+  "Q17"
+ ],
+ "population_min": 10000,
+ "projection": {
+  "type": "equirect",
+  "params": [
+   45.86,
+   30.02,
+   128.24,
+   149.27
+  ]
+ }
+}

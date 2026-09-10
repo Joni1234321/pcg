@@ -1,0 +1,19 @@
+{
+ "image": "https://upload.wikimedia.org/wikipedia/commons/0/06/USA_Region_West_relief_location_map.jpg",
+ "image_file": "us_west.jpg",
+ "columns": 136,
+ "crop": null,
+ "countries": [
+  "Q30"
+ ],
+ "population_min": 20000,
+ "projection": {
+  "type": "equirect",
+  "params": [
+   49.5,
+   28.3,
+   -126.0,
+   -101.4
+  ]
+ }
+}

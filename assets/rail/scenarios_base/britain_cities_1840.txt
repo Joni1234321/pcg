@@ -1,0 +1,4 @@
+city 16 192 London
+city 7 173 Birmingham
+city 53 77 Aberdeen
+city 26 178 Cambridge

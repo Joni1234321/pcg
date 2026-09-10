@@ -10,6 +10,7 @@ import pce.std;
 import pce.math;
 import pce.assets;
 import pce.collections;
+import pce.collections.hive;
 import pce.logger;
 
 export namespace hex::ui {
@@ -38,26 +39,31 @@ public:
     void SetOutline(const i32 outline) const { (void)TTF_SetFontOutline(font.Get(), outline); }
 };
 class FontCollection {
+    AbsolutePath font_path_icons { };
+    mutable HiveMap<FontSizes, Font> fonts_icons { };
     AbsolutePath font_path_normal_courier { };
     AbsolutePath font_path_bold_courier { };
     AbsolutePath font_path_bold_compact { };
-    mutable FlatMap<FontSizes, Font> fonts_normal_courier { 256U };
-    mutable FlatMap<FontSizes, Font> fonts_bold_courier { 256U };
-    mutable FlatMap<FontSizes, Font> fonts_bold_compact { 256U };
+    mutable HiveMap<FontSizes, Font> fonts_normal_courier { };
+    mutable HiveMap<FontSizes, Font> fonts_bold_courier { };
+    mutable HiveMap<FontSizes, Font> fonts_bold_compact { };
 
-    [[nodiscard]] static const Font& GetFont(FlatMap<FontSizes, Font>& fonts, const AbsolutePath& font_path, FontSizes font_size) {
+    [[nodiscard]] const Font& GetFont(HiveMap<FontSizes, Font>& fonts, const AbsolutePath& font_path, FontSizes font_size) const {
         assert(static_cast<FontSize>(font_size) >= FONT_MIN_SIZE);
         font_size = math::Max(font_size, static_cast<FontSizes>(FONT_MIN_SIZE));
         if (!fonts.HasKey(font_size)) {
-            fonts.EmplaceBack(font_size, font_path, static_cast<FontSize>(font_size));
+            fonts.Emplace(font_size, font_path, static_cast<FontSize>(font_size));
             if (fonts[font_size].FailedLoading()) { SDL_Log("ERROR Failed Font not loaded, size %u (%s)", static_cast<u32>(font_size), SDL_GetError()); }
+            if (!fonts_icons.HasKey(font_size)) { fonts_icons.Emplace(font_size, font_path_icons, static_cast<FontSize>(font_size)); }
+            if (!fonts_icons[font_size].FailedLoading()) { (void)TTF_AddFallbackFont(fonts[font_size], fonts_icons[font_size]); }
         }
         return fonts[font_size];
     }
 
 public:
     explicit FontCollection() { }
-    void SetFontFile(const AbsolutePath& normal_courier, const AbsolutePath& bold_courier, const AbsolutePath& bold_compact) {
+    void SetFontFile(const AbsolutePath& normal_courier, const AbsolutePath& bold_courier, const AbsolutePath& bold_compact, const AbsolutePath& icons) {
+        font_path_icons = icons;
         font_path_normal_courier = normal_courier;
         font_path_bold_courier = bold_courier;
         font_path_bold_compact = bold_compact;
@@ -70,6 +76,7 @@ public:
         fonts_normal_courier.Clear();
         fonts_bold_courier.Clear();
         fonts_bold_compact.Clear();
+        fonts_icons.Clear();
     }
     ~FontCollection() { Clear(); }
 };

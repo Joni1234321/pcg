@@ -282,7 +282,6 @@ public:
     [[nodiscard]] constexpr const List<K>& Keys() { return keys; }
     [[nodiscard]] constexpr const List<V>& Values() { return values; }
 };
-
 template <typename T> struct Queue : List<T> {
     void RemoveAt(u32 pos) { this->data.erase(this->data.begin() + pos); }
     [[nodiscard]] constexpr T Front() { return this->data.front(); }

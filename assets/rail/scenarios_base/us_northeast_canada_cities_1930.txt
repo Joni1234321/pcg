@@ -1,0 +1,70 @@
+city 59 76 New York City
+city 30 77 Detroit
+city 54 81 Philadelphia
+city 14 82 Chicago
+city -1 99 St. Louis
+city 65 54 Montreal
+city 70 65 Boston
+city 46 88 Washington, D.C.
+city 20 93 Cincinnati
+city 48 85 Baltimore
+city 58 76 Newark
+city 44 68 Toronto
+city -46 95 Denver
+city 27 81 Toledo
+city -15 98 Kansas City
+city 33 80 Cleveland
+city 36 81 Youngstown
+city 73 45 Quebec City
+city 63 72 New Haven
+city -25 112 Tulsa
+city 37 84 Allegheny
+city 58 75 Paterson
+city 34 107 Fayetteville
+city 22 76 Grand Rapids
+city 52 76 Wilkes-Barre
+city 27 108 Charlotte
+city 10 78 Madison
+city -48 117 Amarillo
+city -7 98 Columbia
+city 35 103 Durham
+city 53 81 Chester
+city 65 67 Holyoke
+city 61 72 Danbury
+city 70 66 Brockton
+city 18 89 Muncie
+city 41 103 Greenville
+city 15 77 Racine
+city 5 81 Dubuque
+city -19 112 Fayetteville
+city 8 91 Champaign
+city 62 73 Fairfield
+city 27 78 Ann Arbor
+city 69 49 Trois-Rivières
+city 14 77 Waukesha
+city -12 77 Sioux Falls
+city 1 70 Plymouth
+city 29 72 Bay City
+city 29 76 Pontiac
+city 62 66 Troy
+city 22 79 Battle Creek
+city 63 67 Pittsfield
+city 14 84 Gary
+city 70 52 Sherbrooke
+city 26 108 Gastonia
+city 64 68 Westfield
+city 6 75 La Crosse
+city 72 67 Barnstable
+city 15 72 Appleton
+city 36 80 Warren
+city 44 85 Hagerstown
+city 64 54 Westmount
+city -6 115 Bartlett
+city 60 74 White Plains
+city 71 66 Plymouth
+city 68 65 Leominster
+city 27 89 Lancaster
+city -3 57 Grand Forks
+city 70 64 Billerica
+city -15 97 Leavenworth
+city 0 98 Cahokia

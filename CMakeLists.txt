@@ -102,6 +102,7 @@ target_sources(pcg
                src/0_pce/u_algorithm.cppm
                src/0_pce/u_assets.cppm
                src/0_pce/u_collections.cppm
+               src/0_pce/u_collections_hive.cppm
                src/0_pce/u_colors.cppm
                src/0_pce/u_strong.cppm
                src/0_pce/u_fonts.cppm
@@ -139,6 +140,8 @@ target_sources(pcg
 
                 # rail
                 src/8_rail/g_rail_types.cppm
+                src/8_rail/g_rail_scenarios.cppm
+                src/8_rail/g_rail_editor.cppm
 
                # app modules
 #               src/g_battlesim.cpp

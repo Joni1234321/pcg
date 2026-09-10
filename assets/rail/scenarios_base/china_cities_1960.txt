@@ -1,0 +1,4 @@
+city 48 129 Hong Kong
+city 66 71 Taiyuan
+city 31 99 Chengdu
+city 45 130 Macau

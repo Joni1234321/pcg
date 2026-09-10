@@ -36,6 +36,7 @@ public:
     NodeBuilder(NodeReference parent, Layout new_layout);
     [[nodiscard]] NodeBuilder& Name(const String& name);
     [[nodiscard]] NodeBuilder& Fill(Color color);
+    [[nodiscard]] NodeBuilder& FillHover(Color hover_color);
     [[nodiscard]] NodeBuilder& Texture(Handle<Texture> texture);
     [[nodiscard]] NodeBuilder& Padding(u32 padding);
     [[nodiscard]] NodeBuilder& Padding2(uint2 padding);

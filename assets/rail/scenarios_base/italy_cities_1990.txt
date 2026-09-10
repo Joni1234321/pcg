@@ -1,0 +1,17 @@
+city 22 90 Rome
+city 16 31 Milan
+city -3 38 Turin
+city 24 59 Florence
+city 67 28 Free Territory of Trieste
+city 24 150 Messina
+city 35 32 Verona
+city 61 113 Taranto
+city 18 30 Monza
+city 23 28 Bergamo
+city 10 32 Novara
+city 15 60 Pisa
+city 54 29 Heraclea
+city 50 28 Treviso
+city 71 110 Brindisi
+city -12 58 Sanremo
+city 38 106 Avellino

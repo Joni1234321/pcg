@@ -1,0 +1,27 @@
+city 59 76 New York City
+city 54 81 Philadelphia
+city 14 82 Chicago
+city 70 65 Boston
+city -1 99 St. Louis
+city 48 85 Baltimore
+city 20 93 Cincinnati
+city 46 88 Washington, D.C.
+city 65 54 Montreal
+city 58 76 Newark
+city -15 98 Kansas City
+city 44 68 Toronto
+city 33 80 Cleveland
+city 30 77 Detroit
+city 27 81 Toledo
+city 34 107 Fayetteville
+city 73 45 Quebec City
+city 63 72 New Haven
+city 58 75 Paterson
+city 61 72 Danbury
+city -46 95 Denver
+city -7 98 Columbia
+city 22 76 Grand Rapids
+city 70 66 Brockton
+city 65 67 Holyoke
+city 62 73 Fairfield
+city 0 98 Cahokia

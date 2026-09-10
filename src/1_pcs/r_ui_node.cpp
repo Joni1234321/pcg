@@ -8,6 +8,11 @@ module pcs.node;
 
 import std;
 import pcs.input;
+import pcs.animation;
+import pcs.easing;
+
+import pce.colors;
+import pce.strong;
 
 import pce.std;
 import pce.font;
@@ -38,6 +43,26 @@ NodeBuilder& NodeBuilder::Name(const String& name) {
 }
 NodeBuilder& NodeBuilder::Fill(const Color color) {
     style.background_color = color;
+    return *this;
+}
+NodeBuilder& NodeBuilder::FillHover(const Color hover_color) {
+    const NodeReference reference = node_reference;
+    const Color base_color = style.background_color;
+    const auto register_fill_animation = [reference](const Color from, const Color to) {
+        constexpr miliseconds32 HOVER_ANIMATION_MS { 120U };
+        return AnimationSystem::Register(AnimationDesc {
+            .action =
+                [reference, from, to](const f32 t) {
+                    globalData[reference.tree].styles[reference.node].background_color = colors::ColorLerp(from, to, EaseOutCubic(t));
+                    globalData[reference.tree].MarkDirty();
+                },
+            .duration = HOVER_ANIMATION_MS,
+            .state = AnimationState::persistent_stopped });
+    };
+    const Handle<hex::Animation> hover_in = register_fill_animation(base_color, hover_color);
+    const Handle<hex::Animation> hover_out = register_fill_animation(hover_color, base_color);
+    properties.on_hover = [hover_in](NodeReference) { AnimationSystem::StartAnimation(hover_in); };
+    properties.on_hover_out = [hover_out](NodeReference) { AnimationSystem::StartAnimation(hover_out); };
     return *this;
 }
 NodeBuilder& NodeBuilder::Texture(const Handle<hex::Texture> texture) {
@@ -391,14 +416,15 @@ void InputNodeSystem::operator()() const {
 
     if (hovered.has_value() && previous_hovered.has_value() && hovered->tree.id == previous_hovered->tree.id && hovered->node.id == previous_hovered->node.id) { return; }
 
-    if (previous_hovered.has_value()) {
-        Propagate(previous_hovered.value(), HoverOut);
-        trees[previous_hovered->tree].MarkDirty();
-    }
-    if (hovered.has_value()) {
-        Propagate(hovered.value(), Hover);
-        trees[hovered->tree].MarkDirty();
-    }
+    // Ai fix.
+    const auto is_ancestor_or_self = [&trees](const NodeReference ancestor, const HoveredType& other) -> b8 {
+        if (!other.has_value() || other->tree.id != ancestor.tree.id) { return false; }
+        Handle<Node> node = other->node;
+        while (node.id != ancestor.node.id && node.id != trees[ancestor.tree].Root().id) { node = trees[ancestor.tree].parents[node]; }
+        return node.id == ancestor.node.id;
+    };
+    if (previous_hovered.has_value()) { Propagate(*previous_hovered, [&](const NodeReference reference) { if (!is_ancestor_or_self(reference, hovered)) { HoverOut(reference); } }); trees[previous_hovered->tree].MarkDirty(); }
+    if (hovered.has_value()) { Propagate(*hovered, [&](const NodeReference reference) { if (!is_ancestor_or_self(reference, previous_hovered)) { Hover(reference); } }); trees[hovered->tree].MarkDirty(); }
 }
 void RenderNodeSystem::operator()() const {
     for (NodeTree& tree : globalData.Get<NodeTree>() | std::views::reverse | std::views::filter(&NodeTree::GetDisplay)) {

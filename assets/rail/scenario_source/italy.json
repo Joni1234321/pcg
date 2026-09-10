@@ -1,0 +1,19 @@
+{
+ "image": "https://upload.wikimedia.org/wikipedia/commons/7/79/Italy_relief_location_map.jpg",
+ "image_file": "italy.jpg",
+ "columns": 136,
+ "crop": null,
+ "countries": [
+  "Q38"
+ ],
+ "population_min": 20000,
+ "projection": {
+  "type": "equirect",
+  "params": [
+   47.4,
+   35.3,
+   6.2,
+   19.0
+  ]
+ }
+}

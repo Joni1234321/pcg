@@ -1,0 +1,22 @@
+{
+ "image": "https://upload.wikimedia.org/wikipedia/commons/8/82/North_Italy_relief_location_map.png",
+ "image_file": "italy_north.png",
+ "columns": 136,
+ "crop": null,
+ "countries": [
+  "Q38",
+  "Q39",
+  "Q40",
+  "Q215"
+ ],
+ "population_min": 10000,
+ "projection": {
+  "type": "equirect",
+  "params": [
+   47.3,
+   43.6,
+   6.4,
+   14.1
+  ]
+ }
+}

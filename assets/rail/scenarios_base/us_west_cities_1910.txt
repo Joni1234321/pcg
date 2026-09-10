@@ -1,0 +1,19 @@
+city -28 97 San Francisco
+city -21 128 Los Angeles
+city 76 81 Denver
+city -21 131 Long Beach
+city 10 19 Tacoma
+city -29 106 Salinas
+city -17 109 Visalia
+city -21 139 San Diego
+city 41 77 Provo
+city 74 119 Amarillo
+city -20 130 Orange
+city -27 94 Vallejo
+city -24 94 Antioch
+city -26 93 Napa
+city -18 128 Ontario
+city -24 93 Vacaville
+city -26 126 Ventura
+city 15 13 Everett
+city -19 136 Escondido

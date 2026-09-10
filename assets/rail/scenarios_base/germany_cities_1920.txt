@@ -1,0 +1,104 @@
+city 29 61 Berlin
+city 25 133 Vienna
+city 6 44 Hamburg
+city 99 58 Warsaw
+city 20 102 Prague
+city -24 137 Munich
+city 46 7 Copenhagen
+city 20 86 Dresden
+city 81 69 Łódź
+city -18 114 Nuremberg
+city -8 52 Bremen
+city -6 64 Hanover
+city 9 82 Leipzig
+city -43 113 Mannheim
+city 35 115 Brno
+city -61 150 Zurich
+city 56 103 Ostrava
+city 0 66 Brunswick
+city 14 31 Kiel
+city -29 133 Augsburg
+city 9 68 Magdeburg
+city -6 88 Erfurt
+city 7 108 Plzeň
+city 15 39 Lübeck
+city -69 146 Basel
+city 76 47 Bydgoszcz
+city 31 90 Liberec
+city -27 109 Würzburg
+city 6 92 Zwickau
+city -38 132 Ulm
+city -12 121 Regensburg
+city -19 114 Fürth
+city -12 79 Göttingen
+city 65 94 Zabrze
+city 20 93 Ústí nad Labem
+city -33 151 Innsbruck
+city 25 13 Odense
+city 44 108 Olomouc
+city -38 76 Dorsten
+city 20 63 Brandenburg an der Havel
+city 81 48 Toruń
+city 12 121 České Budějovice
+city 6 100 Karlovy Vary
+city 18 93 Teplice
+city 15 95 Most
+city -58 148 Winterthur
+city 23 90 Děčín
+city 53 101 Opava
+city 17 101 Kladno
+city -17 107 Bamberg
+city -38 127 Göppingen
+city -39 120 Heilbronn
+city -18 72 Detmold
+city -13 88 Eisenach
+city -33 66 Enschede
+city -3 99 Hof
+city 11 35 Neumünster
+city 32 90 Jablonec nad Nisou
+city 34 99 Hradec Králové
+city 7 88 Altenburg
+city 19 87 Freital
+city -21 104 Schweinfurt
+city 33 102 Pardubice
+city 42 110 Prostějov
+city 85 96 Tarnów
+city -9 106 Bayreuth
+city 59 102 Karviná
+city 0 103 Cheb
+city -32 105 Aschaffenburg
+city -1 74 Wernigerode
+city 69 93 Dąbrowa Górnicza
+city -4 72 Goslar
+city -47 143 Ravensburg
+city -18 112 Erlangen
+city 4 75 Aschersleben
+city 45 110 Přerov
+city 13 96 Chomutov
+city 2 74 Quedlinburg
+city -21 52 Papenburg
+city 38 93 Trutnov
+city -21 126 Ingolstadt
+city 27 122 Znojmo
+city 26 113 Jihlava
+city -11 114 Amberg
+city -15 130 Landshut
+city -1 101 Aš
+city -13 101 Coburg
+city -2 129 Passau
+city -44 125 Leonberg
+city 16 73 Lutherstadt Wittenberg
+city 15 94 Litvínov
+city 58 102 Orlová
+city 58 101 Bohumín
+city -8 124 Straubing
+city 28 88 Varnsdorf
+city 56 105 Frýdek-Místek
+city 21 7 Vejle
+city -24 117 Ansbach
+city 39 47 Prenzlau
+city 52 99 Krnov
+city 27 96 Mladá Boleslav
+city 44 113 Kroměříž
+city -39 98 Limburg an der Lahn
+city 19 84 Meissen

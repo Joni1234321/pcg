@@ -12,7 +12,7 @@ namespace hex {
 b8 Start() {
     SDL_Log("Loading window");
     constexpr uint2 WINDOW_SIZE { 2500U, 1500U };
-    Window window { WINDOW_SIZE };
+    Window window { WINDOW_SIZE, "RAIL" };
 
     Logger().Log("Starting Game");
     arcade::RunRail();

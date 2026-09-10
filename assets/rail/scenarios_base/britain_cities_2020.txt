@@ -1,0 +1,392 @@
+city 16 192 London
+city 7 173 Birmingham
+city 24 146 Leeds
+city 18 104 Glasgow
+city -29 155 Dublin
+city 21 154 Sheffield
+city 14 152 Manchester
+city 6 154 Liverpool
+city -10 193 Bristol
+city 29 102 Edinburgh
+city -16 193 Cardiff
+city 11 174 Coventry
+city 17 169 Leicester
+city -13 130 Belfast
+city 36 122 Newcastle upon Tyne
+city 14 154 Stockport
+city 21 163 Nottingham
+city 13 150 Bolton
+city 9 206 Brighton and Hove
+city 37 124 Sunderland
+city -3 204 Southampton
+city -37 215 Plymouth
+city 36 147 Kingston upon Hull
+city 15 181 Milton Keynes
+city 16 164 Derby
+city 6 171 Wolverhampton
+city 10 162 Stoke-on-Trent
+city -1 205 Portsmouth
+city -21 190 Swansea
+city 15 178 Northampton
+city 23 151 Barnsley
+city -1 191 Swindon
+city -66 184 Cork
+city 17 185 Luton
+city 31 143 York
+city 8 174 Solihull
+city 53 77 Aberdeen
+city 42 169 Norwich
+city 25 171 Peterborough
+city -10 208 Bournemouth
+city 23 191 Basildon
+city 9 153 St Helens
+city 10 154 Warrington
+city 20 149 Huddersfield
+city 7 193 Reading
+city 25 191 Southend-on-Sea
+city -13 191 Newport
+city 35 181 Ipswich
+city 37 91 Dundee
+city 7 187 Oxford
+city 7 172 West Bromwich
+city -2 185 Gloucester
+city -11 208 Poole
+city 4 168 Telford
+city 12 147 Preston
+city 36 130 Middlesbrough
+city 9 146 Blackpool
+city 2 161 Wrexham County Borough
+city 13 153 Sale
+city -27 208 Exeter
+city 26 178 Cambridge
+city 30 185 Colchester
+city 11 190 High Wycombe
+city 11 192 Slough
+city 14 147 Blackburn
+city 0 184 Cheltenham
+city 24 188 Chelmsford
+city 5 154 Birkenhead
+city 16 150 Rochdale
+city 26 151 Doncaster
+city 23 153 Rotherham
+city 7 206 Worthing
+city 21 195 Gillingham
+city 4 197 Basingstoke
+city 11 200 Crawley
+city 19 192 Dagenham
+city 11 151 Wigan
+city 21 147 Halifax
+city 2 179 Worcester
+city 13 207 Eastbourne
+city 24 148 Wakefield
+city 29 157 Lincoln
+city 16 151 Oldham
+city 9 171 Sutton Coldfield
+city 15 187 Hemel Hempstead
+city -8 195 Bath
+city 32 131 Darlington
+city 14 194 Wimbledon
+city 19 179 Bedford
+city 8 149 Southport
+city 17 205 Hastings
+city 15 189 Watford
+city 19 184 Stevenage
+city 37 151 Grimsby
+city 37 128 Hartlepool
+city 5 158 Chester
+city 12 172 Nuneaton
+city -23 122 Derry
+city 35 130 Stockton-on-Tees
+city 16 187 St Albans
+city -58 156 Galway
+city 21 187 Harlow
+city 17 146 Burnley
+city 5 176 Redditch
+city 22 200 Ashford
+city 23 147 Batley
+city 32 150 Scunthorpe
+city 22 159 Mansfield
+city 6 172 Dudley
+city 15 150 Bury
+city -2 203 Eastleigh
+city 16 104 Paisley
+city 8 198 Guildford
+city 21 190 Brentwood
+city 20 157 Chesterfield
+city 1 168 Shrewsbury
+city -14 195 Weston-super-Mare
+city 21 124 Carlisle
+city 38 122 South Shields
+city 17 106 East Kilbride
+city 9 162 Newcastle-under-Lyme
+city 13 166 Burton upon Trent
+city 20 194 Gravesend
+city 11 169 Tamworth
+city 26 142 Harrogate
+city -2 206 Gosport
+city -14 131 Lisburn
+city 13 175 Rugby
+city 9 166 Stafford
+city 38 121 Tynemouth
+city 8 168 Cannock
+city 8 170 Walsall
+city 12 186 Aylesbury
+city 36 123 Washington
+city 12 195 Walton-on-Thames
+city 7 197 Farnborough
+city 17 167 Loughborough
+city -30 214 Paignton
+city 10 192 Maidenhead
+city 5 173 Stourbridge
+city 23 148 Dewsbury
+city 10 196 Woking
+city 9 194 Bracknell
+city 9 155 Runcorn
+city 41 136 Scarborough
+city 20 172 Corby
+city -60 169 Limerick
+city 30 195 Margate
+city 5 157 Ellesmere Port
+city -9 129 Bangor
+city -20 202 Taunton
+city 6 153 Wallasey
+city 6 173 Halesowen
+city 8 160 Crewe
+city 16 200 Royal Tunbridge Wells
+city -19 133 Craigavon
+city -15 187 Merthyr Tydfil
+city 5 155 Bebington
+city 21 145 Keighley
+city 3 174 Kidderminster
+city 25 104 Livingston
+city 19 174 Kettering
+city -5 181 Hereford
+city 26 197 Canterbury
+city 18 176 Wellingborough
+city 19 106 Hamilton
+city 9 181 Banbury
+city -17 210 Weymouth
+city -17 194 Barry
+city 28 100 Dunfermline
+city 13 157 Macclesfield
+city 14 141 Lancaster
+city 12 154 Altrincham
+city 6 152 Crosby
+city 18 186 Welwyn Garden City
+city 7 170 Willenhall
+city 18 191 Stratford
+city 10 176 Leamington Spa
+city 21 103 Cumbernauld
+city 32 186 Clacton-on-Sea
+city 14 171 Hinckley
+city 45 172 Lowestoft
+city 31 99 Kirkcaldy
+city -1 198 Andover
+city -20 192 Bridgend
+city -12 189 Cwmbran
+city -49 177 Waterford
+city 34 126 Durham
+city 25 200 Folkestone
+city 31 93 Perth
+city 34 71 Inverness
+city 10 112 Ayr
+city 13 109 Kilmarnock
+city 16 152 Ashton-under-Lyne
+city 15 205 Bexhill-on-Sea
+city 20 193 Grays
+city 20 104 Coatbridge
+city 10 147 Lytham St Annes
+city 34 167 King's Lynn
+city 18 187 Hatfield
+city -6 201 Salisbury
+city 13 101 Greenock
+city 6 198 Farnham
+city 32 177 Bury St Edmunds
+city -26 148 Drogheda
+city 23 185 Bishop's Stortford
+city 8 194 Wokingham
+city 16 184 Dunstable
+city -27 153 Swords
+city 38 119 Blyth
+city 9 170 Aldridge
+city -24 142 Dundalk
+city 5 206 Littlehampton
+city 13 152 Eccles
+city 17 198 Tonbridge
+city 24 191 Rayleigh
+city 32 97 Glenrothes
+city 12 149 Chorley
+city 27 196 Herne Bay
+city -18 200 Bridgwater
+city 23 99 Stirling
+city 15 182 Bletchley
+city 15 184 Leighton Buzzard
+city -7 196 Trowbridge
+city 38 130 Redcar
+city -5 193 Chippenham
+city 9 184 Bicester
+city 24 101 Falkirk
+city 20 161 Hucknall
+city -26 210 Exmouth
+city 41 140 Bridlington
+city 13 195 Ewell
+city 15 140 Morecambe
+city 19 183 Hitchin
+city 36 129 Billingham
+city 11 109 Irvine
+city -9 208 Christchurch
+city 3 194 Newbury
+city 16 120 Dumfries
+city 34 124 Stanley
+city 8 158 Winsford
+city 7 189 Abingdon-on-Thames
+city 20 189 Loughton
+city 18 145 Nelson
+city 22 178 St Neots
+city 9 176 Warwick
+city 10 169 Lichfield
+city 7 194 Earley
+city 21 148 Brighouse
+city 10 204 Burgess Hill
+city -16 204 Yeovil
+city 19 176 Rushden
+city 6 190 Didcot
+city -16 190 Pontypridd
+city 17 105 Rutherglen
+city 12 173 Bedworth
+city -13 124 Ballymena
+city 27 200 Dover
+city 17 186 Harpenden
+city 29 166 Spalding
+city 11 202 Haywards Heath
+city 20 106 Wishaw
+city 26 194 Whitstable
+city 7 178 Stratford-upon-Avon
+city 37 120 Cramlington
+city 2 206 Chichester
+city 18 135 Kendal
+city 4 187 Witney
+city 4 176 Bromsgrove
+city 19 187 Hertford
+city 18 105 Cambuslang
+city 46 170 Great Yarmouth
+city 3 206 Bognor Regis
+city -29 156 Blackrock
+city 8 193 Woodley
+city 23 190 Billericay
+city -10 198 Frome
+city 11 159 Congleton
+city 38 118 Ashington
+city 17 103 Bearsden
+city 14 148 Darwen
+city 13 177 Daventry
+city 13 200 East Grinstead
+city 24 190 Wickford
+city 27 186 Witham
+city 37 122 Jarrow
+city 3 180 Evesham
+city 12 199 Horley
+city 12 193 Windsor
+city 0 156 Rhyl
+city -30 212 Newton Abbot
+city 9 169 Burntwood
+city 16 106 Newton Mearns
+city 3 177 Droitwich Spa
+city 16 103 Clydebank
+city 12 143 Fleetwood
+city 13 155 Wilmslow
+city -75 177 Tralee
+city -13 196 Portishead
+city 14 196 Coulsdon
+city 34 174 Thetford
+city -7 207 New Milton
+city 30 169 Wisbech
+city 13 129 Workington
+city 20 191 Upminster
+city -24 188 Llanelli
+city 12 151 Westhoughton
+city 24 175 Huntingdon
+city -18 132 Lurgan
+city 45 68 Elgin
+city 17 173 Market Harborough
+city -15 119 Coleraine
+city 36 183 Felixstowe
+city -41 166 Carlow
+city -62 165 Ennis
+city -3 208 Ryde
+city 11 131 Whitehaven
+city -29 201 Barnstaple
+city 14 189 Rickmansworth
+city -4 208 Newport
+city 42 89 Arbroath
+city 11 207 Seaford
+city -49 220 Falmouth
+city 15 152 Droylsden
+city 18 103 Bishopbriggs
+city 10 160 Kidsgrove
+city -7 191 Yate
+city -50 218 Camborne
+city 6 197 Fleet
+city 22 145 Bingley
+city -45 214 Newquay
+city 8 199 Godalming
+city 13 188 Chesham
+city 24 103 Bathgate
+city 29 171 March
+city 19 189 Waltham Abbey
+city 34 131 Ingleby Barwick
+city 13 205 Hailsham
+city 3 168 Wellington
+city 10 175 Kenilworth
+city 9 157 Northwich
+city 20 192 South Ockendon
+city -2 204 Hedge End
+city -25 205 Tiverton
+city -46 169 Kilkenny
+city 33 128 Spennymoor
+city 7 151 Formby
+city 12 198 Reigate
+city 15 168 Coalville
+city 20 181 Biggleswade
+city -3 186 Quedgeley
+city -20 189 Neath
+city 14 201 Crowborough
+city 7 171 Darlaston
+city 9 159 Sandbach
+city 18 161 Belper
+city 14 192 Richmond
+city -34 158 Naas
+city -13 194 Clevedon
+city 19 103 Kirkintilloch
+city 24 145 Horsforth
+city 35 178 Stowmarket
+city 20 156 Dronfield
+city -47 217 Truro
+city -16 208 Dorchester
+city 17 197 Sevenoaks
+city 14 197 Caterham
+city -44 216 St Austell
+city 37 159 Skegness
+city -38 151 Mullingar
+city 25 148 Normanton
+city 31 103 Musselburgh
+city -54 220 Penzance
+city 7 152 Maghull
+city -9 192 Bradley Stoke
+city 12 160 Leek
+city 2 175 Stourport-on-Severn
+city 18 180 Kempston
+city 36 145 Beverley
+city 15 102 Dumbarton
+city 29 174 Ely
+city -27 130 Omagh
+city 7 196 Sandhurst
+city 29 197 Deal
+city 30 148 Goole
+city 28 154 Gainsborough
+city 25 196 Faversham
+city 37 125 Peterlee
+city 19 105 Bellshill
+city -41 174 Wexford
+city -1 188 Cirencester
+city 15 157 Buxton

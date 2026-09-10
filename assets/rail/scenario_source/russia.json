@@ -1,0 +1,27 @@
+{
+ "image": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Russia_rel_location_map.png",
+ "image_file": "russia.png",
+ "columns": 200,
+ "crop": null,
+ "countries": [
+  "Q159",
+  "Q212",
+  "Q184",
+  "Q232"
+ ],
+ "population_min": 50000,
+ "projection": {
+  "type": "conic",
+  "params": [
+   50.0,
+   -15.7279772605764,
+   100.0,
+   181.83217859892235,
+   1.17998895761064,
+   0.0123530472371397,
+   0.01410209540804529,
+   97.0,
+   1
+  ]
+ }
+}

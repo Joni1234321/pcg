@@ -1,0 +1,17 @@
+city 25 49 Milan
+city -7 59 Turin
+city 108 43 Free Territory of Trieste
+city 39 94 Florence
+city 56 50 Verona
+city 14 9 Bern
+city 88 1 Innsbruck
+city 88 45 Heraclea
+city 31 7 Lucerne
+city 15 14 Thun
+city 13 10 Köniz
+city 49 12 Chur
+city 18 7 Burgdorf
+city 16 3 Grenchen
+city -4 28 Monthey
+city 31 6 Emmen
+city 90 0 Hall in Tirol

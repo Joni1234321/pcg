@@ -99,7 +99,7 @@ struct NodeStyle : LogDestroyWithCount<NodeStyle> {
     [[nodiscard]] constexpr b8 IsInside(const int2 screen_position) const {
         const int2 start { static_cast<i32>(bounding_box.x), static_cast<i32>(bounding_box.y) };
         const int2 relative = screen_position - start;
-        return relative.x < static_cast<i32>(bounding_box.w) && relative.y < static_cast<i32>(bounding_box.h);
+        return relative.x >= 0 && relative.y >= 0 && relative.x < static_cast<i32>(bounding_box.w) && relative.y < static_cast<i32>(bounding_box.h);
     }
 };
 struct NodeProperties {

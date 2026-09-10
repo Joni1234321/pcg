@@ -1,0 +1,6 @@
+city -13 116 Kyoto
+city 19 111 Yokohama
+city -41 122 Hiroshima
+city 73 30 Sapporo
+city -17 118 Nishinomiya
+city -71 152 Castle town of Kagoshima
