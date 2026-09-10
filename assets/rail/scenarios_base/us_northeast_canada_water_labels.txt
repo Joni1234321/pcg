@@ -1,0 +1,86 @@
+label 53 27 James Bay
+label 109 24 Gulf of Saint Lawrence
+label 91 45 Bay of Fundy
+label 79 56 Gulf of Maine
+label 72 65 Massachusetts Bay
+label 6 35 Lake Winnipeg
+label 35 77 Lake Erie
+label 51 65 Lake Ontario
+label 31 76 Lake Saint Clair
+label 5 9 Wollaston Lake
+label 5 13 Reindeer Lake
+label 7 49 Lake of the Woods
+label 24 46 Lake Nipigon
+label -1 42 Lake Manitoba
+label -1 35 Lake Winnipegosis
+label 69 30 Lake Mistassini
+label 55 67 Oneida Lake
+label 15 72 Lake Winnebago
+label 65 58 Lake Champlain
+label 50 71 Keuka Lake
+label 51 70 Cayuga Lake
+label -3 11 Cree Lake
+label 71 7 Lac-à-l'Eau-Claire
+label 45 57 Lake Nipissing
+label 62 22 Lake Sakami
+label 9 53 Rainy Lake
+label 17 18 Split Lake
+label 20 41 Lake St. Joseph
+label 74 10 Lake Bienville
+label 49 70 Canandaigua Lake
+label 52 69 Owasco Lake
+label 53 69 Skaneateles Lake
+label 3 60 Leech Lake
+label 17 51 Lac des Mille Lacs
+label 92 48 Lake Rossignol
+label 90 42 Grand Lake
+label 3 4 Black Lake
+label 117 16 Grand Lake
+label 28 27 Big Trout Lake
+label 14 41 Trout Lake
+label 16 28 Island Lake
+label 79 18 Lake Naococane
+label -5 22 Lac la Ronge
+label 3 64 Mille Lacs Lake
+label 3 56 Upper Red Lake
+label 70 60 Lake Winnipesaukee
+label 45 64 Lake Simcoe
+label 18 25 Gods Lake
+label 84 46 Chiputneticook Lakes
+label 3 59 Cass Lake
+label 4 58 Lake Winnibigoshish
+label 15 51 Marmion Lake
+label 5 45 Lac du Bonnet
+label 19 32 Sandy Lake
+label -7 67 Lake Traverse
+label 73 58 Sebago Lake
+label 78 48 Moosehead Lake
+label 29 46 Long Lake
+label 19 45 Sturgeon Lake
+label 15 46 Minnitaki Lake
+label 71 2 Lac Minto
+label 24 32 North Caribou Lake
+label 80 22 Lake Plétipi
+label 49 52 Lake Kipawa
+label 55 60 Big Rideau Lake
+label 79 46 Chesuncook Lake
+label 24 55 Lake Superior
+label 21 69 Lake Michigan
+label 37 63 Lake Huron
+label 31 58 Whitefish Bay
+label 30 70 Saginaw Bay
+label 36 60 North Channel
+label 42 62 Georgian Bay
+label 1 31 Cedar Lake
+label 27 41 Ogoki Reservoir
+label 57 48 Cabonga Reservoir
+label 72 38 Lac Saint-Jean
+label 63 19 Réservoir de La Grande 2
+label 66 19 Réservoir de La Grande 3
+label 64 41 Réservoir Gouin
+label 78 32 Réservoir Pipmuacan
+label 82 11 Réservoir de Caniapiscau
+label 19 116 J. Strom Thurmond Lake
+label 3 106 Lake Barkley
+label 82 28 Réservoir Outardes Quatre
+label 32 59 St. Marys River

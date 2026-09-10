@@ -1,0 +1,25 @@
+label -30 105 Monterey Bay
+label -1 27 Columbia River
+label 11 7 Salish Sea
+label -10 86 Lake Tahoe
+label 65 42 Yellowstone Lake
+label 59 13 Flathead Lake
+label 47 11 Lake Pend Oreille
+label 50 62 Bear Lake
+label 40 77 Utah Lake
+label 2 125 Lake Havasu
+label -7 59 Upper Klamath Lake
+label 67 25 Canyon Ferry Lake
+label 62 46 Jackson Lake
+label 62 39 Hebgen Lake
+label 41 57 Lake Walcott
+label 73 77 Lake Granby
+label 98 15 Fort Peck Lake
+label 124 14 Lake Sakakawea
+label 35 137 Caballo Reservoir
+label 40 69 Great Salt Lake
+label -11 134 Salton Sea
+label -1 63 Goose Lake
+label -4 79 Pyramid Lake
+label 15 51 Malheur Lake
+label 12 52 Harney Lake

@@ -1,0 +1,10 @@
+label 4 94 Inner Seas
+label -10 150 Irish Sea
+label -19 224 English Channel
+label -17 129 Lough Neagh
+label 30 75 Loch Ness
+label -54 163 Lough Derg
+label -44 151 Lough Ree
+label -39 139 Lough Allen
+label 22 82 Loch Lochy
+label -33 137 Upper Lough Erne

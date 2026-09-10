@@ -8,6 +8,8 @@ scenario_source/city_classes.json  Wikidata classes counted as city or town (dow
 
 scenarios_base/<name>.txt                elevation hex grid
 scenarios_base/<name>_cities_<year>.txt  cities present that decade, one "city x y name" line each (axial hex)
+scenarios_base/<name>_rivers.txt         "river <size> <name>" followed by one "x y" hex per line (maps with "rivers": true)
+scenarios_base/<name>_water_labels.txt   "label x y name" per named sea, bay or lake (maps with "rivers": true)
 
 The game only ever sees hex coordinates; projections and lat/lon live here and in scenario_source.
 
@@ -17,7 +19,8 @@ Run from the repo root:
 
 The elevation heuristic mirrors ElevationFromImage in src/8_rail/g_rail_scenarios.cppm.
 Images are Wikimedia Commons relief location maps (CC BY-SA); the projections mirror
-the matching Wikipedia Module:Location map/data pages.
+the matching Wikipedia Module:Location map/data pages. Rivers, seas and lakes come from
+Natural Earth 10m GeoJSON (public domain) stored next to the images.
 """
 import json
 import math
@@ -36,6 +39,20 @@ ELEVATION_MAX = 127
 DECADES = range(1830, 2030, 10)
 SQRT3 = math.sqrt(3)
 AXIAL_NEIGHBOURS = [(1, 0), (1, -1), (0, -1), (-1, 0), (-1, 1), (0, 1)]
+RIVER_FILES = ["ne_10m_rivers_lake_centerlines", "ne_10m_rivers_europe", "ne_10m_rivers_north_america"]
+WATER_FILES = ["ne_10m_geography_marine_polys", "ne_10m_lakes"]
+RIVER_SIZE_MAX = 12
+RIVER_SAMPLE_STEP_WORLD = 0.5
+
+
+def natural_earth_features(files):
+    features = []
+    for file in files:
+        path = SOURCE_DIR / f"{file}.geojson"
+        if not path.exists():
+            subprocess.run(["curl", "-s", "-L", "--fail", "-m", "300", "-A", USER_AGENT, "-o", str(path), f"https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/{file}.geojson"], check=True)
+        features += json.loads(path.read_text())["features"]
+    return features
 
 
 def pixel_to_elevation(r, g, b):
@@ -198,6 +215,63 @@ def convert(name, definition):
             if land:
                 return min(land, key=lambda a: (a[0] - axial[0]) ** 2 + (a[1] - axial[1]) ** 2)
         return None
+
+    def map_fraction_to_world(u, v):
+        return u * world_width, v * world_height
+
+    def world_to_axial(world_x, world_y):
+        axial_y = world_y / 1.5
+        return hex_round(world_x / SQRT3 - axial_y * 0.5, axial_y)
+
+    if definition.get("rivers"):
+        river_lines = []
+        for feature in natural_earth_features(RIVER_FILES):
+            river_name = feature["properties"].get("name") or feature["properties"].get("name_en") or ""
+            if not feature["geometry"]:
+                continue
+            size = max(0, RIVER_SIZE_MAX - int(feature["properties"].get("scalerank") or RIVER_SIZE_MAX))
+            geometry = feature["geometry"]
+            for line in geometry["coordinates"] if geometry["type"] == "MultiLineString" else [geometry["coordinates"]]:
+                world_points = []
+                for lon, lat in line:
+                    fx, fy = project(projection, lat, lon)
+                    world_points.append(map_fraction_to_world((fx - crop[0]) / (crop[2] - crop[0]), (fy - crop[1]) / (crop[3] - crop[1])))
+                path = []
+                for (ax, ay), (bx, by) in zip(world_points, world_points[1:]):
+                    length = math.hypot(bx - ax, by - ay)
+                    for step in range(max(1, int(length / RIVER_SAMPLE_STEP_WORLD)) + 1):
+                        t = min(1.0, step * RIVER_SAMPLE_STEP_WORLD / length) if length else 0.0
+                        axial = world_to_axial(ax + (bx - ax) * t, ay + (by - ay) * t)
+                        if not contains(axial):
+                            if len(path) >= 2:
+                                river_lines.append((size, river_name, path))
+                            path = []
+                        elif not path or path[-1] != axial:
+                            path.append(axial)
+                if len(path) >= 2:
+                    river_lines.append((size, river_name, path))
+        river_lines.sort(key=lambda river: -river[0])
+        with open(BASE_DIR / f"{name}_rivers.txt", "w") as file:
+            for size, river_name, path in river_lines:
+                file.write(f"river {size} {river_name}\n" + "".join(f"{x} {y}\n" for x, y in path))
+        water_labels = {}
+        for feature in natural_earth_features(WATER_FILES):
+            water_name = feature["properties"].get("name") or feature["properties"].get("name_en")
+            if not water_name or not feature["geometry"]:
+                continue
+            geometry = feature["geometry"]
+            ring = geometry["coordinates"][0] if geometry["type"] == "Polygon" else max(geometry["coordinates"], key=lambda polygon: len(polygon[0]))[0]
+            lon = sum(point[0] for point in ring) / len(ring)
+            lat = sum(point[1] for point in ring) / len(ring)
+            fx, fy = project(projection, lat, lon)
+            u, v = (fx - crop[0]) / (crop[2] - crop[0]), (fy - crop[1]) / (crop[3] - crop[1])
+            if not (0.0 <= u < 1.0 and 0.0 <= v < 1.0):
+                continue
+            axial = world_to_axial(*map_fraction_to_world(u, v))
+            if contains(axial) and (feature["properties"].get("featurecla") == "Lake" or not is_land(axial)):
+                water_labels[axial] = water_name
+        (BASE_DIR / f"{name}_water_labels.txt").write_text("".join(f"label {x} {y} {water_name}\n" for (x, y), water_name in water_labels.items()))
+        print(f"{name}: {len(river_lines)} river segments, {len(water_labels)} water labels")
 
     cities_path = SOURCE_DIR / f"{name}_cities.json"
     city_classes = set(json.loads((SOURCE_DIR / "city_classes.json").read_text()))

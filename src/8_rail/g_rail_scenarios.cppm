@@ -58,6 +58,53 @@ std::vector<City> CitiesLoad(const AssetPath& asset_path) {
     return cities;
 }
 
+void RiversSave(const std::vector<River>& rivers, const AssetPath& asset_path) {
+    std::ofstream file { Asset(asset_path) };
+    for (const River& river : rivers) {
+        file << "river " << static_cast<u32>(river.size) << ' ' << river.name << '\n';
+        for (const int2 axial : river.axials) { file << axial.x << ' ' << axial.y << '\n'; }
+    }
+}
+
+std::vector<River> RiversLoad(const AssetPath& asset_path) {
+    std::ifstream file { Asset(asset_path) };
+    std::vector<River> rivers;
+    std::string token;
+    while (file >> token) {
+        if (token == "river") {
+            u32 size = 0;
+            file >> size >> std::ws;
+            River river { .size = static_cast<u8>(size) };
+            std::getline(file, river.name);
+            rivers.push_back(std::move(river));
+        } else if (!rivers.empty()) {
+            int2 axial { std::stoi(token), 0 };
+            file >> axial.y;
+            rivers.back().axials.push_back(axial);
+        }
+    }
+    return rivers;
+}
+
+void WaterLabelsSave(const std::vector<MapLabel>& labels, const AssetPath& asset_path) {
+    std::ofstream file { Asset(asset_path) };
+    for (const MapLabel& label : labels) { file << "label " << label.axial.x << ' ' << label.axial.y << ' ' << label.name << '\n'; }
+}
+
+std::vector<MapLabel> WaterLabelsLoad(const AssetPath& asset_path) {
+    std::ifstream file { Asset(asset_path) };
+    std::vector<MapLabel> labels;
+    std::string keyword;
+    while (file >> keyword) {
+        if (keyword != "label") { continue; }
+        MapLabel label;
+        file >> label.axial.x >> label.axial.y >> std::ws;
+        std::getline(file, label.name);
+        labels.push_back(std::move(label));
+    }
+    return labels;
+}
+
 HexList<i8> ElevationFromImage(const AssetPath& asset_path, const uint2 map_size) {
     HexList<i8> elevation;
     elevation.Resize(map_size);
@@ -87,10 +134,15 @@ HexList<i8> ElevationFromImage(const AssetPath& asset_path, const uint2 map_size
 
 std::vector<MapDefine> RailMapDefines() {
     return {
-        MapDefine { .elevation = TerrainLoad("rail/scenarios_base/britain.txt"), .cities = CitiesLoad("rail/scenarios_base/britain_cities_1830.txt") },
+        MapDefine {
+            .elevation = TerrainLoad("rail/scenarios_base/britain.txt"),
+            .water_labels = WaterLabelsLoad("rail/scenarios_base/britain_water_labels.txt"),
+            .rivers = RiversLoad("rail/scenarios_base/britain_rivers.txt"),
+            .cities = CitiesLoad("rail/scenarios_base/britain_cities_1830.txt"),
+        },
         MapDefine {
             .elevation = TerrainLoad("rail/scenarios_base/twin_cities.txt"),
-            .rivers = { River { .waypoints = { float2 { 0.0F, 8.0F }, float2 { 8.0F, 8.0F }, float2 { 16.0F, 8.0F } } } },
+            .rivers = { River { .size = 6U, .axials = { int2 { -4, 8 }, int2 { 0, 8 }, int2 { 4, 8 }, int2 { 8, 8 }, int2 { 11, 8 } }, .name = "Twin River" } },
             .cities = CitiesLoad("rail/scenarios_base/twin_cities_cities_1830.txt"),
         },
     };

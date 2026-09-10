@@ -198,12 +198,17 @@ if (SET_CLANG_TIDY)
 
 endif ()
 
+file(GLOB_RECURSE PCG_ASSET_FILES CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/assets/*")
 add_custom_command(
-		TARGET pcg POST_BUILD
+		OUTPUT "${CMAKE_BINARY_DIR}/assets.stamp"
 		COMMAND "${CMAKE_COMMAND}" -E copy_directory_if_different "${CMAKE_SOURCE_DIR}/assets" "$<TARGET_FILE_DIR:pcg>/assets"
+		COMMAND "${CMAKE_COMMAND}" -E touch "${CMAKE_BINARY_DIR}/assets.stamp"
+		DEPENDS ${PCG_ASSET_FILES}
 		COMMENT "Copying assets to output directory"
 		VERBATIM
 )
+add_custom_target(pcg_assets DEPENDS "${CMAKE_BINARY_DIR}/assets.stamp")
+add_dependencies(pcg pcg_assets)
 
 if (WIN32 OR MINGW OR MSYS OR CMAKE_SYSTEM_NAME STREQUAL "MSYS")
     # Find runtime DLLs by scanning the actual import table of pcg.exe and copy

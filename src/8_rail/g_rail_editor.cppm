@@ -44,6 +44,10 @@ constexpr u32 OVERLAY_YEAR_STEP = 10U;
 constexpr u32 SLIDER_TRACK_WIDTH = 200U;
 constexpr u32 SLIDER_KNOB_WIDTH = 14U;
 constexpr u32 SLIDER_HEIGHT = 24U;
+constexpr u32 RIVER_SIZE_MAX = 12U;
+constexpr Color COLOR_RIVER_SMALL { 110U, 160U, 220U };
+constexpr Color COLOR_RIVER_LARGE { 40U, 80U, 170U };
+constexpr Color COLOR_WATER_LABEL { 30U, 60U, 120U };
 constexpr Color COLOR_SEA_SHALLOW { 140U, 190U, 230U };
 constexpr Color COLOR_SEA_DEEP { 40U, 80U, 150U };
 constexpr Color COLOR_LOWLAND { 110U, 160U, 90U };
@@ -76,6 +80,40 @@ enum class EditorTool : u8 { TOOL_TERRAIN, TOOL_CITY };
 }
 void SetButtonTextColor(const Handle<NodeTree> tree, const Handle<Node> button, const Color color) { globalData[tree].styles[globalData[tree].children[button][0]].background_color = color; }
 
+struct Slider {
+    Handle<Node> track;
+    Handle<Node> knob;
+    Handle<Node> label;
+    u32 min;
+    u32 max;
+    u32 step;
+    u32 value;
+    b8 dragging { false };
+
+    Slider(const NodeReference parent, const u32 min, const u32 max, const u32 step, const u32 value)
+        : track { NodeBuilder(parent, Layout { uint2 { SLIDER_TRACK_WIDTH, SLIDER_HEIGHT } }).Fill(colors::COLOR_GRAY).Build() },
+          knob { NodeBuilder(NodeReference { parent.tree, track }, Layout { uint2 { SLIDER_KNOB_WIDTH, SLIDER_HEIGHT } }).Fill(colors::COLOR_BLACK).Build() },
+          label { NodeBuilder(parent, Layout { hug }).Padding(4U).Text(FontSizes::body, colors::COLOR_BLACK).Build() },
+          min { min }, max { max }, step { step }, value { value } { }
+
+    void SetValue(NodeTree& tree, const u32 new_value, String&& text) {
+        value = std::clamp(new_value / step * step, min, max);
+        tree.node_properties[label].text = std::move(text);
+        tree.styles[track].padding.x = (value - min) * (SLIDER_TRACK_WIDTH - SLIDER_KNOB_WIDTH) / (max - min);
+        tree.MarkDirty();
+    }
+
+    [[nodiscard]] Optional<u32> Drag(const InputState& input, const HoveredType& hovered, const Handle<NodeTree> tree) {
+        const b8 slider_hovered = hovered.has_value() && hovered->tree.id == tree.id && (hovered->node.id == track.id || hovered->node.id == knob.id);
+        if (input.left_mouse_down && slider_hovered) { dragging = true; }
+        if (!input.left_mouse) { dragging = false; }
+        if (!dragging) { return std::nullopt; }
+        const SDL_FRect& box = globalData[tree].styles[track].bounding_box;
+        const f32 t = math::Clamp((input.mouse_position.x - box.x - SLIDER_KNOB_WIDTH * 0.5F) / (box.w - SLIDER_KNOB_WIDTH), 0.0F, 1.0F);
+        return min + math::Round(t * (max - min) / step) * step;
+    }
+};
+
 struct RailEditorFrame : Frame {
     Handle<Node> root { B(frame).Node(hug).Gap(6U).Direction(vertical).Build() };
     Handle<Node> toolbar { B(root).Node(hug).Padding(8U).Gap(16U).Fill(colors::COLOR_BEIGE).Build() };
@@ -91,10 +129,10 @@ struct RailEditorFrame : Frame {
     Handle<Node> brush_bigger { Button(B(brush_group).parent, "+") };
     Handle<Node> overlay_group { B(toolbar).Node(hug).Gap(4U).Build() };
     Handle<Node> year_previous { Button(B(overlay_group).parent, "◂") };
-    Handle<Node> year_track { B(overlay_group).Node(SLIDER_TRACK_WIDTH, SLIDER_HEIGHT).Fill(colors::COLOR_GRAY).Build() };
-    Handle<Node> year_knob { B(year_track).Node(SLIDER_KNOB_WIDTH, SLIDER_HEIGHT).Fill(colors::COLOR_BLACK).Build() };
-    Handle<Node> year_label { B(overlay_group).Node(hug).Padding(4U).Text(FontSizes::body, colors::COLOR_BLACK).Build() };
+    Slider year_slider { B(overlay_group).parent, OVERLAY_YEAR_MIN, OVERLAY_YEAR_MAX, OVERLAY_YEAR_STEP, OVERLAY_YEAR_MIN };
     Handle<Node> year_next { Button(B(overlay_group).parent, "▸") };
+    Handle<Node> river_group { B(toolbar).Node(hug).Gap(4U).Build() };
+    Slider river_slider { B(river_group).parent, 0U, RIVER_SIZE_MAX, 1U, 0U };
     Handle<Node> file_group { B(toolbar).Node(hug).Gap(4U).Build() };
     Handle<Node> import_button { Button(B(file_group).parent, "▦ Import image") };
     Handle<Node> save_button { Button(B(file_group).parent, "⬇ Save") };
@@ -110,15 +148,18 @@ struct RailEditorFrame : Frame {
 
 struct EditorDocument {
     HexList<i8> elevation { };
+    std::vector<River> rivers { };
+    std::vector<MapLabel> water_labels { };
     std::map<u32, std::vector<City>> city_overlays { };
 };
 
 struct RailEditorSystem {
     EditorDocument document { };
     u32 overlay_year { OVERLAY_YEAR_MIN };
-    b8 slider_dragging { false };
+    u32 river_size_min { 0U };
     List<Vertex> verts { };
     List<Label> city_labels { };
+    List<Label> water_labels { };
     EditorTool tool { EditorTool::TOOL_TERRAIN };
     u32 brush_radius { 1U };
     Optional<int2> last_painted_axial { };
@@ -147,6 +188,8 @@ struct RailEditorSystem {
                 if (std::filesystem::exists(Asset(asset_path))) { continue; }
                 std::filesystem::create_directories(Asset(SCENARIOS_DIR));
                 TerrainSave(document.elevation, asset_path);
+                if (!document.rivers.empty()) { RiversSave(document.rivers, std::format("{}/map_{:03}_rivers.txt", SCENARIOS_DIR, number)); }
+                if (!document.water_labels.empty()) { WaterLabelsSave(document.water_labels, std::format("{}/map_{:03}_water_labels.txt", SCENARIOS_DIR, number)); }
                 for (const auto& [year, cities] : document.city_overlays) {
                     if (!cities.empty()) { CitiesSave(cities, std::format("{}/map_{:03}_cities_{}.txt", SCENARIOS_DIR, number, year)); }
                 }
@@ -159,7 +202,8 @@ struct RailEditorSystem {
             if (!std::filesystem::exists(Asset(dir))) { continue; }
             std::vector<AssetPath> asset_paths;
             for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(Asset(dir))) {
-                if (!entry.path().filename().string().contains("_cities_")) { asset_paths.push_back(AssetPath { dir } / entry.path().filename()); }
+                const std::string filename = entry.path().filename().string();
+                if (!filename.contains("_cities_") && !filename.ends_with("_rivers.txt") && !filename.ends_with("_water_labels.txt")) { asset_paths.push_back(AssetPath { dir } / entry.path().filename()); }
             }
             std::ranges::sort(asset_paths);
             for (const AssetPath& asset_path : asset_paths) { AddFileButton(asset_path); }
@@ -168,12 +212,21 @@ struct RailEditorSystem {
         SetTool(tool);
         SetDocument(LoadDocument(AssetPath { SCENARIOS_BASE_DIR } / "britain.txt"));
         SetOverlayYear(overlay_year);
+        SetRiverSizeMin(river_size_min);
         UpdateHistoryButtons();
+    }
+
+    void SetRiverSizeMin(const u32 size) {
+        frame.river_slider.SetValue(globalData[frame.tree], size, std::format("Rivers ≥ {}", size));
+        river_size_min = frame.river_slider.value;
     }
 
     [[nodiscard]] static EditorDocument LoadDocument(const AssetPath& terrain_path) {
         EditorDocument loaded { .elevation = TerrainLoad(terrain_path) };
-        const std::string overlay_prefix = terrain_path.stem().string() + "_cities_";
+        const std::string stem = terrain_path.stem().string();
+        if (std::filesystem::exists(Asset(terrain_path.parent_path() / (stem + "_rivers.txt")))) { loaded.rivers = RiversLoad(terrain_path.parent_path() / (stem + "_rivers.txt")); }
+        if (std::filesystem::exists(Asset(terrain_path.parent_path() / (stem + "_water_labels.txt")))) { loaded.water_labels = WaterLabelsLoad(terrain_path.parent_path() / (stem + "_water_labels.txt")); }
+        const std::string overlay_prefix = stem + "_cities_";
         for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(Asset(terrain_path).parent_path())) {
             const std::string filename = entry.path().stem().string();
             if (!filename.starts_with(overlay_prefix)) { continue; }
@@ -187,10 +240,7 @@ struct RailEditorSystem {
 
     void SetOverlayYear(const u32 year) {
         overlay_year = std::clamp(year / OVERLAY_YEAR_STEP * OVERLAY_YEAR_STEP, OVERLAY_YEAR_MIN, OVERLAY_YEAR_MAX);
-        NodeTree& tree = globalData[frame.tree];
-        tree.node_properties[frame.year_label].text = std::format("{} ({} cities)", overlay_year, Cities().size());
-        tree.styles[frame.year_track].padding.x = (overlay_year - OVERLAY_YEAR_MIN) * (SLIDER_TRACK_WIDTH - SLIDER_KNOB_WIDTH) / (OVERLAY_YEAR_MAX - OVERLAY_YEAR_MIN);
-        tree.MarkDirty();
+        frame.year_slider.SetValue(globalData[frame.tree], overlay_year, std::format("{} ({} cities)", overlay_year, Cities().size()));
         SelectCity(std::nullopt);
         RebuildCityLabels();
     }
@@ -255,6 +305,9 @@ struct RailEditorSystem {
 
     void SetDocument(EditorDocument&& new_document) {
         document = std::move(new_document);
+        water_labels.clear();
+        TTF_Font* font = Singleton::Get<FontCollection>().GetFontNormalCourier(FontSizes::body);
+        for (const MapLabel& label : document.water_labels) { water_labels.EmplaceBack(font, String { label.name.c_str() }); }
         SetOverlayYear(overlay_year);
         CameraState& camera = Singleton::Get<CameraState>();
         camera.map_world_min = { 0.0F, 0.0F };
@@ -279,14 +332,8 @@ struct RailEditorSystem {
         if (ctrl && input.keys_down[SDLK_U]) { Redo(); }
 
         const HoveredType& hovered = Singleton::Get<HoveredType>();
-        const b8 slider_hovered = hovered.has_value() && hovered->tree.id == frame.tree.id && (hovered->node.id == frame.year_track.id || hovered->node.id == frame.year_knob.id);
-        if (input.left_mouse_down && slider_hovered) { slider_dragging = true; }
-        if (!input.left_mouse) { slider_dragging = false; }
-        if (slider_dragging) {
-            const SDL_FRect& track = globalData[frame.tree].styles[frame.year_track].bounding_box;
-            const f32 t = math::Clamp((input.mouse_position.x - track.x - SLIDER_KNOB_WIDTH * 0.5F) / (track.w - SLIDER_KNOB_WIDTH), 0.0F, 1.0F);
-            SetOverlayYear(OVERLAY_YEAR_MIN + math::Round(t * (OVERLAY_YEAR_MAX - OVERLAY_YEAR_MIN) / OVERLAY_YEAR_STEP) * OVERLAY_YEAR_STEP);
-        }
+        if (const Optional<u32> year = frame.year_slider.Drag(input, hovered, frame.tree); year.has_value() && year != overlay_year) { SetOverlayYear(year.value()); }
+        if (const Optional<u32> size = frame.river_slider.Drag(input, hovered, frame.tree); size.has_value() && size != river_size_min) { SetRiverSizeMin(size.value()); }
 
         const int2 axial_hover = HexWorldToAxial(camera.ScreenToWorld(input.mouse_position));
         const b8 over_ui = hovered.has_value();
@@ -357,6 +404,19 @@ struct RailEditorSystem {
                 verts.EmplaceBack(screen + HEX_ANGLE[(corner + 1) % HEX_CORNERS] * float2 { hex_screen_radius }, color);
             }
         }
+        for (const River& river : document.rivers) {
+            if (river.size < river_size_min) { continue; }
+            const Color color = colors::ColorLerp(COLOR_RIVER_SMALL, COLOR_RIVER_LARGE, static_cast<f32>(river.size) / RIVER_SIZE_MAX);
+            for (const int2 axial : river.axials) {
+                const float2 screen = camera.WorldToScreen(HexAxialToWorld(axial));
+                if (screen.x < -camera.scale || screen.y < -camera.scale || screen.x > screen_size.x + camera.scale || screen.y > screen_size.y + camera.scale) { continue; }
+                for (u32 corner = 0; corner < HEX_CORNERS; corner++) {
+                    verts.EmplaceBack(screen, color);
+                    verts.EmplaceBack(screen + HEX_ANGLE[corner] * float2 { hex_screen_radius }, color);
+                    verts.EmplaceBack(screen + HEX_ANGLE[(corner + 1) % HEX_CORNERS] * float2 { hex_screen_radius }, color);
+                }
+            }
+        }
         for (u32 i = 0; i < cities.size(); i++) {
             const float2 screen = camera.WorldToScreen(HexAxialToWorld(cities[i].axial));
             const Color color = selected_city == i ? COLOR_CITY_SELECTED : COLOR_CITY;
@@ -376,6 +436,10 @@ struct RailEditorSystem {
             }
         }
         (void)SDL_RenderGeometry(Singleton::Get<WindowState>().renderer, nullptr, verts);
+        for (u32 i = 0; i < document.water_labels.size(); i++) {
+            water_labels[i].SetColor(COLOR_WATER_LABEL);
+            water_labels[i].Draw(camera.WorldToScreen(HexAxialToWorld(document.water_labels[i].axial)) - float2 { 0.0F, static_cast<f32>(FontSizes::body) * 0.5F });
+        }
         for (u32 i = 0; i < cities.size(); i++) {
             const float2 screen = camera.WorldToScreen(HexAxialToWorld(cities[i].axial));
             city_labels[i].SetColor(selected_city == i ? COLOR_CITY_SELECTED : COLOR_CITY);
