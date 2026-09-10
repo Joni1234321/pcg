@@ -391,7 +391,7 @@ struct RailEditorSystem {
         const float2 screen_size { Singleton::Get<WindowState>().screen_size };
         const float2 texture_size = TerrainTextureSize();
         const f32 minimap_scale = MINIMAP_WIDTH / texture_size.x;
-        const SDL_FRect minimap_rect { screen_size.x - MINIMAP_WIDTH - MINIMAP_SCREEN_MARGIN, screen_size.y - texture_size.y * minimap_scale - MINIMAP_SCREEN_MARGIN, MINIMAP_WIDTH, texture_size.y * minimap_scale };
+        const SDL_FRect minimap_rect { MINIMAP_SCREEN_MARGIN, screen_size.y - texture_size.y * minimap_scale - MINIMAP_SCREEN_MARGIN, MINIMAP_WIDTH, texture_size.y * minimap_scale };
         const b8 over_minimap = input.mouse_position.x >= minimap_rect.x && input.mouse_position.y >= minimap_rect.y && input.mouse_position.x <= minimap_rect.x + minimap_rect.w && input.mouse_position.y <= minimap_rect.y + minimap_rect.h;
         if (over_minimap && input.left_mouse && !ctrl) {
             const float2 world = (input.mouse_position - float2 { minimap_rect.x, minimap_rect.y }) / float2 { minimap_scale * TERRAIN_TEXTURE_HEX_RADIUS } - TERRAIN_TEXTURE_WORLD_MARGIN;
@@ -472,12 +472,20 @@ struct RailEditorSystem {
                 }
             }
         } else {
-            for (u32 i = 0; i < document.elevation.Size(); i++) {
-                const int2 axial = document.elevation.IndexToAxial(i);
-                const float2 screen = camera.WorldToScreen(HexAxialToWorld(axial));
-                if (screen.x < -camera.scale || screen.y < -camera.scale || screen.x > screen_size.x + camera.scale || screen.y > screen_size.y + camera.scale) { continue; }
-                const Color color = HexAxialDistance(axial, axial_hover) <= brush_hover_radius ? ElevationToColor(document.elevation.data[i]).Mul(1.2F) : ElevationToColor(document.elevation.data[i]);
-                AppendHex(verts, screen, hex_screen_radius, color);
+            const uint2 map_size = document.elevation.map_size;
+            const float2 world_min = camera.ScreenToWorld({ 0.0F, 0.0F }) - float2 { 1.0F };
+            const float2 world_max = camera.ScreenToWorld(screen_size) + float2 { 1.0F };
+            const i32 row_min = std::clamp(static_cast<i32>(std::floor(world_min.y / HEX_SPACING.y)), 0, static_cast<i32>(map_size.y) - 1);
+            const i32 row_max = std::clamp(static_cast<i32>(std::ceil(world_max.y / HEX_SPACING.y)), 0, static_cast<i32>(map_size.y) - 1);
+            for (i32 row = row_min; row <= row_max; row++) {
+                const f32 row_shift = row & 1 ? 0.5F : 0.0F;
+                const i32 column_min = std::clamp(static_cast<i32>(std::floor(world_min.x / HEX_SPACING.x - row_shift)), 0, static_cast<i32>(map_size.x) - 1);
+                const i32 column_max = std::clamp(static_cast<i32>(std::ceil(world_max.x / HEX_SPACING.x - row_shift)), 0, static_cast<i32>(map_size.x) - 1);
+                for (i32 column = column_min; column <= column_max; column++) {
+                    const int2 axial = HexOffsetToAxial(int2 { column, row });
+                    const Color color = HexAxialDistance(axial, axial_hover) <= brush_hover_radius ? ElevationToColor(document.elevation[axial]).Mul(1.2F) : ElevationToColor(document.elevation[axial]);
+                    AppendHex(verts, camera.WorldToScreen(HexAxialToWorld(axial)), hex_screen_radius, color);
+                }
             }
         }
         for (const River& river : document.rivers) {
