@@ -1,5 +1,7 @@
 module;
 
+#include <tracy/Tracy.hpp>
+
 export module pcs.orchestra;
 
 import std;
@@ -28,10 +30,13 @@ struct Orchestra {
     void RunSystems() {
         OrchestraState& orchestra_state = Singleton::Get<OrchestraState>();
         for (const auto [i, system] : std::views::zip(std::views::iota(0U), orchestra_state.systems)) {
+            ZoneScoped;
+            ZoneName(orchestra_state.names[i].c_str(), orchestra_state.names[i].size());
             const nanoseconds64 start = TimeNowNS();
             system();
             orchestra_state.ns[i] = TimeNowNS() - start;
         }
+        FrameMark;
     }
     ~Orchestra() { Singleton::Get<OrchestraState>() = { }; }
 };

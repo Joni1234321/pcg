@@ -27,6 +27,14 @@
         "SET_CLANG_TIDY": "ON",
         "SET_WARNINGS_ENABLED": "ON"
       }
+    },
+    {
+      "name": "xdt",
+      "inherits": "xd",
+      "binaryDir": "${sourceDir}/build/xdt",
+      "cacheVariables": {
+        "SET_TRACY": "ON"
+      }
     }
   ]
 }

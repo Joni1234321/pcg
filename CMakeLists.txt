@@ -13,6 +13,7 @@ project(pcg VERSION 1.0)
 
 option(SET_WARNINGS_ENABLED "Enable warnings" FALSE)
 option(SET_CLANG_TIDY "Enable clang tidy" FALSE)
+option(SET_TRACY "Enable tracy profiler" FALSE)
 
 set(CMAKE_CXX_MODULE_STD 1)
 set(CMAKE_CXX_STANDARD 26)
@@ -83,7 +84,12 @@ fetchcontent_declare(SDL3_ttf
 fetchcontent_declare(SDL3_image
                      GIT_REPOSITORY "https://github.com/libsdl-org/SDL_image.git"
                      GIT_TAG "release-3.4.4" EXCLUDE_FROM_ALL)
-fetchcontent_makeavailable(SDL3 SDL3_ttf SDL3_image)
+pcg_seed_fetchcontent_from_cache(tracy tracy-src)
+set(TRACY_ENABLE ${SET_TRACY} CACHE BOOL "" FORCE)
+fetchcontent_declare(tracy
+                     GIT_REPOSITORY "https://github.com/wolfpld/tracy.git"
+                     GIT_TAG "v0.12.2" EXCLUDE_FROM_ALL)
+fetchcontent_makeavailable(SDL3 SDL3_ttf SDL3_image tracy)
 
 add_executable(pcg src/pcg.cpp
                src/8_rail/g_rail_game.cpp
@@ -164,6 +170,7 @@ target_link_libraries(pcg
                       PRIVATE SDL3::SDL3
                       PRIVATE SDL3_ttf::SDL3_ttf
                       PRIVATE SDL3_image::SDL3_image
+                      PRIVATE Tracy::TracyClient
 )
 
 target_include_directories(pcg PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
