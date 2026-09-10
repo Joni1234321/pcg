@@ -35,7 +35,15 @@ constexpr const char* SCENARIOS_BASE_DIR = "rail/scenarios_base";
 constexpr const char* SCENARIOS_DIR = "rail/scenarios";
 constexpr const char* IMPORT_IMAGE = "rail/source/britain.jpg";
 constexpr uint2 IMPORT_MAP_SIZE { 136U, 240U };
-constexpr f32 EDITOR_CAMERA_SCALE = 8.0F;
+constexpr f32 EDITOR_CAMERA_SCALE = 20.0F;
+constexpr f32 TERRAIN_TEXTURE_HEX_RADIUS = 2.0F;
+constexpr f32 TERRAIN_TEXTURE_MAX_CAMERA_SCALE = 6.0F;
+constexpr u32 TERRAIN_TEXTURE_HEXES_PER_DRAW = 16384U;
+constexpr float2 TERRAIN_TEXTURE_WORLD_MARGIN { HEX_SPACING.x * 0.5F, 1.0F };
+constexpr f32 MINIMAP_WIDTH = 300.0F;
+constexpr f32 MINIMAP_SCREEN_MARGIN = 10.0F;
+constexpr Color COLOR_MINIMAP_BORDER { 30U, 30U, 30U };
+constexpr Color COLOR_MINIMAP_VIEW { 255U, 255U, 255U };
 constexpr u32 HISTORY_MAX = 64U;
 constexpr i32 BRUSH_ELEVATION_STEP = 8;
 constexpr u32 OVERLAY_YEAR_MIN = 1830U;
@@ -71,6 +79,14 @@ enum class EditorTool : u8 { TOOL_TERRAIN, TOOL_CITY };
     if (t < UPLAND_T) { return colors::ColorLerp(COLOR_LOWLAND, COLOR_UPLAND, t / UPLAND_T); }
     if (t < HIGHLAND_T) { return colors::ColorLerp(COLOR_UPLAND, COLOR_HIGHLAND, (t - UPLAND_T) / (HIGHLAND_T - UPLAND_T)); }
     return colors::ColorLerp(COLOR_HIGHLAND, COLOR_MOUNTAIN, (t - HIGHLAND_T) / (1.0F - HIGHLAND_T));
+}
+
+void AppendHex(List<Vertex>& verts, const float2 screen_center, const f32 screen_radius, const Color color) {
+    for (u32 corner = 0; corner < HEX_CORNERS; corner++) {
+        verts.EmplaceBack(screen_center, color);
+        verts.EmplaceBack(screen_center + HEX_ANGLE[corner] * float2 { screen_radius }, color);
+        verts.EmplaceBack(screen_center + HEX_ANGLE[(corner + 1) % HEX_CORNERS] * float2 { screen_radius }, color);
+    }
 }
 
 [[nodiscard]] Handle<Node> Button(const NodeReference parent, const String& text) {
@@ -160,6 +176,8 @@ struct RailEditorSystem {
     List<Vertex> verts { };
     List<Label> city_labels { };
     List<Label> water_labels { };
+    SDL_Texture* terrain_texture { nullptr };
+    List<int2> terrain_texture_dirty_axials { };
     EditorTool tool { EditorTool::TOOL_TERRAIN };
     u32 brush_radius { 1U };
     Optional<int2> last_painted_axial { };
@@ -219,6 +237,40 @@ struct RailEditorSystem {
     void SetRiverSizeMin(const u32 size) {
         frame.river_slider.SetValue(globalData[frame.tree], size, std::format("Rivers ≥ {}", size));
         river_size_min = frame.river_slider.value;
+    }
+
+    ~RailEditorSystem() {
+        if (terrain_texture) { SDL_DestroyTexture(terrain_texture); }
+    }
+
+    [[nodiscard]] static float2 TerrainTexturePixel(const float2 world) { return (world + TERRAIN_TEXTURE_WORLD_MARGIN) * float2 { TERRAIN_TEXTURE_HEX_RADIUS }; }
+    [[nodiscard]] float2 TerrainTextureSize() const { return TerrainTexturePixel(HexAxialToWorld(HexOffsetToAxial(static_cast<int2>(document.elevation.map_size - uint2 { 1U, 1U }))) + TERRAIN_TEXTURE_WORLD_MARGIN); }
+
+    void RebuildTerrainTexture() {
+        if (terrain_texture) { SDL_DestroyTexture(terrain_texture); }
+        const float2 size = TerrainTextureSize();
+        terrain_texture = SDL_CreateTexture(Singleton::Get<WindowState>().renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, static_cast<i32>(std::ceil(size.x)), static_cast<i32>(std::ceil(size.y)));
+        terrain_texture_dirty_axials.clear();
+        for (u32 i = 0; i < document.elevation.Size(); i++) { terrain_texture_dirty_axials.EmplaceBack(document.elevation.IndexToAxial(i)); }
+        FlushTerrainTexture();
+    }
+
+    void FlushTerrainTexture() {
+        if (terrain_texture_dirty_axials.empty()) { return; }
+        WindowState& window_state = Singleton::Get<WindowState>();
+        (void)SDL_SetRenderTarget(window_state.renderer, terrain_texture);
+        (void)SDL_SetRenderScale(window_state.renderer, 1.0F, 1.0F);
+        for (u32 start = 0; start < terrain_texture_dirty_axials.size(); start += TERRAIN_TEXTURE_HEXES_PER_DRAW) {
+            verts.clear();
+            for (u32 i = start; i < std::min(start + TERRAIN_TEXTURE_HEXES_PER_DRAW, terrain_texture_dirty_axials.size()); i++) {
+                const int2 axial = terrain_texture_dirty_axials[i];
+                AppendHex(verts, TerrainTexturePixel(HexAxialToWorld(axial)), TERRAIN_TEXTURE_HEX_RADIUS * 1.1F, ElevationToColor(document.elevation[axial]));
+            }
+            (void)SDL_RenderGeometry(window_state.renderer, nullptr, verts);
+        }
+        (void)SDL_SetRenderTarget(window_state.renderer, nullptr);
+        (void)SDL_SetRenderScale(window_state.renderer, window_state.ui_scale, window_state.ui_scale);
+        terrain_texture_dirty_axials.clear();
     }
 
     [[nodiscard]] static EditorDocument LoadDocument(const AssetPath& terrain_path) {
@@ -309,6 +361,7 @@ struct RailEditorSystem {
         TTF_Font* font = Singleton::Get<FontCollection>().GetFontNormalCourier(FontSizes::body);
         for (const MapLabel& label : document.water_labels) { water_labels.EmplaceBack(font, String { label.name.c_str() }); }
         SetOverlayYear(overlay_year);
+        RebuildTerrainTexture();
         CameraState& camera = Singleton::Get<CameraState>();
         camera.map_world_min = { 0.0F, 0.0F };
         camera.map_world_max = HexAxialToWorld(HexOffsetToAxial(static_cast<int2>(document.elevation.map_size - uint2 { 1U, 1U })));
@@ -335,8 +388,18 @@ struct RailEditorSystem {
         if (const Optional<u32> year = frame.year_slider.Drag(input, hovered, frame.tree); year.has_value() && year != overlay_year) { SetOverlayYear(year.value()); }
         if (const Optional<u32> size = frame.river_slider.Drag(input, hovered, frame.tree); size.has_value() && size != river_size_min) { SetRiverSizeMin(size.value()); }
 
+        const float2 screen_size { Singleton::Get<WindowState>().screen_size };
+        const float2 texture_size = TerrainTextureSize();
+        const f32 minimap_scale = MINIMAP_WIDTH / texture_size.x;
+        const SDL_FRect minimap_rect { screen_size.x - MINIMAP_WIDTH - MINIMAP_SCREEN_MARGIN, screen_size.y - texture_size.y * minimap_scale - MINIMAP_SCREEN_MARGIN, MINIMAP_WIDTH, texture_size.y * minimap_scale };
+        const b8 over_minimap = input.mouse_position.x >= minimap_rect.x && input.mouse_position.y >= minimap_rect.y && input.mouse_position.x <= minimap_rect.x + minimap_rect.w && input.mouse_position.y <= minimap_rect.y + minimap_rect.h;
+        if (over_minimap && input.left_mouse && !ctrl) {
+            const float2 world = (input.mouse_position - float2 { minimap_rect.x, minimap_rect.y }) / float2 { minimap_scale * TERRAIN_TEXTURE_HEX_RADIUS } - TERRAIN_TEXTURE_WORLD_MARGIN;
+            camera.world_position = world * float2 { camera.scale } - screen_size * float2 { 0.5F };
+        }
+
         const int2 axial_hover = HexWorldToAxial(camera.ScreenToWorld(input.mouse_position));
-        const b8 over_ui = hovered.has_value();
+        const b8 over_ui = hovered.has_value() || over_minimap;
         const b8 left_click = !over_ui && !ctrl && input.left_mouse_down;
         const b8 right_click = !over_ui && !ctrl && input.right_mouse_down;
         std::vector<City>& cities = Cities();
@@ -361,6 +424,7 @@ struct RailEditorSystem {
                             if (HexAxialDistance(axial, axial_hover) > static_cast<u32>(radius) || !document.elevation.Contains(axial)) { continue; }
                             i8& elevation_value = document.elevation[axial];
                             elevation_value = static_cast<i8>(std::clamp<i32>(elevation_value + (paint_raise ? BRUSH_ELEVATION_STEP : -BRUSH_ELEVATION_STEP), ELEVATION_MIN, ELEVATION_MAX));
+                            terrain_texture_dirty_axials.EmplaceBack(axial);
                         }
                     }
                 }
@@ -389,19 +453,31 @@ struct RailEditorSystem {
             }
         }
 
-        const float2 screen_size { Singleton::Get<WindowState>().screen_size };
+        FlushTerrainTexture();
+        SDL_Renderer* renderer = Singleton::Get<WindowState>().renderer;
         const f32 hex_screen_radius = camera.scale * 0.95F;
+        const u32 brush_hover_radius = tool == EditorTool::TOOL_TERRAIN && !over_ui ? brush_radius - 1U : 0U;
         verts.clear();
-        for (u32 i = 0; i < document.elevation.Size(); i++) {
-            const int2 axial = document.elevation.IndexToAxial(i);
-            const float2 screen = camera.WorldToScreen(HexAxialToWorld(axial));
-            if (screen.x < -camera.scale || screen.y < -camera.scale || screen.x > screen_size.x + camera.scale || screen.y > screen_size.y + camera.scale) { continue; }
-            const u32 brush_hover_radius = tool == EditorTool::TOOL_TERRAIN && !over_ui ? brush_radius - 1U : 0U;
-            const Color color = HexAxialDistance(axial, axial_hover) <= brush_hover_radius ? ElevationToColor(document.elevation.data[i]).Mul(1.2F) : ElevationToColor(document.elevation.data[i]);
-            for (u32 corner = 0; corner < HEX_CORNERS; corner++) {
-                verts.EmplaceBack(screen, color);
-                verts.EmplaceBack(screen + HEX_ANGLE[corner] * float2 { hex_screen_radius }, color);
-                verts.EmplaceBack(screen + HEX_ANGLE[(corner + 1) % HEX_CORNERS] * float2 { hex_screen_radius }, color);
+        if (camera.scale < TERRAIN_TEXTURE_MAX_CAMERA_SCALE) {
+            const float2 screen_origin = camera.WorldToScreen(float2 { 0.0F, 0.0F } - TERRAIN_TEXTURE_WORLD_MARGIN);
+            const float2 screen_texture_size = texture_size * float2 { camera.scale / TERRAIN_TEXTURE_HEX_RADIUS };
+            const SDL_FRect destination { screen_origin.x, screen_origin.y, screen_texture_size.x, screen_texture_size.y };
+            (void)SDL_RenderTexture(renderer, terrain_texture, nullptr, &destination);
+            const i32 radius = static_cast<i32>(brush_hover_radius);
+            for (i32 dy = -radius; dy <= radius; dy++) {
+                for (i32 dx = -radius; dx <= radius; dx++) {
+                    const int2 axial = axial_hover + int2 { dx, dy };
+                    if (HexAxialDistance(axial, axial_hover) > brush_hover_radius || !document.elevation.Contains(axial)) { continue; }
+                    AppendHex(verts, camera.WorldToScreen(HexAxialToWorld(axial)), hex_screen_radius, ElevationToColor(document.elevation[axial]).Mul(1.2F));
+                }
+            }
+        } else {
+            for (u32 i = 0; i < document.elevation.Size(); i++) {
+                const int2 axial = document.elevation.IndexToAxial(i);
+                const float2 screen = camera.WorldToScreen(HexAxialToWorld(axial));
+                if (screen.x < -camera.scale || screen.y < -camera.scale || screen.x > screen_size.x + camera.scale || screen.y > screen_size.y + camera.scale) { continue; }
+                const Color color = HexAxialDistance(axial, axial_hover) <= brush_hover_radius ? ElevationToColor(document.elevation.data[i]).Mul(1.2F) : ElevationToColor(document.elevation.data[i]);
+                AppendHex(verts, screen, hex_screen_radius, color);
             }
         }
         for (const River& river : document.rivers) {
@@ -410,11 +486,7 @@ struct RailEditorSystem {
             for (const int2 axial : river.axials) {
                 const float2 screen = camera.WorldToScreen(HexAxialToWorld(axial));
                 if (screen.x < -camera.scale || screen.y < -camera.scale || screen.x > screen_size.x + camera.scale || screen.y > screen_size.y + camera.scale) { continue; }
-                for (u32 corner = 0; corner < HEX_CORNERS; corner++) {
-                    verts.EmplaceBack(screen, color);
-                    verts.EmplaceBack(screen + HEX_ANGLE[corner] * float2 { hex_screen_radius }, color);
-                    verts.EmplaceBack(screen + HEX_ANGLE[(corner + 1) % HEX_CORNERS] * float2 { hex_screen_radius }, color);
-                }
+                AppendHex(verts, screen, hex_screen_radius, color);
             }
         }
         for (u32 i = 0; i < cities.size(); i++) {
@@ -435,7 +507,15 @@ struct RailEditorSystem {
                 verts.EmplaceBack(inner_a, color);
             }
         }
-        (void)SDL_RenderGeometry(Singleton::Get<WindowState>().renderer, nullptr, verts);
+        (void)SDL_RenderGeometry(renderer, nullptr, verts);
+        (void)SDL_RenderTexture(renderer, terrain_texture, nullptr, &minimap_rect);
+        const float2 minimap_view_min = float2 { minimap_rect.x, minimap_rect.y } + TerrainTexturePixel(camera.ScreenToWorld({ 0.0F, 0.0F })) * float2 { minimap_scale };
+        const float2 minimap_view_max = float2 { minimap_rect.x, minimap_rect.y } + TerrainTexturePixel(camera.ScreenToWorld(screen_size)) * float2 { minimap_scale };
+        const SDL_FRect minimap_view_rect { minimap_view_min.x, minimap_view_min.y, minimap_view_max.x - minimap_view_min.x, minimap_view_max.y - minimap_view_min.y };
+        (void)SDL_SetRenderDrawColor(renderer, COLOR_MINIMAP_VIEW.r, COLOR_MINIMAP_VIEW.g, COLOR_MINIMAP_VIEW.b, COLOR_MINIMAP_VIEW.a);
+        (void)SDL_RenderRect(renderer, &minimap_view_rect);
+        (void)SDL_SetRenderDrawColor(renderer, COLOR_MINIMAP_BORDER.r, COLOR_MINIMAP_BORDER.g, COLOR_MINIMAP_BORDER.b, COLOR_MINIMAP_BORDER.a);
+        (void)SDL_RenderRect(renderer, &minimap_rect);
         for (u32 i = 0; i < document.water_labels.size(); i++) {
             water_labels[i].SetColor(COLOR_WATER_LABEL);
             water_labels[i].Draw(camera.WorldToScreen(HexAxialToWorld(document.water_labels[i].axial)) - float2 { 0.0F, static_cast<f32>(FontSizes::body) * 0.5F });

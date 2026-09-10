@@ -1,140 +1,146 @@
-city 16 192 London
-city 7 173 Birmingham
-city 18 104 Glasgow
-city -29 155 Dublin
-city 11 174 Coventry
-city 37 124 Sunderland
-city 10 162 Stoke-on-Trent
-city 53 77 Aberdeen
-city -1 205 Portsmouth
-city -66 184 Cork
-city 31 143 York
-city 9 146 Blackpool
-city 7 172 West Bromwich
-city -11 208 Poole
-city 36 130 Middlesbrough
-city 7 187 Oxford
-city 25 171 Peterborough
-city 9 206 Brighton
-city 2 161 Wrexham County Borough
-city 11 192 Slough
-city 23 153 Rotherham
-city 30 185 Colchester
-city 26 178 Cambridge
-city 9 153 St Helens
-city 13 207 Eastbourne
-city 2 179 Worcester
-city 14 194 Wimbledon
-city -23 122 Derry
-city 19 179 Bedford
-city -8 195 Bath
-city 9 162 Newcastle-under-Lyme
-city 17 146 Burnley
-city -14 131 Lisburn
-city 22 159 Mansfield
-city 8 199 Godalming
-city 10 196 Woking
-city -19 133 Craigavon
-city 12 186 Aylesbury
-city -17 210 Weymouth
-city 6 152 Crosby
-city 21 145 Keighley
-city -5 181 Hereford
-city 41 136 Scarborough
-city 9 194 Bracknell
-city 13 153 Stretford
-city 31 99 Kirkcaldy
-city -17 194 Barry
-city 26 197 Canterbury
-city 10 112 Ayr
-city -20 189 Neath
-city 13 101 Greenock
-city 10 176 Leamington Spa
-city 31 93 Perth
-city 34 167 King's Lynn
-city 9 181 Banbury
-city -2 206 Fareham
-city 34 71 Inverness
-city 15 205 Bexhill-on-Sea
-city 6 198 Farnham
-city -24 188 Llanelli
-city 32 177 Bury St Edmunds
-city 23 185 Bishop's Stortford
-city 41 140 Bridlington
-city 16 184 Dunstable
-city 11 109 Irvine
-city -26 210 Exmouth
-city 16 120 Dumfries
-city 21 148 Brighouse
-city 7 194 Earley
-city 8 194 Wokingham
-city 20 189 Loughton
-city 24 191 Rayleigh
-city 26 194 Whitstable
-city 8 158 Winsford
-city 18 187 Hatfield
-city 4 176 Bromsgrove
-city 10 204 Burgess Hill
-city -13 124 Ballymena
-city 9 184 Bicester
-city -29 156 Blackrock
-city -16 204 Yeovil
-city 3 194 Newbury
-city -7 196 Trowbridge
-city -5 193 Chippenham
-city 10 169 Lichfield
-city 23 147 Morley
-city 17 186 Harpenden
-city 23 190 Billericay
-city 37 122 Jarrow
-city 18 135 Kendal
-city 12 193 Windsor
-city 8 193 Woodley
-city 22 178 St Neots
-city 19 176 Rushden
-city 11 159 Congleton
-city 9 169 Burntwood
-city 5 206 Littlehampton
-city -49 220 Falmouth
-city 11 131 Whitehaven
-city 23 143 Ilkley
-city 0 156 Rhyl
-city 19 187 Hertford
-city -10 198 Frome
-city 13 129 Workington
-city -62 165 Ennis
-city 10 160 Kidsgrove
-city 36 183 Felixstowe
-city -4 208 Newport
-city 13 200 East Grinstead
-city -7 207 New Milton
-city 2 206 Chichester
-city -30 212 Newton Abbot
-city 12 147 Penwortham
-city 12 151 Westhoughton
-city 11 207 Seaford
-city 11 202 Haywards Heath
-city 4 187 Witney
-city 6 190 Didcot
-city 10 175 Kenilworth
-city 3 206 Bognor Regis
-city 27 186 Witham
-city 3 180 Evesham
-city 7 152 Maghull
-city 7 178 Stratford-upon-Avon
-city -13 194 Clevedon
-city 37 125 Peterlee
-city -7 191 Yate
-city 34 174 Thetford
-city 20 156 Dronfield
-city 12 199 Horley
-city -54 220 Penzance
-city 7 196 Yateley
-city 18 194 Swanley
-city -29 201 Barnstaple
-city 18 161 Belper
-city 29 197 Deal
-city 13 188 Chesham
-city 3 168 Wellington
-city 30 169 Wisbech
-city -50 218 Camborne
+city 60 723 London
+city 28 649 Birmingham
+city 66 391 Glasgow
+city -108 583 Dublin
+city -107 582 Dublin City
+city 41 654 Coventry
+city 141 464 Sunderland
+city 37 609 Stoke-on-Trent
+city 199 293 Aberdeen
+city -3 777 Portsmouth
+city -248 693 Cork
+city 116 537 York
+city 36 547 Blackpool
+city 27 646 West Bromwich
+city -42 783 Poole
+city 134 490 Middlesbrough
+city 26 704 Oxford
+city 96 642 Peterborough
+city 34 775 Brighton
+city 7 606 Wrexham County Borough
+city 42 723 Slough
+city 86 576 Rotherham
+city 115 694 Colchester
+city 96 670 Cambridge
+city 33 575 St Helens
+city 48 779 Eastbourne
+city 6 671 Worcester
+city 54 729 Wimbledon
+city -87 458 Derry
+city 71 675 Bedford
+city -31 733 Bath
+city 36 609 Newcastle-under-Lyme
+city 65 549 Burnley
+city -54 494 Lisburn
+city 81 598 Mansfield
+city 29 748 Godalming
+city 36 738 Woking
+city -71 499 Craigavon
+city 45 700 Aylesbury
+city -64 790 Weymouth
+city 23 572 Crosby
+city 81 543 Keighley
+city -19 681 Hereford
+city 155 512 Scarborough
+city 33 730 Bracknell
+city 50 575 Stretford
+city 26 648 Smethwick
+city 118 372 Kirkcaldy
+city -66 731 Barry
+city 98 741 Canterbury
+city 37 422 Ayr
+city -77 711 Neath
+city 49 386 Greenock
+city 36 663 Leamington Spa
+city 118 351 Perth
+city 128 628 King's Lynn
+city 34 681 Banbury
+city -6 773 Fareham
+city 130 268 Inverness
+city 58 773 Bexhill-on-Sea
+city 23 745 Farnham
+city -89 710 Llanelli
+city 121 667 Bury St Edmunds
+city 86 695 Bishop's Stortford
+city 156 526 Bridlington
+city 59 694 Dunstable
+city 41 410 Irvine
+city -100 790 Exmouth
+city 60 452 Dumfries
+city 79 556 Brighouse
+city 26 729 Earley
+city 29 730 Wokingham
+city 74 712 Loughton
+city 92 717 Rayleigh
+city 100 735 Whitstable
+city 32 594 Winsford
+city 66 704 Hatfield
+city 17 660 Bromsgrove
+city 39 765 Burgess Hill
+city -50 467 Ballymena
+city 36 693 Bicester
+city -107 586 Blackrock
+city -59 766 Yeovil
+city 10 731 Newbury
+city -27 737 Trowbridge
+city -19 727 Chippenham
+city 39 633 Lichfield
+city 89 552 Morley
+city 63 700 Harpenden
+city 86 714 Billericay
+city 140 458 Jarrow
+city 66 508 Kendal
+city 41 725 Windsor
+city 28 727 Woodley
+city 82 668 St Neots
+city 72 663 Rushden
+city 42 597 Congleton
+city 35 634 Burntwood
+city 18 776 Littlehampton
+city -183 825 Falmouth
+city 43 491 Whitehaven
+city 86 539 Ilkley
+city -1 584 Rhyl
+city 73 701 Hertford
+city -35 744 Frome
+city 47 485 Workington
+city -232 621 Ennis
+city 38 603 Kidsgrove
+city 135 688 Felixstowe
+city -15 784 Newport
+city 50 752 East Grinstead
+city -28 780 New Milton
+city 9 774 Chichester
+city -112 797 Newton Abbot
+city 45 553 Penwortham
+city 45 567 Westhoughton
+city 42 779 Seaford
+city 12 731 Thatcham
+city 42 761 Haywards Heath
+city 18 702 Witney
+city 21 715 Didcot
+city 36 660 Kenilworth
+city 11 778 Bognor Regis
+city 101 701 Witham
+city 12 678 Evesham
+city 27 570 Maghull
+city 25 671 Stratford-upon-Avon
+city -48 729 Clevedon
+city 138 475 Peterlee
+city -27 720 Yate
+city 128 654 Thetford
+city 77 586 Dronfield
+city 46 748 Horley
+city -202 828 Penzance
+city 26 736 Yateley
+city 68 731 Swanley
+city 28 735 Sandhurst
+city 92 720 Leigh-on-Sea
+city -108 755 Barnstaple
+city 66 607 Belper
+city 108 745 Deal
+city 49 708 Chesham
+city 13 632 Wellington
+city 69 607 Ripley
+city 115 635 Wisbech
+city -190 822 Camborne

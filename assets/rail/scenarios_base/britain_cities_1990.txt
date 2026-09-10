@@ -1,23 +1,23 @@
-city 16 192 London
-city 7 173 Birmingham
-city 18 104 Glasgow
-city 11 174 Coventry
-city 37 124 Sunderland
-city 10 162 Stoke-on-Trent
-city 53 77 Aberdeen
-city -66 184 Cork
-city 9 146 Blackpool
-city 7 172 West Bromwich
-city 7 187 Oxford
-city 30 185 Colchester
-city 26 178 Cambridge
-city 19 179 Bedford
-city 22 159 Mansfield
-city 12 186 Aylesbury
-city -17 210 Weymouth
-city 13 153 Stretford
-city 34 71 Inverness
-city 9 181 Banbury
-city 15 205 Bexhill-on-Sea
-city 12 193 Windsor
-city 22 178 St Neots
+city 60 723 London
+city 28 649 Birmingham
+city 66 391 Glasgow
+city 41 654 Coventry
+city 141 464 Sunderland
+city 37 609 Stoke-on-Trent
+city 199 293 Aberdeen
+city -248 693 Cork
+city 36 547 Blackpool
+city 27 646 West Bromwich
+city 26 704 Oxford
+city 115 694 Colchester
+city 96 670 Cambridge
+city 71 675 Bedford
+city 81 598 Mansfield
+city 45 700 Aylesbury
+city -64 790 Weymouth
+city 50 575 Stretford
+city 130 268 Inverness
+city 34 681 Banbury
+city 58 773 Bexhill-on-Sea
+city 41 725 Windsor
+city 82 668 St Neots
