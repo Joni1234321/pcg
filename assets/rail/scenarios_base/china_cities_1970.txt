@@ -1,6 +1,46 @@
-city 31 99 Chengdu
-city 48 129 Hong Kong
-city 66 71 Taiyuan
-city 68 123 Tainan
-city 71 119 Taichung
-city 45 130 Macau
+city 31 99 3.0 Chengdu
+city 48 129 3.0 Hong Kong
+city 66 71 3.0 Taiyuan
+city 68 123 2.0 Tainan
+city 71 119 2.0 Taichung
+city 45 130 1.5 Macau
+city 80 62 0.75 Beijing
+city 108 43 0.5 Changchun
+city 70 119 0.5 Changhua City
+city 52 107 0.5 Changsha
+city 92 64 0.5 Dalian
+city 70 120 0.5 Douliou City
+city 69 112 0.5 Fuzhou
+city 45 126 0.5 Guangzhou
+city 31 114 0.5 Guiyang
+city 31 138 0.5 Haikou
+city 77 97 0.5 Hangzhou
+city 114 35 0.5 Harbin
+city 71 92 0.5 Hefei
+city 69 60 0.5 Hohhot
+city 73 119 0.5 Hualien City
+city 77 74 0.5 Jinan
+city 63 118 0.5 Jincheng Township
+city 16 120 0.5 Kunming
+city 40 79 0.5 Lanzhou
+city -6 100 0.5 Lhasa
+city 66 121 0.5 Magong City
+city 72 117 0.5 Miaoli City
+city 62 104 0.5 Nanchang
+city 75 91 0.5 Nanjing
+city 29 128 0.5 Nanning
+city 68 125 0.5 Pingtung City
+city 101 52 0.5 Shenyang
+city 72 70 0.5 Shijiazhuang
+city 69 121 0.5 Taibao City
+city 75 115 0.75 Taipei
+city 70 124 0.5 Taitung City
+city 74 115 0.5 Taoyuan District
+city 60 98 0.5 Wuhan
+city 51 85 0.5 Xi'an
+city 36 77 0.5 Xining
+city 75 116 0.5 Yilan City
+city 51 70 0.5 Yinchuan
+city 66 82 0.5 Zhengzhou
+city 73 116 0.5 Zhubei City
+city 18 46 0.5 Ürümqi

@@ -1,4 +1,25 @@
-city 22 90 Rome
-city 24 59 Florence
-city 54 29 Heraclea
-city 35 32 Verona
+city 22 90 1.5 Rome
+city 24 59 1.5 Florence
+city 54 29 1.0 Heraclea
+city 35 32 1.0 Verona
+city 47 62 0.5 Ancona
+city 62 102 0.5 Bari
+city 23 28 0.5 Bergamo
+city 41 138 0.5 Catanzaro
+city 38 42 0.5 Ferrara
+city 36 52 0.5 Forlì
+city 5 49 0.5 Genoa
+city 35 82 0.5 L'Aquila
+city 16 31 0.5 Milan
+city 28 45 0.5 Modena
+city 33 107 0.5 Naples
+city 10 32 0.5 Novara
+city 1 150 0.5 Palermo
+city 31 70 0.5 Perugia
+city 47 110 0.5 Potenza
+city 39 49 0.5 Ravenna
+city 25 151 0.5 Reggio Calabria
+city 25 44 0.5 Reggio Emilia
+city 66 29 0.5 Trieste
+city -3 38 0.5 Turin
+city 49 31 0.5 Venice

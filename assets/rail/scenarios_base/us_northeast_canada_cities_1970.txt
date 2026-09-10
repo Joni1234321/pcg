@@ -1,118 +1,143 @@
-city 59 76 New York City
-city 14 82 Chicago
-city 54 81 Philadelphia
-city 30 77 Detroit
-city 65 54 Montreal
-city 46 88 Washington, D.C.
-city 44 68 Toronto
-city 70 65 Boston
-city -1 99 St. Louis
-city 48 85 Baltimore
-city 26 88 Columbus
-city -46 95 Denver
-city 44 71 Buffalo
-city 20 93 Cincinnati
-city 3 70 Minneapolis
-city 73 45 Quebec City
-city 58 76 Newark
-city 27 81 Toledo
-city -15 98 Kansas City
-city -25 112 Tulsa
-city 33 80 Cleveland
-city 27 108 Charlotte
-city 64 54 Laval
-city 34 107 Fayetteville
-city 65 68 Springfield
-city 22 76 Grand Rapids
-city 10 78 Madison
-city 35 103 Durham
-city 63 72 New Haven
-city 36 81 Youngstown
-city 58 75 Paterson
-city 37 84 Allegheny
-city -48 117 Amarillo
-city -14 107 Springfield
-city -14 97 Independence
-city 18 98 Lexington
-city 37 110 Wilmington
-city 14 83 Hammond
-city 3 93 Springfield
-city -7 98 Columbia
-city 70 52 Sherbrooke
-city 52 82 Wilmington
-city 27 78 Ann Arbor
-city 70 66 Brockton
-city -12 77 Sioux Falls
-city 18 89 Muncie
-city 61 72 Danbury
-city 43 82 Altoona
-city 41 103 Greenville
-city 15 77 Racine
-city 8 91 Champaign
-city 52 76 Wilkes-Barre
-city 15 72 Appleton
-city -19 112 Fayetteville
-city 53 81 Chester
-city 69 49 Trois-Rivières
-city 14 84 Gary
-city 14 77 Waukesha
-city 1 70 Plymouth
-city 66 54 Saint-Jean-sur-Richelieu
-city 65 67 Holyoke
-city 26 108 Gastonia
-city 5 81 Dubuque
-city 29 72 Bay City
-city 41 83 Johnstown
-city 20 117 Augusta
-city 62 73 Fairfield
-city 29 76 Pontiac
-city 1 71 Edina
-city -30 75 Rapid City
-city 62 66 Troy
-city 75 56 Lewiston
-city 22 79 Battle Creek
-city 60 74 White Plains
-city 71 66 Plymouth
-city -6 115 Bartlett
-city -16 62 Bismarck
-city 6 75 La Crosse
-city -19 111 Rogers
-city -3 57 Grand Forks
-city 63 67 Pittsfield
-city 13 83 Berwyn
-city 72 67 Barnstable
-city 64 68 Westfield
-city -8 100 Jefferson City
-city 67 52 Saint-Hyacinthe
-city 36 80 Warren
-city -46 94 Thornton
-city 46 87 Rockville
-city -14 55 Minot
-city 44 85 Hagerstown
-city 68 65 Leominster
-city 84 34 Rimouski
-city 59 75 Hackensack
-city 68 51 Drummondville
-city 67 53 Granby
-city 70 64 Billerica
-city 27 89 Lancaster
-city 71 64 Beverly
-city 50 47 Rouyn-Noranda
-city 13 69 Wausau
-city 21 75 Muskegon
-city 68 66 Marlborough
-city 45 67 Whitby
-city -15 97 Leavenworth
-city 38 105 Goldsboro
-city 14 115 Gainesville
-city 57 77 Westfield
-city 3 88 Galesburg
-city 32 74 Port Huron
-city 15 75 West Bend
-city 76 55 Augusta
-city 73 48 Thetford Mines
-city 70 50 Victoriaville
-city 30 87 Zanesville
-city 69 68 Newport
-city 58 56 Gatineau
-city 0 98 Cahokia
+city 59 76 3.0 New York City
+city 14 82 3.0 Chicago
+city 54 81 3.0 Philadelphia
+city 30 77 3.0 Detroit
+city 65 54 3.0 Montreal
+city 46 88 2.0 Washington, D.C.
+city 44 68 2.0 Toronto
+city 70 65 2.0 Boston
+city -1 99 2.0 St. Louis
+city 48 85 2.0 Baltimore
+city 26 88 2.0 Columbus
+city -46 95 2.0 Denver
+city 44 71 2.0 Buffalo
+city 20 93 2.0 Cincinnati
+city 3 70 2.0 Minneapolis
+city 73 45 2.0 Quebec City
+city 58 76 2.0 Newark
+city 27 81 2.0 Toledo
+city -15 98 2.0 Kansas City
+city -25 112 2.0 Tulsa
+city 33 80 2.0 Cleveland
+city 27 108 1.5 Charlotte
+city 64 54 1.5 Laval
+city 34 107 1.5 Fayetteville
+city 65 68 1.5 Springfield
+city 22 76 1.5 Grand Rapids
+city 10 78 1.5 Madison
+city 35 103 1.5 Durham
+city 63 72 1.5 New Haven
+city 36 81 1.5 Youngstown
+city 58 75 1.5 Paterson
+city 37 84 1.5 Allegheny
+city -48 117 1.5 Amarillo
+city -14 107 1.5 Springfield
+city -14 97 1.5 Independence
+city 18 98 1.5 Lexington
+city 37 110 1.5 Wilmington
+city 14 83 1.5 Hammond
+city 3 93 1.0 Springfield
+city -7 98 1.0 Columbia
+city 70 52 1.0 Sherbrooke
+city 52 82 1.0 Wilmington
+city 27 78 1.0 Ann Arbor
+city 70 66 1.0 Brockton
+city -12 77 1.0 Sioux Falls
+city 18 89 1.0 Muncie
+city 61 72 1.0 Danbury
+city 43 82 1.0 Altoona
+city 41 103 1.0 Greenville
+city 15 77 1.0 Racine
+city 8 91 1.0 Champaign
+city 52 76 1.0 Wilkes-Barre
+city 15 72 1.0 Appleton
+city -19 112 1.0 Fayetteville
+city 53 81 1.0 Chester
+city 69 49 1.0 Trois-Rivières
+city 14 84 1.0 Gary
+city 14 77 1.0 Waukesha
+city 1 70 1.0 Plymouth
+city 66 54 1.0 Saint-Jean-sur-Richelieu
+city 65 67 1.0 Holyoke
+city 26 108 1.0 Gastonia
+city 5 81 1.0 Dubuque
+city 29 72 1.0 Bay City
+city 41 83 1.0 Johnstown
+city 20 117 1.0 Augusta
+city 62 73 1.0 Fairfield
+city 29 76 1.0 Pontiac
+city 1 71 1.0 Edina
+city -30 75 1.0 Rapid City
+city 62 66 1.0 Troy
+city 75 56 1.0 Lewiston
+city 22 79 1.0 Battle Creek
+city 60 74 1.0 White Plains
+city 71 66 1.0 Plymouth
+city -6 115 1.0 Bartlett
+city -16 62 1.0 Bismarck
+city 6 75 1.0 La Crosse
+city -19 111 1.0 Rogers
+city -3 57 1.0 Grand Forks
+city 63 67 1.0 Pittsfield
+city 13 83 1.0 Berwyn
+city 72 67 1.0 Barnstable
+city 64 68 1.0 Westfield
+city -8 100 1.0 Jefferson City
+city 67 52 1.0 Saint-Hyacinthe
+city 36 80 1.0 Warren
+city -46 94 1.0 Thornton
+city 46 87 1.0 Rockville
+city -14 55 1.0 Minot
+city 44 85 1.0 Hagerstown
+city 68 65 1.0 Leominster
+city 84 34 1.0 Rimouski
+city 59 75 1.0 Hackensack
+city 68 51 1.0 Drummondville
+city 67 53 1.0 Granby
+city 70 64 1.0 Billerica
+city 27 89 1.0 Lancaster
+city 71 64 1.0 Beverly
+city 50 47 1.0 Rouyn-Noranda
+city 13 69 1.0 Wausau
+city 21 75 1.0 Muskegon
+city 68 66 1.0 Marlborough
+city 45 67 1.0 Whitby
+city -15 97 1.0 Leavenworth
+city 38 105 1.0 Goldsboro
+city 14 115 1.0 Gainesville
+city 57 77 1.0 Westfield
+city 3 88 1.0 Galesburg
+city 32 74 1.0 Port Huron
+city 15 75 1.0 West Bend
+city 76 55 1.0 Augusta
+city 73 48 1.0 Thetford Mines
+city 70 50 1.0 Victoriaville
+city 30 87 1.0 Zanesville
+city 69 68 1.0 Newport
+city 58 56 1.0 Gatineau
+city 0 98 1.0 Cahokia
+city 61 67 0.5 Albany
+city 49 87 0.5 Annapolis
+city 29 94 0.5 Charleston
+city 99 37 0.5 Charlottetown
+city -42 88 0.5 Cheyenne
+city 24 114 0.5 Columbia
+city 69 62 0.5 Concord
+city -6 86 0.5 Des Moines
+city 51 85 0.5 Dover
+city 17 98 0.5 Frankfort
+city 48 81 0.5 Harrisburg
+city 64 70 0.5 Hartford
+city 15 91 0.5 Indianapolis
+city 25 76 0.5 Lansing
+city -18 90 0.5 Lincoln
+city -16 118 0.5 Little Rock
+city 7 108 0.5 Nashville
+city -33 116 0.5 Oklahoma City
+city -21 74 0.5 Pierre
+city 36 104 0.5 Raleigh
+city -17 44 0.5 Regina
+city 43 94 0.5 Richmond
+city -18 98 0.5 Topeka
+city 55 79 0.5 Trenton
+city 1 47 0.5 Winnipeg

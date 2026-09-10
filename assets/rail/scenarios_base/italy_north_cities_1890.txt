@@ -1,9 +1,37 @@
-city 25 49 Milan
-city 39 94 Florence
-city 56 50 Verona
-city 88 45 Heraclea
-city 14 9 Bern
-city 88 1 Innsbruck
-city 31 7 Lucerne
-city 15 14 Thun
-city 49 12 Chur
+city 25 49 2.0 Milan
+city 39 94 1.5 Florence
+city 56 50 1.0 Verona
+city 88 45 1.0 Heraclea
+city 14 9 1.0 Bern
+city 88 1 1.0 Innsbruck
+city 31 7 1.0 Lucerne
+city 15 14 1.0 Thun
+city 49 12 1.0 Chur
+city 34 11 0.5 Altdorf
+city 76 99 0.5 Ancona
+city 32 29 0.5 Bellinzona
+city 36 43 0.5 Bergamo
+city 59 66 0.5 Ferrara
+city 59 82 0.5 Forlì
+city 7 13 0.5 Fribourg
+city 6 77 0.5 Genoa
+city 44 7 0.5 Glarus
+city 105 47 0.5 Izola
+city 124 23 0.5 Jesenice
+city 106 47 0.5 Koper
+city -6 20 0.5 Lausanne
+city 28 35 0.5 Lugano
+city 44 71 0.5 Modena
+city 5 8 0.5 Neuchâtel
+city 110 36 0.5 Nova Gorica
+city 14 50 0.5 Novara
+city 64 77 0.5 Ravenna
+city 40 70 0.5 Reggio Emilia
+city 27 11 0.5 Sarnen
+city 36 8 0.5 Schwyz
+city 3 28 0.5 Sion
+city 19 2 0.5 Solothurn
+city 108 44 0.5 Trieste
+city -7 59 0.5 Turin
+city 81 49 0.5 Venice
+city 36 3 0.5 Zug

@@ -1,627 +1,629 @@
-city 59 75 New York metropolitan area
-city 59 76 New York City
-city 14 82 Chicago
-city 44 68 Toronto
-city 65 54 Montreal
-city 54 81 Philadelphia
-city 58 56 Ottawa
-city 15 91 Indianapolis
-city 26 88 Columbus
-city 60 76 Hempstead
-city 27 108 Charlotte
-city 30 77 Detroit
-city 43 68 Mississauga
-city 1 47 Winnipeg
-city -7 115 Memphis
-city 7 108 Nashville
-city 48 85 Baltimore
-city 70 65 Boston
-city 46 88 Washington, D.C.
-city -46 95 Denver
-city 14 98 Louisville
-city 15 77 Milwaukee
-city -33 116 Oklahoma City
-city 42 68 Brampton
-city 42 70 Hamilton
-city 73 45 Quebec City
-city 63 74 Brookhaven
-city 58 77 Staten Island
-city -15 98 Kansas City
-city 47 96 Virginia Beach
-city -48 99 Colorado Springs
-city -14 88 Omaha
-city 36 104 Raleigh
-city 33 80 Cleveland
-city 64 54 Laval
-city -25 112 Tulsa
-city 3 70 Minneapolis
-city -27 105 Wichita
-city 36 73 London
-city 61 75 Islip
-city -1 99 St. Louis
-city 37 84 Pittsburgh
-city 44 67 Markham
-city 20 93 Cincinnati
-city 18 98 Lexington
-city 60 75 Oyster Bay
-city 27 81 Toledo
-city 58 76 Newark
-city 32 103 Greensboro
-city 44 71 Buffalo
-city -18 90 Lincoln
-city 21 84 Fort Wayne
-city 40 70 Kitchener
-city 10 78 Madison
-city 30 104 Winston-Salem
-city 35 103 Durham
-city 46 97 Chesapeake
-city -18 36 Saskatoon
-city -17 44 Regina
-city 49 69 Rochester
-city 45 88 Arlington
-city 43 94 Richmond
-city -6 86 Des Moines
-city 61 74 Huntington
-city 34 107 Fayetteville
-city 33 82 Akron
-city 11 83 Aurora
-city 20 117 Augusta
-city -16 118 Little Rock
-city -48 117 Amarillo
-city 22 76 Grand Rapids
-city 42 69 Oakville
-city 68 66 Worcester
-city 46 95 Newport News
-city 5 115 Huntsville
-city 17 107 Knoxville
-city 69 68 Providence
-city -15 99 Overland Park
-city 10 113 Chattanooga
-city 42 56 Greater Sudbury
-city -14 107 Springfield
-city 46 66 Oshawa
-city -12 77 Sioux Falls
-city 70 52 Sherbrooke
-city 65 68 Springfield
-city 10 81 Rockford
-city 12 84 Joliet
-city 58 75 Paterson
-city 54 68 Syracuse
-city 75 38 Saguenay
-city 62 73 Bridgeport
-city -44 91 Fort Collins
-city -47 95 Lakewood
-city 12 83 Naperville
-city 22 90 Dayton
-city 44 65 Barrie
-city 35 104 Cary
-city 30 76 Warren
-city 44 70 St. Catharines
-city 5 107 Clarksville
-city 41 69 Guelph
-city 69 49 Trois-Rivières
-city 63 72 New Haven
-city 24 114 Columbia
-city -18 98 Topeka
-city 59 74 Ramapo
-city 1 83 Cedar Rapids
-city -16 99 Olathe
-city 64 70 Hartford
-city 55 63 Kingston
-city 43 91 Spotsylvania County
-city 60 74 Stamford
-city 45 70 Amherst
-city 45 67 Whitby
-city -46 94 Thornton
-city 53 78 Allentown
-city 62 74 Smithtown
-city 8 101 Evansville
-city -14 97 Independence
-city 3 93 Springfield
-city 16 116 Athens
-city 5 89 Peoria
-city 25 76 Lansing
-city 27 78 Ann Arbor
-city 37 110 Wilmington
-city -33 117 Norman
-city 63 71 Waterbury
-city 69 63 Manchester
-city 7 110 Murfreesboro
-city -7 98 Columbia
-city 20 52 Thunder Bay
-city 12 82 Elgin
-city 2 74 Rochester
-city -49 102 Pueblo
-city 70 64 Lowell
-city -5 62 Fargo
-city 31 104 High Point
-city 17 70 Green Bay
-city 65 53 Terrebonne
-city 33 76 Chatham-Kent
-city 29 74 Flint
-city 3 85 Davenport
-city 39 76 Erie
-city 18 82 South Bend
-city -46 96 Centennial
-city 47 86 Columbia
-city 14 79 Kenosha
-city -25 113 Broken Arrow
-city 40 71 Brantford
-city 29 77 Dearborn
-city 61 67 Albany
-city -47 94 Boulder
-city 33 98 Roanoke
-city 49 68 Greece
-city 46 96 Portsmouth
-city 70 68 New Bedford
-city 12 117 Sandy Springs
-city 70 66 Brockton
-city -44 92 Greeley
-city 71 65 Quincy
-city 45 66 Pickering
-city 66 54 Saint-Jean-sur-Richelieu
-city -14 99 Lee's Summit
-city 71 64 Lynn
-city 97 44 Dartmouth
-city 14 80 Waukegan
-city 45 71 Cheektowaga
-city 51 80 Reading
-city -17 99 Lawrence
-city 69 64 Nashua
-city -46 93 Longmont
-city 9 60 Duluth
-city -21 116 Fort Smith
-city 55 79 Trenton
-city 45 97 Suffolk
-city 41 103 Greenville
-city 54 67 Cicero
-city 13 83 Cicero
-city 21 108 Asheville
-city 1 71 Bloomington
-city -13 82 Sioux City
-city -32 115 Edmond
-city 8 91 Champaign
-city 48 64 Peterborough
-city 61 72 Danbury
-city 14 83 Hammond
-city 13 94 Bloomington
-city 14 84 Gary
-city 44 66 Newmarket
-city -2 98 O'Fallon
-city 16 90 Carmel
-city 28 107 Concord
-city -14 95 St. Joseph
-city 7 89 Bloomington
-city 6 92 Decatur
-city 53 75 Scranton
-city 2 69 Brooklyn Park
-city 36 97 Lynchburg
-city 47 63 Kawartha Lakes
-city 32 58 Sault Ste. Marie
-city 54 78 Bethlehem
-city 21 79 Kalamazoo
-city -19 112 Fayetteville
-city 33 83 Canton
-city 15 72 Appleton
-city 33 74 Sarnia
-city 93 40 Moncton
-city 26 108 Gastonia
-city 69 67 Pawtucket
-city 68 51 Drummondville
-city 52 82 Wilmington
-city 14 77 Waukesha
-city 1 70 Plymouth
-city 39 107 Jacksonville
-city 18 89 Muncie
-city 89 45 Saint John
-city 0 81 Waterloo
-city 69 66 Framingham
-city -30 75 Rapid City
-city 1 85 Iowa City
-city 64 53 Saint-Jérôme
-city -8 112 Jonesboro
-city 14 88 Lafayette
-city 36 81 Youngstown
-city -45 92 Loveland
-city 42 67 Caledon
-city 74 58 Portland
-city 26 110 Rock Hill
-city 61 66 Schenectady
-city 14 73 Oshkosh
-city 7 70 Eau Claire
-city 0 68 St. Cloud
-city 45 86 Frederick
-city -2 112 Jackson
-city 31 81 Lorain
-city 11 79 Janesville
-city 23 105 Johnson City
-city 29 78 Taylor
-city 6 110 Franklin
-city 20 92 Hamilton
-city 57 66 Utica
-city -16 62 Bismarck
-city 46 87 Rockville
-city 71 63 Haverhill
-city 64 71 Meriden
-city 10 94 Terre Haute
-city 54 83 Vineland
-city 23 89 Springfield
-city 63 70 Bristol
-city 67 53 Granby
-city 45 87 Gaithersburg
-city 29 76 Pontiac
-city -42 88 Cheyenne
-city 50 81 Lancaster
-city -6 84 Ames
-city -15 116 Conway
-city 21 111 Greenville
-city 13 82 Des Plaines
-city 65 69 Manchester
-city 9 105 Bowling Green
-city 5 81 Dubuque
-city 39 102 Rocky Mount
-city 44 72 Hamburg
-city 65 73 Southampton
-city -7 86 West Des Moines
-city 11 117 Marietta
-city 71 66 Plymouth
-city 53 72 Union
-city 17 89 Anderson
-city -19 111 Rogers
-city 1 72 Lakeville
-city 70 67 Taunton
-city 4 116 Decatur
-city 28 77 Novi
-city 57 77 New Brunswick
-city 47 87 Bowie
-city -6 115 Bartlett
-city -32 116 Midwest City
-city 47 56 North Bay
-city 67 52 Saint-Hyacinthe
-city -3 57 Grand Forks
-city 22 79 Battle Creek
-city -21 98 Manhattan
-city 0 98 Florissant
-city 28 73 Saginaw
-city 29 94 Charleston
-city 6 75 La Crosse
-city 11 118 Smyrna
-city 19 82 Elkhart
-city 43 71 Welland
-city 68 48 Shawinigan
-city -19 108 Joplin
-city -15 89 Bellevue
-city 62 66 Troy
-city 33 103 Burlington
-city 15 92 Greenwood
-city 33 81 Cuyahoga Falls
-city 48 81 Harrisburg
-city 51 64 Belleville
-city -32 112 Enid
-city 17 73 Sheboygan
-city 39 103 Wilson
-city 26 95 Huntington
-city 39 91 Harrisonburg
-city -7 116 Southaven
-city 35 79 Euclid
-city 21 91 Middletown
-city 26 76 East Lansing
-city -23 90 Grand Island
-city -47 97 Castle Rock
-city 22 104 Kingsport
-city 29 84 Mansfield
-city -25 100 Salina
-city 29 87 Newark
-city -2 99 Chesterfield
-city 61 57 Cornwall
-city 43 82 Altoona
-city -7 48 Brandon
-city 16 91 Lawrence
-city 84 34 Rimouski
-city -30 113 Stillwater
-city 41 72 Haldimand County
-city -6 85 Ankeny
-city 16 88 Kokomo
-city 72 67 Barnstable
-city 32 81 Strongsville
-city 63 67 Pittsfield
-city 0 99 Belleville
-city 15 94 Columbus
-city 10 83 DeKalb
-city 48 82 York
-city 40 93 Charlottesville
-city 4 85 Moline
-city 26 118 Summerville
-city 60 71 Poughkeepsie
-city 44 47 Timmins
-city -8 100 Jefferson City
-city 34 101 Danville
-city 14 74 Fond du Lac
-city 50 64 Quinte West
-city 4 115 Madison
-city 70 50 Victoriaville
-city 69 62 Concord
-city 50 68 Webster
-city 31 99 Blacksburg
-city 44 87 Leesburg
-city 65 58 Burlington
-city -28 104 Hutchinson
-city 28 72 Midland
-city -47 96 Littleton
-city 60 73 Cortlandt
-city 36 80 Warren
-city 52 76 Wilkes-Barre
-city 12 112 Cleveland
-city 9 91 Urbana
-city 26 83 Findlay
-city 64 68 Westfield
-city -14 55 Minot
-city 50 47 Rouyn-Noranda
-city 68 65 Leominster
-city 12 81 Crystal Lake
-city -2 93 Quincy
-city 27 114 Sumter
-city 66 70 Norwich
-city 63 54 Mirabel
-city 66 71 Groton
-city 26 106 Hickory
-city 64 55 Salaberry-de-Valleyfield
-city 7 109 Smyrna
-city 59 73 Monroe
-city 65 67 Holyoke
-city 44 85 Hagerstown
-city 62 72 Shelton
-city 56 82 Atlantic City
-city 1 115 Florence
-city -2 74 Mankato
-city -1 81 Cedar Falls
-city -24 114 Muskogee
-city 13 69 Wausau
-city 3 86 Rock Island
-city 27 89 Lancaster
-city 24 85 Lima
-city 21 75 Muskegon
-city 49 87 Annapolis
-city 44 89 Manassas
-city -1 105 Cape Girardeau
-city 0 71 Shakopee
-city 6 109 Brentwood
-city 30 112 Florence
-city 22 111 Spartanburg
-city 10 80 Beloit
-city 27 85 Marion
-city 16 83 Portage
-city 20 90 Richmond
-city 31 77 Lakeshore
-city 75 56 Lewiston
-city 38 105 Goldsboro
-city 9 116 Rome
-city 27 87 Westerville
-city 51 85 Dover
-city 27 118 Goose Creek
-city 27 88 Reynoldsburg
-city -24 109 Bartlesville
-city 14 78 Franklin
-city -15 97 Leavenworth
-city -13 31 Prince Albert
-city 68 69 Coventry
-city 29 72 Bay City
-city 34 81 Stow
-city 26 87 Delaware
-city 5 111 Columbia
-city 2 71 Cottage Grove
-city 99 37 Charlottetown
-city 67 51 Sorel‐Tracy
-city 65 70 Glastonbury
-city 53 81 Chester
-city 14 115 Gainesville
-city 17 72 Manitowoc
-city 56 66 Rome
-city 29 106 Salisbury
-city 25 78 Jackson
-city 27 109 Indian Trail
-city -45 94 Brighton
-city -20 45 Moose Jaw
-city 11 114 Dalton
-city 70 63 Derry
-city 20 77 Holland
-city 80 51 Bangor
-city 11 90 Danville
-city 28 109 Monroe
-city 27 107 Mooresville
-city 12 116 Milton
-city 42 96 Petersburg
-city 3 88 Galesburg
-city 68 68 North Providence
-city 58 74 Warwick
-city 15 84 Valparaiso
-city 19 83 Goshen
-city 54 46 Val-d'Or
-city 5 106 Hopkinsville
-city 71 67 Falmouth
-city 30 90 Parkersburg
-city 17 82 Michigan City
-city 38 71 Stratford
-city 51 83 Newark
-city 18 100 Richmond
-city 42 75 Jamestown
-city 15 75 West Bend
-city 74 48 Saint-Georges
-city -26 91 Kearney
-city 73 38 Alma
-city 58 78 Long Branch
-city 21 92 Mason
-city 68 70 South Kingstown
-city 46 64 Orillia
-city 11 108 Cookeville
-city 50 89 Salisbury
-city 8 107 Gallatin
-city 13 84 Chicago Heights
-city 43 66 New Tecumseth
-city 32 74 Port Huron
-city 37 102 Wake Forest
-city 26 82 Bowling Green
-city 52 71 Ithaca
-city 72 61 Dover
-city 19 94 Florence
-city 18 87 Marion
-city 108 33 Sydney
-city 66 53 Sainte-Julie
-city -31 116 Shawnee
-city 59 72 Newburgh
-city 71 61 Rochester
-city 36 87 Morgantown
-city 21 117 Aiken
-city 41 105 New Bern
-city -15 117 Sherwood
-city 49 77 Williamsport
-city 11 77 Sun Prairie
-city 16 107 Oak Ridge
-city 50 73 Elmira
-city 19 106 Morristown
-city 18 97 Georgetown
-city -36 74 Gillette
-city -3 98 Wentzville
-city 60 72 East Fishkill
-city 72 62 Gloucester
-city 48 69 Chili
-city 13 117 Lawrenceville
-city 12 101 Elizabethtown
-city 33 106 Sanford
-city 34 86 Wheeling
-city 62 71 New Milford
-city 58 73 Middletown
-city -2 79 Mason City
-city 17 99 Nicholasville
-city -18 116 Russellville
-city 62 64 Queensbury
-city 0 97 Alton
-city 52 69 Auburn
-city 14 92 Plainfield
-city 5 74 Winona
-city 12 118 Tucker
-city -3 84 Marshalltown
-city 12 86 Kankakee
-city 16 109 Maryville
-city -36 105 Dodge City
-city 32 114 Myrtle Beach
-city 43 67 Bolton
-city 56 63 Watertown
-city 5 84 Clinton
-city 12 71 Stevens Point
-city 24 103 Bristol
-city 19 113 Anderson
-city 32 82 Medina
-city -38 104 Garden City
-city 15 98 Jeffersontown
-city 62 65 Saratoga Springs
-city 66 69 Mansfield
-city -19 110 Bella Vista
-city -16 87 Fremont
-city 61 73 Westport
-city 42 88 Winchester
-city 8 108 Lebanon
-city 31 83 Wooster
-city -7 111 Paragould
-city -13 69 Aberdeen
-city 26 72 Mount Pleasant
-city 1 102 Carbondale
-city -48 100 Fountain
-city 30 81 Sandusky
-city 23 90 Xenia
-city 73 48 Thetford Mines
-city 0 89 Burlington
-city 90 24 Sept-Îles
-city 8 81 Freeport
-city 0 74 Owatonna
-city 17 98 Frankfort
-city 30 87 Zanesville
-city 50 80 Lebanon
-city -28 110 Ponca City
-city 53 83 Bridgeton
-city 52 77 Hazleton
-city 69 53 Magog
-city -6 82 Fort Dodge
-city 22 89 Troy
-city 2 105 Paducah
-city -4 89 Ottumwa
-city 32 105 Asheboro
-city -22 102 Emporia
-city -24 92 Hastings
-city -30 89 North Platte
-city 0 76 Austin
-city 28 106 Statesville
-city 21 90 Trotwood
-city -18 85 Norfolk
-city 53 68 Camillus
-city 13 81 Rolling Meadows
-city 21 76 Norton Shores
-city 28 78 Romulus
-city 60 70 Kingston
-city 12 77 Watertown
-city 29 90 Athens
-city 38 93 Staunton
-city 3 69 White Bear Lake
-city 73 67 Yarmouth
-city -14 117 Cabot
-city 1 69 Ramsey
-city 64 69 Simsbury
-city 67 64 Keene
-city -22 99 Junction City
-city 0 73 Faribault
-city 34 80 Solon
-city 44 88 Herndon
-city 37 81 New Castle
-city 21 114 Greenwood
-city 15 76 Mequon
-city 21 112 Mauldin
-city -13 115 Searcy
-city -21 115 Van Buren
-city 67 70 Westerly
-city 28 108 Mint Hill
-city -33 115 Yukon
-city 43 95 Hopewell
-city 64 72 Guilford
-city 34 82 Alliance
-city 84 31 Baie-Comeau
-city 56 67 New Hartford
-city -27 106 Derby
-city -19 88 Columbus
-city 25 87 Marysville
-city -11 74 Brookings
-city 69 65 Westford
-city 25 91 Chillicothe
-city 57 60 Brockville
-city 7 94 Charleston
-city 53 67 Lysander
-city 13 100 Radcliff
-city 25 95 Ashland
-city 39 105 Kinston
-city 33 109 Lumberton
-city -10 71 Watertown
-city -11 100 Sedalia
-city 19 92 Oxford
-city 22 60 Marquette
-city 14 91 Brownsburg
-city 73 59 Biddeford
-city 23 87 Sidney
-city 5 117 Albertville
-city 26 80 Adrian
-city 41 83 Johnstown
-city -26 113 Bixby
-city 41 86 Cumberland
-city -2 100 Arnold
-city 41 106 Havelock
-city 28 79 Monroe
-city 16 108 Farragut
-city -40 108 Liberal
-city 22 88 Piqua
-city -31 100 Hays
-city 30 83 Ashland
-city 7 111 Shelbyville
-city 24 109 Shelby
-city 75 57 Brunswick
-city 55 83 Pleasantville
-city -19 106 Pittsburg
-city 67 65 Gardner
-city 24 94 Portsmouth
+city 59 75 3.0 New York metropolitan area
+city 59 76 3.0 New York City
+city 14 82 3.0 Chicago
+city 44 68 3.0 Toronto
+city 65 54 3.0 Montreal
+city 54 81 3.0 Philadelphia
+city 58 56 2.0 Ottawa
+city 15 91 2.0 Indianapolis
+city 26 88 2.0 Columbus
+city 60 76 2.0 Hempstead
+city 27 108 2.0 Charlotte
+city 30 77 2.0 Detroit
+city 43 68 2.0 Mississauga
+city 1 47 2.0 Winnipeg
+city -7 115 2.0 Memphis
+city 7 108 2.0 Nashville
+city 48 85 2.0 Baltimore
+city 70 65 2.0 Boston
+city 46 88 2.0 Washington, D.C.
+city -46 95 2.0 Denver
+city 14 98 2.0 Louisville
+city 15 77 2.0 Milwaukee
+city -33 116 2.0 Oklahoma City
+city 42 68 2.0 Brampton
+city 42 70 2.0 Hamilton
+city 73 45 2.0 Quebec City
+city 63 74 2.0 Brookhaven
+city 58 77 2.0 Staten Island
+city -15 98 2.0 Kansas City
+city 47 96 2.0 Virginia Beach
+city -48 99 2.0 Colorado Springs
+city -14 88 2.0 Omaha
+city 36 104 2.0 Raleigh
+city 33 80 2.0 Cleveland
+city 64 54 2.0 Laval
+city -25 112 2.0 Tulsa
+city 3 70 2.0 Minneapolis
+city -27 105 2.0 Wichita
+city 36 73 2.0 London
+city 61 75 2.0 Islip
+city -1 99 2.0 St. Louis
+city 37 84 2.0 Pittsburgh
+city 44 67 2.0 Markham
+city 20 93 1.5 Cincinnati
+city 18 98 1.5 Lexington
+city 60 75 1.5 Oyster Bay
+city 27 81 1.5 Toledo
+city 58 76 1.5 Newark
+city 32 103 1.5 Greensboro
+city 44 71 1.5 Buffalo
+city -18 90 1.5 Lincoln
+city 21 84 1.5 Fort Wayne
+city 40 70 1.5 Kitchener
+city 10 78 1.5 Madison
+city 30 104 1.5 Winston-Salem
+city 35 103 1.5 Durham
+city 46 97 1.5 Chesapeake
+city -18 36 1.5 Saskatoon
+city -17 44 1.5 Regina
+city 49 69 1.5 Rochester
+city 45 88 1.5 Arlington
+city 43 94 1.5 Richmond
+city -6 86 1.5 Des Moines
+city 61 74 1.5 Huntington
+city 34 107 1.5 Fayetteville
+city 33 82 1.5 Akron
+city 11 83 1.5 Aurora
+city 20 117 1.5 Augusta
+city -16 118 1.5 Little Rock
+city -48 117 1.5 Amarillo
+city 22 76 1.5 Grand Rapids
+city 42 69 1.5 Oakville
+city 68 66 1.5 Worcester
+city 46 95 1.5 Newport News
+city 5 115 1.5 Huntsville
+city 17 107 1.5 Knoxville
+city 69 68 1.5 Providence
+city -15 99 1.5 Overland Park
+city 10 113 1.5 Chattanooga
+city 42 56 1.5 Greater Sudbury
+city -14 107 1.5 Springfield
+city 46 66 1.5 Oshawa
+city -12 77 1.5 Sioux Falls
+city 70 52 1.5 Sherbrooke
+city 65 68 1.5 Springfield
+city 10 81 1.5 Rockford
+city 12 84 1.5 Joliet
+city 58 75 1.5 Paterson
+city 54 68 1.5 Syracuse
+city 75 38 1.5 Saguenay
+city 62 73 1.5 Bridgeport
+city -44 91 1.5 Fort Collins
+city -47 95 1.5 Lakewood
+city 12 83 1.5 Naperville
+city 22 90 1.5 Dayton
+city 44 65 1.5 Barrie
+city 35 104 1.5 Cary
+city 30 76 1.5 Warren
+city 44 70 1.5 St. Catharines
+city 5 107 1.5 Clarksville
+city 41 69 1.5 Guelph
+city 69 49 1.5 Trois-Rivières
+city 63 72 1.5 New Haven
+city 24 114 1.5 Columbia
+city -18 98 1.5 Topeka
+city 59 74 1.5 Ramapo
+city 1 83 1.5 Cedar Rapids
+city -16 99 1.5 Olathe
+city 64 70 1.5 Hartford
+city 55 63 1.5 Kingston
+city 43 91 1.5 Spotsylvania County
+city 60 74 1.5 Stamford
+city 45 70 1.5 Amherst
+city 45 67 1.5 Whitby
+city -46 94 1.5 Thornton
+city 53 78 1.5 Allentown
+city 62 74 1.5 Smithtown
+city 8 101 1.5 Evansville
+city -14 97 1.5 Independence
+city 3 93 1.5 Springfield
+city 16 116 1.5 Athens
+city 5 89 1.5 Peoria
+city 25 76 1.5 Lansing
+city 27 78 1.5 Ann Arbor
+city 37 110 1.5 Wilmington
+city -33 117 1.5 Norman
+city 63 71 1.5 Waterbury
+city 69 63 1.5 Manchester
+city 7 110 1.5 Murfreesboro
+city -7 98 1.5 Columbia
+city 20 52 1.5 Thunder Bay
+city 12 82 1.5 Elgin
+city 2 74 1.5 Rochester
+city -49 102 1.5 Pueblo
+city 70 64 1.5 Lowell
+city -5 62 1.5 Fargo
+city 31 104 1.5 High Point
+city 17 70 1.5 Green Bay
+city 65 53 1.5 Terrebonne
+city 33 76 1.5 Chatham-Kent
+city 29 74 1.5 Flint
+city 3 85 1.5 Davenport
+city 39 76 1.5 Erie
+city 18 82 1.5 South Bend
+city -46 96 1.5 Centennial
+city 47 86 1.0 Columbia
+city 14 79 1.0 Kenosha
+city -25 113 1.0 Broken Arrow
+city 40 71 1.0 Brantford
+city 29 77 1.0 Dearborn
+city 61 67 1.0 Albany
+city -47 94 1.0 Boulder
+city 33 98 1.0 Roanoke
+city 49 68 1.0 Greece
+city 46 96 1.0 Portsmouth
+city 70 68 1.0 New Bedford
+city 12 117 1.0 Sandy Springs
+city 70 66 1.0 Brockton
+city -44 92 1.0 Greeley
+city 71 65 1.0 Quincy
+city 45 66 1.0 Pickering
+city 66 54 1.0 Saint-Jean-sur-Richelieu
+city -14 99 1.0 Lee's Summit
+city 71 64 1.0 Lynn
+city 97 44 1.0 Dartmouth
+city 14 80 1.0 Waukegan
+city 45 71 1.0 Cheektowaga
+city 51 80 1.0 Reading
+city -17 99 1.0 Lawrence
+city 69 64 1.0 Nashua
+city -46 93 1.0 Longmont
+city 9 60 1.0 Duluth
+city -21 116 1.0 Fort Smith
+city 55 79 1.0 Trenton
+city 45 97 1.0 Suffolk
+city 41 103 1.0 Greenville
+city 54 67 1.0 Cicero
+city 13 83 1.0 Cicero
+city 21 108 1.0 Asheville
+city 1 71 1.0 Bloomington
+city -13 82 1.0 Sioux City
+city -32 115 1.0 Edmond
+city 8 91 1.0 Champaign
+city 48 64 1.0 Peterborough
+city 61 72 1.0 Danbury
+city 14 83 1.0 Hammond
+city 13 94 1.0 Bloomington
+city 14 84 1.0 Gary
+city 44 66 1.0 Newmarket
+city -2 98 1.0 O'Fallon
+city 16 90 1.0 Carmel
+city 28 107 1.0 Concord
+city -14 95 1.0 St. Joseph
+city 7 89 1.0 Bloomington
+city 6 92 1.0 Decatur
+city 53 75 1.0 Scranton
+city 2 69 1.0 Brooklyn Park
+city 36 97 1.0 Lynchburg
+city 47 63 1.0 Kawartha Lakes
+city 32 58 1.0 Sault Ste. Marie
+city 54 78 1.0 Bethlehem
+city 21 79 1.0 Kalamazoo
+city -19 112 1.0 Fayetteville
+city 33 83 1.0 Canton
+city 15 72 1.0 Appleton
+city 33 74 1.0 Sarnia
+city 93 40 1.0 Moncton
+city 26 108 1.0 Gastonia
+city 69 67 1.0 Pawtucket
+city 68 51 1.0 Drummondville
+city 52 82 1.0 Wilmington
+city 14 77 1.0 Waukesha
+city 1 70 1.0 Plymouth
+city 39 107 1.0 Jacksonville
+city 18 89 1.0 Muncie
+city 89 45 1.0 Saint John
+city 0 81 1.0 Waterloo
+city 69 66 1.0 Framingham
+city -30 75 1.0 Rapid City
+city 1 85 1.0 Iowa City
+city 64 53 1.0 Saint-Jérôme
+city -8 112 1.0 Jonesboro
+city 14 88 1.0 Lafayette
+city 36 81 1.0 Youngstown
+city -45 92 1.0 Loveland
+city 42 67 1.0 Caledon
+city 74 58 1.0 Portland
+city 26 110 1.0 Rock Hill
+city 61 66 1.0 Schenectady
+city 14 73 1.0 Oshkosh
+city 7 70 1.0 Eau Claire
+city 0 68 1.0 St. Cloud
+city 45 86 1.0 Frederick
+city -2 112 1.0 Jackson
+city 31 81 1.0 Lorain
+city 11 79 1.0 Janesville
+city 23 105 1.0 Johnson City
+city 29 78 1.0 Taylor
+city 6 110 1.0 Franklin
+city 20 92 1.0 Hamilton
+city 57 66 1.0 Utica
+city -16 62 1.0 Bismarck
+city 46 87 1.0 Rockville
+city 71 63 1.0 Haverhill
+city 64 71 1.0 Meriden
+city 10 94 1.0 Terre Haute
+city 54 83 1.0 Vineland
+city 23 89 1.0 Springfield
+city 63 70 1.0 Bristol
+city 67 53 1.0 Granby
+city 45 87 1.0 Gaithersburg
+city 29 76 1.0 Pontiac
+city -42 88 1.0 Cheyenne
+city 50 81 1.0 Lancaster
+city -6 84 1.0 Ames
+city -15 116 1.0 Conway
+city 21 111 1.0 Greenville
+city 13 82 1.0 Des Plaines
+city 65 69 1.0 Manchester
+city 9 105 1.0 Bowling Green
+city 5 81 1.0 Dubuque
+city 39 102 1.0 Rocky Mount
+city 44 72 1.0 Hamburg
+city 65 73 1.0 Southampton
+city -7 86 1.0 West Des Moines
+city 11 117 1.0 Marietta
+city 71 66 1.0 Plymouth
+city 53 72 1.0 Union
+city 17 89 1.0 Anderson
+city -19 111 1.0 Rogers
+city 1 72 1.0 Lakeville
+city 70 67 1.0 Taunton
+city 4 116 1.0 Decatur
+city 28 77 1.0 Novi
+city 57 77 1.0 New Brunswick
+city 47 87 1.0 Bowie
+city -6 115 1.0 Bartlett
+city -32 116 1.0 Midwest City
+city 47 56 1.0 North Bay
+city 67 52 1.0 Saint-Hyacinthe
+city -3 57 1.0 Grand Forks
+city 22 79 1.0 Battle Creek
+city -21 98 1.0 Manhattan
+city 0 98 1.0 Florissant
+city 28 73 1.0 Saginaw
+city 29 94 1.0 Charleston
+city 6 75 1.0 La Crosse
+city 11 118 1.0 Smyrna
+city 19 82 1.0 Elkhart
+city 43 71 1.0 Welland
+city 68 48 1.0 Shawinigan
+city -19 108 1.0 Joplin
+city -15 89 1.0 Bellevue
+city 62 66 1.0 Troy
+city 33 103 1.0 Burlington
+city 15 92 1.0 Greenwood
+city 33 81 1.0 Cuyahoga Falls
+city 48 81 1.0 Harrisburg
+city 51 64 1.0 Belleville
+city -32 112 1.0 Enid
+city 17 73 1.0 Sheboygan
+city 39 103 1.0 Wilson
+city 26 95 1.0 Huntington
+city 39 91 1.0 Harrisonburg
+city -7 116 1.0 Southaven
+city 35 79 1.0 Euclid
+city 21 91 1.0 Middletown
+city 26 76 1.0 East Lansing
+city -23 90 1.0 Grand Island
+city -47 97 1.0 Castle Rock
+city 22 104 1.0 Kingsport
+city 29 84 1.0 Mansfield
+city -25 100 1.0 Salina
+city 29 87 1.0 Newark
+city -2 99 1.0 Chesterfield
+city 61 57 1.0 Cornwall
+city 43 82 1.0 Altoona
+city -7 48 1.0 Brandon
+city 16 91 1.0 Lawrence
+city 84 34 1.0 Rimouski
+city -30 113 1.0 Stillwater
+city 41 72 1.0 Haldimand County
+city -6 85 1.0 Ankeny
+city 16 88 1.0 Kokomo
+city 72 67 1.0 Barnstable
+city 32 81 1.0 Strongsville
+city 63 67 1.0 Pittsfield
+city 0 99 1.0 Belleville
+city 15 94 1.0 Columbus
+city 10 83 1.0 DeKalb
+city 48 82 1.0 York
+city 40 93 1.0 Charlottesville
+city 4 85 1.0 Moline
+city 26 118 1.0 Summerville
+city 60 71 1.0 Poughkeepsie
+city 44 47 1.0 Timmins
+city -8 100 1.0 Jefferson City
+city 34 101 1.0 Danville
+city 14 74 1.0 Fond du Lac
+city 50 64 1.0 Quinte West
+city 4 115 1.0 Madison
+city 70 50 1.0 Victoriaville
+city 69 62 1.0 Concord
+city 50 68 1.0 Webster
+city 31 99 1.0 Blacksburg
+city 44 87 1.0 Leesburg
+city 65 58 1.0 Burlington
+city -28 104 1.0 Hutchinson
+city 28 72 1.0 Midland
+city -47 96 1.0 Littleton
+city 60 73 1.0 Cortlandt
+city 36 80 1.0 Warren
+city 52 76 1.0 Wilkes-Barre
+city 12 112 1.0 Cleveland
+city 9 91 1.0 Urbana
+city 26 83 1.0 Findlay
+city 64 68 1.0 Westfield
+city -14 55 1.0 Minot
+city 50 47 1.0 Rouyn-Noranda
+city 68 65 1.0 Leominster
+city 12 81 1.0 Crystal Lake
+city -2 93 1.0 Quincy
+city 27 114 1.0 Sumter
+city 66 70 1.0 Norwich
+city 63 54 1.0 Mirabel
+city 66 71 1.0 Groton
+city 26 106 1.0 Hickory
+city 64 55 1.0 Salaberry-de-Valleyfield
+city 7 109 1.0 Smyrna
+city 59 73 1.0 Monroe
+city 65 67 1.0 Holyoke
+city 44 85 1.0 Hagerstown
+city 62 72 1.0 Shelton
+city 56 82 1.0 Atlantic City
+city 1 115 1.0 Florence
+city -2 74 1.0 Mankato
+city -1 81 1.0 Cedar Falls
+city -24 114 1.0 Muskogee
+city 13 69 1.0 Wausau
+city 3 86 1.0 Rock Island
+city 27 89 1.0 Lancaster
+city 24 85 1.0 Lima
+city 21 75 1.0 Muskegon
+city 49 87 1.0 Annapolis
+city 44 89 1.0 Manassas
+city -1 105 1.0 Cape Girardeau
+city 0 71 1.0 Shakopee
+city 6 109 1.0 Brentwood
+city 30 112 1.0 Florence
+city 22 111 1.0 Spartanburg
+city 10 80 1.0 Beloit
+city 27 85 1.0 Marion
+city 16 83 1.0 Portage
+city 20 90 1.0 Richmond
+city 31 77 1.0 Lakeshore
+city 75 56 1.0 Lewiston
+city 38 105 1.0 Goldsboro
+city 9 116 1.0 Rome
+city 27 87 1.0 Westerville
+city 51 85 1.0 Dover
+city 27 118 1.0 Goose Creek
+city 27 88 1.0 Reynoldsburg
+city -24 109 1.0 Bartlesville
+city 14 78 1.0 Franklin
+city -15 97 1.0 Leavenworth
+city -13 31 1.0 Prince Albert
+city 68 69 1.0 Coventry
+city 29 72 1.0 Bay City
+city 34 81 1.0 Stow
+city 26 87 1.0 Delaware
+city 5 111 1.0 Columbia
+city 2 71 1.0 Cottage Grove
+city 99 37 1.0 Charlottetown
+city 67 51 1.0 Sorel‐Tracy
+city 65 70 1.0 Glastonbury
+city 53 81 1.0 Chester
+city 14 115 1.0 Gainesville
+city 17 72 1.0 Manitowoc
+city 56 66 1.0 Rome
+city 29 106 1.0 Salisbury
+city 25 78 1.0 Jackson
+city 27 109 1.0 Indian Trail
+city -45 94 1.0 Brighton
+city -20 45 1.0 Moose Jaw
+city 11 114 1.0 Dalton
+city 70 63 1.0 Derry
+city 20 77 1.0 Holland
+city 80 51 1.0 Bangor
+city 11 90 1.0 Danville
+city 28 109 1.0 Monroe
+city 27 107 1.0 Mooresville
+city 12 116 1.0 Milton
+city 42 96 1.0 Petersburg
+city 3 88 1.0 Galesburg
+city 68 68 1.0 North Providence
+city 58 74 1.0 Warwick
+city 15 84 1.0 Valparaiso
+city 19 83 1.0 Goshen
+city 54 46 1.0 Val-d'Or
+city 5 106 1.0 Hopkinsville
+city 71 67 1.0 Falmouth
+city 30 90 1.0 Parkersburg
+city 17 82 1.0 Michigan City
+city 38 71 1.0 Stratford
+city 51 83 1.0 Newark
+city 18 100 1.0 Richmond
+city 42 75 1.0 Jamestown
+city 15 75 1.0 West Bend
+city 74 48 1.0 Saint-Georges
+city -26 91 1.0 Kearney
+city 73 38 1.0 Alma
+city 58 78 1.0 Long Branch
+city 21 92 1.0 Mason
+city 68 70 1.0 South Kingstown
+city 46 64 1.0 Orillia
+city 11 108 1.0 Cookeville
+city 50 89 1.0 Salisbury
+city 8 107 1.0 Gallatin
+city 13 84 1.0 Chicago Heights
+city 43 66 1.0 New Tecumseth
+city 32 74 1.0 Port Huron
+city 37 102 1.0 Wake Forest
+city 26 82 1.0 Bowling Green
+city 52 71 1.0 Ithaca
+city 72 61 1.0 Dover
+city 19 94 1.0 Florence
+city 18 87 1.0 Marion
+city 108 33 1.0 Sydney
+city 66 53 1.0 Sainte-Julie
+city -31 116 1.0 Shawnee
+city 59 72 1.0 Newburgh
+city 71 61 1.0 Rochester
+city 36 87 1.0 Morgantown
+city 21 117 1.0 Aiken
+city 41 105 1.0 New Bern
+city -15 117 1.0 Sherwood
+city 49 77 1.0 Williamsport
+city 11 77 1.0 Sun Prairie
+city 16 107 1.0 Oak Ridge
+city 50 73 1.0 Elmira
+city 19 106 1.0 Morristown
+city 18 97 1.0 Georgetown
+city -36 74 1.0 Gillette
+city -3 98 1.0 Wentzville
+city 60 72 1.0 East Fishkill
+city 72 62 1.0 Gloucester
+city 48 69 1.0 Chili
+city 13 117 1.0 Lawrenceville
+city 12 101 1.0 Elizabethtown
+city 33 106 1.0 Sanford
+city 34 86 1.0 Wheeling
+city 62 71 1.0 New Milford
+city 58 73 1.0 Middletown
+city -2 79 1.0 Mason City
+city 17 99 1.0 Nicholasville
+city -18 116 1.0 Russellville
+city 62 64 1.0 Queensbury
+city 0 97 1.0 Alton
+city 52 69 1.0 Auburn
+city 14 92 1.0 Plainfield
+city 5 74 1.0 Winona
+city 12 118 1.0 Tucker
+city -3 84 1.0 Marshalltown
+city 12 86 1.0 Kankakee
+city 16 109 1.0 Maryville
+city -36 105 1.0 Dodge City
+city 32 114 1.0 Myrtle Beach
+city 43 67 1.0 Bolton
+city 56 63 1.0 Watertown
+city 5 84 1.0 Clinton
+city 12 71 1.0 Stevens Point
+city 24 103 1.0 Bristol
+city 19 113 1.0 Anderson
+city 32 82 1.0 Medina
+city -38 104 1.0 Garden City
+city 15 98 1.0 Jeffersontown
+city 62 65 1.0 Saratoga Springs
+city 66 69 1.0 Mansfield
+city -19 110 1.0 Bella Vista
+city -16 87 1.0 Fremont
+city 61 73 1.0 Westport
+city 42 88 1.0 Winchester
+city 8 108 1.0 Lebanon
+city 31 83 1.0 Wooster
+city -7 111 1.0 Paragould
+city -13 69 1.0 Aberdeen
+city 26 72 1.0 Mount Pleasant
+city 1 102 1.0 Carbondale
+city -48 100 1.0 Fountain
+city 30 81 1.0 Sandusky
+city 23 90 1.0 Xenia
+city 73 48 1.0 Thetford Mines
+city 0 89 1.0 Burlington
+city 90 24 1.0 Sept-Îles
+city 8 81 1.0 Freeport
+city 0 74 1.0 Owatonna
+city 17 98 1.0 Frankfort
+city 30 87 1.0 Zanesville
+city 50 80 1.0 Lebanon
+city -28 110 1.0 Ponca City
+city 53 83 1.0 Bridgeton
+city 52 77 1.0 Hazleton
+city 69 53 1.0 Magog
+city -6 82 1.0 Fort Dodge
+city 22 89 1.0 Troy
+city 2 105 1.0 Paducah
+city -4 89 1.0 Ottumwa
+city 32 105 1.0 Asheboro
+city -22 102 1.0 Emporia
+city -24 92 1.0 Hastings
+city -30 89 1.0 North Platte
+city 0 76 1.0 Austin
+city 28 106 1.0 Statesville
+city 21 90 1.0 Trotwood
+city -18 85 1.0 Norfolk
+city 53 68 1.0 Camillus
+city 13 81 1.0 Rolling Meadows
+city 21 76 1.0 Norton Shores
+city 28 78 1.0 Romulus
+city 60 70 1.0 Kingston
+city 12 77 1.0 Watertown
+city 29 90 1.0 Athens
+city 38 93 1.0 Staunton
+city 3 69 1.0 White Bear Lake
+city 73 67 1.0 Yarmouth
+city -14 117 1.0 Cabot
+city 1 69 1.0 Ramsey
+city 64 69 1.0 Simsbury
+city 67 64 1.0 Keene
+city -22 99 1.0 Junction City
+city 0 73 1.0 Faribault
+city 34 80 1.0 Solon
+city 44 88 1.0 Herndon
+city 37 81 1.0 New Castle
+city 21 114 1.0 Greenwood
+city 15 76 1.0 Mequon
+city 21 112 1.0 Mauldin
+city -13 115 1.0 Searcy
+city -21 115 1.0 Van Buren
+city 67 70 1.0 Westerly
+city 28 108 1.0 Mint Hill
+city -33 115 1.0 Yukon
+city 43 95 1.0 Hopewell
+city 64 72 1.0 Guilford
+city 34 82 1.0 Alliance
+city 84 31 1.0 Baie-Comeau
+city 56 67 1.0 New Hartford
+city -27 106 1.0 Derby
+city -19 88 1.0 Columbus
+city 25 87 1.0 Marysville
+city -11 74 1.0 Brookings
+city 69 65 1.0 Westford
+city 25 91 1.0 Chillicothe
+city 57 60 1.0 Brockville
+city 7 94 1.0 Charleston
+city 53 67 1.0 Lysander
+city 13 100 1.0 Radcliff
+city 25 95 1.0 Ashland
+city 39 105 1.0 Kinston
+city 33 109 1.0 Lumberton
+city -10 71 1.0 Watertown
+city -11 100 1.0 Sedalia
+city 19 92 1.0 Oxford
+city 22 60 1.0 Marquette
+city 14 91 1.0 Brownsburg
+city 73 59 1.0 Biddeford
+city 23 87 1.0 Sidney
+city 5 117 1.0 Albertville
+city 26 80 1.0 Adrian
+city 41 83 1.0 Johnstown
+city -26 113 1.0 Bixby
+city 41 86 1.0 Cumberland
+city -2 100 1.0 Arnold
+city 41 106 1.0 Havelock
+city 28 79 1.0 Monroe
+city 16 108 1.0 Farragut
+city -40 108 1.0 Liberal
+city 22 88 1.0 Piqua
+city -31 100 1.0 Hays
+city 30 83 1.0 Ashland
+city 7 111 1.0 Shelbyville
+city 24 109 1.0 Shelby
+city 75 57 1.0 Brunswick
+city 55 83 1.0 Pleasantville
+city -19 106 1.0 Pittsburg
+city 67 65 1.0 Gardner
+city 24 94 1.0 Portsmouth
+city 76 55 0.5 Augusta
+city -21 74 0.5 Pierre

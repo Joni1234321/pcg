@@ -1,0 +1,1014 @@
+city 220 286 3.0 New York metropolitan area
+city 220 287 3.0 New York City
+city 164 257 3.0 Toronto
+city 51 311 3.0 Chicago
+city 222 287 3.0 Queens
+city 202 305 3.0 Philadelphia
+city 222 284 3.0 The Bronx
+city 243 203 3.0 Montreal
+city 111 292 2.0 Detroit
+city 56 345 2.0 Indianapolis
+city 225 286 2.0 Hempstead
+city 98 333 2.0 Columbus
+city 179 323 2.0 Baltimore
+city -27 435 2.0 Memphis
+city 24 410 2.0 Nashville
+city 55 290 2.0 Milwaukee
+city 52 370 2.0 Louisville
+city 264 246 2.0 Boston
+city -123 437 2.0 Oklahoma City
+city 172 331 2.0 Washington, D.C.
+city -176 360 2.0 Denver
+city 101 409 2.0 Charlotte
+city 235 281 2.0 Brookhaven
+city 276 170 2.0 Quebec City
+city 218 290 2.0 Staten Island
+city -56 371 2.0 Kansas City
+city 177 363 2.0 Virginia Beach
+city -55 333 2.0 Omaha
+city -182 376 2.0 Colorado Springs
+city 134 392 2.0 Raleigh
+city -97 425 2.0 Tulsa
+city 6 264 2.0 Minneapolis
+city -102 398 2.0 Wichita
+city 125 302 2.0 Cleveland
+city -4 373 2.0 St. Louis
+city 241 203 2.0 Laval
+city 231 283 2.0 Islip
+city 73 353 2.0 Cincinnati
+city -173 360 2.0 Aurora
+city 101 305 2.0 Toledo
+city 140 315 2.0 Pittsburgh
+city 166 269 1.5 Buffalo
+city 75 444 1.5 Augusta
+city 227 284 1.5 Oyster Bay
+city 218 287 1.5 Newark
+city 120 391 1.5 Greensboro
+city 8 265 1.5 Saint Paul
+city -68 342 1.5 Lincoln
+city 67 371 1.5 Lexington
+city 77 319 1.5 Fort Wayne
+city 219 288 1.5 Jersey City
+city 114 392 1.5 Winston-Salem
+city 226 284 1.5 North Hempstead
+city 245 202 1.5 Longueuil
+city 172 365 1.5 Chesapeake
+city 229 284 1.5 Babylon
+city 37 293 1.5 Madison
+city 184 259 1.5 Rochester
+city 171 332 1.5 Arlington
+city 132 389 1.5 Durham
+city 160 356 1.5 Richmond
+city -25 325 1.5 Des Moines
+city 218 212 1.5 Gatineau
+city 124 309 1.5 Akron
+city 223 282 1.5 Yonkers
+city 228 282 1.5 Huntington
+city -60 445 1.5 Little Rock
+city 127 405 1.5 Fayetteville
+city 254 251 1.5 Worcester
+city 171 361 1.5 Newport News
+city 82 287 1.5 Grand Rapids
+city 18 435 1.5 Huntsville
+city 62 406 1.5 Knoxville
+city 258 256 1.5 Providence
+city -181 443 1.5 Amarillo
+city -59 374 1.5 Overland Park
+city 42 314 1.5 Aurora
+city 38 426 1.5 Chattanooga
+city 158 213 1.5 Greater Sudbury
+city 35 307 1.5 Rockford
+city 43 318 1.5 Joliet
+city -54 403 1.5 Springfield
+city 244 257 1.5 Springfield
+city 282 143 1.5 Saguenay
+city -57 371 1.5 Kansas City
+city 202 256 1.5 Syracuse
+city 232 276 1.5 Bridgeport
+city 219 284 1.5 Paterson
+city -177 360 1.5 Lakewood
+city -168 345 1.5 Fort Collins
+city 43 314 1.5 Naperville
+city 81 340 1.5 Dayton
+city 171 333 1.5 Alexandria
+city 173 361 1.5 Hampton
+city 132 392 1.5 Cary
+city 112 288 1.5 Warren
+city 19 405 1.5 Clarksville
+city 236 272 1.5 New Haven
+city 91 431 1.5 Columbia
+city -70 372 1.5 Topeka
+city 219 281 1.5 Ramapo
+city 217 289 1.5 Elizabeth
+city -61 375 1.5 Olathe
+city 241 263 1.5 Hartford
+city 113 287 1.5 Sterling Heights
+city -46 293 1.5 Sioux Falls
+city 160 346 1.5 Spotsylvania County
+city 227 279 1.5 Stamford
+city 168 267 1.5 Amherst
+city 276 171 1.5 Lévis
+city 2 316 1.5 Cedar Rapids
+city 200 295 1.5 Allentown
+city 231 281 1.5 Smithtown
+city 26 380 1.5 Evansville
+city 57 440 1.5 Athens
+city -54 370 1.5 Independence
+city 95 288 1.5 Lansing
+city 11 352 1.5 Springfield
+city 18 336 1.5 Peoria
+city -124 442 1.5 Norman
+city 236 268 1.5 Waterbury
+city 27 415 1.5 Murfreesboro
+city 44 309 1.5 Elgin
+city 261 237 1.5 Manchester
+city 8 280 1.5 Rochester
+city -185 386 1.5 Pueblo
+city 262 242 1.5 Lowell
+city -176 358 1.5 Arvada
+city -175 358 1.5 Westminster
+city -18 233 1.5 Fargo
+city 258 184 1.5 Trois-Rivières
+city 264 245 1.5 Cambridge
+city 117 393 1.5 High Point
+city 63 265 1.5 Green Bay
+city 102 294 1.5 Ann Arbor
+city -29 371 1.5 Columbia
+city 107 281 1.5 Flint
+city 12 322 1.5 Davenport
+city 148 286 1.5 Erie
+city 67 311 1.5 South Bend
+city -175 362 1.5 Centennial
+city 176 325 1.0 Columbia
+city 53 299 1.0 Kenosha
+city -96 426 1.0 Broken Arrow
+city 109 292 1.0 Dearborn
+city 230 253 1.0 Albany
+city -176 354 1.0 Boulder
+city -174 357 1.0 Thornton
+city 124 371 1.0 Roanoke
+city 107 291 1.0 Livonia
+city 183 259 1.0 Greece
+city 172 364 1.0 Portsmouth
+city 264 257 1.0 New Bedford
+city 44 443 1.0 Sandy Springs
+city -166 348 1.0 Greeley
+city 265 247 1.0 Quincy
+city -55 374 1.0 Lee's Summit
+city 266 243 1.0 Lynn
+city 51 303 1.0 Waukegan
+city 261 257 1.0 Fall River
+city 264 250 1.0 Brockton
+city 223 281 1.0 Greenburgh
+city 45 441 1.0 Roswell
+city 168 268 1.0 Cheektowaga
+city 193 302 1.0 Reading
+city -65 373 1.0 Lawrence
+city 51 315 1.0 Hammond
+city 260 241 1.0 Nashua
+city -173 352 1.0 Longmont
+city 32 231 1.0 Duluth
+city -82 437 1.0 Fort Smith
+city 229 278 1.0 Norwalk
+city 262 247 1.0 Newton
+city 208 299 1.0 Trenton
+city 168 367 1.0 Suffolk
+city 170 252 1.0 Whitby
+city 222 280 1.0 Clarkstown
+city 219 285 1.0 Clifton
+city 202 254 1.0 Cicero
+city 106 293 1.0 Westland
+city 49 312 1.0 Cicero
+city 79 408 1.0 Asheville
+city 4 267 1.0 Bloomington
+city -50 311 1.0 Sioux City
+city 258 258 1.0 Warwick
+city 135 306 1.0 Youngstown
+city 123 304 1.0 Parma
+city -121 434 1.0 Edmond
+city 111 288 1.0 Troy
+city 47 356 1.0 Bloomington
+city 258 257 1.0 Cranston
+city 108 290 1.0 Farmington Hills
+city 151 390 1.0 Greenville
+city -9 371 1.0 O'Fallon
+city 230 252 1.0 Colonie
+city 58 341 1.0 Carmel
+city 105 405 1.0 Concord
+city 246 205 1.0 Saint-Jean-sur-Richelieu
+city 230 273 1.0 Danbury
+city 263 198 1.0 Sherbrooke
+city 224 283 1.0 New Rochelle
+city 59 341 1.0 Fishers
+city -53 359 1.0 St. Joseph
+city 46 441 1.0 Johns Creek
+city 264 240 1.0 Lawrence
+city 21 349 1.0 Decatur
+city 201 282 1.0 Scranton
+city 137 416 1.0 Wilmington
+city 5 263 1.0 Brooklyn Park
+city 32 343 1.0 Champaign
+city 136 365 1.0 Lynchburg
+city 201 295 1.0 Bethlehem
+city 51 308 1.0 Evanston
+city 79 299 1.0 Kalamazoo
+city 54 296 1.0 Racine
+city 52 315 1.0 Gary
+city 167 267 1.0 Tonawanda
+city 240 265 1.0 New Britain
+city 124 313 1.0 Canton
+city 69 335 1.0 Muncie
+city 245 199 1.0 Repentigny
+city 81 288 1.0 Wyoming
+city 243 200 1.0 Terrebonne
+city 110 289 1.0 Southfield
+city 259 255 1.0 Pawtucket
+city 112 286 1.0 Rochester Hills
+city 196 310 1.0 Wilmington
+city 147 405 1.0 Jacksonville
+city 57 270 1.0 Appleton
+city -73 422 1.0 Springdale
+city -75 424 1.0 Fayetteville
+city -3 308 1.0 Waterloo
+city 259 249 1.0 Framingham
+city 1 322 1.0 Iowa City
+city 223 283 1.0 Mount Vernon
+city -31 424 1.0 Jonesboro
+city 51 335 1.0 Lafayette
+city -170 348 1.0 Loveland
+city 96 410 1.0 Gastonia
+city 278 220 1.0 Portland
+city 97 415 1.0 Rock Hill
+city 229 251 1.0 Schenectady
+city 51 292 1.0 Waukesha
+city 54 274 1.0 Oshkosh
+city 4 264 1.0 Plymouth
+city 25 265 1.0 Eau Claire
+city 0 255 1.0 St. Cloud
+city -8 371 1.0 St. Charles
+city 169 324 1.0 Frederick
+city -7 424 1.0 Jackson
+city 25 338 1.0 Bloomington
+city 6 267 1.0 Eagan
+city 117 305 1.0 Lorain
+city 39 299 1.0 Janesville
+city 240 264 1.0 West Hartford
+city 86 395 1.0 Johnson City
+city 108 294 1.0 Taylor
+city 218 289 1.0 Bayonne
+city 22 414 1.0 Franklin
+city 74 348 1.0 Hamilton
+city 214 251 1.0 Utica
+city -59 372 1.0 Shawnee
+city 9 265 1.0 Woodbury
+city 6 262 1.0 Coon Rapids
+city 226 280 1.0 Greenwich
+city 237 270 1.0 Hamden
+city 265 239 1.0 Haverhill
+city 239 268 1.0 Meriden
+city 2 267 1.0 Eden Prairie
+city 38 353 1.0 Terre Haute
+city 202 313 1.0 Vineland
+city 262 246 1.0 Waltham
+city 87 336 1.0 Springfield
+city 237 266 1.0 Bristol
+city 54 291 1.0 West Allis
+city 4 268 1.0 Burnsville
+city 114 288 1.0 St. Clair Shores
+city -113 283 1.0 Rapid City
+city -160 335 1.0 Cheyenne
+city 258 192 1.0 Drummondville
+city 187 308 1.0 Lancaster
+city -21 317 1.0 Ames
+city -60 440 1.0 Conway
+city 41 443 1.0 Marietta
+city 77 421 1.0 Greenville
+city 49 308 1.0 Des Plaines
+city -54 333 1.0 Council Bluffs
+city 243 262 1.0 Manchester
+city 34 395 1.0 Bowling Green
+city 108 292 1.0 Dearborn Heights
+city 147 385 1.0 Rocky Mount
+city 30 383 1.0 Owensboro
+city 111 289 1.0 Royal Oak
+city 7 261 1.0 Blaine
+city 167 271 1.0 Hamburg
+city 243 277 1.0 Southampton
+city -26 326 1.0 West Des Moines
+city 4 263 1.0 Maple Grove
+city 231 276 1.0 Fairfield
+city 199 271 1.0 Union
+city 82 341 1.0 Kettering
+city 64 338 1.0 Anderson
+city 110 287 1.0 Pontiac
+city -174 356 1.0 Broomfield
+city 3 270 1.0 Lakeville
+city 262 254 1.0 Taunton
+city 171 328 1.0 Rockville
+city 11 439 1.0 Decatur
+city -62 235 1.0 Bismarck
+city 18 305 1.0 Dubuque
+city 236 273 1.0 West Haven
+city 244 256 1.0 Chicopee
+city 106 290 1.0 Novi
+city 213 293 1.0 New Brunswick
+city -124 440 1.0 Moore
+city 176 329 1.0 Bowie
+city 118 305 1.0 Elyria
+city -122 438 1.0 Midwest City
+city 266 247 1.0 Weymouth
+city 45 312 1.0 Wheaton
+city 234 274 1.0 Milford
+city 224 281 1.0 White Plains
+city 171 327 1.0 Gaithersburg
+city -53 372 1.0 Blue Springs
+city 239 200 1.0 Saint-Jérôme
+city -80 370 1.0 Manhattan
+city 268 250 1.0 Plymouth
+city -4 368 1.0 Florissant
+city 123 303 1.0 Lakewood
+city 59 340 1.0 Noblesville
+city 265 244 1.0 Revere
+city 106 275 1.0 Saginaw
+city -72 419 1.0 Rogers
+city 107 357 1.0 Charleston
+city 233 275 1.0 Stratford
+city 28 407 1.0 Hendersonville
+city 41 445 1.0 Smyrna
+city 242 263 1.0 East Hartford
+city 267 242 1.0 Peabody
+city 70 311 1.0 Elkhart
+city 215 292 1.0 Perth Amboy
+city -23 433 1.0 Bartlett
+city 161 308 1.0 Altoona
+city 166 265 1.0 Niagara Falls
+city -71 406 1.0 Joplin
+city -56 335 1.0 Bellevue
+city 125 389 1.0 Burlington
+city 214 291 1.0 Plainfield
+city 55 348 1.0 Greenwood
+city 124 308 1.0 Cuyahoga Falls
+city 84 297 1.0 Battle Creek
+city 180 307 1.0 Harrisburg
+city -120 421 1.0 Enid
+city 62 278 1.0 Sheboygan
+city 251 199 1.0 Saint-Hyacinthe
+city 222 281 1.0 Orangetown
+city 232 251 1.0 Troy
+city 144 390 1.0 Wilson
+city 97 358 1.0 Huntington
+city 4 269 1.0 Apple Valley
+city 145 346 1.0 Harrisonburg
+city -27 437 1.0 Southaven
+city 127 300 1.0 Euclid
+city -13 215 1.0 Grand Forks
+city 129 391 1.0 Chapel Hill
+city 82 289 1.0 Kentwood
+city 77 345 1.0 Middletown
+city 241 266 1.0 Middletown
+city -87 341 1.0 Grand Island
+city 68 311 1.0 Mishawaka
+city -177 366 1.0 Castle Rock
+city 84 392 1.0 Kingsport
+city -59 373 1.0 Lenexa
+city 20 283 1.0 La Crosse
+city 240 204 1.0 Dollard-des-Ormeaux
+city 109 318 1.0 Mansfield
+city -96 378 1.0 Salina
+city 106 330 1.0 Newark
+city -8 373 1.0 Chesterfield
+city 4 266 1.0 Edina
+city 201 271 1.0 Binghamton
+city 113 288 1.0 Roseville
+city 130 298 1.0 Mentor
+city 259 256 1.0 East Providence
+city 102 406 1.0 Huntersville
+city 96 288 1.0 East Lansing
+city 186 260 1.0 Perinton
+city 2 266 1.0 Minnetonka
+city 79 300 1.0 Portage
+city 59 343 1.0 Lawrence
+city -173 358 1.0 Commerce City
+city -112 426 1.0 Stillwater
+city -23 323 1.0 Ankeny
+city 61 332 1.0 Kokomo
+city 257 181 1.0 Shawinigan
+city -175 364 1.0 Parker
+city 4 265 1.0 St. Louis Park
+city 83 340 1.0 Beavercreek
+city 238 269 1.0 Wallingford
+city 197 286 1.0 Wilkes-Barre
+city 121 306 1.0 Strongsville
+city 167 269 1.0 West Seneca
+city 244 259 1.0 Enfield
+city -2 375 1.0 Belleville
+city 164 179 1.0 Timmins
+city 47 311 1.0 Elmhurst
+city 56 354 1.0 Columbus
+city -23 436 1.0 Collierville
+city 253 201 1.0 Granby
+city 224 280 1.0 Mount Pleasant
+city 181 311 1.0 York
+city 260 254 1.0 Attleboro
+city 148 352 1.0 Charlottesville
+city 13 323 1.0 Moline
+city 98 446 1.0 Summerville
+city 225 270 1.0 Poughkeepsie
+city 238 267 1.0 Southington
+city 128 380 1.0 Danville
+city 53 279 1.0 Fond du Lac
+city 15 436 1.0 Madison
+city 263 245 1.0 Arlington
+city 236 254 1.0 Pittsfield
+city 272 253 1.0 Barnstable
+city 261 233 1.0 Concord
+city 186 258 1.0 Webster
+city 117 373 1.0 Blacksburg
+city 166 329 1.0 Leesburg
+city 183 261 1.0 Henrietta
+city 74 349 1.0 Fairfield
+city -106 391 1.0 Hutchinson
+city 104 272 1.0 Midland
+city 97 331 1.0 Dublin
+city 170 267 1.0 Lancaster
+city 224 277 1.0 Cortlandt
+city 311 131 1.0 Rimouski
+city 189 241 1.0 Quinte West
+city 44 423 1.0 Cleveland
+city 96 316 1.0 Findlay
+city 257 254 1.0 Woonsocket
+city 240 206 1.0 Châteauguay
+city 44 306 1.0 Crystal Lake
+city 219 287 1.0 Kearny
+city -10 352 1.0 Quincy
+city 101 430 1.0 Sumter
+city 216 290 1.0 Linden
+city 248 264 1.0 Norwich
+city -177 362 1.0 Littleton
+city 256 245 1.0 Fitchburg
+city 239 204 1.0 Saint-Eustache
+city 248 267 1.0 Groton
+city 220 284 1.0 Hackensack
+city 46 442 1.0 Peachtree Corners
+city 97 402 1.0 Hickory
+city 27 412 1.0 Smyrna
+city 220 277 1.0 Monroe
+city 244 255 1.0 Holyoke
+city 235 210 1.0 Salaberry-de-Valleyfield
+city 52 292 1.0 New Berlin
+city 234 273 1.0 Shelton
+city 209 312 1.0 Atlantic City
+city -26 325 1.0 Urbandale
+city 133 304 1.0 Warren
+city 242 257 1.0 Westfield
+city 3 436 1.0 Florence
+city -9 280 1.0 Mankato
+city -3 307 1.0 Cedar Falls
+city -93 431 1.0 Muskogee
+city 37 312 1.0 DeKalb
+city 12 323 1.0 Rock Island
+city 245 219 1.0 Burlington
+city -24 435 1.0 Germantown
+city 88 323 1.0 Lima
+city 264 187 1.0 Victoriaville
+city 108 271 1.0 Bay City
+city 256 246 1.0 Leominster
+city 165 336 1.0 Manassas
+city 109 293 1.0 Lincoln Park
+city 263 244 1.0 Woburn
+city 83 338 1.0 Huber Heights
+city -5 396 1.0 Cape Girardeau
+city 53 291 1.0 Brookfield
+city 262 243 1.0 Billerica
+city 49 309 1.0 Park Ridge
+city 166 321 1.0 Hagerstown
+city 223 279 1.0 Ossining
+city 131 393 1.0 Apex
+city 40 446 1.0 Mableton
+city 1 268 1.0 Shakopee
+city 110 424 1.0 Florence
+city 50 315 1.0 Calumet City
+city 267 241 1.0 Beverly
+city 84 418 1.0 Spartanburg
+city 38 302 1.0 Beloit
+city 105 404 1.0 Kannapolis
+city 198 308 1.0 Chester
+city 100 322 1.0 Marion
+city 55 315 1.0 Portage
+city 73 340 1.0 Richmond
+city 54 292 1.0 Greenfield
+city 231 249 1.0 Clifton Park
+city 222 279 1.0 Haverstraw
+city 184 260 1.0 Brighton
+city -54 210 1.0 Minot
+city 47 260 1.0 Wausau
+city 265 245 1.0 Chelsea
+city 236 264 1.0 Torrington
+city 51 370 1.0 New Albany
+city 186 259 1.0 Penfield
+city 100 330 1.0 Westerville
+city 225 276 1.0 Yorktown
+city 193 321 1.0 Dover
+city 232 275 1.0 Trumbull
+city 258 248 1.0 Marlborough
+city 100 445 1.0 Goose Creek
+city 77 284 1.0 Muskegon
+city 101 332 1.0 Reynoldsburg
+city 179 328 1.0 Annapolis
+city -93 414 1.0 Bartlesville
+city 264 248 1.0 Braintree
+city 280 212 1.0 Lewiston
+city 53 289 1.0 Menomonee Falls
+city 255 250 1.0 Shrewsbury
+city 96 335 1.0 Grove City
+city -10 375 1.0 Wildwood
+city 53 293 1.0 Franklin
+city -5 373 1.0 University City
+city 102 336 1.0 Lancaster
+city 228 253 1.0 Guilderland
+city -73 419 1.0 Bentonville
+city 52 317 1.0 Merrillville
+city 255 259 1.0 Coventry
+city -7 373 1.0 Missouri River Township
+city 34 440 1.0 Rome
+city -29 377 1.0 Jefferson City
+city 246 252 1.0 Amherst
+city 46 440 1.0 Alpharetta
+city 125 307 1.0 Stow
+city 3 315 1.0 Marion
+city 99 327 1.0 Delaware
+city 240 202 1.0 Blainville
+city 17 420 1.0 Columbia
+city 8 267 1.0 Cottage Grove
+city 54 294 1.0 Oak Creek
+city 243 264 1.0 Glastonbury
+city 226 274 1.0 Carmel
+city 120 307 1.0 Brunswick
+city 250 192 1.0 Sorel‐Tracy
+city 142 396 1.0 Goldsboro
+city 263 258 1.0 Dartmouth
+city 39 342 1.0 Danville
+city 17 338 1.0 Pekin
+city 261 243 1.0 Chelmsford
+city 98 332 1.0 Upper Arlington
+city 65 271 1.0 Manitowoc
+city 211 250 1.0 Rome
+city 202 255 1.0 Salina
+city 108 400 1.0 Salisbury
+city 7 264 1.0 Roseville
+city 229 254 1.0 Bethlehem
+city 93 297 1.0 Jackson
+city 102 411 1.0 Indian Trail
+city 258 254 1.0 Cumberland
+city 238 277 1.0 Riverhead
+city -26 438 1.0 Olive Branch
+city -57 367 1.0 Leavenworth
+city -171 356 1.0 Brighton
+city 224 288 1.0 Long Beach
+city 189 176 1.0 Rouyn-Noranda
+city 100 332 1.0 Gahanna
+city 13 322 1.0 Bettendorf
+city 40 430 1.0 Dalton
+city 262 238 1.0 Derry
+city 76 291 1.0 Holland
+city 300 193 1.0 Bangor
+city 260 248 1.0 Natick
+city 43 311 1.0 St. Charles
+city 5 266 1.0 Richfield
+city 104 412 1.0 Monroe
+city 48 317 1.0 Chicago Heights
+city 120 304 1.0 Westlake
+city 103 403 1.0 Mooresville
+city 46 439 1.0 Milton
+city 26 412 1.0 La Vergne
+city 159 362 1.0 Petersburg
+city 113 289 1.0 Eastpointe
+city 204 255 1.0 Manlius
+city 224 282 1.0 Eastchester
+city 84 339 1.0 Fairborn
+city 264 249 1.0 Randolph
+city 122 314 1.0 Massillon
+city 257 256 1.0 North Providence
+city 218 279 1.0 Warwick
+city 263 246 1.0 Watertown
+city -58 374 1.0 Leawood
+city 235 270 1.0 Naugatuck
+city 55 317 1.0 Valparaiso
+city 71 312 1.0 Goshen
+city 259 252 1.0 Franklin
+city 20 399 1.0 Hopkinsville
+city 53 435 1.0 Gainesville
+city 168 266 1.0 North Tonawanda
+city 268 257 1.0 Falmouth
+city 113 341 1.0 Parkersburg
+city 60 312 1.0 Michigan City
+city 193 312 1.0 Newark
+city 262 245 1.0 Lexington
+city 68 376 1.0 Richmond
+city 264 241 1.0 Andover
+city 158 284 1.0 Jamestown
+city 219 294 1.0 Long Branch
+city 78 347 1.0 Mason
+city 170 266 1.0 Clarence
+city 255 263 1.0 South Kingstown
+city 7 260 1.0 Andover
+city 122 306 1.0 North Royalton
+city 42 407 1.0 Cookeville
+city 174 329 1.0 College Park
+city -9 375 1.0 Ballwin
+city 189 335 1.0 Salisbury
+city 30 406 1.0 Gallatin
+city -176 361 1.0 Englewood
+city 11 332 1.0 Galesburg
+city -176 359 1.0 Wheat Ridge
+city 276 143 1.0 Alma
+city 137 388 1.0 Wake Forest
+city 58 340 1.0 Westfield
+city 203 174 1.0 Val-d'Or
+city 98 310 1.0 Bowling Green
+city 194 268 1.0 Ithaca
+city 269 231 1.0 Dover
+city 71 355 1.0 Florence
+city 67 330 1.0 Marion
+city -117 439 1.0 Shawnee
+city -2 371 1.0 Granite City
+city 222 273 1.0 Newburgh
+city 41 442 1.0 Kennesaw
+city 51 306 1.0 Highland Park
+city 268 229 1.0 Rochester
+city 136 329 1.0 Morgantown
+city 50 335 1.0 West Lafayette
+city -55 372 1.0 Raytown
+city 79 442 1.0 Aiken
+city 154 397 1.0 New Bern
+city -58 444 1.0 Sherwood
+city 228 249 1.0 Glenville
+city 119 305 1.0 North Ridgeville
+city 262 241 1.0 Dracut
+city 185 260 1.0 Pittsford
+city 183 290 1.0 Williamsport
+city 40 291 1.0 Sun Prairie
+city 58 406 1.0 Oak Ridge
+city 244 199 1.0 Mascouche
+city 237 269 1.0 Cheshire
+city 237 272 1.0 East Haven
+city 51 317 1.0 Schererville
+city 189 275 1.0 Elmira
+city 256 259 1.0 West Warwick
+city 244 261 1.0 Vernon
+city -53 368 1.0 Liberty
+city 72 400 1.0 Morristown
+city 240 205 1.0 Pointe-Claire
+city 67 368 1.0 Georgetown
+city 228 252 1.0 Rotterdam
+city -11 371 1.0 Wentzville
+city 53 316 1.0 Hobart
+city 168 270 1.0 Orchard Park
+city 242 262 1.0 Windsor
+city 20 418 1.0 Spring Hill
+city 226 271 1.0 East Fishkill
+city 263 242 1.0 Tewksbury
+city 54 285 1.0 West Bend
+city -95 422 1.0 Owasso
+city 215 290 1.0 Westfield
+city 126 307 1.0 Kent
+city 262 248 1.0 Needham
+city 124 303 1.0 Garfield Heights
+city 23 413 1.0 Brentwood
+city 270 238 1.0 Gloucester
+city 264 239 1.0 Salem
+city 48 314 1.0 Burbank
+city 257 257 1.0 Johnston
+city 25 381 1.0 Henderson
+city 260 253 1.0 North Attleborough
+city 182 261 1.0 Chili
+city 262 249 1.0 Norwood
+city 244 253 1.0 Northampton
+city 49 442 1.0 Lawrenceville
+city 46 381 1.0 Elizabethtown
+city 125 399 1.0 Sanford
+city 129 324 1.0 Wheeling
+city 122 279 1.0 Port Huron
+city 243 258 1.0 Agawam
+city 97 332 1.0 Hilliard
+city 182 260 1.0 Gates
+city 201 314 1.0 Millville
+city 243 257 1.0 West Springfield
+city -57 443 1.0 Jacksonville
+city 0 373 1.0 O'Fallon
+city 223 274 1.0 Newburgh
+city 231 270 1.0 New Milford
+city 218 276 1.0 Middletown
+city -8 297 1.0 Mason City
+city 199 272 1.0 Vestal
+city 238 272 1.0 Branford
+city 153 314 1.0 Johnstown
+city 65 374 1.0 Nicholasville
+city 258 251 1.0 Milford
+city 261 248 1.0 Wellesley
+city 47 316 1.0 Oak Forest
+city -67 437 1.0 Russellville
+city 235 240 1.0 Queensbury
+city -1 368 1.0 Alton
+city 167 331 1.0 Sterling
+city 107 293 1.0 Garden City
+city 196 259 1.0 Auburn
+city 52 347 1.0 Plainfield
+city 247 268 1.0 New London
+city 17 279 1.0 Winona
+city 45 444 1.0 Tucker
+city 232 272 1.0 Newtown
+city -13 317 1.0 Marshalltown
+city -7 374 1.0 Kirkwood
+city 43 325 1.0 Kankakee
+city 225 281 1.0 Harrison
+city -6 372 1.0 Maryland Heights
+city 60 410 1.0 Maryville
+city 9 264 1.0 Oakdale
+city -135 397 1.0 Dodge City
+city 51 318 1.0 Crown Point
+city 32 232 1.0 Superior
+city 6 263 1.0 Fridley
+city 120 429 1.0 Myrtle Beach
+city 43 312 1.0 West Chicago
+city 224 272 1.0 Wappinger
+city 208 239 1.0 Watertown
+city -3 373 1.0 East St. Louis
+city 264 247 1.0 Milton
+city 46 304 1.0 McHenry
+city 264 244 1.0 Melrose
+city 225 283 1.0 Glen Cove
+city 263 250 1.0 Stoughton
+city 3 268 1.0 Savage
+city 19 315 1.0 Clinton
+city 204 293 1.0 Easton
+city 115 395 1.0 Thomasville
+city 45 268 1.0 Stevens Point
+city 71 428 1.0 Anderson
+city 119 309 1.0 Medina
+city 241 264 1.0 Wethersfield
+city -143 393 1.0 Garden City
+city 47 441 1.0 Duluth
+city 54 371 1.0 Jeffersontown
+city 232 245 1.0 Saratoga Springs
+city 122 310 1.0 Barberton
+city 247 261 1.0 Mansfield
+city 280 180 1.0 Saint-Georges
+city 257 260 1.0 North Kingstown
+city -73 417 1.0 Bella Vista
+city 29 307 1.0 Freeport
+city -60 330 1.0 Fremont
+city 230 277 1.0 Westport
+city 237 203 1.0 Mirabel
+city -29 435 1.0 West Memphis
+city 158 331 1.0 Winchester
+city 31 408 1.0 Lebanon
+city 117 315 1.0 Wooster
+city -26 419 1.0 Paragould
+city -49 259 1.0 Aberdeen
+city 246 201 1.0 Sainte-Julie
+city -28 438 1.0 Horn Lake
+city 42 313 1.0 Batavia
+city 97 274 1.0 Mount Pleasant
+city 2 388 1.0 Carbondale
+city 109 294 1.0 Wyandotte
+city -182 378 1.0 Fountain
+city 203 255 1.0 DeWitt
+city -20 234 1.0 West Fargo
+city 111 306 1.0 Sandusky
+city 110 290 1.0 Oak Park
+city 134 393 1.0 Garner
+city 84 341 1.0 Xenia
+city 123 311 1.0 Green
+city 0 336 1.0 Burlington
+city -1 280 1.0 Owatonna
+city 111 330 1.0 Zanesville
+city 39 306 1.0 Belvidere
+city -1 372 1.0 Collinsville
+city 63 369 1.0 Frankfort
+city 80 419 1.0 Greer
+city 56 272 1.0 Neenah
+city 260 239 1.0 Merrimack
+city 186 304 1.0 Lebanon
+city 221 284 1.0 Englewood
+city -55 369 1.0 Gladstone
+city -107 415 1.0 Ponca City
+city 339 91 1.0 Sept-Îles
+city 198 315 1.0 Bridgeton
+city 239 265 1.0 Farmington
+city 195 291 1.0 Hazleton
+city 49 316 1.0 Harvey
+city 36 294 1.0 Fitchburg
+city -24 309 1.0 Fort Dodge
+city 82 340 1.0 Riverside
+city 264 251 1.0 Bridgewater
+city 268 248 1.0 Marshfield
+city 175 327 1.0 Laurel
+city 8 263 1.0 Shoreview
+city 6 398 1.0 Paducah
+city -14 334 1.0 Ottumwa
+city 118 397 1.0 Asheboro
+city 265 243 1.0 Wakefield
+city -82 384 1.0 Emporia
+city -90 346 1.0 Hastings
+city 123 370 1.0 Salem
+city 49 310 1.0 Elmwood Park
+city 102 405 1.0 Cornelius
+city 44 317 1.0 Lockport
+city 90 390 1.0 Bristol
+city 44 305 1.0 Woodstock
+city 72 355 1.0 Independence
+city 264 243 1.0 Reading
+city -114 337 1.0 North Platte
+city 263 248 1.0 Dedham
+city -1 288 1.0 Austin
+city 131 395 1.0 Holly Springs
+city 229 275 1.0 Ridgefield
+city 273 183 1.0 Thetford Mines
+city 103 400 1.0 Statesville
+city -57 374 1.0 Grandview
+city 261 240 1.0 Hudson
+city -174 355 1.0 Lafayette
+city 80 340 1.0 Trotwood
+city 52 301 1.0 Zion
+city 0 370 1.0 Edwardsville
+city -66 320 1.0 Norfolk
+city 200 256 1.0 Camillus
+city 51 294 1.0 Muskego
+city 238 270 1.0 North Haven
+city 261 250 1.0 Walpole
+city 81 342 1.0 Centerville
+city 37 305 1.0 Loves Park
+city 77 285 1.0 Norton Shores
+city 106 294 1.0 Romulus
+city 258 262 1.0 Newport
+city 42 441 1.0 Woodstock
+city 141 352 1.0 Staunton
+city 62 266 1.0 De Pere
+city 9 262 1.0 White Bear Lake
+city 273 253 1.0 Yarmouth
+city -55 441 1.0 Cabot
+city 55 350 1.0 Franklin
+city 28 409 1.0 Mt. Juliet
+city 5 260 1.0 Ramsey
+city 83 335 1.0 Troy
+city 50 316 1.0 Munster
+city 223 277 1.0 Peekskill
+city 317 116 1.0 Baie-Comeau
+city 81 287 1.0 Walker
+city 240 262 1.0 Simsbury
+city -55 367 1.0 May Township
+city 251 241 1.0 Keene
+city -85 374 1.0 Junction City
+city 0 277 1.0 Faribault
+city 126 303 1.0 Solon
+city 168 331 1.0 Herndon
+city 138 307 1.0 New Castle
+city 261 252 1.0 Mansfield
+city 125 303 1.0 Maple Heights
+city 56 287 1.0 Mequon
+city 116 391 1.0 Kernersville
+city -58 376 1.0 Belton
+city 265 253 1.0 Middleborough
+city 262 252 1.0 Easton
+city 201 257 1.0 Onondaga
+city 6 261 1.0 Champlin
+city -6 374 1.0 Webster Groves
+city 4 259 1.0 Elk River
+city 44 438 1.0 Canton
+city 259 258 1.0 Bristol
+city 78 422 1.0 Mauldin
+city 248 262 1.0 Windham
+city 2 269 1.0 Prior Lake
+city -82 435 1.0 Van Buren
+city 251 266 1.0 Westerly
+city -126 437 1.0 Yukon
+city 163 343 1.0 Fredericksburg
+city 161 360 1.0 Hopewell
+city 19 336 1.0 East Peoria
+city 225 266 1.0 Kingston
+city 221 274 1.0 Montgomery
+city 168 333 1.0 Fairfax
+city 235 268 1.0 Watertown
+city 243 205 1.0 Saint-Constant
+city 111 290 1.0 Hamtramck
+city 240 271 1.0 Guilford
+city 263 243 1.0 Wilmington
+city 128 311 1.0 Alliance
+city 126 301 1.0 South Euclid
+city 129 299 1.0 Willoughby
+city 125 306 1.0 Hudson
+city 9 268 1.0 Hastings
+city 213 252 1.0 New Hartford
+city -102 400 1.0 Derby
+city 5 264 1.0 Crystal
+city -71 331 1.0 Columbus
+city 224 273 1.0 Fishkill
+city 226 286 1.0 Merrick
+city 95 329 1.0 Marysville
+city 46 314 1.0 Darien
+city 76 432 1.0 Greenwood
+city -40 279 1.0 Brookings
+city 60 314 1.0 La Porte
+city 0 268 1.0 Chaska
+city 49 315 1.0 Blue Island
+city 242 273 1.0 Southold
+city 214 227 1.0 Brockville
+city 260 244 1.0 Westford
+city 260 245 1.0 Acton
+city 123 413 1.0 Lumberton
+city 5 269 1.0 Rosemount
+city 28 354 1.0 Charleston
+city 267 254 1.0 Wareham
+city 95 344 1.0 Chillicothe
+city 210 237 1.0 Le Ray
+city 200 254 1.0 Lysander
+city 46 379 1.0 Radcliff
+city 94 358 1.0 Ashland
+city 147 396 1.0 Kinston
+city 46 290 1.0 Watertown
+city 225 268 1.0 Hyde Park
+city 120 311 1.0 Wadsworth
+city 263 249 1.0 Canton
+city 232 249 1.0 Halfmoon
+city 152 325 1.0 Cumberland
+city -39 269 1.0 Watertown
+city 245 275 1.0 East Hampton
+city 215 289 1.0 Summit
+city 7 263 1.0 New Brighton
+city 47 308 1.0 Rolling Meadows
+city -58 373 1.0 Prairie Village
+city 257 255 1.0 Smithfield
+city 111 286 1.0 Auburn Hills
+city -42 376 1.0 Sedalia
+city -49 436 1.0 Searcy
+city 73 346 1.0 Oxford
+city 83 228 1.0 Marquette
+city 244 203 1.0 Saint-Lambert
+city 75 443 1.0 North Augusta
+city 106 342 1.0 Athens
+city -123 438 1.0 Del City
+city 14 322 1.0 East Moline
+city 53 344 1.0 Brownsburg
+city 275 224 1.0 Biddeford
+city 112 315 1.0 Ashland
+city 270 232 1.0 Portsmouth
+city 85 331 1.0 Sidney
+city 260 238 1.0 Bedford
+city 119 304 1.0 Avon
+city 170 263 1.0 Lockport
+city 20 442 1.0 Albertville
+city 55 293 1.0 South Milwaukee
+city 96 302 1.0 Adrian
+city 258 255 1.0 Lincoln
+city 245 256 1.0 Ludlow
+city 4 271 1.0 Farmington
+city 142 353 1.0 Waynesboro
+city 117 374 1.0 Christiansburg
+city 38 427 1.0 East Ridge
+city -98 428 1.0 Bixby
+city 1 267 1.0 Chanhassen
+city 260 201 1.0 Magog
+city 43 317 1.0 Crest Hill
+city -8 377 1.0 Arnold
+city 155 400 1.0 Havelock
+city 104 300 1.0 Monroe
+city 228 279 1.0 Darien
+city 122 304 1.0 Parma Heights
+city 59 408 1.0 Farragut
+city 270 253 1.0 Sandwich
+city 99 307 1.0 Perrysburg
+city -100 427 1.0 Sapulpa
+city -153 410 1.0 Liberal
+city 83 333 1.0 Piqua
+city -116 377 1.0 Hays
+city 241 262 1.0 Bloomfield
+city 227 275 1.0 Somers
+city 40 442 1.0 Acworth
+city -98 345 1.0 Kearney
+city 25 421 1.0 Shelbyville
+city 91 411 1.0 Shelby
+city 102 305 1.0 Oregon
+city 283 214 1.0 Brunswick
+city 208 312 1.0 Pleasantville
+city -71 401 1.0 Pittsburg
+city 253 246 1.0 Gardner
+city 92 354 1.0 Portsmouth
+city 246 203 1.0 Chambly
+city 9 261 1.0 Lino Lakes
+city 121 304 1.0 Rocky River
+city 80 342 1.0 Miamisburg
+city 6 266 1.0 South St. Paul
+city 42 312 1.0 Geneva
+city 109 296 1.0 Amherstburg
+city 239 205 1.0 Kirkland
+city 50 305 1.0 Lake Forest
+city 79 346 1.0 Lebanon
+city 3 274 1.0 Northfield
+city -2 373 1.0 Cahokia
+city 286 206 0.5 Augusta
+city -79 279 0.5 Pierre
+city 372 139 0.5 Charlottetown
+city 217 213 0.75 Ottawa
+city -66 169 0.5 Regina
+city 3 179 0.5 Winnipeg

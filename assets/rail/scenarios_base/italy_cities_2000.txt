@@ -1,34 +1,47 @@
-city 22 90 Rome
-city 16 31 Milan
-city -3 38 Turin
-city 24 59 Florence
-city 67 28 Free Territory of Trieste
-city 24 150 Messina
-city 35 32 Verona
-city 61 113 Taranto
-city 66 29 Trieste
-city 25 151 Reggio Calabria
-city 39 49 Ravenna
-city 18 30 Monza
-city 23 97 Latina
-city 23 28 Bergamo
-city 10 32 Novara
-city 47 15 Bolzano
-city 28 64 Arezzo
-city 59 99 Barletta
-city 15 60 Pisa
-city 5 41 Alessandria
-city 54 29 Heraclea
-city 50 28 Treviso
-city 71 110 Brindisi
-city 35 82 L'Aquila
-city 48 136 Crotone
-city -12 58 Sanremo
-city -10 49 Cuneo
-city 38 106 Avellino
-city 5 30 Biella
-city -9 57 Imperia
-city 44 67 Macerata
-city 67 24 Gorizia
-city 43 38 Adria
-city 27 80 Narni
+city 22 90 3.0 Rome
+city 16 31 3.0 Milan
+city -3 38 2.0 Turin
+city 24 59 2.0 Florence
+city 67 28 2.0 Free Territory of Trieste
+city 24 150 1.5 Messina
+city 35 32 1.5 Verona
+city 61 113 1.5 Taranto
+city 66 29 1.5 Trieste
+city 25 151 1.5 Reggio Calabria
+city 39 49 1.5 Ravenna
+city 18 30 1.5 Monza
+city 23 97 1.5 Latina
+city 23 28 1.5 Bergamo
+city 10 32 1.5 Novara
+city 47 15 1.0 Bolzano
+city 28 64 1.0 Arezzo
+city 59 99 1.0 Barletta
+city 15 60 1.0 Pisa
+city 5 41 1.0 Alessandria
+city 54 29 1.0 Heraclea
+city 50 28 1.0 Treviso
+city 71 110 1.0 Brindisi
+city 35 82 1.0 L'Aquila
+city 48 136 1.0 Crotone
+city -12 58 1.0 Sanremo
+city -10 49 1.0 Cuneo
+city 38 106 1.0 Avellino
+city 5 30 1.0 Biella
+city -9 57 1.0 Imperia
+city 44 67 1.0 Macerata
+city 67 24 1.0 Gorizia
+city 43 38 1.0 Adria
+city 27 80 1.0 Narni
+city 47 62 0.5 Ancona
+city 62 102 0.5 Bari
+city 41 138 0.5 Catanzaro
+city 38 42 0.5 Ferrara
+city 36 52 0.5 Forlì
+city 5 49 0.5 Genoa
+city 28 45 0.5 Modena
+city 33 107 0.5 Naples
+city 1 150 0.5 Palermo
+city 31 70 0.5 Perugia
+city 47 110 0.5 Potenza
+city 25 44 0.5 Reggio Emilia
+city 49 31 0.5 Venice

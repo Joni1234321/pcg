@@ -1,127 +1,128 @@
-city 25 49 Milan
-city -7 59 Turin
-city 6 77 Genoa
-city 39 94 Florence
-city 108 43 Free Territory of Trieste
-city 81 49 Venice
-city 56 50 Verona
-city 71 51 Padua
-city 108 44 Trieste
-city 36 67 Parma
-city 37 92 Prato
-city 44 71 Modena
-city 40 70 Reggio Emilia
-city 64 77 Ravenna
-city 65 87 Rimini
-city -6 20 Lausanne
-city 14 9 Bern
-city 88 1 Innsbruck
-city 59 66 Ferrara
-city 28 46 Monza
-city 36 43 Bergamo
-city 59 82 Forlì
-city 67 47 Vicenza
-city 77 21 Bolzano
-city 14 50 Novara
-city 28 60 Piacenza
-city 76 99 Ancona
-city 104 33 Udine
-city 61 85 Cesena
-city 7 64 Alessandria
-city 24 96 Pisa
-city 88 45 Heraclea
-city 27 92 Lucca
-city 81 44 Treviso
-city 27 40 Como
-city 31 7 Lucerne
-city 23 40 Varese
-city 0 64 Asti
-city 35 58 Cremona
-city 54 79 Imola
-city 28 35 Lugano
-city 122 18 Villach
-city 22 86 Carrara
-city -3 79 Savona
-city 56 81 Faenza
-city -19 78 Cuneo
-city 13 4 Biel/Bienne
-city -22 93 Sanremo
-city 32 96 Empoli
-city 6 46 Biella
-city 15 14 Thun
-city 32 29 Bellinzona
-city -17 91 Imperia
-city 13 10 Köniz
-city 76 17 Merano
-city 7 13 Fribourg
-city 5 5 La Chaux-de-Fonds
-city 5 8 Neuchâtel
-city 49 12 Chur
-city 3 28 Sion
-city 109 37 Gorizia
-city 56 1 Feldkirch
-city 24 90 Camaiore
-city 36 3 Zug
-city 31 6 Emmen
-city -3 14 Yverdon-les-Bains
-city 20 37 Verbania
-city 43 2 Rapperswil-Jona
-city -2 23 Montreux
-city 106 47 Koper
-city -12 87 Albenga
-city -25 94 Ventimiglia
-city 2 18 Bulle FR
-city 38 1 Horgen
-city -14 78 Mondovì
-city 39 2 Wädenswil
-city -6 21 Renens
-city -3 22 Vevey
-city -4 32 Martigny
-city 70 60 Adria
-city 44 6 Glarus Nord
-city 38 0 Thalwil
-city -4 28 Monthey
-city 15 9 Ostermundigen
-city 16 3 Grenchen
-city 35 3 Cham
-city 19 2 Solothurn
-city 18 7 Burgdorf
-city 40 3 Freienbach
-city 27 30 Locarno
-city 40 5 Einsiedeln
-city -9 20 Morges
-city 24 2 Langenthal
-city 13 6 Lyss
-city 36 8 Schwyz
-city 27 38 Mendrisio
-city 40 1 Stäfa
-city 128 15 Feldkirchen in Kärnten
-city 30 8 Horw
-city 62 96 Urbino
-city 90 0 Hall in Tirol
-city 124 23 Jesenice
-city 14 10 Muri bei Bern
-city 110 36 Nova Gorica
-city 107 46 Muggia
-city -8 20 Ecublens
-city 14 17 Spiez
-city 15 11 Münsingen
-city 52 4 Buchs
-city 44 7 Glarus
-city 36 0 Affoltern am Albis
-city 43 1 Rüti
-city 6 14 Villars-sur-Glâne
-city 27 0 Zofingen
-city 35 6 Arth
-city 57 1 Rankweil
-city 106 13 Lienz
-city 105 47 Izola
-city 54 13 Davos
-city 35 4 Risch
-city -3 26 Aigle
-city 27 11 Sarnen
-city 6 26 Crans-Montana
-city 15 8 Zollikofen
-city 29 3 Sursee
-city 3 7 Le Locle
-city 15 7 Münchenbuchsee
+city 25 49 3.0 Milan
+city -7 59 2.0 Turin
+city 6 77 2.0 Genoa
+city 39 94 2.0 Florence
+city 108 43 2.0 Free Territory of Trieste
+city 81 49 1.5 Venice
+city 56 50 1.5 Verona
+city 71 51 1.5 Padua
+city 108 44 1.5 Trieste
+city 36 67 1.5 Parma
+city 37 92 1.5 Prato
+city 44 71 1.5 Modena
+city 40 70 1.5 Reggio Emilia
+city 64 77 1.5 Ravenna
+city 65 87 1.5 Rimini
+city -6 20 1.5 Lausanne
+city 14 9 1.5 Bern
+city 88 1 1.5 Innsbruck
+city 59 66 1.5 Ferrara
+city 28 46 1.5 Monza
+city 36 43 1.5 Bergamo
+city 59 82 1.5 Forlì
+city 67 47 1.5 Vicenza
+city 77 21 1.5 Bolzano
+city 14 50 1.5 Novara
+city 28 60 1.5 Piacenza
+city 76 99 1.0 Ancona
+city 104 33 1.0 Udine
+city 61 85 1.0 Cesena
+city 7 64 1.0 Alessandria
+city 24 96 1.0 Pisa
+city 88 45 1.0 Heraclea
+city 27 92 1.0 Lucca
+city 81 44 1.0 Treviso
+city 27 40 1.0 Como
+city 31 7 1.0 Lucerne
+city 23 40 1.0 Varese
+city 0 64 1.0 Asti
+city 35 58 1.0 Cremona
+city 54 79 1.0 Imola
+city 28 35 1.0 Lugano
+city 122 18 1.0 Villach
+city 22 86 1.0 Carrara
+city -3 79 1.0 Savona
+city 56 81 1.0 Faenza
+city -19 78 1.0 Cuneo
+city 13 4 1.0 Biel/Bienne
+city -22 93 1.0 Sanremo
+city 32 96 1.0 Empoli
+city 6 46 1.0 Biella
+city 15 14 1.0 Thun
+city 32 29 1.0 Bellinzona
+city -17 91 1.0 Imperia
+city 13 10 1.0 Köniz
+city 76 17 1.0 Merano
+city 7 13 1.0 Fribourg
+city 5 5 1.0 La Chaux-de-Fonds
+city 5 8 1.0 Neuchâtel
+city 49 12 1.0 Chur
+city 3 28 1.0 Sion
+city 109 37 1.0 Gorizia
+city 56 1 1.0 Feldkirch
+city 24 90 1.0 Camaiore
+city 36 3 1.0 Zug
+city 31 6 1.0 Emmen
+city -3 14 1.0 Yverdon-les-Bains
+city 20 37 1.0 Verbania
+city 43 2 1.0 Rapperswil-Jona
+city -2 23 1.0 Montreux
+city 106 47 1.0 Koper
+city -12 87 1.0 Albenga
+city -25 94 1.0 Ventimiglia
+city 2 18 1.0 Bulle FR
+city 38 1 1.0 Horgen
+city -14 78 1.0 Mondovì
+city 39 2 1.0 Wädenswil
+city -6 21 1.0 Renens
+city -3 22 1.0 Vevey
+city -4 32 1.0 Martigny
+city 70 60 1.0 Adria
+city 44 6 1.0 Glarus Nord
+city 38 0 1.0 Thalwil
+city -4 28 1.0 Monthey
+city 15 9 1.0 Ostermundigen
+city 16 3 1.0 Grenchen
+city 35 3 1.0 Cham
+city 19 2 1.0 Solothurn
+city 18 7 1.0 Burgdorf
+city 40 3 1.0 Freienbach
+city 27 30 1.0 Locarno
+city 40 5 1.0 Einsiedeln
+city -9 20 1.0 Morges
+city 24 2 1.0 Langenthal
+city 13 6 1.0 Lyss
+city 36 8 1.0 Schwyz
+city 27 38 1.0 Mendrisio
+city 40 1 1.0 Stäfa
+city 128 15 1.0 Feldkirchen in Kärnten
+city 30 8 1.0 Horw
+city 62 96 1.0 Urbino
+city 90 0 1.0 Hall in Tirol
+city 124 23 1.0 Jesenice
+city 14 10 1.0 Muri bei Bern
+city 110 36 1.0 Nova Gorica
+city 107 46 1.0 Muggia
+city -8 20 1.0 Ecublens
+city 14 17 1.0 Spiez
+city 15 11 1.0 Münsingen
+city 52 4 1.0 Buchs
+city 44 7 1.0 Glarus
+city 36 0 1.0 Affoltern am Albis
+city 43 1 1.0 Rüti
+city 6 14 1.0 Villars-sur-Glâne
+city 27 0 1.0 Zofingen
+city 35 6 1.0 Arth
+city 57 1 1.0 Rankweil
+city 106 13 1.0 Lienz
+city 105 47 1.0 Izola
+city 54 13 1.0 Davos
+city 35 4 1.0 Risch
+city -3 26 1.0 Aigle
+city 27 11 1.0 Sarnen
+city 6 26 1.0 Crans-Montana
+city 15 8 1.0 Zollikofen
+city 29 3 1.0 Sursee
+city 3 7 1.0 Le Locle
+city 15 7 1.0 Münchenbuchsee
+city 34 11 0.5 Altdorf

@@ -1,0 +1,36 @@
+{
+ "image": "https://upload.wikimedia.org/wikipedia/commons/7/79/Europe_relief_laea_location_map.jpg",
+ "image_file": "germany.jpg",
+ "columns": 512,
+ "crop": [
+  0.32,
+  0.44,
+  0.53,
+  0.68
+ ],
+ "countries": [
+  "Q183",
+  "Q55",
+  "Q31",
+  "Q39",
+  "Q40",
+  "Q213",
+  "Q36",
+  "Q35",
+  "Q32"
+ ],
+ "population_min": 20000,
+ "projection": {
+  "type": "laea",
+  "params": [
+   52.0,
+   10.0,
+   131.579,
+   153.61,
+   36.388,
+   55.11
+  ]
+ },
+ "rivers": true,
+ "cities_source": "germany"
+}

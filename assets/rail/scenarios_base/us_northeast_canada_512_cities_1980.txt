@@ -1,0 +1,173 @@
+city 220 287 3.0 New York City
+city 51 311 3.0 Chicago
+city 202 305 3.0 Philadelphia
+city 111 292 3.0 Detroit
+city 243 203 3.0 Montreal
+city 172 331 2.0 Washington, D.C.
+city 55 290 2.0 Milwaukee
+city 179 323 2.0 Baltimore
+city 164 257 2.0 Toronto
+city 98 333 2.0 Columbus
+city 264 246 2.0 Boston
+city -176 360 2.0 Denver
+city -4 373 2.0 St. Louis
+city 276 170 2.0 Quebec City
+city -56 371 2.0 Kansas City
+city 73 353 2.0 Cincinnati
+city 166 269 2.0 Buffalo
+city 6 264 2.0 Minneapolis
+city -97 425 2.0 Tulsa
+city 101 305 2.0 Toledo
+city 125 302 2.0 Cleveland
+city 218 287 2.0 Newark
+city 101 409 2.0 Charlotte
+city 8 265 1.5 Saint Paul
+city 241 203 1.5 Laval
+city 245 202 1.5 Longueuil
+city 67 371 1.5 Lexington
+city 127 405 1.5 Fayetteville
+city 37 293 1.5 Madison
+city 82 287 1.5 Grand Rapids
+city 132 389 1.5 Durham
+city 244 257 1.5 Springfield
+city -181 443 1.5 Amarillo
+city 219 284 1.5 Paterson
+city -54 403 1.5 Springfield
+city 236 272 1.5 New Haven
+city 140 315 1.5 Allegheny
+city 135 306 1.5 Youngstown
+city -54 370 1.5 Independence
+city 137 416 1.5 Wilmington
+city 264 245 1.5 Cambridge
+city 51 315 1.0 Hammond
+city 11 352 1.0 Springfield
+city -29 371 1.0 Columbia
+city 102 294 1.0 Ann Arbor
+city 276 171 1.0 Lévis
+city -46 293 1.0 Sioux Falls
+city 264 250 1.0 Brockton
+city 69 335 1.0 Muncie
+city 230 252 1.0 Colonie
+city 263 198 1.0 Sherbrooke
+city 230 273 1.0 Danbury
+city 196 310 1.0 Wilmington
+city 218 212 1.0 Gatineau
+city 151 390 1.0 Greenville
+city 32 343 1.0 Champaign
+city 54 296 1.0 Racine
+city 52 315 1.0 Gary
+city -75 424 1.0 Fayetteville
+city 161 308 1.0 Altoona
+city 57 270 1.0 Appleton
+city 246 205 1.0 Saint-Jean-sur-Richelieu
+city 51 292 1.0 Waukesha
+city 4 264 1.0 Plymouth
+city 96 410 1.0 Gastonia
+city -174 357 1.0 Thornton
+city 197 286 1.0 Wilkes-Barre
+city 18 305 1.0 Dubuque
+city 258 184 1.0 Trois-Rivières
+city 231 276 1.0 Fairfield
+city 110 287 1.0 Pontiac
+city 75 444 1.0 Augusta
+city -113 283 1.0 Rapid City
+city 4 263 1.0 Maple Grove
+city 4 266 1.0 Edina
+city 198 308 1.0 Chester
+city 108 271 1.0 Bay City
+city 171 328 1.0 Rockville
+city 244 255 1.0 Holyoke
+city -62 235 1.0 Bismarck
+city 232 251 1.0 Troy
+city 224 281 1.0 White Plains
+city 84 297 1.0 Battle Creek
+city 268 250 1.0 Plymouth
+city -23 433 1.0 Bartlett
+city -72 419 1.0 Rogers
+city 153 314 1.0 Johnstown
+city 20 283 1.0 La Crosse
+city 49 312 1.0 Berwyn
+city -13 215 1.0 Grand Forks
+city 280 212 1.0 Lewiston
+city 2 266 1.0 Minnetonka
+city 171 327 1.0 Gaithersburg
+city 240 204 1.0 Dollard-des-Ormeaux
+city 265 245 1.0 Chelsea
+city 236 254 1.0 Pittsfield
+city 272 253 1.0 Barnstable
+city 251 199 1.0 Saint-Hyacinthe
+city 253 201 1.0 Granby
+city 311 131 1.0 Rimouski
+city 240 206 1.0 Châteauguay
+city 242 257 1.0 Westfield
+city 133 304 1.0 Warren
+city 170 252 1.0 Whitby
+city 220 284 1.0 Hackensack
+city -29 377 1.0 Jefferson City
+city 166 321 1.0 Hagerstown
+city 256 246 1.0 Leominster
+city 179 328 1.0 Annapolis
+city 262 243 1.0 Billerica
+city -54 210 1.0 Minot
+city 267 241 1.0 Beverly
+city 102 336 1.0 Lancaster
+city 47 260 1.0 Wausau
+city 77 284 1.0 Muskegon
+city 258 248 1.0 Marlborough
+city 239 204 1.0 Saint-Eustache
+city -57 367 1.0 Leavenworth
+city 142 396 1.0 Goldsboro
+city 339 91 1.0 Sept-Îles
+city 48 314 1.0 Burbank
+city 5 266 1.0 Richfield
+city 258 192 1.0 Drummondville
+city 53 435 1.0 Gainesville
+city 189 176 1.0 Rouyn-Noranda
+city 11 332 1.0 Galesburg
+city 215 290 1.0 Westfield
+city 122 279 1.0 Port Huron
+city 243 200 1.0 Terrebonne
+city 240 205 1.0 Pointe-Claire
+city 54 285 1.0 West Bend
+city 219 285 1.0 Garfield
+city 152 325 1.0 Cumberland
+city 111 330 1.0 Zanesville
+city 317 116 1.0 Baie-Comeau
+city 258 262 1.0 Newport
+city 221 284 1.0 Englewood
+city 264 187 1.0 Victoriaville
+city 286 206 1.0 Augusta
+city 90 390 1.0 Bristol
+city 83 335 1.0 Troy
+city 244 203 1.0 Saint-Lambert
+city 273 183 1.0 Thetford Mines
+city 225 266 1.0 Kingston
+city 263 245 1.0 Belmont
+city 263 244 1.0 Burlington
+city -2 373 1.0 Cahokia
+city -79 279 0.5 Pierre
+city 230 253 0.5 Albany
+city 107 357 0.5 Charleston
+city 372 139 0.5 Charlottetown
+city -160 335 0.5 Cheyenne
+city 91 431 0.5 Columbia
+city 261 233 0.5 Concord
+city -25 325 0.5 Des Moines
+city 193 321 0.5 Dover
+city 63 369 0.5 Frankfort
+city 180 307 0.5 Harrisburg
+city 241 263 0.5 Hartford
+city 56 345 0.5 Indianapolis
+city 95 288 0.5 Lansing
+city -68 342 0.5 Lincoln
+city -60 445 0.5 Little Rock
+city 24 410 0.5 Nashville
+city -123 437 0.5 Oklahoma City
+city 217 213 0.75 Ottawa
+city 258 256 0.5 Providence
+city 134 392 0.5 Raleigh
+city -66 169 0.5 Regina
+city 160 356 0.5 Richmond
+city -70 372 0.5 Topeka
+city 208 299 0.5 Trenton
+city 3 179 0.5 Winnipeg

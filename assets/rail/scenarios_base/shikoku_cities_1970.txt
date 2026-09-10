@@ -1,4 +1,10 @@
-city -7 34 Hiroshima
-city 63 36 Takamatsu
-city 77 53 Tokushima
-city -24 86 Uchiko-chō
+city -7 34 2.0 Hiroshima
+city 63 36 1.5 Takamatsu
+city 77 53 1.5 Tokushima
+city -24 86 1.0 Uchiko-chō
+city 106 7 0.5 Himeji
+city 125 15 0.5 Kobe
+city 15 85 0.5 Kōchi-shi
+city -10 67 0.5 Matsuyama
+city 67 17 0.5 Okayama
+city 109 43 0.5 Wakayama

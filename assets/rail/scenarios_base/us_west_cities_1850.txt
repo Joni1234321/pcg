@@ -1,1 +1,14 @@
-city -28 97 San Francisco
+city -28 97 1.0 San Francisco
+city 76 81 0.5 Denver
+city 29 49 0.5 Boise
+city -8 86 0.5 Carson City
+city 83 69 0.5 Cheyenne
+city 65 24 0.5 Helena
+city 57 137 0.5 Lovington
+city 7 20 0.5 Olympia
+city 10 133 0.5 Phoenix
+city -21 91 0.5 Sacramento
+city -3 38 0.5 Salem
+city 42 73 0.5 Salt Lake City
+city 53 115 0.5 Santa Fe
+city -27 94 0.5 Vallejo

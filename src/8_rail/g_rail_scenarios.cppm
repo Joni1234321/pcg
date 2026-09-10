@@ -41,7 +41,7 @@ HexList<i8> TerrainLoad(const AssetPath& asset_path) {
 
 void CitiesSave(const std::vector<City>& cities, const AssetPath& asset_path) {
     std::ofstream file { Asset(asset_path) };
-    for (const City& city : cities) { file << "city " << city.axial.x << ' ' << city.axial.y << ' ' << city.name << '\n'; }
+    for (const City& city : cities) { file << "city " << city.axial.x << ' ' << city.axial.y << ' ' << city.level << ' ' << city.name << '\n'; }
 }
 
 std::vector<City> CitiesLoad(const AssetPath& asset_path) {
@@ -51,7 +51,7 @@ std::vector<City> CitiesLoad(const AssetPath& asset_path) {
     while (file >> keyword) {
         if (keyword != "city") { continue; }
         City city;
-        file >> city.axial.x >> city.axial.y >> std::ws;
+        file >> city.axial.x >> city.axial.y >> city.level >> std::ws;
         std::getline(file, city.name);
         cities.push_back(std::move(city));
     }

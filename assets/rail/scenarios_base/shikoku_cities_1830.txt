@@ -1,0 +1,9 @@
+city 106 7 0.5 Himeji
+city -7 34 0.5 Hiroshima
+city 125 15 0.5 Kobe
+city 15 85 0.5 Kōchi-shi
+city -10 67 0.5 Matsuyama
+city 67 17 0.5 Okayama
+city 63 36 0.5 Takamatsu
+city 77 53 0.5 Tokushima
+city 109 43 0.5 Wakayama

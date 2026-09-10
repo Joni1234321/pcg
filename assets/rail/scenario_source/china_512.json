@@ -1,0 +1,26 @@
+{
+ "image": "https://upload.wikimedia.org/wikipedia/commons/4/41/China_edcp_relief_location_map.jpg",
+ "image_file": "china.jpg",
+ "columns": 512,
+ "crop": null,
+ "countries": [
+  "Q148",
+  "Q865"
+ ],
+ "population_min": 50000,
+ "projection": {
+  "type": "conic",
+  "params": [
+   50.0,
+   -147.37924772388672,
+   116.80932603407057,
+   146.75725147066368,
+   1.9996655301850468,
+   0.017453292519943295,
+   0.0102400481922537,
+   104.0,
+   0
+  ]
+ },
+ "cities_source": "china"
+}

@@ -1,26 +1,50 @@
-city -7 59 Turin
-city 25 49 Milan
-city 108 43 Free Territory of Trieste
-city 39 94 Florence
-city 56 50 Verona
-city 14 9 Bern
-city 36 43 Bergamo
-city 88 1 Innsbruck
-city 24 96 Pisa
-city 81 44 Treviso
-city 88 45 Heraclea
-city 31 7 Lucerne
-city -22 93 Sanremo
-city 15 14 Thun
-city 13 10 Köniz
-city 49 12 Chur
-city 31 6 Emmen
-city 106 47 Koper
-city 18 7 Burgdorf
-city 124 23 Jesenice
-city 16 3 Grenchen
-city -4 28 Monthey
-city 90 0 Hall in Tirol
-city 106 13 Lienz
-city 38 0 Thalwil
-city 14 10 Muri bei Bern
+city -7 59 3.0 Turin
+city 25 49 3.0 Milan
+city 108 43 2.0 Free Territory of Trieste
+city 39 94 2.0 Florence
+city 56 50 1.5 Verona
+city 14 9 1.5 Bern
+city 36 43 1.5 Bergamo
+city 88 1 1.5 Innsbruck
+city 24 96 1.5 Pisa
+city 81 44 1.0 Treviso
+city 88 45 1.0 Heraclea
+city 31 7 1.0 Lucerne
+city -22 93 1.0 Sanremo
+city 15 14 1.0 Thun
+city 13 10 1.0 Köniz
+city 49 12 1.0 Chur
+city 31 6 1.0 Emmen
+city 106 47 1.0 Koper
+city 18 7 1.0 Burgdorf
+city 124 23 1.0 Jesenice
+city 16 3 1.0 Grenchen
+city -4 28 1.0 Monthey
+city 90 0 1.0 Hall in Tirol
+city 106 13 1.0 Lienz
+city 38 0 1.0 Thalwil
+city 14 10 1.0 Muri bei Bern
+city 105 47 0.5 Izola
+city 34 11 0.5 Altdorf
+city 76 99 0.5 Ancona
+city 32 29 0.5 Bellinzona
+city 59 66 0.5 Ferrara
+city 59 82 0.5 Forlì
+city 7 13 0.5 Fribourg
+city 6 77 0.5 Genoa
+city 44 7 0.5 Glarus
+city -6 20 0.5 Lausanne
+city 28 35 0.5 Lugano
+city 44 71 0.5 Modena
+city 5 8 0.5 Neuchâtel
+city 110 36 0.5 Nova Gorica
+city 14 50 0.5 Novara
+city 64 77 0.5 Ravenna
+city 40 70 0.5 Reggio Emilia
+city 27 11 0.5 Sarnen
+city 36 8 0.5 Schwyz
+city 3 28 0.5 Sion
+city 19 2 0.5 Solothurn
+city 108 44 0.5 Trieste
+city 81 49 0.5 Venice
+city 36 3 0.5 Zug

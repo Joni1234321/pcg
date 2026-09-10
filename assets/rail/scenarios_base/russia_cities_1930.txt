@@ -1,67 +1,150 @@
-city -1 56 Moscow
-city 9 40 Saint Petersburg
-city -18 65 Kharkiv
-city -18 56 Kyiv
-city -24 75 Rostov-on-Don
-city -1 75 Samara
-city 3 62 Nizhny Novgorod
-city -6 35 Kaliningrad
-city -22 66 Dnipro
-city -17 78 Volgograd
-city 23 89 Omsk
-city 15 76 Yekaterinburg
-city 6 78 Ufa
-city 4 69 Kazan
-city -8 46 Minsk
-city -12 66 Voronezh
-city -24 67 Zaporizhzhia
-city -1 84 Orenburg
-city 38 93 Kemerovo
-city 12 81 Chelyabinsk
-city 39 90 Tomsk
-city 15 70 Perm
-city -27 64 Mykolaiv
-city 105 111 Vladivostok
-city -24 74 Taganrog
-city -12 53 Gomel
-city -31 74 Kerch
-city -5 48 Vitebsk
-city 32 98 Barnaul
-city -25 72 Mariupol
-city -15 61 Sumy
-city -33 91 Vladikavkaz
-city -13 62 Kursk
-city -32 71 Simferopol
-city 24 107 Oskemen
-city -8 67 Tambov
-city 48 93 Krasnoyarsk
-city -31 77 Novorossiysk
-city -19 54 Zhytomyr
-city -29 81 Armavir
-city -23 62 Kropyvnytskyi
-city 6 65 Yoshkar-Ola
-city 0 57 Orekhovo-Zuyevo
-city 11 103 Karaganda
-city -22 75 Shakhty
-city -3 57 Serpukhov
-city 10 80 Zlatoust
-city -23 75 Novocherkassk
-city -21 63 Kremenchuk
-city -7 50 Mahilyow
-city 5 84 Magnitogorsk
-city 18 87 Petropavl
-city -8 65 Michurinsk
-city -14 43 Brest
-city 11 37 Vyborg
-city -22 55 Vinnytsia
-city -10 50 Babruysk
-city 51 86 Lesosibirsk
-city -5 36 Sovetsk
-city -2 74 Syzran
-city -7 47 Barysaw
-city -1 57 Noginsk
-city -31 86 Pyatigorsk
-city 32 101 Biysk
-city 42 99 Abakan
-city 17 73 Nizhny Tagil
-city -20 54 Berdychiv
+city -1 56 3.0 Moscow
+city 9 40 3.0 Saint Petersburg
+city -18 65 2.0 Kharkiv
+city -18 56 2.0 Kyiv
+city -24 75 2.0 Rostov-on-Don
+city -1 75 2.0 Samara
+city 3 62 2.0 Nizhny Novgorod
+city -6 35 2.0 Kaliningrad
+city -22 66 1.5 Dnipro
+city -17 78 1.5 Volgograd
+city 23 89 1.5 Omsk
+city 15 76 1.5 Yekaterinburg
+city 6 78 1.5 Ufa
+city 4 69 1.5 Kazan
+city -8 46 1.5 Minsk
+city -12 66 1.5 Voronezh
+city -24 67 1.5 Zaporizhzhia
+city -1 84 1.5 Orenburg
+city 38 93 1.5 Kemerovo
+city 12 81 1.5 Chelyabinsk
+city 39 90 1.5 Tomsk
+city 15 70 1.5 Perm
+city -27 64 1.5 Mykolaiv
+city 105 111 1.5 Vladivostok
+city -24 74 1.5 Taganrog
+city -12 53 1.5 Gomel
+city -31 74 1.5 Kerch
+city -5 48 1.5 Vitebsk
+city 32 98 1.0 Barnaul
+city -25 72 1.0 Mariupol
+city -15 61 1.0 Sumy
+city -33 91 1.0 Vladikavkaz
+city -13 62 1.0 Kursk
+city -32 71 1.0 Simferopol
+city 24 107 1.0 Oskemen
+city -8 67 1.0 Tambov
+city 48 93 1.0 Krasnoyarsk
+city -31 77 1.0 Novorossiysk
+city -19 54 1.0 Zhytomyr
+city -29 81 1.0 Armavir
+city -23 62 1.0 Kropyvnytskyi
+city 6 65 1.0 Yoshkar-Ola
+city 0 57 1.0 Orekhovo-Zuyevo
+city 11 103 1.0 Karaganda
+city -22 75 1.0 Shakhty
+city -3 57 1.0 Serpukhov
+city 10 80 1.0 Zlatoust
+city -23 75 1.0 Novocherkassk
+city -21 63 1.0 Kremenchuk
+city -7 50 1.0 Mahilyow
+city 5 84 1.0 Magnitogorsk
+city 18 87 1.0 Petropavl
+city -8 65 1.0 Michurinsk
+city -14 43 1.0 Brest
+city 11 37 1.0 Vyborg
+city -22 55 1.0 Vinnytsia
+city -10 50 1.0 Babruysk
+city 51 86 1.0 Lesosibirsk
+city -5 36 1.0 Sovetsk
+city -2 74 1.0 Syzran
+city -7 47 1.0 Barysaw
+city -1 57 1.0 Noginsk
+city -31 86 1.0 Pyatigorsk
+city 32 101 1.0 Biysk
+city 42 99 1.0 Abakan
+city 17 73 1.0 Nizhny Tagil
+city -20 54 1.0 Berdychiv
+city -9 41 0.5 Hrodna
+city 3 41 0.5 Pskov
+city -6 81 0.5 Oral
+city -32 73 0.5 Feodosiia
+city -6 120 0.5 Taraz
+city -32 88 0.5 Nalchik
+city -21 50 0.5 Ternopil
+city 108 96 0.5 Birobidzhan
+city -4 89 0.5 Aktobe
+city -31 85 0.5 Cherkessk
+city -2 68 0.5 Saransk
+city 12 99 0.75 Astana
+city 9 87 0.5 Kostanay
+city -9 111 0.5 Kyzylorda
+city 21 98 0.5 Pavlodar
+city 25 78 0.5 Tobolsk
+city -18 52 0.5 Zviahel
+city 15 91 0.5 Kokshetau
+city 4 121 0.5 Qonayev
+city -26 98 0.5 Aktau
+city 2 123 0.5 Almaty
+city 160 16 0.5 Anadyr
+city 5 98 0.5 Arkalyk
+city -21 88 0.5 Astrakhan
+city -16 91 0.5 Atyrau
+city -16 65 0.5 Belgorod
+city -9 57 0.5 Bryansk
+city 4 66 0.5 Cheboksary
+city -20 60 0.5 Cherkasy
+city -15 56 0.5 Chernihiv
+city -25 53 0.5 Chernivtsi
+city 74 101 0.5 Chita
+city -24 83 0.5 Elista
+city 32 103 0.5 Gorno-Altaysk
+city -31 92 0.5 Grozny
+city -23 50 0.5 Ivano-Frankivsk
+city 10 70 0.5 Izhevsk
+city -19 51 0.5 Iziaslav
+city -23 53 0.5 Kamianets-Podilskyi
+city 32 71 0.5 Khanty-Mansiysk
+city -21 52 0.5 Khmelnytskyi
+city 12 63 0.5 Kirov
+city -30 78 0.5 Krasnodar
+city 16 83 0.5 Kurgan
+city 45 105 0.5 Kyzyl
+city -20 72 0.5 Luhansk
+city -18 48 0.5 Lutsk
+city -20 47 0.5 Lviv
+city -31 95 0.5 Makhachkala
+city -31 81 0.5 Maykop
+city -24 55 0.5 Mohyliv-Podilskyi
+city 35 27 0.5 Murmansk
+city 34 93 0.5 Novosibirsk
+city -29 63 0.5 Odesa
+city -9 59 0.5 Oryol
+city -5 70 0.5 Penza
+city 151 58 0.5 Petropavlovsk-Kamchatsky
+city 15 41 0.75 Petrozavodsk
+city -19 63 0.5 Poltava
+city -18 50 0.5 Rivne
+city -3 61 0.5 Ryazan
+city 44 55 0.5 Salekhard
+city -9 75 0.5 Saratov
+city 21 105 0.5 Semey
+city -10 121 0.5 Shymkent
+city -5 51 0.5 Smolensk
+city -29 83 0.5 Stavropol
+city -25 52 0.5 Storozhynets
+city 21 57 0.5 Syktyvkar
+city 8 119 0.5 Taldyqorğan
+city -5 59 0.5 Tula
+city -9 117 0.5 Turkistan
+city 2 52 0.5 Tver
+city 20 79 0.5 Tyumen
+city 65 103 0.5 Ulan-Ude
+city 0 71 0.5 Ulyanovsk
+city 5 43 0.5 Veliky Novgorod
+city 1 59 0.5 Vladimir
+city 9 52 0.5 Vologda
+city 105 66 0.5 Yakutsk
+city -24 56 0.5 Yampil
+city 6 55 0.5 Yaroslavl
+city 127 91 0.5 Yuzhno-Sakhalinsk

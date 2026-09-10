@@ -7,15 +7,18 @@ scenario_source/<name>_cities.json cities with coordinates, classes and populati
 scenario_source/city_classes.json  Wikidata classes counted as city or town (downloaded by fetch)
 
 scenarios_base/<name>.txt                elevation hex grid
-scenarios_base/<name>_cities_<year>.txt  cities present that decade, one "city x y name" line each (axial hex)
+scenarios_base/<name>_cities_<year>.txt  cities present that decade, one "city x y level name" line each (axial hex)
 scenarios_base/<name>_rivers.txt         "river <size> <name>" followed by one "x y" hex per line (maps with "rivers": true)
 scenarios_base/<name>_water_labels.txt   "label x y name" per named sea, bay or lake (maps with "rivers": true)
 
 The game only ever sees hex coordinates; projections and lat/lon live here and in scenario_source.
 
 Run from the repo root:
-    python3 tools/rail_scenario_base.py fetch [name ...]   download images and Wikidata cities
-    python3 tools/rail_scenario_base.py [name ...]         convert
+    python3 tools/rail_scenario_base.py fetch [name ...]           download images and Wikidata cities
+    python3 tools/rail_scenario_base.py fetch-capitals [name ...]  refresh only the "capital of" data
+    python3 tools/rail_scenario_base.py [name ...]                 convert
+
+A definition may set "cities_source": "<other name>" to share another map's cities file.
 
 The elevation heuristic mirrors ElevationFromImage in src/8_rail/g_rail_scenarios.cppm.
 Images are Wikimedia Commons relief location maps (CC BY-SA); the projections mirror
@@ -42,6 +45,8 @@ AXIAL_NEIGHBOURS = [(1, 0), (1, -1), (0, -1), (-1, 0), (-1, 1), (0, 1)]
 RIVER_FILES = ["ne_10m_rivers_lake_centerlines", "ne_10m_rivers_europe", "ne_10m_rivers_north_america"]
 WATER_FILES = ["ne_10m_geography_marine_polys", "ne_10m_lakes"]
 RIVER_SIZE_MAX = 12
+CITY_LEVELS = [(1_000_000, 3.0), (300_000, 2.0), (100_000, 1.5), (0, 1.0)]
+CAPITAL_LEVELS = {"country": 0.75, "region": 0.5}
 RIVER_SAMPLE_STEP_WORLD = 0.5
 
 
@@ -143,6 +148,29 @@ def fetch(name, definition):
             populations[year] = max(populations.get(year, 0), int(float(row["pop"]["value"])))
     (SOURCE_DIR / f"{name}_cities.json").write_text(json.dumps(sorted(cities.values(), key=lambda city: city["name"]), indent=1, ensure_ascii=False))
     print(f"{name}: wrote {len(cities)} cities")
+    fetch_capitals(name, definition)
+
+
+def fetch_capitals(name, definition):
+    cities_path = SOURCE_DIR / f"{definition.get('cities_source', name)}_cities.json"
+    cities = json.loads(cities_path.read_text())
+    country_classes = {row["class"]["value"].rsplit("/", 1)[1] for row in sparql("SELECT ?class WHERE { ?class wdt:P279* wd:Q6256 }")}
+    region_classes = {row["class"]["value"].rsplit("/", 1)[1] for row in sparql("SELECT ?class WHERE { ?class wdt:P279* wd:Q10864048 }")}
+    capital_of = {}
+    ids = [city["id"] for city in cities]
+    for start in range(0, len(ids), 300):
+        values = " ".join("wd:" + city_id for city_id in ids[start:start + 300])
+        for row in sparql(f"SELECT ?city ?ofClass WHERE {{ VALUES ?city {{ {values} }} ?city wdt:P1376 ?of . ?of wdt:P31 ?ofClass }}"):
+            city_id = row["city"]["value"].rsplit("/", 1)[1]
+            of_class = row["ofClass"]["value"].rsplit("/", 1)[1]
+            if of_class in country_classes:
+                capital_of[city_id] = "country"
+            elif of_class in region_classes and capital_of.get(city_id) != "country":
+                capital_of[city_id] = "region"
+    for city in cities:
+        city["capital_of"] = capital_of.get(city["id"])
+    cities_path.write_text(json.dumps(cities, indent=1, ensure_ascii=False))
+    print(f"{name}: {sum(1 for kind in capital_of.values() if kind == 'country')} national and {sum(1 for kind in capital_of.values() if kind == 'region')} regional capitals")
 
 
 def population_at(populations, decade):
@@ -273,7 +301,7 @@ def convert(name, definition):
         (BASE_DIR / f"{name}_water_labels.txt").write_text("".join(f"label {x} {y} {water_name}\n" for (x, y), water_name in water_labels.items()))
         print(f"{name}: {len(river_lines)} river segments, {len(water_labels)} water labels")
 
-    cities_path = SOURCE_DIR / f"{name}_cities.json"
+    cities_path = SOURCE_DIR / f"{definition.get('cities_source', name)}_cities.json"
     city_classes = set(json.loads((SOURCE_DIR / "city_classes.json").read_text()))
     cities = [city for city in json.loads(cities_path.read_text()) if any(class_id in city_classes for class_id in city["classes"])] if cities_path.exists() else []
     placed = [(city, city_axial(city["lat"], city["lon"])) for city in cities]
@@ -283,13 +311,16 @@ def convert(name, definition):
         by_hex = {}
         for city, axial in placed:
             population = population_at({int(year): pop for year, pop in city["populations"].items()}, decade)
-            if population is None or population < definition["population_min"]:
+            capital_level = CAPITAL_LEVELS.get(city.get("capital_of"))
+            if capital_level is None and (population is None or population < definition["population_min"]):
                 continue
-            if axial not in by_hex or by_hex[axial][2] < population:
-                by_hex[axial] = (city["name"], city, population)
+            population_level = next(level for threshold, level in CITY_LEVELS if (population or 0) >= threshold) if population is not None and population >= definition["population_min"] else 0.0
+            level = max(population_level, capital_level or 0.0)
+            if axial not in by_hex or by_hex[axial][2] < (population or 0):
+                by_hex[axial] = (city["name"], level, population or 0)
         if not by_hex:
             continue
-        lines = [f"city {axial[0]} {axial[1]} {city_name}" for axial, (city_name, _, _) in sorted(by_hex.items(), key=lambda item: -item[1][2])]
+        lines = [f"city {axial[0]} {axial[1]} {level} {city_name}" for axial, (city_name, level, _) in sorted(by_hex.items(), key=lambda item: -item[1][2])]
         (BASE_DIR / f"{name}_cities_{decade}.txt").write_text("\n".join(lines) + "\n")
         written += 1
     print(f"{name}: {width}x{height}, {len(placed)}/{len(cities)} cities on map, {written} decade files")
@@ -297,11 +328,12 @@ def convert(name, definition):
 
 if __name__ == "__main__":
     arguments = sys.argv[1:]
-    fetching = bool(arguments) and arguments[0] == "fetch"
-    selected = set(arguments[1:] if fetching else arguments)
+    mode = arguments[0] if arguments and arguments[0] in ("fetch", "fetch-capitals") else "convert"
+    selected = set(arguments[1:] if mode != "convert" else arguments)
     for path in sorted(SOURCE_DIR.glob("*.json")):
         name = path.stem
         if name.endswith("_cities") or name == "city_classes" or (selected and name not in selected):
             continue
         definition = json.loads(path.read_text())
-        (fetch if fetching else convert)(name, definition)
+        if mode == "convert" or "cities_source" not in definition:
+            {"fetch": fetch, "fetch-capitals": fetch_capitals, "convert": convert}[mode](name, definition)

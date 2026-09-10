@@ -1,11 +1,47 @@
-city 59 76 New York City
-city 54 81 Philadelphia
-city 70 65 Boston
-city 34 107 Fayetteville
-city 63 72 New Haven
-city 46 88 Washington, D.C.
-city 65 54 Montreal
-city 73 45 Quebec City
-city 20 93 Cincinnati
-city 61 72 Danbury
-city 0 98 Cahokia
+city 59 76 1.5 New York City
+city 54 81 1.0 Philadelphia
+city 70 65 1.0 Boston
+city 34 107 1.0 Fayetteville
+city 63 72 1.0 New Haven
+city 46 88 1.0 Washington, D.C.
+city 65 54 1.0 Montreal
+city 73 45 1.0 Quebec City
+city 20 93 1.0 Cincinnati
+city 61 72 1.0 Danbury
+city 0 98 1.0 Cahokia
+city 10 78 0.5 Madison
+city 61 67 0.5 Albany
+city 49 87 0.5 Annapolis
+city 76 55 0.5 Augusta
+city -16 62 0.5 Bismarck
+city 29 94 0.5 Charleston
+city 99 37 0.5 Charlottetown
+city -42 88 0.5 Cheyenne
+city 24 114 0.5 Columbia
+city 26 88 0.5 Columbus
+city 69 62 0.5 Concord
+city -46 95 0.5 Denver
+city -6 86 0.5 Des Moines
+city 51 85 0.5 Dover
+city 17 98 0.5 Frankfort
+city 48 81 0.5 Harrisburg
+city 64 70 0.5 Hartford
+city 15 91 0.5 Indianapolis
+city -8 100 0.5 Jefferson City
+city 25 76 0.5 Lansing
+city -18 90 0.5 Lincoln
+city -16 118 0.5 Little Rock
+city 7 108 0.5 Nashville
+city -33 116 0.5 Oklahoma City
+city 58 56 0.75 Ottawa
+city -21 74 0.5 Pierre
+city 69 68 0.5 Providence
+city 36 104 0.5 Raleigh
+city -17 44 0.5 Regina
+city 43 94 0.5 Richmond
+city 3 70 0.5 Saint Paul
+city 3 93 0.5 Springfield
+city -18 98 0.5 Topeka
+city 44 68 0.5 Toronto
+city 55 79 0.5 Trenton
+city 1 47 0.5 Winnipeg

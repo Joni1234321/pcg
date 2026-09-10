@@ -33,7 +33,7 @@ using namespace hex::ui;
 export namespace rail {
 constexpr const char* SCENARIOS_BASE_DIR = "rail/scenarios_base";
 constexpr const char* SCENARIOS_DIR = "rail/scenarios";
-constexpr const char* IMPORT_IMAGE = "rail/source/britain.jpg";
+constexpr const char* IMPORT_IMAGE = "rail/scenario_source/britain.jpg";
 constexpr uint2 IMPORT_MAP_SIZE { 136U, 240U };
 constexpr f32 EDITOR_CAMERA_SCALE = 20.0F;
 constexpr f32 EDITOR_ZOOM_MIN = 0.5F;
@@ -92,9 +92,9 @@ void AppendHex(List<Vertex>& verts, const float2 screen_center, const f32 screen
     }
 }
 
-[[nodiscard]] Handle<Node> Button(const NodeReference parent, const String& text) {
-    const Handle<Node> button = NodeBuilder(parent, Layout { hug }).Padding(4U).Fill(COLOR_BUTTON).FillHover(COLOR_BUTTON_HOVER).Build();
-    (void)NodeBuilder(NodeReference { parent.tree, button }, Layout { hug }).Text(text, COLOR_BUTTON_TEXT).Build();
+[[nodiscard]] Handle<Node> Button(const NodeReference parent, const String& text, const FontSizes font_size = FontSizes::body, const u32 padding = 4U) {
+    const Handle<Node> button = NodeBuilder(parent, Layout { hug }).Padding(padding).Fill(COLOR_BUTTON).FillHover(COLOR_BUTTON_HOVER).Build();
+    (void)NodeBuilder(NodeReference { parent.tree, button }, Layout { hug }).Text(text, font_size, COLOR_BUTTON_TEXT).Build();
     return button;
 }
 void SetButtonTextColor(const Handle<NodeTree> tree, const Handle<Node> button, const Color color) { globalData[tree].styles[globalData[tree].children[button][0]].background_color = color; }
@@ -158,7 +158,7 @@ struct RailEditorFrame : Frame {
     Handle<Node> file_panel { B(root).Node(hug).Padding(8U).Gap(4U).Direction(vertical).Fill(colors::COLOR_BEIGE).Build() };
     Handle<Node> help_label { B(file_panel).Node(hug).Text(FontSizes::small, colors::COLOR_DARK_GRAY).Build() };
     Handle<Node> status_label { B(file_panel).Node(hug).Text(FontSizes::small, colors::COLOR_DARK_GRAY).Build() };
-    Handle<Node> file_list { B(file_panel).Node(hug).Gap(2U).Direction(vertical).Build() };
+    Handle<Node> file_list { B(file_panel).Node(hug).Gap(1U).Direction(vertical).Build() };
     RailEditorFrame() {
         globalData[tree].styles[frame].alignment = top_right;
         globalData[tree].styles[root].alignment = top_right;
@@ -301,7 +301,7 @@ struct RailEditorSystem {
     }
 
     void AddFileButton(const AssetPath& asset_path) {
-        const Handle<Node> button = Button(NodeReference { frame.tree, frame.file_list }, std::format("▸ {}/{}", asset_path.parent_path().filename().string(), asset_path.filename().string()));
+        const Handle<Node> button = Button(NodeReference { frame.tree, frame.file_list }, std::format("▸ {}/{}", asset_path.parent_path().filename().string(), asset_path.stem().string()), FontSizes::small, 2U);
         globalData[frame.tree].node_properties[button].on_click = [this, asset_path](NodeReference) {
             PushHistory();
             SetDocument(LoadDocument(asset_path));
@@ -439,7 +439,7 @@ struct RailEditorSystem {
                     const Optional<u32> existing = city_at(axial_hover);
                     if (!existing.has_value()) {
                         PushHistory();
-                        cities.push_back(City { .axial = axial_hover, .name = std::format("City {}", cities.size() + 1U) });
+                        cities.push_back(City { .axial = axial_hover, .level = 1.0F, .name = std::format("City {}", cities.size() + 1U) });
                         RebuildCityLabels();
                     }
                     SelectCity(existing.value_or(static_cast<u32>(cities.size() - 1U)));
@@ -503,8 +503,8 @@ struct RailEditorSystem {
         for (u32 i = 0; i < cities.size(); i++) {
             const float2 screen = camera.WorldToScreen(HexAxialToWorld(cities[i].axial));
             const Color color = selected_city == i ? COLOR_CITY_SELECTED : COLOR_CITY;
-            const f32 outer = camera.scale * 0.6F;
-            const f32 inner = camera.scale * 0.4F;
+            const f32 outer = camera.scale * (0.35F + 0.15F * cities[i].level);
+            const f32 inner = outer - camera.scale * 0.2F;
             for (u32 corner = 0; corner < HEX_CORNERS; corner++) {
                 const float2 outer_a = screen + HEX_ANGLE[corner] * float2 { outer };
                 const float2 outer_b = screen + HEX_ANGLE[(corner + 1) % HEX_CORNERS] * float2 { outer };

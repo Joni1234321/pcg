@@ -1,69 +1,80 @@
-city -21 128 Los Angeles
-city -21 139 San Diego
-city -28 97 San Francisco
-city 76 81 Denver
-city -21 131 Long Beach
-city 47 120 Albuquerque
-city 4 111 Las Vegas
-city 10 19 Tacoma
-city 74 119 Amarillo
-city -26 127 Oxnard
-city -21 127 Glendale
-city -27 99 Fremont
-city -18 128 Ontario
-city -29 106 Salinas
-city -19 136 Escondido
-city -20 130 Orange
-city -17 109 Visalia
-city -27 94 Vallejo
-city 41 77 Provo
-city -29 101 Sunnyvale
-city -22 129 Santa Monica
-city -26 126 Ventura
-city -24 94 Antioch
-city -18 123 Lancaster
-city -20 128 El Monte
-city -27 96 Richmond
-city -24 93 Vacaville
-city -21 130 Lakewood
-city -18 124 Palmdale
-city -21 125 Santa Clarita
-city -20 139 El Cajon
-city -21 129 South Gate
-city -20 92 Elk Grove
-city -26 93 Napa
-city -20 131 Irvine
-city -21 132 Newport Beach
-city -22 130 Carson
-city 0 33 Hillsboro
-city 15 13 Everett
-city 76 80 Thornton
-city 24 27 Kennewick
-city 103 45 Rapid City
-city -20 140 National City
-city 35 143 Las Cruces
-city -15 128 Redlands
-city -12 59 Medford
-city 81 55 Casper
-city -17 111 Porterville
-city -20 129 La Habra
-city 46 64 Logan
-city -23 131 Rancho Palos Verdes
-city 20 119 Flagstaff
-city 55 22 Missoula
-city -28 99 Newark
-city 37 26 Lewiston
-city -19 128 Covina
-city -27 100 Milpitas
-city -12 139 El Centro
-city -19 138 Santee
-city 28 29 Walla Walla
-city 67 32 Bozeman
-city -29 102 Los Gatos
-city -24 96 Brentwood
-city -20 137 Encinitas
-city 79 68 Laramie
-city -20 132 Laguna Niguel
-city 23 17 Wenatchee
-city -25 72 Eureka
-city -29 100 East Palo Alto
+city -21 128 3.0 Los Angeles
+city -21 139 2.0 San Diego
+city -28 97 2.0 San Francisco
+city 76 81 2.0 Denver
+city -21 131 2.0 Long Beach
+city 47 120 2.0 Albuquerque
+city 4 111 1.5 Las Vegas
+city 10 19 1.5 Tacoma
+city 74 119 1.5 Amarillo
+city -26 127 1.5 Oxnard
+city -21 127 1.5 Glendale
+city -27 99 1.5 Fremont
+city -18 128 1.5 Ontario
+city -29 106 1.5 Salinas
+city -19 136 1.5 Escondido
+city -20 130 1.5 Orange
+city -17 109 1.0 Visalia
+city -27 94 1.0 Vallejo
+city 41 77 1.0 Provo
+city -29 101 1.0 Sunnyvale
+city -22 129 1.0 Santa Monica
+city -26 126 1.0 Ventura
+city -24 94 1.0 Antioch
+city -18 123 1.0 Lancaster
+city -20 128 1.0 El Monte
+city -27 96 1.0 Richmond
+city -24 93 1.0 Vacaville
+city -21 130 1.0 Lakewood
+city -18 124 1.0 Palmdale
+city -21 125 1.0 Santa Clarita
+city -20 139 1.0 El Cajon
+city -21 129 1.0 South Gate
+city -20 92 1.0 Elk Grove
+city -26 93 1.0 Napa
+city -20 131 1.0 Irvine
+city -21 132 1.0 Newport Beach
+city -22 130 1.0 Carson
+city 0 33 1.0 Hillsboro
+city 15 13 1.0 Everett
+city 76 80 1.0 Thornton
+city 24 27 1.0 Kennewick
+city 103 45 1.0 Rapid City
+city -20 140 1.0 National City
+city 35 143 1.0 Las Cruces
+city -15 128 1.0 Redlands
+city -12 59 1.0 Medford
+city 81 55 1.0 Casper
+city -17 111 1.0 Porterville
+city -20 129 1.0 La Habra
+city 46 64 1.0 Logan
+city -23 131 1.0 Rancho Palos Verdes
+city 20 119 1.0 Flagstaff
+city 55 22 1.0 Missoula
+city -28 99 1.0 Newark
+city 37 26 1.0 Lewiston
+city -19 128 1.0 Covina
+city -27 100 1.0 Milpitas
+city -12 139 1.0 El Centro
+city -19 138 1.0 Santee
+city 28 29 1.0 Walla Walla
+city 67 32 1.0 Bozeman
+city -29 102 1.0 Los Gatos
+city -24 96 1.0 Brentwood
+city -20 137 1.0 Encinitas
+city 79 68 1.0 Laramie
+city -20 132 1.0 Laguna Niguel
+city 23 17 1.0 Wenatchee
+city -25 72 1.0 Eureka
+city -29 100 1.0 East Palo Alto
+city 29 49 0.5 Boise
+city -8 86 0.5 Carson City
+city 83 69 0.5 Cheyenne
+city 65 24 0.5 Helena
+city 57 137 0.5 Lovington
+city 7 20 0.5 Olympia
+city 10 133 0.5 Phoenix
+city -21 91 0.5 Sacramento
+city -3 38 0.5 Salem
+city 42 73 0.5 Salt Lake City
+city 53 115 0.5 Santa Fe

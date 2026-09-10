@@ -1,6 +1,11 @@
-city 121 1445 London
-city 57 1297 Birmingham
-city 397 586 Aberdeen
-city 193 1339 Cambridge
-city 230 1387 Colchester
-city 91 1398 Aylesbury
+city 121 1445 3.0 London
+city 57 1297 2.0 Birmingham
+city 397 586 1.5 Aberdeen
+city 193 1339 1.0 Cambridge
+city 230 1387 1.0 Colchester
+city 91 1398 1.0 Aylesbury
+city -94 975 0.75 Belfast
+city -118 1449 0.75 Cardiff
+city -215 1165 0.75 Dublin
+city 222 768 0.75 Edinburgh
+city -203 1148 0.5 Swords

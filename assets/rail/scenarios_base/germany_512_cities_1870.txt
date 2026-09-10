@@ -1,0 +1,148 @@
+city 95 499 3.0 Vienna
+city 107 231 2.0 Berlin
+city 373 220 2.0 Warsaw
+city 23 167 1.5 Hamburg
+city 73 385 1.5 Prague
+city -32 197 1.5 Bremen
+city -92 515 1.5 Munich
+city 174 27 1.5 Copenhagen
+city -23 243 1.5 Hanover
+city 76 325 1.5 Dresden
+city -163 428 1.5 Mannheim
+city 131 435 1.5 Brno
+city -110 501 1.5 Augsburg
+city 36 308 1.5 Leipzig
+city 0 250 1.0 Brunswick
+city 305 259 1.0 Łódź
+city 34 258 1.0 Magdeburg
+city 53 117 1.0 Kiel
+city -23 333 1.0 Erfurt
+city 73 386 1.0 New Town
+city -142 287 1.0 Dorsten
+city 116 339 1.0 Liberec
+city -143 499 1.0 Ulm
+city -260 552 1.0 Basel
+city 56 147 1.0 Lübeck
+city 212 387 1.0 Ostrava
+city -100 409 1.0 Würzburg
+city -44 297 1.0 Göttingen
+city 25 409 1.0 Plzeň
+city -146 480 1.0 Göppingen
+city -62 403 1.0 Bamberg
+city 166 407 1.0 Olomouc
+city 286 178 1.0 Bydgoszcz
+city 21 348 1.0 Zwickau
+city 200 382 1.0 Opava
+city -126 572 1.0 Innsbruck
+city 75 239 1.0 Brandenburg an der Havel
+city 320 361 1.0 Tarnów
+city -68 422 1.0 Erlangen
+city -79 197 1.0 Papenburg
+city -166 473 1.0 Leonberg
+city -67 271 1.0 Detmold
+city 76 349 1.0 Ústí nad Labem
+city -231 565 1.0 Zurich
+city 98 426 1.0 Jihlava
+city 27 331 1.0 Altenburg
+city -78 475 1.0 Ingolstadt
+city 43 456 0.5 České Budějovice
+city 129 373 0.5 Hradec Králové
+city 95 48 0.5 Odense
+city 20 379 0.5 Karlovy Vary
+city 305 182 0.5 Toruń
+city -48 333 0.5 Eisenach
+city -122 397 0.5 Aschaffenburg
+city 123 384 0.5 Pardubice
+city 172 429 0.5 Zlín
+city -83 467 0.5 Eichstätt
+city -35 388 0.5 Kulmbach
+city -249 563 0.5 Aarau
+city -195 475 0.5 Baden-Baden
+city -36 399 0.5 Bayreuth
+city 241 384 0.5 Bielsko-Biała
+city -169 346 0.75 Bonn
+city -51 250 0.5 Bückeburg
+city 40 340 0.5 Chemnitz
+city 307 161 0.5 Chełmno
+city 374 180 0.5 Ciechanów
+city -48 379 0.5 Coburg
+city 118 278 0.5 Cottbus
+city 268 321 0.5 Częstochowa
+city -144 404 0.5 Darmstadt
+city -276 564 0.5 Delémont
+city -149 371 0.5 Diez
+city 91 522 0.5 Eisenstadt
+city 362 105 0.5 Elbląg
+city -231 516 0.5 Emmendingen
+city 143 239 0.5 Frankfurt (Oder)
+city -211 553 0.5 Frauenfeld
+city 341 96 0.5 Gdańsk
+city 12 338 0.5 Gera
+city 179 212 0.5 Gorzów Wielkopolski
+city -35 335 0.5 Gotha
+city 26 576 0.5 Graz
+city -188 501 0.5 Haigerloch
+city 26 299 0.5 Halle (Saale)
+city -112 286 0.5 Hamm
+city -202 564 0.5 Herisau
+city 173 12 0.5 Hillerød
+city 287 198 0.5 Inowrocław
+city 145 329 0.5 Jelenia Góra
+city 254 265 0.5 Kalisz
+city -181 459 0.5 Karlsruhe
+city -66 311 0.5 Kassel
+city 250 357 0.5 Katowice
+city 327 308 0.5 Kielce
+city 273 234 0.5 Konin
+city 281 364 0.5 Kraków
+city 71 489 0.5 Krems
+city 169 308 0.5 Legnica
+city -116 362 0.5 Lich
+city 402 101 0.5 Lidzbark Warmiński
+city -257 557 0.5 Liestal
+city 17 500 0.5 Linz
+city 62 274 0.5 Lutherstadt Wittenberg
+city 28 186 0.5 Lüneburg
+city -153 395 0.5 Mainz
+city 346 115 0.5 Malbork
+city -58 360 0.5 Meiningen
+city 23 308 0.5 Merseburg
+city 222 239 0.75 Mosina
+city -109 268 0.5 Münster
+city 124 88 0.5 Nykøbing Falster
+city -49 192 0.5 Oldenburg
+city 391 123 0.5 Olsztyn
+city 220 335 0.5 Opole
+city -7 484 0.5 Passau
+city 304 280 0.5 Piotrków Trybunalski
+city 92 239 0.5 Potsdam
+city 229 228 0.5 Poznań
+city 333 206 0.5 Płock
+city 159 31 0.5 Roskilde
+city 111 132 0.5 Rostock
+city -20 349 0.5 Rudolstadt
+city -22 354 0.5 Saalfeld
+city -46 535 0.5 Salzburg
+city -217 544 0.5 Schaffhausen
+city 73 162 0.5 Schwerin
+city 335 242 0.5 Skierniewice
+city -274 574 0.5 Solothurn
+city -198 562 0.5 St. Gallen
+city 65 503 0.5 St. Pölten
+city 8 164 0.5 Stade
+city -161 475 0.5 Stuttgart
+city -47 357 0.5 Suhl
+city 174 170 0.5 Szczecin
+city 288 95 0.5 Słupsk
+city 78 28 0.5 Vejle
+city 161 336 0.5 Wałbrzych
+city -12 332 0.5 Weimar
+city 17 318 0.5 Weißenfels
+city -151 390 0.5 Wiesbaden
+city -3 257 0.5 Wolfenbüttel
+city 198 311 0.5 Wrocław
+city -108 379 0.5 Wächtersbach
+city 312 203 0.5 Włocławek
+city 19 327 0.5 Zeitz
+city 165 263 0.5 Zielona Góra
+city 303 240 0.5 Łęczyca

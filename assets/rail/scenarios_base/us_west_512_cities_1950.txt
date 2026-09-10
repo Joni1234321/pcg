@@ -1,0 +1,66 @@
+city -80 483 3.0 Los Angeles
+city -109 367 2.0 San Francisco
+city -78 524 2.0 San Diego
+city 285 305 2.0 Denver
+city -104 365 1.5 Oakland
+city -83 491 1.5 Long Beach
+city 178 450 1.5 Albuquerque
+city 39 70 1.5 Tacoma
+city 279 447 1.0 Amarillo
+city -110 401 1.0 Salinas
+city -67 482 1.0 Ontario
+city -97 478 1.0 Oxnard
+city -78 479 1.0 Glendale
+city -69 482 1.0 Pomona
+city -66 411 1.0 Visalia
+city -75 490 1.0 Orange
+city -70 511 1.0 Escondido
+city -85 483 1.0 Santa Monica
+city 154 289 1.0 Provo
+city -80 489 1.0 Lakewood
+city -100 356 1.0 Vallejo
+city -92 359 1.0 Antioch
+city -97 476 1.0 Ventura
+city -76 488 1.0 Fullerton
+city -90 348 1.0 Vacaville
+city -77 484 1.0 Pico Rivera
+city -98 350 1.0 Napa
+city -78 489 1.0 Buena Park
+city -104 361 1.0 Richmond
+city -103 373 1.0 Fremont
+city -75 482 1.0 El Monte
+city -81 486 1.0 South Gate
+city -83 489 1.0 Carson
+city -107 379 1.0 Sunnyvale
+city -79 496 1.0 Newport Beach
+city 55 48 1.0 Everett
+city -85 489 1.0 Redondo Beach
+city -73 522 1.0 El Cajon
+city 1 124 1.0 Hillsboro
+city -77 525 1.0 National City
+city 91 103 1.0 Kennewick
+city 174 242 1.0 Logan
+city -80 487 1.0 Paramount
+city -79 488 1.0 Cerritos
+city -68 463 1.0 Lancaster
+city 389 169 1.0 Rapid City
+city -74 483 1.0 La Puente
+city 18 416 1.0 Las Vegas
+city 106 107 1.0 Walla Walla
+city 305 208 1.0 Casper
+city -65 420 1.0 Porterville
+city -104 374 1.0 Newark
+city 208 83 1.0 Missoula
+city -77 487 1.0 La Mirada
+city 139 97 1.0 Lewiston
+city 111 184 0.5 Boise
+city -31 323 0.5 Carson City
+city 311 261 0.5 Cheyenne
+city 245 91 0.5 Helena
+city 213 517 0.5 Lovington
+city 26 77 0.5 Olympia
+city 39 501 0.5 Phoenix
+city -76 341 0.5 Sacramento
+city -9 142 0.5 Salem
+city 157 273 0.5 Salt Lake City
+city 201 432 0.5 Santa Fe

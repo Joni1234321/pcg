@@ -1,323 +1,324 @@
-city -21 128 Los Angeles
-city 10 133 Phoenix
-city -21 139 San Diego
-city -28 101 San Jose
-city -28 97 San Francisco
-city 34 147 El Paso
-city 13 16 Seattle
-city 76 81 Denver
-city 3 33 Portland
-city 4 111 Las Vegas
-city 47 120 Albuquerque
-city 12 143 Tucson
-city -19 106 Fresno
-city -21 91 Sacramento
-city -21 131 Long Beach
-city 12 133 Mesa
-city 73 88 Colorado Springs
-city -20 117 Bakersfield
-city -20 130 Anaheim
-city 77 81 Aurora
-city -17 129 Riverside
-city -21 96 Stockton
-city 5 112 Henderson
-city -20 140 Chula Vista
-city 11 134 Chandler
-city 68 132 Lubbock
-city 10 132 Glendale
-city -7 83 Reno
-city 11 133 Scottsdale
-city 5 110 North Las Vegas
-city -27 99 Fremont
-city -20 131 Irvine
-city -16 128 San Bernardino
-city 40 15 Spokane
-city 12 134 Gilbert
-city 29 49 Boise
-city -21 98 Modesto
-city 10 19 Tacoma
-city -26 127 Oxnard
-city -17 128 Fontana
-city -16 129 Moreno Valley
-city -21 127 Glendale
-city 74 119 Amarillo
-city 42 73 Salt Lake City
-city -21 125 Santa Clarita
-city -28 92 Santa Rosa
-city -19 135 Oceanside
-city -18 128 Ontario
-city 2 31 Vancouver
-city -18 123 Lancaster
-city -5 45 Eugene
-city -3 38 Salem
-city -20 92 Elk Grove
-city -18 124 Palmdale
-city -18 130 Corona
-city -29 106 Salinas
-city -22 130 Torrance
-city -27 98 Hayward
-city 79 74 Fort Collins
-city -19 136 Escondido
-city 75 81 Lakewood
-city -29 101 Sunnyvale
-city -20 127 Pasadena
-city 41 73 West Valley City
-city -24 127 Thousand Oaks
-city -17 109 Visalia
-city -23 126 Simi Valley
-city -26 96 Concord
-city -18 89 Roseville
-city 76 80 Thornton
-city 9 132 Surprise
-city -27 94 Vallejo
-city -14 124 Victorville
-city -20 128 El Monte
-city 41 77 Provo
-city -21 129 Downey
-city 60 145 Midland
-city -22 129 Inglewood
-city 41 74 West Jordan
-city 72 93 Pueblo
-city -26 126 Ventura
-city -19 128 West Covina
-city -20 136 Carlsbad
-city -25 93 Fairfield
-city 81 31 Billings
-city -27 96 Richmond
-city -17 132 Murrieta
-city 15 13 Everett
-city -24 94 Antioch
-city 76 82 Centennial
-city -17 133 Temecula
-city 58 146 Odessa
-city -30 121 Santa Maria
-city -20 139 El Cajon
-city 35 143 Las Cruces
-city 75 79 Boulder
-city -28 99 San Mateo
-city -18 105 Clovis
-city -20 132 Mission Viejo
-city -7 140 Yuma
-city 80 75 Greeley
-city -24 93 Vacaville
-city 12 18 Kent
-city 0 33 Hillsboro
-city 18 24 Yakima
-city 12 17 Renton
-city -14 125 Hesperia
-city -16 74 Redding
-city 1 33 Beaverton
-city 41 15 Spokane Valley
-city -28 125 Santa Barbara
-city 41 76 Orem
-city 48 118 Rio Rancho
-city 77 77 Longmont
-city -17 81 Chico
-city -20 129 Whittier
-city -21 132 Newport Beach
-city 28 49 Nampa
-city -19 90 Citrus Heights
-city -24 98 Tracy
-city 43 69 Ogden
-city -26 98 Livermore
-city 17 6 Bellingham
-city -21 130 Buena Park
-city -20 101 Merced
-city -16 131 Hemet
-city -17 131 Menifee
-city -26 93 Napa
-city -29 100 Redwood City
-city 3 45 Bend
-city 9 133 Avondale
-city -11 131 Indio
-city -12 59 Medford
-city -19 129 Chino Hills
-city -28 100 Mountain View
-city 24 27 Kennewick
-city 17 103 St. George
-city -18 90 Folsom
-city -26 97 San Ramon
-city -15 128 Redlands
-city -21 99 Turlock
-city 103 45 Rapid City
-city 53 115 Santa Fe
-city 43 70 Layton
-city -22 97 Manteca
-city 78 75 Loveland
-city -27 100 Milpitas
-city 55 22 Missoula
-city 20 119 Flagstaff
-city -22 91 Davis
-city -25 127 Camarillo
-city -19 86 Yuba City
-city -20 133 San Clemente
-city -25 94 Pittsburg
-city -21 94 Lodi
-city -19 104 Madera
-city 15 12 Marysville
-city -30 104 Santa Cruz
-city 25 27 Pasco
-city -20 137 Encinitas
-city 83 69 Cheyenne
-city -18 110 Tulare
-city 53 87 Grand Junction
-city 73 17 Great Falls
-city 47 55 Pocatello
-city -28 93 Petaluma
-city -29 96 San Rafael
-city 53 50 Idaho Falls
-city 76 79 Broomfield
-city -22 90 Woodland
-city 81 55 Casper
-city -8 86 Carson City
-city -4 41 Corvallis
-city -17 111 Porterville
-city 14 15 Redmond
-city -19 109 Hanford
-city -18 129 Eastvale
-city -19 138 Santee
-city -20 114 Delano
-city 14 14 Shoreline
-city 3 125 Lake Havasu City
-city -28 94 Novato
-city -18 131 Lake Elsinore
-city -24 96 Brentwood
-city -15 129 Yucaipa
-city -12 130 Cathedral City
-city -29 105 Watsonville
-city 7 134 Buckeye
-city -4 40 Albany
-city -28 104 Gilroy
-city 10 138 Casa Grande
-city -12 131 Palm Desert
-city 52 134 Roswell
-city 75 84 Castle Rock
-city 46 64 Logan
-city 1 34 Tigard
-city -19 137 Poway
-city 40 76 Lehi
-city 7 20 Olympia
-city 27 49 Caldwell
-city 77 80 Commerce City
-city 45 106 Farmington
-city 14 16 Sammamish
-city -22 99 Ceres
-city 76 83 Parker
-city -29 118 San Luis Obispo
-city -13 130 Palm Springs
-city -15 130 San Jacinto
-city 43 15 Coeur d'Alene
-city 35 57 Twin Falls
-city 12 149 Sierra Vista
-city 9 136 Maricopa
-city -18 88 Lincoln
-city -12 139 El Centro
-city 42 72 Bountiful
-city -31 123 Lompoc
-city 7 21 Lacey
-city 37 26 Lewiston
-city 75 82 Littleton
-city -23 131 Rancho Palos Verdes
-city -30 99 San Bruno
-city 12 142 Oro Valley
-city 13 124 Prescott
-city 4 120 Bullhead City
-city -22 128 Culver City
-city 14 124 Prescott Valley
-city 40 75 Riverton
-city -12 140 Calexico
-city -27 103 Morgan Hill
-city 64 125 Clovis
-city 11 15 Bremerton
-city 67 32 Bozeman
-city 11 19 Puyallup
-city 4 28 Longview
-city -2 37 Keizer
-city -23 103 Los Banos
-city 13 134 Apache Junction
-city -26 94 Martinez
-city 11 142 Marana
-city -27 105 Hollister
-city 40 78 Spanish Fork
-city -15 59 Grants Pass
-city -24 126 Moorpark
-city 57 139 Hobbs
-city 60 29 Butte
-city 78 79 Brighton
-city -30 107 Seaside
-city -2 35 McMinnville
-city -18 132 Wildomar
-city 35 148 Socorro
-city 23 17 Wenatchee
-city 2 34 Oregon City
-city -15 124 Adelanto
-city 16 9 Mount Vernon
-city 28 29 Walla Walla
-city 39 74 Tooele
-city 79 68 Laramie
-city 42 138 Alamogordo
-city -29 102 Saratoga
-city 37 23 Pullman
-city -28 115 Paso Robles
-city -14 129 Banning
-city -25 126 Santa Paula
-city 92 43 Gillette
-city 22 98 Cedar City
-city -29 116 Atascadero
-city 65 24 Helena
-city -21 101 Atwater
-city 16 12 Lake Stevens
-city 7 119 Kingman
-city -11 115 Ridgecrest
-city 64 143 Big Spring
-city -25 72 Eureka
-city -28 91 Windsor
-city 40 73 Magna
-city 12 135 Queen Creek
-city 5 43 Redmond
-city 49 142 Carlsbad
-city -12 129 Desert Hot Springs
-city 73 90 Fountain
-city -28 108 Soledad
-city -21 115 Wasco
-city 12 137 Florence
-city -8 141 San Luis
-city 55 47 Rexburg
-city 10 146 Sahuarita
-city -9 128 Twentynine Palms
-city -11 137 Brawley
-city -20 111 Corcoran
-city -20 109 Lemoore
-city -17 106 Sanger
-city -17 107 Reedley
-city -1 36 Woodburn
-city -27 97 Lafayette
-city 38 23 Moscow
-city -21 93 Galt
-city -21 126 San Fernando
-city -18 107 Selma
-city -23 127 Calabasas
-city 60 66 Rock Springs
-city 13 15 Bainbridge Island
-city 13 18 Maple Valley
-city -11 121 Barstow
-city 13 132 Fountain Hills
-city 71 127 Plainview
-city 14 10 Oak Harbor
-city -1 35 Newberg
-city 37 116 Gallup
-city 39 76 Eagle Mountain
-city -11 88 South Lake Tahoe
-city -19 127 Duarte
-city -11 52 Roseburg
-city -1 33 Forest Grove
-city -6 60 Klamath Falls
-city 8 151 Nogales
-city -3 132 Blythe
-city -11 128 Yucca Valley
-city -20 97 Oakdale
-city -23 100 Patterson
-city 27 20 Moses Lake
-city -24 128 Agoura Hills
-city 14 13 Mukilteo
-city -12 61 Ashland
+city -21 128 3.0 Los Angeles
+city 10 133 3.0 Phoenix
+city -21 139 3.0 San Diego
+city -28 101 2.0 San Jose
+city -28 97 2.0 San Francisco
+city 34 147 2.0 El Paso
+city 13 16 2.0 Seattle
+city 76 81 2.0 Denver
+city 3 33 2.0 Portland
+city 4 111 2.0 Las Vegas
+city 47 120 2.0 Albuquerque
+city 12 143 2.0 Tucson
+city -19 106 2.0 Fresno
+city -21 91 2.0 Sacramento
+city -21 131 2.0 Long Beach
+city 12 133 2.0 Mesa
+city 73 88 2.0 Colorado Springs
+city -20 117 2.0 Bakersfield
+city -20 130 2.0 Anaheim
+city 77 81 2.0 Aurora
+city -17 129 2.0 Riverside
+city -21 96 1.5 Stockton
+city 5 112 1.5 Henderson
+city -20 140 1.5 Chula Vista
+city 11 134 1.5 Chandler
+city 68 132 1.5 Lubbock
+city 10 132 1.5 Glendale
+city -7 83 1.5 Reno
+city 11 133 1.5 Scottsdale
+city 5 110 1.5 North Las Vegas
+city -27 99 1.5 Fremont
+city -20 131 1.5 Irvine
+city -16 128 1.5 San Bernardino
+city 40 15 1.5 Spokane
+city 12 134 1.5 Gilbert
+city 29 49 1.5 Boise
+city -21 98 1.5 Modesto
+city 10 19 1.5 Tacoma
+city -26 127 1.5 Oxnard
+city -17 128 1.5 Fontana
+city -16 129 1.5 Moreno Valley
+city -21 127 1.5 Glendale
+city 74 119 1.5 Amarillo
+city 42 73 1.5 Salt Lake City
+city -21 125 1.5 Santa Clarita
+city -28 92 1.5 Santa Rosa
+city -19 135 1.5 Oceanside
+city -18 128 1.5 Ontario
+city 2 31 1.5 Vancouver
+city -18 123 1.5 Lancaster
+city -5 45 1.5 Eugene
+city -3 38 1.5 Salem
+city -20 92 1.5 Elk Grove
+city -18 124 1.5 Palmdale
+city -18 130 1.5 Corona
+city -29 106 1.5 Salinas
+city -22 130 1.5 Torrance
+city -27 98 1.5 Hayward
+city 79 74 1.5 Fort Collins
+city -19 136 1.5 Escondido
+city 75 81 1.5 Lakewood
+city -29 101 1.5 Sunnyvale
+city -20 127 1.5 Pasadena
+city 41 73 1.5 West Valley City
+city -24 127 1.5 Thousand Oaks
+city -17 109 1.5 Visalia
+city -23 126 1.5 Simi Valley
+city -26 96 1.5 Concord
+city -18 89 1.5 Roseville
+city 76 80 1.5 Thornton
+city 9 132 1.5 Surprise
+city -27 94 1.5 Vallejo
+city -14 124 1.5 Victorville
+city -20 128 1.5 El Monte
+city 41 77 1.5 Provo
+city -21 129 1.5 Downey
+city 60 145 1.5 Midland
+city -22 129 1.5 Inglewood
+city 41 74 1.5 West Jordan
+city 72 93 1.5 Pueblo
+city -26 126 1.5 Ventura
+city -19 128 1.5 West Covina
+city -20 136 1.5 Carlsbad
+city -25 93 1.5 Fairfield
+city 81 31 1.5 Billings
+city -27 96 1.5 Richmond
+city -17 132 1.5 Murrieta
+city 15 13 1.5 Everett
+city -24 94 1.5 Antioch
+city 76 82 1.5 Centennial
+city -17 133 1.5 Temecula
+city 58 146 1.0 Odessa
+city -30 121 1.0 Santa Maria
+city -20 139 1.0 El Cajon
+city 35 143 1.0 Las Cruces
+city 75 79 1.0 Boulder
+city -28 99 1.0 San Mateo
+city -18 105 1.0 Clovis
+city -20 132 1.0 Mission Viejo
+city -7 140 1.0 Yuma
+city 80 75 1.0 Greeley
+city -24 93 1.0 Vacaville
+city 12 18 1.0 Kent
+city 0 33 1.0 Hillsboro
+city 18 24 1.0 Yakima
+city 12 17 1.0 Renton
+city -14 125 1.0 Hesperia
+city -16 74 1.0 Redding
+city 1 33 1.0 Beaverton
+city 41 15 1.0 Spokane Valley
+city -28 125 1.0 Santa Barbara
+city 41 76 1.0 Orem
+city 48 118 1.0 Rio Rancho
+city 77 77 1.0 Longmont
+city -17 81 1.0 Chico
+city -20 129 1.0 Whittier
+city -21 132 1.0 Newport Beach
+city 28 49 1.0 Nampa
+city -19 90 1.0 Citrus Heights
+city -24 98 1.0 Tracy
+city 43 69 1.0 Ogden
+city -26 98 1.0 Livermore
+city 17 6 1.0 Bellingham
+city -21 130 1.0 Buena Park
+city -20 101 1.0 Merced
+city -16 131 1.0 Hemet
+city -17 131 1.0 Menifee
+city -26 93 1.0 Napa
+city -29 100 1.0 Redwood City
+city 3 45 1.0 Bend
+city 9 133 1.0 Avondale
+city -11 131 1.0 Indio
+city -12 59 1.0 Medford
+city -19 129 1.0 Chino Hills
+city -28 100 1.0 Mountain View
+city 24 27 1.0 Kennewick
+city 17 103 1.0 St. George
+city -18 90 1.0 Folsom
+city -26 97 1.0 San Ramon
+city -15 128 1.0 Redlands
+city -21 99 1.0 Turlock
+city 103 45 1.0 Rapid City
+city 53 115 1.0 Santa Fe
+city 43 70 1.0 Layton
+city -22 97 1.0 Manteca
+city 78 75 1.0 Loveland
+city -27 100 1.0 Milpitas
+city 55 22 1.0 Missoula
+city 20 119 1.0 Flagstaff
+city -22 91 1.0 Davis
+city -25 127 1.0 Camarillo
+city -19 86 1.0 Yuba City
+city -20 133 1.0 San Clemente
+city -25 94 1.0 Pittsburg
+city -21 94 1.0 Lodi
+city -19 104 1.0 Madera
+city 15 12 1.0 Marysville
+city -30 104 1.0 Santa Cruz
+city 25 27 1.0 Pasco
+city -20 137 1.0 Encinitas
+city 83 69 1.0 Cheyenne
+city -18 110 1.0 Tulare
+city 53 87 1.0 Grand Junction
+city 73 17 1.0 Great Falls
+city 47 55 1.0 Pocatello
+city -28 93 1.0 Petaluma
+city -29 96 1.0 San Rafael
+city 53 50 1.0 Idaho Falls
+city 76 79 1.0 Broomfield
+city -22 90 1.0 Woodland
+city 81 55 1.0 Casper
+city -8 86 1.0 Carson City
+city -4 41 1.0 Corvallis
+city -17 111 1.0 Porterville
+city 14 15 1.0 Redmond
+city -19 109 1.0 Hanford
+city -18 129 1.0 Eastvale
+city -19 138 1.0 Santee
+city -20 114 1.0 Delano
+city 14 14 1.0 Shoreline
+city 3 125 1.0 Lake Havasu City
+city -28 94 1.0 Novato
+city -18 131 1.0 Lake Elsinore
+city -24 96 1.0 Brentwood
+city -15 129 1.0 Yucaipa
+city -12 130 1.0 Cathedral City
+city -29 105 1.0 Watsonville
+city 7 134 1.0 Buckeye
+city -4 40 1.0 Albany
+city -28 104 1.0 Gilroy
+city 10 138 1.0 Casa Grande
+city -12 131 1.0 Palm Desert
+city 52 134 1.0 Roswell
+city 75 84 1.0 Castle Rock
+city 46 64 1.0 Logan
+city 1 34 1.0 Tigard
+city -19 137 1.0 Poway
+city 40 76 1.0 Lehi
+city 7 20 1.0 Olympia
+city 27 49 1.0 Caldwell
+city 77 80 1.0 Commerce City
+city 45 106 1.0 Farmington
+city 14 16 1.0 Sammamish
+city -22 99 1.0 Ceres
+city 76 83 1.0 Parker
+city -29 118 1.0 San Luis Obispo
+city -13 130 1.0 Palm Springs
+city -15 130 1.0 San Jacinto
+city 43 15 1.0 Coeur d'Alene
+city 35 57 1.0 Twin Falls
+city 12 149 1.0 Sierra Vista
+city 9 136 1.0 Maricopa
+city -18 88 1.0 Lincoln
+city -12 139 1.0 El Centro
+city 42 72 1.0 Bountiful
+city -31 123 1.0 Lompoc
+city 7 21 1.0 Lacey
+city 37 26 1.0 Lewiston
+city 75 82 1.0 Littleton
+city -23 131 1.0 Rancho Palos Verdes
+city -30 99 1.0 San Bruno
+city 12 142 1.0 Oro Valley
+city 13 124 1.0 Prescott
+city 4 120 1.0 Bullhead City
+city -22 128 1.0 Culver City
+city 14 124 1.0 Prescott Valley
+city 40 75 1.0 Riverton
+city -12 140 1.0 Calexico
+city -27 103 1.0 Morgan Hill
+city 64 125 1.0 Clovis
+city 11 15 1.0 Bremerton
+city 67 32 1.0 Bozeman
+city 11 19 1.0 Puyallup
+city 4 28 1.0 Longview
+city -2 37 1.0 Keizer
+city -23 103 1.0 Los Banos
+city 13 134 1.0 Apache Junction
+city -26 94 1.0 Martinez
+city 11 142 1.0 Marana
+city -27 105 1.0 Hollister
+city 40 78 1.0 Spanish Fork
+city -15 59 1.0 Grants Pass
+city -24 126 1.0 Moorpark
+city 57 139 1.0 Hobbs
+city 60 29 1.0 Butte
+city 78 79 1.0 Brighton
+city -30 107 1.0 Seaside
+city -2 35 1.0 McMinnville
+city -18 132 1.0 Wildomar
+city 35 148 1.0 Socorro
+city 23 17 1.0 Wenatchee
+city 2 34 1.0 Oregon City
+city -15 124 1.0 Adelanto
+city 16 9 1.0 Mount Vernon
+city 28 29 1.0 Walla Walla
+city 39 74 1.0 Tooele
+city 79 68 1.0 Laramie
+city 42 138 1.0 Alamogordo
+city -29 102 1.0 Saratoga
+city 37 23 1.0 Pullman
+city -28 115 1.0 Paso Robles
+city -14 129 1.0 Banning
+city -25 126 1.0 Santa Paula
+city 92 43 1.0 Gillette
+city 22 98 1.0 Cedar City
+city -29 116 1.0 Atascadero
+city 65 24 1.0 Helena
+city -21 101 1.0 Atwater
+city 16 12 1.0 Lake Stevens
+city 7 119 1.0 Kingman
+city -11 115 1.0 Ridgecrest
+city 64 143 1.0 Big Spring
+city -25 72 1.0 Eureka
+city -28 91 1.0 Windsor
+city 40 73 1.0 Magna
+city 12 135 1.0 Queen Creek
+city 5 43 1.0 Redmond
+city 49 142 1.0 Carlsbad
+city -12 129 1.0 Desert Hot Springs
+city 73 90 1.0 Fountain
+city -28 108 1.0 Soledad
+city -21 115 1.0 Wasco
+city 12 137 1.0 Florence
+city -8 141 1.0 San Luis
+city 55 47 1.0 Rexburg
+city 10 146 1.0 Sahuarita
+city -9 128 1.0 Twentynine Palms
+city -11 137 1.0 Brawley
+city -20 111 1.0 Corcoran
+city -20 109 1.0 Lemoore
+city -17 106 1.0 Sanger
+city -17 107 1.0 Reedley
+city -1 36 1.0 Woodburn
+city -27 97 1.0 Lafayette
+city 38 23 1.0 Moscow
+city -21 93 1.0 Galt
+city -21 126 1.0 San Fernando
+city -18 107 1.0 Selma
+city -23 127 1.0 Calabasas
+city 60 66 1.0 Rock Springs
+city 13 15 1.0 Bainbridge Island
+city 13 18 1.0 Maple Valley
+city -11 121 1.0 Barstow
+city 13 132 1.0 Fountain Hills
+city 71 127 1.0 Plainview
+city 14 10 1.0 Oak Harbor
+city -1 35 1.0 Newberg
+city 37 116 1.0 Gallup
+city 39 76 1.0 Eagle Mountain
+city -11 88 1.0 South Lake Tahoe
+city -19 127 1.0 Duarte
+city -11 52 1.0 Roseburg
+city -1 33 1.0 Forest Grove
+city -6 60 1.0 Klamath Falls
+city 8 151 1.0 Nogales
+city -3 132 1.0 Blythe
+city -11 128 1.0 Yucca Valley
+city -20 97 1.0 Oakdale
+city -23 100 1.0 Patterson
+city 27 20 1.0 Moses Lake
+city -24 128 1.0 Agoura Hills
+city 14 13 1.0 Mukilteo
+city -12 61 1.0 Ashland
+city 57 137 0.5 Lovington

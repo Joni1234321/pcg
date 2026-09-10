@@ -1,0 +1,10 @@
+label 172 143 Stettiner Haff
+label 445 25 Kaliningrad
+label 176 29 Øresund
+label 102 112 Mecklenburger Bucht
+label -189 549 Bodensee
+label 110 174 Müritz
+label 77 158 Schweriner See
+label 179 167 Jezioro Dąbie
+label 396 71 Kaliningradskiy Zaliv
+label 371 92 Zalew Wislany

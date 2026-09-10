@@ -1,0 +1,105 @@
+city -80 483 3.0 Los Angeles
+city -78 524 2.0 San Diego
+city -109 367 2.0 San Francisco
+city 285 305 2.0 Denver
+city -83 491 2.0 Long Beach
+city 178 450 2.0 Albuquerque
+city -104 365 2.0 Oakland
+city 18 416 1.5 Las Vegas
+city 39 70 1.5 Tacoma
+city 279 447 1.5 Amarillo
+city -97 478 1.5 Oxnard
+city -78 479 1.5 Glendale
+city -103 373 1.5 Fremont
+city -67 482 1.5 Ontario
+city -110 401 1.5 Salinas
+city -69 482 1.5 Pomona
+city -70 511 1.5 Escondido
+city -75 490 1.5 Orange
+city -66 411 1.0 Visalia
+city -76 488 1.0 Fullerton
+city -100 356 1.0 Vallejo
+city 154 289 1.0 Provo
+city -107 379 1.0 Sunnyvale
+city -85 483 1.0 Santa Monica
+city -79 478 1.0 Burbank
+city -97 476 1.0 Ventura
+city -92 359 1.0 Antioch
+city -68 463 1.0 Lancaster
+city -75 482 1.0 El Monte
+city -104 361 1.0 Richmond
+city -90 348 1.0 Vacaville
+city -80 489 1.0 Lakewood
+city -84 487 1.0 Hawthorne
+city -69 466 1.0 Palmdale
+city -81 472 1.0 Santa Clarita
+city -73 522 1.0 El Cajon
+city -81 486 1.0 South Gate
+city -77 346 1.0 Elk Grove
+city -98 350 1.0 Napa
+city -76 494 1.0 Irvine
+city -78 489 1.0 Buena Park
+city -79 496 1.0 Newport Beach
+city -83 489 1.0 Carson
+city 1 124 1.0 Hillsboro
+city -77 484 1.0 Pico Rivera
+city 55 48 1.0 Everett
+city 288 300 1.0 Thornton
+city -111 370 1.0 South San Francisco
+city 91 103 1.0 Kennewick
+city -85 489 1.0 Redondo Beach
+city 389 169 1.0 Rapid City
+city -77 525 1.0 National City
+city 132 537 1.0 Las Cruces
+city -57 482 1.0 Redlands
+city -79 490 1.0 Cypress
+city -47 224 1.0 Medford
+city 305 208 1.0 Casper
+city -65 420 1.0 Porterville
+city -75 486 1.0 La Habra
+city 174 242 1.0 Logan
+city -80 487 1.0 Paramount
+city -79 488 1.0 Cerritos
+city -87 492 1.0 Rancho Palos Verdes
+city 76 446 1.0 Flagstaff
+city 90 100 1.0 Richland
+city 208 83 1.0 Missoula
+city -77 487 1.0 La Mirada
+city -104 374 1.0 Newark
+city 139 97 1.0 Lewiston
+city -71 481 1.0 Covina
+city -76 482 1.0 Rosemead
+city -74 483 1.0 La Puente
+city -103 377 1.0 Milpitas
+city -44 522 1.0 El Centro
+city -72 519 1.0 Santee
+city -76 481 1.0 San Gabriel
+city 106 107 1.0 Walla Walla
+city 252 119 1.0 Bozeman
+city -107 383 1.0 Los Gatos
+city -91 361 1.0 Brentwood
+city -108 379 1.0 Los Altos
+city -75 514 1.0 Encinitas
+city -110 374 1.0 Belmont
+city 297 256 1.0 Laramie
+city -72 511 1.0 San Marcos
+city -77 499 1.0 Laguna Niguel
+city 86 65 1.0 Wenatchee
+city -108 382 1.0 Saratoga
+city -68 481 1.0 Claremont
+city -69 480 1.0 La Verne
+city -98 272 1.0 Eureka
+city -85 488 1.0 Lawndale
+city -107 376 1.0 East Palo Alto
+city -108 376 1.0 Menlo Park
+city 111 184 0.5 Boise
+city -31 323 0.5 Carson City
+city 311 261 0.5 Cheyenne
+city 245 91 0.5 Helena
+city 213 517 0.5 Lovington
+city 26 77 0.5 Olympia
+city 39 501 0.5 Phoenix
+city -76 341 0.5 Sacramento
+city -9 142 0.5 Salem
+city 157 273 0.5 Salt Lake City
+city 201 432 0.5 Santa Fe

@@ -1,25 +1,61 @@
-city 36 103 Chongqing
-city 76 66 Baoding
-city 66 86 Zhoukou
-city 59 89 Nanyang
-city 114 35 Harbin
-city 72 70 Shijiazhuang
-city 31 99 Chengdu
-city 70 75 Handan
-city 70 83 Shangqiu
-city 63 89 Zhumadian
-city 55 115 Ganzhou
-city 101 52 Shenyang
-city 84 63 Tangshan
-city 70 74 Xingtai
-city 48 129 Hong Kong
-city 69 77 Anyang
-city 29 106 Yibin
-city 62 104 Nanchang
-city 37 100 Guang'an
-city 97 57 Yingkou
-city 66 71 Taiyuan
-city 71 119 Taichung
-city 68 123 Tainan
-city 29 52 Hami
-city 45 130 Macau
+city 36 103 3.0 Chongqing
+city 76 66 3.0 Baoding
+city 66 86 3.0 Zhoukou
+city 59 89 3.0 Nanyang
+city 114 35 3.0 Harbin
+city 72 70 3.0 Shijiazhuang
+city 31 99 3.0 Chengdu
+city 70 75 3.0 Handan
+city 70 83 3.0 Shangqiu
+city 63 89 3.0 Zhumadian
+city 55 115 3.0 Ganzhou
+city 101 52 3.0 Shenyang
+city 84 63 3.0 Tangshan
+city 70 74 3.0 Xingtai
+city 48 129 3.0 Hong Kong
+city 69 77 3.0 Anyang
+city 29 106 3.0 Yibin
+city 62 104 3.0 Nanchang
+city 37 100 3.0 Guang'an
+city 97 57 3.0 Yingkou
+city 66 71 3.0 Taiyuan
+city 71 119 2.0 Taichung
+city 68 123 2.0 Tainan
+city 29 52 2.0 Hami
+city 45 130 2.0 Macau
+city 80 62 0.75 Beijing
+city 108 43 0.5 Changchun
+city 70 119 0.5 Changhua City
+city 52 107 0.5 Changsha
+city 92 64 0.5 Dalian
+city 70 120 0.5 Douliou City
+city 69 112 0.5 Fuzhou
+city 45 126 0.5 Guangzhou
+city 31 114 0.5 Guiyang
+city 31 138 0.5 Haikou
+city 77 97 0.5 Hangzhou
+city 71 92 0.5 Hefei
+city 69 60 0.5 Hohhot
+city 73 119 0.5 Hualien City
+city 77 74 0.5 Jinan
+city 63 118 0.5 Jincheng Township
+city 16 120 0.5 Kunming
+city 40 79 0.5 Lanzhou
+city -6 100 0.5 Lhasa
+city 66 121 0.5 Magong City
+city 72 117 0.5 Miaoli City
+city 75 91 0.5 Nanjing
+city 29 128 0.5 Nanning
+city 68 125 0.5 Pingtung City
+city 69 121 0.5 Taibao City
+city 75 115 0.75 Taipei
+city 70 124 0.5 Taitung City
+city 74 115 0.5 Taoyuan District
+city 60 98 0.5 Wuhan
+city 51 85 0.5 Xi'an
+city 36 77 0.5 Xining
+city 75 116 0.5 Yilan City
+city 51 70 0.5 Yinchuan
+city 66 82 0.5 Zhengzhou
+city 73 116 0.5 Zhubei City
+city 18 46 0.5 Ürümqi

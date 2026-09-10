@@ -1,0 +1,62 @@
+city 113 331 3.0 Chongqing
+city 242 213 3.0 Baoding
+city 209 277 3.0 Zhoukou
+city 187 286 3.0 Nanyang
+city 364 114 3.0 Harbin
+city 230 224 3.0 Shijiazhuang
+city 98 318 3.0 Chengdu
+city 223 241 3.0 Handan
+city 223 266 3.0 Shangqiu
+city 201 285 3.0 Zhumadian
+city 174 370 3.0 Ganzhou
+city 323 166 3.0 Shenyang
+city 269 200 3.0 Tangshan
+city 225 235 3.0 Xingtai
+city 150 412 3.0 Hong Kong
+city 219 247 3.0 Anyang
+city 91 341 3.0 Yibin
+city 198 334 3.0 Nanchang
+city 120 320 3.0 Guang'an
+city 309 182 3.0 Yingkou
+city 212 228 3.0 Taiyuan
+city 226 381 2.0 Taichung
+city 216 396 2.0 Tainan
+city 93 166 2.0 Hami
+city 143 415 2.0 Macau
+city 255 199 0.75 Beijing
+city 347 138 0.5 Changchun
+city 224 382 0.5 Changhua City
+city 167 343 0.5 Changsha
+city 296 203 0.5 Dalian
+city 223 386 0.5 Douliou City
+city 220 360 0.5 Fuzhou
+city 144 404 0.5 Guangzhou
+city 98 367 0.5 Guiyang
+city 97 444 0.5 Haikou
+city 247 309 0.5 Hangzhou
+city 226 294 0.5 Hefei
+city 220 193 0.5 Hohhot
+city 235 380 0.5 Hualien City
+city 246 237 0.5 Jinan
+city 201 384 0.5 Jincheng Township
+city 51 386 0.5 Kunming
+city 128 253 0.5 Lanzhou
+city -21 321 0.5 Lhasa
+city 212 392 0.5 Magong City
+city 229 376 0.5 Miaoli City
+city 241 290 0.5 Nanjing
+city 92 412 0.5 Nanning
+city 225 384 0.5 Nantou City
+city 218 399 0.5 Pingtung City
+city 220 389 0.5 Taibao City
+city 239 369 0.75 Taipei
+city 225 396 0.5 Taitung City
+city 236 370 0.5 Taoyuan District
+city 193 313 0.5 Wuhan
+city 162 273 0.5 Xi'an
+city 114 246 0.5 Xining
+city 240 371 0.5 Yilan City
+city 162 224 0.5 Yinchuan
+city 206 264 0.5 Zhengzhou
+city 232 372 0.5 Zhubei City
+city 59 147 0.5 Ürümqi

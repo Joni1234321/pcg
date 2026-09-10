@@ -1,15 +1,32 @@
-city 22 90 Rome
-city 16 31 Milan
-city -3 38 Turin
-city 24 59 Florence
-city 67 28 Free Territory of Trieste
-city 35 32 Verona
-city 24 150 Messina
-city 61 113 Taranto
-city 23 28 Bergamo
-city 15 60 Pisa
-city 10 32 Novara
-city 54 29 Heraclea
-city 50 28 Treviso
-city 71 110 Brindisi
-city -12 58 Sanremo
+city 22 90 3.0 Rome
+city 16 31 3.0 Milan
+city -3 38 3.0 Turin
+city 24 59 2.0 Florence
+city 67 28 2.0 Free Territory of Trieste
+city 35 32 1.5 Verona
+city 24 150 1.5 Messina
+city 61 113 1.5 Taranto
+city 23 28 1.5 Bergamo
+city 15 60 1.5 Pisa
+city 10 32 1.5 Novara
+city 54 29 1.0 Heraclea
+city 50 28 1.0 Treviso
+city 71 110 1.0 Brindisi
+city -12 58 1.0 Sanremo
+city 47 62 0.5 Ancona
+city 62 102 0.5 Bari
+city 41 138 0.5 Catanzaro
+city 38 42 0.5 Ferrara
+city 36 52 0.5 Forlì
+city 5 49 0.5 Genoa
+city 35 82 0.5 L'Aquila
+city 28 45 0.5 Modena
+city 33 107 0.5 Naples
+city 1 150 0.5 Palermo
+city 31 70 0.5 Perugia
+city 47 110 0.5 Potenza
+city 39 49 0.5 Ravenna
+city 25 151 0.5 Reggio Calabria
+city 25 44 0.5 Reggio Emilia
+city 66 29 0.5 Trieste
+city 49 31 0.5 Venice

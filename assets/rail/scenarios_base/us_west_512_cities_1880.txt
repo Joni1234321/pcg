@@ -1,0 +1,16 @@
+city -109 367 1.5 San Francisco
+city -104 365 1.0 Oakland
+city 39 70 1.0 Tacoma
+city 285 305 1.0 Denver
+city -100 356 0.5 Vallejo
+city 111 184 0.5 Boise
+city -31 323 0.5 Carson City
+city 311 261 0.5 Cheyenne
+city 245 91 0.5 Helena
+city 213 517 0.5 Lovington
+city 26 77 0.5 Olympia
+city 39 501 0.5 Phoenix
+city -76 341 0.5 Sacramento
+city -9 142 0.5 Salem
+city 157 273 0.5 Salt Lake City
+city 201 432 0.5 Santa Fe

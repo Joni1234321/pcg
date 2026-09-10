@@ -1,49 +1,62 @@
-city 25 49 Milan
-city -7 59 Turin
-city 39 94 Florence
-city 108 43 Free Territory of Trieste
-city 56 50 Verona
-city 14 9 Bern
-city -6 20 Lausanne
-city 28 46 Monza
-city 88 1 Innsbruck
-city 36 43 Bergamo
-city 14 50 Novara
-city 24 96 Pisa
-city 88 45 Heraclea
-city 81 44 Treviso
-city 31 7 Lucerne
-city -22 93 Sanremo
-city 13 4 Biel/Bienne
-city 28 35 Lugano
-city 15 14 Thun
-city 13 10 Köniz
-city 7 13 Fribourg
-city 32 29 Bellinzona
-city 5 8 Neuchâtel
-city 49 12 Chur
-city 3 28 Sion
-city 31 6 Emmen
-city 106 47 Koper
-city -3 14 Yverdon-les-Bains
-city 36 3 Zug
-city -2 23 Montreux
-city -6 21 Renens
-city 15 9 Ostermundigen
-city -3 22 Vevey
-city 19 2 Solothurn
-city 18 7 Burgdorf
-city -4 28 Monthey
-city 124 23 Jesenice
-city 16 3 Grenchen
-city 38 0 Thalwil
-city 24 2 Langenthal
-city 14 10 Muri bei Bern
-city 36 8 Schwyz
-city 90 0 Hall in Tirol
-city -4 32 Martigny
-city 106 13 Lienz
-city 13 6 Lyss
-city 14 17 Spiez
-city 15 11 Münsingen
-city 105 47 Izola
+city 25 49 3.0 Milan
+city -7 59 2.0 Turin
+city 39 94 2.0 Florence
+city 108 43 2.0 Free Territory of Trieste
+city 56 50 1.5 Verona
+city 14 9 1.5 Bern
+city -6 20 1.5 Lausanne
+city 28 46 1.5 Monza
+city 88 1 1.5 Innsbruck
+city 36 43 1.5 Bergamo
+city 14 50 1.5 Novara
+city 24 96 1.5 Pisa
+city 88 45 1.0 Heraclea
+city 81 44 1.0 Treviso
+city 31 7 1.0 Lucerne
+city -22 93 1.0 Sanremo
+city 13 4 1.0 Biel/Bienne
+city 28 35 1.0 Lugano
+city 15 14 1.0 Thun
+city 13 10 1.0 Köniz
+city 7 13 1.0 Fribourg
+city 32 29 1.0 Bellinzona
+city 5 8 1.0 Neuchâtel
+city 49 12 1.0 Chur
+city 3 28 1.0 Sion
+city 31 6 1.0 Emmen
+city 106 47 1.0 Koper
+city -3 14 1.0 Yverdon-les-Bains
+city 36 3 1.0 Zug
+city -2 23 1.0 Montreux
+city -6 21 1.0 Renens
+city 15 9 1.0 Ostermundigen
+city -3 22 1.0 Vevey
+city 19 2 1.0 Solothurn
+city 18 7 1.0 Burgdorf
+city -4 28 1.0 Monthey
+city 124 23 1.0 Jesenice
+city 16 3 1.0 Grenchen
+city 38 0 1.0 Thalwil
+city 24 2 1.0 Langenthal
+city 14 10 1.0 Muri bei Bern
+city 36 8 1.0 Schwyz
+city 90 0 1.0 Hall in Tirol
+city -4 32 1.0 Martigny
+city 106 13 1.0 Lienz
+city 13 6 1.0 Lyss
+city 14 17 1.0 Spiez
+city 15 11 1.0 Münsingen
+city 105 47 1.0 Izola
+city 27 11 0.5 Sarnen
+city 34 11 0.5 Altdorf
+city 76 99 0.5 Ancona
+city 59 66 0.5 Ferrara
+city 59 82 0.5 Forlì
+city 6 77 0.5 Genoa
+city 44 7 0.5 Glarus
+city 44 71 0.5 Modena
+city 110 36 0.5 Nova Gorica
+city 64 77 0.5 Ravenna
+city 40 70 0.5 Reggio Emilia
+city 108 44 0.5 Trieste
+city 81 49 0.5 Venice

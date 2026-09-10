@@ -1,445 +1,445 @@
-city 36 103 Chongqing
-city 82 92 Shanghai
-city 80 62 Beijing
-city 31 99 Chengdu
-city 45 126 Guangzhou
-city 47 128 Shenzhen
-city 81 65 Tianjin
-city 51 85 Xi'an
-city 80 92 Suzhou
-city 66 82 Zhengzhou
-city 60 98 Wuhan
-city 77 97 Hangzhou
-city 76 66 Baoding
-city 72 70 Shijiazhuang
-city 78 79 Linyi
-city 47 126 Dongguan
-city 85 74 Qingdao
-city 52 107 Changsha
-city 114 35 Harbin
-city 59 89 Nanyang
-city 76 104 Wenzhou
-city 44 127 Foshan
-city 70 75 Handan
-city 81 97 Ningbo
-city 83 73 Weifang
-city 71 92 Hefei
-city 75 91 Nanjing
-city 77 74 Jinan
-city 74 83 Xuzhou
-city 101 52 Shenyang
-city 108 43 Changchun
-city 66 86 Zhoukou
-city 55 115 Ganzhou
-city 70 80 Heze
-city 65 117 Quanzhou
-city 29 128 Nanning
-city 16 120 Kunming
-city 74 79 Jining
-city 69 112 Fuzhou
-city 68 89 Fuyang
-city 70 83 Shangqiu
-city 82 90 Nantong
-city 84 63 Tangshan
-city 48 129 Hong Kong
-city 92 64 Dalian
-city 79 68 Cangzhou
-city 70 74 Xingtai
-city 90 69 Yantai
-city 61 83 Luoyang
-city 74 101 Jinhua
-city 63 89 Zhumadian
-city 33 133 Zhanjiang
-city 28 112 Bijie
-city 81 85 Yancheng
-city 49 112 Hengyang
-city 79 101 Taizhou
-city 34 110 Zunyi
-city 46 111 Shaoyang
-city 68 104 Shangrao
-city 62 104 Nanchang
-city 66 80 Xinxiang
-city 62 92 Xinyang
-city 35 132 Maoming
-city 49 126 Huizhou
-city 31 114 Guiyang
-city 74 75 Liaocheng
-city 61 98 Huanggang
-city 34 129 Yulin
-city 20 119 Qujing
-city 83 92 Pudong
-city 76 71 Dezhou
-city 36 99 Nanchong
-city 56 123 Jieyang
-city 57 123 Shantou
-city 69 77 Anyang
-city 76 76 Tai'an
-city 80 64 Langfang
-city 80 94 Jiaxing
-city 41 97 Dazhou
-city 72 86 Suzhou
-city 66 71 Taiyuan
-city 45 114 Yongzhou
-city 50 104 Changde
-city 78 91 Changzhou
-city 78 97 Shaoxing
-city 56 93 Xiangyang
-city 53 100 Jingzhou
-city 63 118 Xiamen
-city 23 112 Zhaotong
-city 61 119 Zhangzhou
-city 54 103 Yueyang
-city 56 108 Yichun
-city 69 85 Bozhou
-city 62 86 Pingdingshan
-city 76 84 Suqian
-city 50 85 Xianyang
-city 39 119 Guilin
-city 34 96 Mianyang
-city 67 82 Kaifeng
-city 58 82 Yuncheng
-city 80 73 Zibo
-city 53 84 Weinan
-city 49 116 Chenzhou
-city 64 100 Jiujiang
-city 80 81 Lianyungang
-city 29 106 Yibin
-city 42 110 Huaihua
-city 78 89 Yangzhou
-city 78 85 Huai'an
-city 79 88 Taizhou
-city 57 110 Ji'an
-city 68 93 Lu'an
-city 64 85 Xuchang
-city 74 115 New Taipei City
-city 40 79 Lanzhou
-city 34 127 Guigang
-city 59 97 Xiaogan
-city 31 106 Luzhou
-city 75 70 Hengshui
-city 68 97 Anqing
-city 35 123 Liuzhou
-city 77 59 Zhangjiakou
-city 42 127 Zhaoqing
-city 109 31 Qiqihar
-city 18 46 Ürümqi
-city 90 52 Chifeng
-city 51 98 Yichang
-city 74 90 Chuzhou
-city 61 78 Linfen
-city 45 124 Qingyuan
-city 82 71 Binzhou
-city 52 109 Zhuzhou
-city 56 121 Meizhou
-city 76 80 Zaozhuang
-city 51 106 Yiyang
-city 49 109 Loudi
-city 70 78 Puyang
-city 116 32 Suihua
-city 74 93 Wuhu
-city 60 70 Yulin
-city 111 43 Jilin City
-city 62 107 Fuzhou
-city 25 125 Baise
-city 64 81 Jiaozuo
-city 32 98 Deyang
-city 69 60 Hohhot
-city 32 121 Hechi
-city 62 73 Lüliang
-city 66 72 Jinzhong
-city 79 94 Huzhou
-city 85 58 Chengde
-city 99 55 Anshan
-city 46 85 Baoji
-city 29 132 Qinzhou
-city 40 110 Tongren
-city 72 88 Bengbu
-city 37 100 Guang'an
-city 43 90 Hanzhong
-city 67 115 Putian
-city 77 90 Zhenjiang
-city 53 91 Shiyan
-city 65 77 Changzhi
-city 28 103 Leshan
-city 70 110 Ningde
-city 32 103 Neijiang
-city 88 61 Qinhuangdao
-city 72 62 Datong
-city 71 119 Taichung
-city 71 90 Huainan
-city 25 115 Liupanshui
-city 42 85 Tianshui
-city 82 77 Rizhao
-city 29 101 Meishan
-city 92 69 Weihai
-city 31 138 Haikou
-city 100 46 Tongliao
-city 93 54 Chaoyang
-city 51 70 Yinchuan
-city 49 120 Shaoguan
-city 51 123 Heyuan
-city 40 125 Wuzhou
-city 34 100 Suining
-city 111 33 Daqing
-city 51 126 Shanwei
-city 51 109 Xiangtan
-city 60 117 Longyan
-city 40 95 Bazhong
-city 64 61 Baotou
-city 94 56 Jinzhou
-city 68 69 Xinzhou
-city 66 111 Nanping
-city 59 101 Xianning
-city 75 115 Taipei
-city 39 131 Yangjiang
-city 54 97 Jingmen
-city 41 81 Dingxi
-city 74 103 Lishui
-city 74 95 Xuancheng
-city 48 91 Ankang
-city 30 104 Zigong
-city 64 112 Sanming
-city 28 116 Anshun
-city 63 99 Huangshi
-city 36 77 Xining
-city 45 130 Zhuhai
-city 93 57 Huludao
-city 6 120 Baoshan
-city 39 89 Longnan
-city 6 129 Pu'er City
-city 103 50 Tieling
-city 41 127 Yunfu
-city 64 87 Luohe
-city 97 57 Yingkou
-city 31 101 Ziyang
-city 39 92 Guangyuan
-city 120 38 Mudanjiang
-city 56 77 Yan'an
-city 71 102 Quzhou
-city 6 124 Lincang
-city 108 39 Songyuan
-city 14 123 Yuxi
-city 101 26 Hulunbuir
-city 63 80 Jincheng
-city 83 70 Dongying
-city 101 58 Dandong
-city 50 80 Qingyang
-city 74 92 Ma'anshan
-city 124 29 Jiamusi
-city 63 64 Ordos City
-city 25 130 Chongzuo
-city 33 125 Laibin
-city 59 94 Suizhou
-city 52 87 Shangluo
-city 58 83 Sanmenxia
-city 42 122 Hezhou
-city 82 64 Binhai New Area
-city 72 84 Huaibei
-city 68 123 Tainan
-city 102 52 Fushun
-city 30 133 Beihai
-city 47 81 Pingliang
-city 105 46 Siping
-city 107 51 Tonghua
-city 54 109 Pingxiang
-city 73 59 Ulanqab
-city 97 52 Fuxin
-city 67 101 Jingdezhen
-city 100 54 Liaoyang
-city 68 66 Shuozhou
-city 68 78 Hebi
-city 104 38 Baicheng
-city 58 61 Bayannur
-city 75 105 Rui'an
-city 46 105 Zhangjiajie
-city 42 77 Baiyin
-city 36 126 Guiping
-city 125 34 Jixi
-city 41 72 Wuwei
-city 77 103 Yueqing
-city 26 102 Ya'an
-city 78 103 Wenling
-city 97 55 Panjin
-city 50 72 Wuzhong
-city 37 77 Haidong
-city 70 96 Chizhou
-city 71 99 Huangshan
-city 101 54 Benxi
-city 69 71 Yangquan
-city 71 95 Tongling
-city 121 18 Heihe
-city 80 97 Yuyao City
-city 12 113 Lijiang
-city 16 115 Panzhihua
-city 35 129 Beiliu
-city 126 29 Shuangyashan
-city 58 108 Xinyu
-city 83 96 Zhoushan
-city 65 105 Yingtan
-city 46 79 Guyuan
-city 49 114 Leiyang
-city 37 68 Zhangye
-city 62 98 Ezhou
-city 46 74 Zhongwei
-city 34 65 Jiuquan
-city 27 132 Fangchenggang
-city 25 145 Sanya
-city 107 47 Liaoyuan
-city 109 50 Baishan
-city 27 141 Danzhou
-city 125 27 Hegang
-city 121 27 Yichun
-city -6 100 Lhasa
-city 47 127 Humen Town
-city 49 105 Taoyuan County
-city -13 101 Shigatse
-city 88 71 Laiyang
-city -17 55 Kashgar
-city 55 121 Xingning
-city 13 97 Chamdo
-city 52 68 Shizuishan
-city 62 82 Jiyuan
-city 52 83 Tongchuan
-city 20 50 Turpan
-city 125 33 Qitaihe
-city 29 52 Hami
-city 55 65 Wuhai
-city 0 94 Nagqu
-city 73 116 Hsinchu City
-city 16 44 Shihezi
-city 17 38 Karamay
-city 40 70 Jinchang
-city 48 127 Fenggang Town
-city 45 120 Lianzhou
-city 81 62 Yanjiao
-city 103 37 Ulanhot
-city -5 105 Lhoka
-city 51 100 Yidu
-city 34 64 Jiayuguan City
-city -1 124 Ruili
-city 69 122 Chiayi City
-city 121 43 Hunchun
-city 2 101 Nyingchi
-city 13 126 Lin'an Town
-city 70 119 Changhua City
-city 119 30 Tieli
-city 18 76 Golmud
-city 48 126 Qiaotou Town
-city 46 126 Zhongtang Town
-city 68 125 Pingtung City
-city 107 53 Ji'an
-city 21 124 Liancheng Town
-city 17 33 Tacheng
-city 96 26 Manzhouli
-city 18 122 Zhongshu Town
-city 28 110 Zhaxi Town
-city 10 119 Xiangcheng Town
-city 23 131 Pingxiang
-city 70 120 Yuanlin City
-city 110 50 Linjiang
-city 19 124 Jinping Town
-city 11 117 Jinniu Town
-city 18 126 Jiangna Town
-city 7 122 Aihua Town
-city 124 37 Suifenhe
-city 76 67 Qingyuan Town
-city 13 125 Yilong Town
-city 72 117 Toufen City
-city 70 124 Taitung City
-city 16 119 Shishan Town
-city 22 126 Xinhua Town
-city 17 128 Mabai Town
-city 3 129 Menglang Town
-city 73 119 Hualien City
-city 14 120 Jinshan Town
-city 72 95 Fanyang Town
-city 10 126 Lianzhu Town
-city 7 126 Weiyuan Town
-city 3 132 Menghai Town
-city 10 118 Dali Town
-city 13 110 Jiantang Town
-city 75 116 Yilan City
-city 19 120 Sanchahe Town
-city 17 125 Pingyuan Town
-city 1 121 Pingyuan Town
-city 81 93 Zhujiajiao
-city 3 133 Menglong Town
-city 13 118 Jinbi Town
-city 27 112 Poji Town
-city 2 126 Mengding Town
-city 60 120 Xiaoxi Town (Pinghe County)
-city 19 121 Majie Town
-city 15 118 Yuanma Town
-city 13 129 Jinhe Town
-city 12 120 Longchuan Town
-city 2 123 Fengping Town
-city 7 128 Ning'er Town
-city 12 119 Dongchuan Town
-city 9 123 JInping Town
-city 26 106 Zhongcheng Town
-city 5 134 Mengla Town
-city 6 121 Tianyuan Town
-city 22 119 FucunZhen
-city 72 119 Puli Township
-city 74 50 Erenhot
-city 74 65 Laiyuan Town
-city 22 125 Babao Town
-city 13 119 Gonghe Town, Mouding
-city 21 115 Zhehai Town
-city 26 109 Yanjing Town
-city 5 41 Khorgos
-city 28 111 Yile Town
-city 69 121 Huwei Township
-city 22 118 Dahe Town
-city 20 120 Dongshan Town
-city 5 42 Kokdala
-city 11 119 Yunnanyi Town
-city 4 124 Dedang Town
-city 12 128 Xinjie Town
-city 30 49 Barkol Kazakh Autonomous County
-city 23 115 Tangtang Town
-city 5 120 Lujiang Town
-city 3 122 Longshan Town
-city 22 114 Yiche Town
-city 0 123 Zhangfeng Town
-city 66 121 Magong City
-city 21 119 Yingshang Town
-city 6 126 Yongping Town
-city 17 120 Yanglin Town
-city 18 119 Xiaojie Town
-city 13 114 Yongbei Town
-city 27 110 Luokan Town
-city 20 124 Zhulin Town
-city 14 125 Qujiang Town
-city 1 130 Nayun Town
-city 22 120 Shibalianshan Town
-city 27 111 Chishuiyuan Town
-city 3 126 Gengma Town
-city 76 94 Xinhang Town
-city 7 119 Bonan Town
-city 5 118 Jietou Town
-city 10 120 Nanjian Town
-city 21 117 Reshui Town
-city 18 128 Mali Town
-city 10 116 Cibihu Town
-city 15 123 Jiangcheng Town
-city 17 123 Xinshao Town
-city 2 125 Nansan Town
-city 11 128 Daxing Town
-city 10 117 Xizhou Town
-city 2 132 Mengzhe Town
-city 42 125 Shidong
-city 11 114 Jinhua Town
-city 5 121 Dianyang Town
-city 70 121 Jhushan Township
-city 15 114 Zhongxin Town
-city 21 120 Majie Town
-city 22 123 Bamei Town
-city 24 111 Jing'an Town
-city 4 126 Mengmeng Town
-city 9 119 Miaojie Town
-city 23 116 Tianba Town
-city 66 76 Lihou Town
-city 25 111 Luozehe Town
-city 21 127 Tianpeng Town
-city 15 126 Jijie Town
+city 36 103 3.0 Chongqing
+city 82 92 3.0 Shanghai
+city 80 62 3.0 Beijing
+city 31 99 3.0 Chengdu
+city 45 126 3.0 Guangzhou
+city 47 128 3.0 Shenzhen
+city 81 65 3.0 Tianjin
+city 51 85 3.0 Xi'an
+city 80 92 3.0 Suzhou
+city 66 82 3.0 Zhengzhou
+city 60 98 3.0 Wuhan
+city 77 97 3.0 Hangzhou
+city 76 66 3.0 Baoding
+city 72 70 3.0 Shijiazhuang
+city 78 79 3.0 Linyi
+city 47 126 3.0 Dongguan
+city 85 74 3.0 Qingdao
+city 52 107 3.0 Changsha
+city 114 35 3.0 Harbin
+city 59 89 3.0 Nanyang
+city 76 104 3.0 Wenzhou
+city 44 127 3.0 Foshan
+city 70 75 3.0 Handan
+city 81 97 3.0 Ningbo
+city 83 73 3.0 Weifang
+city 71 92 3.0 Hefei
+city 75 91 3.0 Nanjing
+city 77 74 3.0 Jinan
+city 74 83 3.0 Xuzhou
+city 101 52 3.0 Shenyang
+city 108 43 3.0 Changchun
+city 66 86 3.0 Zhoukou
+city 55 115 3.0 Ganzhou
+city 70 80 3.0 Heze
+city 65 117 3.0 Quanzhou
+city 29 128 3.0 Nanning
+city 16 120 3.0 Kunming
+city 74 79 3.0 Jining
+city 69 112 3.0 Fuzhou
+city 68 89 3.0 Fuyang
+city 70 83 3.0 Shangqiu
+city 82 90 3.0 Nantong
+city 84 63 3.0 Tangshan
+city 48 129 3.0 Hong Kong
+city 92 64 3.0 Dalian
+city 79 68 3.0 Cangzhou
+city 70 74 3.0 Xingtai
+city 90 69 3.0 Yantai
+city 61 83 3.0 Luoyang
+city 74 101 3.0 Jinhua
+city 63 89 3.0 Zhumadian
+city 33 133 3.0 Zhanjiang
+city 28 112 3.0 Bijie
+city 81 85 3.0 Yancheng
+city 49 112 3.0 Hengyang
+city 79 101 3.0 Taizhou
+city 34 110 3.0 Zunyi
+city 46 111 3.0 Shaoyang
+city 68 104 3.0 Shangrao
+city 62 104 3.0 Nanchang
+city 66 80 3.0 Xinxiang
+city 62 92 3.0 Xinyang
+city 35 132 3.0 Maoming
+city 49 126 3.0 Huizhou
+city 31 114 3.0 Guiyang
+city 74 75 3.0 Liaocheng
+city 61 98 3.0 Huanggang
+city 34 129 3.0 Yulin
+city 20 119 3.0 Qujing
+city 83 92 3.0 Pudong
+city 76 71 3.0 Dezhou
+city 36 99 3.0 Nanchong
+city 56 123 3.0 Jieyang
+city 57 123 3.0 Shantou
+city 69 77 3.0 Anyang
+city 76 76 3.0 Tai'an
+city 80 64 3.0 Langfang
+city 80 94 3.0 Jiaxing
+city 41 97 3.0 Dazhou
+city 72 86 3.0 Suzhou
+city 66 71 3.0 Taiyuan
+city 45 114 3.0 Yongzhou
+city 50 104 3.0 Changde
+city 78 91 3.0 Changzhou
+city 78 97 3.0 Shaoxing
+city 56 93 3.0 Xiangyang
+city 53 100 3.0 Jingzhou
+city 63 118 3.0 Xiamen
+city 23 112 3.0 Zhaotong
+city 61 119 3.0 Zhangzhou
+city 54 103 3.0 Yueyang
+city 56 108 3.0 Yichun
+city 69 85 3.0 Bozhou
+city 62 86 3.0 Pingdingshan
+city 76 84 3.0 Suqian
+city 50 85 3.0 Xianyang
+city 39 119 3.0 Guilin
+city 34 96 3.0 Mianyang
+city 67 82 3.0 Kaifeng
+city 58 82 3.0 Yuncheng
+city 80 73 3.0 Zibo
+city 53 84 3.0 Weinan
+city 49 116 3.0 Chenzhou
+city 64 100 3.0 Jiujiang
+city 80 81 3.0 Lianyungang
+city 29 106 3.0 Yibin
+city 42 110 3.0 Huaihua
+city 78 89 3.0 Yangzhou
+city 78 85 3.0 Huai'an
+city 79 88 3.0 Taizhou
+city 57 110 3.0 Ji'an
+city 68 93 3.0 Lu'an
+city 64 85 3.0 Xuchang
+city 74 115 3.0 New Taipei City
+city 40 79 3.0 Lanzhou
+city 34 127 3.0 Guigang
+city 59 97 3.0 Xiaogan
+city 31 106 3.0 Luzhou
+city 75 70 3.0 Hengshui
+city 68 97 3.0 Anqing
+city 35 123 3.0 Liuzhou
+city 77 59 3.0 Zhangjiakou
+city 42 127 3.0 Zhaoqing
+city 109 31 3.0 Qiqihar
+city 18 46 3.0 Ürümqi
+city 90 52 3.0 Chifeng
+city 51 98 3.0 Yichang
+city 74 90 3.0 Chuzhou
+city 61 78 3.0 Linfen
+city 45 124 3.0 Qingyuan
+city 82 71 3.0 Binzhou
+city 52 109 3.0 Zhuzhou
+city 56 121 3.0 Meizhou
+city 76 80 3.0 Zaozhuang
+city 51 106 3.0 Yiyang
+city 49 109 3.0 Loudi
+city 70 78 3.0 Puyang
+city 116 32 3.0 Suihua
+city 74 93 3.0 Wuhu
+city 60 70 3.0 Yulin
+city 111 43 3.0 Jilin City
+city 62 107 3.0 Fuzhou
+city 25 125 3.0 Baise
+city 64 81 3.0 Jiaozuo
+city 32 98 3.0 Deyang
+city 69 60 3.0 Hohhot
+city 32 121 3.0 Hechi
+city 62 73 3.0 Lüliang
+city 66 72 3.0 Jinzhong
+city 79 94 3.0 Huzhou
+city 85 58 3.0 Chengde
+city 99 55 3.0 Anshan
+city 46 85 3.0 Baoji
+city 29 132 3.0 Qinzhou
+city 40 110 3.0 Tongren
+city 72 88 3.0 Bengbu
+city 37 100 3.0 Guang'an
+city 43 90 3.0 Hanzhong
+city 67 115 3.0 Putian
+city 77 90 3.0 Zhenjiang
+city 53 91 3.0 Shiyan
+city 65 77 3.0 Changzhi
+city 28 103 3.0 Leshan
+city 70 110 3.0 Ningde
+city 32 103 3.0 Neijiang
+city 88 61 3.0 Qinhuangdao
+city 72 62 3.0 Datong
+city 71 119 3.0 Taichung
+city 71 90 3.0 Huainan
+city 25 115 3.0 Liupanshui
+city 42 85 3.0 Tianshui
+city 82 77 3.0 Rizhao
+city 29 101 3.0 Meishan
+city 92 69 3.0 Weihai
+city 31 138 3.0 Haikou
+city 100 46 3.0 Tongliao
+city 93 54 3.0 Chaoyang
+city 51 70 3.0 Yinchuan
+city 49 120 3.0 Shaoguan
+city 51 123 3.0 Heyuan
+city 40 125 3.0 Wuzhou
+city 34 100 3.0 Suining
+city 111 33 3.0 Daqing
+city 51 126 3.0 Shanwei
+city 51 109 3.0 Xiangtan
+city 60 117 3.0 Longyan
+city 40 95 3.0 Bazhong
+city 64 61 3.0 Baotou
+city 94 56 3.0 Jinzhou
+city 68 69 3.0 Xinzhou
+city 66 111 3.0 Nanping
+city 59 101 3.0 Xianning
+city 75 115 3.0 Taipei
+city 39 131 3.0 Yangjiang
+city 54 97 3.0 Jingmen
+city 41 81 3.0 Dingxi
+city 74 103 3.0 Lishui
+city 74 95 3.0 Xuancheng
+city 48 91 3.0 Ankang
+city 30 104 3.0 Zigong
+city 64 112 3.0 Sanming
+city 28 116 3.0 Anshun
+city 63 99 3.0 Huangshi
+city 36 77 3.0 Xining
+city 45 130 3.0 Zhuhai
+city 93 57 3.0 Huludao
+city 6 120 3.0 Baoshan
+city 39 89 3.0 Longnan
+city 6 129 3.0 Pu'er City
+city 103 50 3.0 Tieling
+city 41 127 3.0 Yunfu
+city 64 87 3.0 Luohe
+city 97 57 3.0 Yingkou
+city 31 101 3.0 Ziyang
+city 39 92 3.0 Guangyuan
+city 120 38 3.0 Mudanjiang
+city 56 77 3.0 Yan'an
+city 71 102 3.0 Quzhou
+city 6 124 3.0 Lincang
+city 108 39 3.0 Songyuan
+city 14 123 3.0 Yuxi
+city 101 26 3.0 Hulunbuir
+city 63 80 3.0 Jincheng
+city 83 70 3.0 Dongying
+city 101 58 3.0 Dandong
+city 50 80 3.0 Qingyang
+city 74 92 3.0 Ma'anshan
+city 124 29 3.0 Jiamusi
+city 63 64 3.0 Ordos City
+city 25 130 3.0 Chongzuo
+city 33 125 3.0 Laibin
+city 59 94 3.0 Suizhou
+city 52 87 3.0 Shangluo
+city 58 83 3.0 Sanmenxia
+city 42 122 3.0 Hezhou
+city 82 64 3.0 Binhai New Area
+city 72 84 3.0 Huaibei
+city 68 123 3.0 Tainan
+city 102 52 3.0 Fushun
+city 30 133 3.0 Beihai
+city 47 81 3.0 Pingliang
+city 105 46 3.0 Siping
+city 107 51 3.0 Tonghua
+city 54 109 3.0 Pingxiang
+city 73 59 3.0 Ulanqab
+city 97 52 3.0 Fuxin
+city 67 101 3.0 Jingdezhen
+city 100 54 3.0 Liaoyang
+city 68 66 3.0 Shuozhou
+city 68 78 3.0 Hebi
+city 104 38 3.0 Baicheng
+city 58 61 3.0 Bayannur
+city 75 105 3.0 Rui'an
+city 46 105 3.0 Zhangjiajie
+city 42 77 3.0 Baiyin
+city 36 126 3.0 Guiping
+city 125 34 3.0 Jixi
+city 41 72 3.0 Wuwei
+city 77 103 3.0 Yueqing
+city 26 102 3.0 Ya'an
+city 78 103 3.0 Wenling
+city 97 55 3.0 Panjin
+city 50 72 3.0 Wuzhong
+city 37 77 3.0 Haidong
+city 70 96 3.0 Chizhou
+city 71 99 3.0 Huangshan
+city 101 54 3.0 Benxi
+city 69 71 3.0 Yangquan
+city 71 95 3.0 Tongling
+city 121 18 3.0 Heihe
+city 80 97 3.0 Yuyao City
+city 12 113 3.0 Lijiang
+city 16 115 3.0 Panzhihua
+city 35 129 3.0 Beiliu
+city 126 29 3.0 Shuangyashan
+city 58 108 3.0 Xinyu
+city 83 96 3.0 Zhoushan
+city 65 105 3.0 Yingtan
+city 46 79 3.0 Guyuan
+city 49 114 3.0 Leiyang
+city 37 68 3.0 Zhangye
+city 62 98 3.0 Ezhou
+city 46 74 3.0 Zhongwei
+city 34 65 3.0 Jiuquan
+city 27 132 3.0 Fangchenggang
+city 25 145 3.0 Sanya
+city 107 47 2.0 Liaoyuan
+city 109 50 2.0 Baishan
+city 27 141 2.0 Danzhou
+city 125 27 2.0 Hegang
+city 121 27 2.0 Yichun
+city -6 100 2.0 Lhasa
+city 47 127 2.0 Humen Town
+city 49 105 2.0 Taoyuan County
+city -13 101 2.0 Shigatse
+city 88 71 2.0 Laiyang
+city -17 55 2.0 Kashgar
+city 55 121 2.0 Xingning
+city 13 97 2.0 Chamdo
+city 52 68 2.0 Shizuishan
+city 62 82 2.0 Jiyuan
+city 52 83 2.0 Tongchuan
+city 20 50 2.0 Turpan
+city 125 33 2.0 Qitaihe
+city 29 52 2.0 Hami
+city 55 65 2.0 Wuhai
+city 0 94 2.0 Nagqu
+city 73 116 2.0 Hsinchu City
+city 16 44 2.0 Shihezi
+city 17 38 2.0 Karamay
+city 40 70 2.0 Jinchang
+city 48 127 2.0 Fenggang Town
+city 45 120 2.0 Lianzhou
+city 81 62 2.0 Yanjiao
+city 103 37 2.0 Ulanhot
+city -5 105 2.0 Lhoka
+city 51 100 2.0 Yidu
+city 34 64 2.0 Jiayuguan City
+city -1 124 1.5 Ruili
+city 69 122 1.5 Chiayi City
+city 121 43 1.5 Hunchun
+city 2 101 1.5 Nyingchi
+city 13 126 1.5 Lin'an Town
+city 70 119 1.5 Changhua City
+city 119 30 1.5 Tieli
+city 18 76 1.5 Golmud
+city 48 126 1.5 Qiaotou Town
+city 46 126 1.5 Zhongtang Town
+city 68 125 1.5 Pingtung City
+city 107 53 1.5 Ji'an
+city 21 124 1.5 Liancheng Town
+city 17 33 1.5 Tacheng
+city 96 26 1.5 Manzhouli
+city 18 122 1.5 Zhongshu Town
+city 28 110 1.5 Zhaxi Town
+city 10 119 1.5 Xiangcheng Town
+city 23 131 1.5 Pingxiang
+city 70 120 1.5 Yuanlin City
+city 110 50 1.5 Linjiang
+city 19 124 1.5 Jinping Town
+city 11 117 1.5 Jinniu Town
+city 18 126 1.5 Jiangna Town
+city 7 122 1.5 Aihua Town
+city 124 37 1.5 Suifenhe
+city 76 67 1.5 Qingyuan Town
+city 13 125 1.5 Yilong Town
+city 72 117 1.5 Toufen City
+city 70 124 1.5 Taitung City
+city 16 119 1.5 Shishan Town
+city 22 126 1.5 Xinhua Town
+city 17 128 1.0 Mabai Town
+city 3 129 1.0 Menglang Town
+city 73 119 1.0 Hualien City
+city 14 120 1.0 Jinshan Town
+city 72 95 1.0 Fanyang Town
+city 10 126 1.0 Lianzhu Town
+city 7 126 1.0 Weiyuan Town
+city 3 132 1.0 Menghai Town
+city 10 118 1.0 Dali Town
+city 13 110 1.0 Jiantang Town
+city 75 116 1.0 Yilan City
+city 19 120 1.0 Sanchahe Town
+city 17 125 1.0 Pingyuan Town
+city 1 121 1.0 Pingyuan Town
+city 81 93 1.0 Zhujiajiao
+city 3 133 1.0 Menglong Town
+city 13 118 1.0 Jinbi Town
+city 27 112 1.0 Poji Town
+city 2 126 1.0 Mengding Town
+city 60 120 1.0 Xiaoxi Town (Pinghe County)
+city 19 121 1.0 Majie Town
+city 15 118 1.0 Yuanma Town
+city 13 129 1.0 Jinhe Town
+city 12 120 1.0 Longchuan Town
+city 2 123 1.0 Fengping Town
+city 7 128 1.0 Ning'er Town
+city 12 119 1.0 Dongchuan Town
+city 9 123 1.0 JInping Town
+city 26 106 1.0 Zhongcheng Town
+city 5 134 1.0 Mengla Town
+city 6 121 1.0 Tianyuan Town
+city 22 119 1.0 FucunZhen
+city 72 119 1.0 Puli Township
+city 74 50 1.0 Erenhot
+city 74 65 1.0 Laiyuan Town
+city 22 125 1.0 Babao Town
+city 13 119 1.0 Gonghe Town, Mouding
+city 21 115 1.0 Zhehai Town
+city 26 109 1.0 Yanjing Town
+city 5 41 1.0 Khorgos
+city 28 111 1.0 Yile Town
+city 69 121 1.0 Huwei Township
+city 22 118 1.0 Dahe Town
+city 20 120 1.0 Dongshan Town
+city 5 42 1.0 Kokdala
+city 11 119 1.0 Yunnanyi Town
+city 4 124 1.0 Dedang Town
+city 12 128 1.0 Xinjie Town
+city 30 49 1.0 Barkol Kazakh Autonomous County
+city 23 115 1.0 Tangtang Town
+city 5 120 1.0 Lujiang Town
+city 3 122 1.0 Longshan Town
+city 22 114 1.0 Yiche Town
+city 0 123 1.0 Zhangfeng Town
+city 66 121 1.0 Magong City
+city 21 119 1.0 Yingshang Town
+city 6 126 1.0 Yongping Town
+city 17 120 1.0 Yanglin Town
+city 18 119 1.0 Xiaojie Town
+city 13 114 1.0 Yongbei Town
+city 27 110 1.0 Luokan Town
+city 20 124 1.0 Zhulin Town
+city 14 125 1.0 Qujiang Town
+city 1 130 1.0 Nayun Town
+city 22 120 1.0 Shibalianshan Town
+city 27 111 1.0 Chishuiyuan Town
+city 3 126 1.0 Gengma Town
+city 76 94 1.0 Xinhang Town
+city 7 119 1.0 Bonan Town
+city 5 118 1.0 Jietou Town
+city 10 120 1.0 Nanjian Town
+city 21 117 1.0 Reshui Town
+city 18 128 1.0 Mali Town
+city 10 116 1.0 Cibihu Town
+city 15 123 1.0 Jiangcheng Town
+city 17 123 1.0 Xinshao Town
+city 2 125 1.0 Nansan Town
+city 11 128 1.0 Daxing Town
+city 10 117 1.0 Xizhou Town
+city 2 132 1.0 Mengzhe Town
+city 42 125 1.0 Shidong
+city 11 114 1.0 Jinhua Town
+city 5 121 1.0 Dianyang Town
+city 70 121 1.0 Jhushan Township
+city 15 114 1.0 Zhongxin Town
+city 21 120 1.0 Majie Town
+city 22 123 1.0 Bamei Town
+city 24 111 1.0 Jing'an Town
+city 4 126 1.0 Mengmeng Town
+city 9 119 1.0 Miaojie Town
+city 23 116 1.0 Tianba Town
+city 66 76 1.0 Lihou Town
+city 25 111 1.0 Luozehe Town
+city 21 127 1.0 Tianpeng Town
+city 15 126 1.0 Jijie Town

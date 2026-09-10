@@ -1,23 +1,28 @@
-city 60 723 London
-city 28 649 Birmingham
-city 66 391 Glasgow
-city 41 654 Coventry
-city 141 464 Sunderland
-city 37 609 Stoke-on-Trent
-city 199 293 Aberdeen
-city -248 693 Cork
-city 36 547 Blackpool
-city 27 646 West Bromwich
-city 26 704 Oxford
-city 115 694 Colchester
-city 96 670 Cambridge
-city 71 675 Bedford
-city 81 598 Mansfield
-city 45 700 Aylesbury
-city -64 790 Weymouth
-city 50 575 Stretford
-city 130 268 Inverness
-city 34 681 Banbury
-city 58 773 Bexhill-on-Sea
-city 41 725 Windsor
-city 82 668 St Neots
+city 60 723 3.0 London
+city 28 649 2.0 Birmingham
+city 66 391 2.0 Glasgow
+city 41 654 2.0 Coventry
+city 141 464 1.5 Sunderland
+city 37 609 1.5 Stoke-on-Trent
+city 199 293 1.5 Aberdeen
+city -248 693 1.5 Cork
+city 36 547 1.5 Blackpool
+city 27 646 1.5 West Bromwich
+city 26 704 1.5 Oxford
+city 115 694 1.5 Colchester
+city 96 670 1.5 Cambridge
+city 71 675 1.0 Bedford
+city 81 598 1.0 Mansfield
+city 45 700 1.0 Aylesbury
+city -64 790 1.0 Weymouth
+city 50 575 1.0 Stretford
+city 130 268 1.0 Inverness
+city 34 681 1.0 Banbury
+city 58 773 1.0 Bexhill-on-Sea
+city 41 725 1.0 Windsor
+city 82 668 1.0 St Neots
+city -47 488 0.75 Belfast
+city -59 725 0.75 Cardiff
+city -108 583 0.75 Dublin
+city 111 384 0.75 Edinburgh
+city -102 574 0.5 Swords

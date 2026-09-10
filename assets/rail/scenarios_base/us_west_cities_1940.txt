@@ -1,36 +1,47 @@
-city -21 128 Los Angeles
-city -28 97 San Francisco
-city 76 81 Denver
-city -21 139 San Diego
-city -21 131 Long Beach
-city 47 120 Albuquerque
-city 10 19 Tacoma
-city 74 119 Amarillo
-city -29 106 Salinas
-city -18 128 Ontario
-city -17 109 Visalia
-city -20 130 Orange
-city -26 127 Oxnard
-city 41 77 Provo
-city -19 136 Escondido
-city -21 127 Glendale
-city -27 94 Vallejo
-city -22 129 Santa Monica
-city -24 94 Antioch
-city -26 126 Ventura
-city -24 93 Vacaville
-city -26 93 Napa
-city -27 96 Richmond
-city 15 13 Everett
-city -21 129 South Gate
-city -22 130 Redondo Beach
-city -20 140 National City
-city -20 128 El Monte
-city -21 132 Newport Beach
-city 46 64 Logan
-city 0 33 Hillsboro
-city 28 29 Walla Walla
-city 24 27 Kennewick
-city -21 130 Cerritos
-city -20 139 El Cajon
-city -29 101 Sunnyvale
+city -21 128 3.0 Los Angeles
+city -28 97 2.0 San Francisco
+city 76 81 2.0 Denver
+city -21 139 1.5 San Diego
+city -21 131 1.5 Long Beach
+city 47 120 1.5 Albuquerque
+city 10 19 1.5 Tacoma
+city 74 119 1.0 Amarillo
+city -29 106 1.0 Salinas
+city -18 128 1.0 Ontario
+city -17 109 1.0 Visalia
+city -20 130 1.0 Orange
+city -26 127 1.0 Oxnard
+city 41 77 1.0 Provo
+city -19 136 1.0 Escondido
+city -21 127 1.0 Glendale
+city -27 94 1.0 Vallejo
+city -22 129 1.0 Santa Monica
+city -24 94 1.0 Antioch
+city -26 126 1.0 Ventura
+city -24 93 1.0 Vacaville
+city -26 93 1.0 Napa
+city -27 96 1.0 Richmond
+city 15 13 1.0 Everett
+city -21 129 1.0 South Gate
+city -22 130 1.0 Redondo Beach
+city -20 140 1.0 National City
+city -20 128 1.0 El Monte
+city -21 132 1.0 Newport Beach
+city 46 64 1.0 Logan
+city 0 33 1.0 Hillsboro
+city 28 29 1.0 Walla Walla
+city 24 27 1.0 Kennewick
+city -21 130 1.0 Cerritos
+city -20 139 1.0 El Cajon
+city -29 101 1.0 Sunnyvale
+city 29 49 0.5 Boise
+city -8 86 0.5 Carson City
+city 83 69 0.5 Cheyenne
+city 65 24 0.5 Helena
+city 57 137 0.5 Lovington
+city 7 20 0.5 Olympia
+city 10 133 0.5 Phoenix
+city -21 91 0.5 Sacramento
+city -3 38 0.5 Salem
+city 42 73 0.5 Salt Lake City
+city 53 115 0.5 Santa Fe

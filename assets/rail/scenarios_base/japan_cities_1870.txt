@@ -1,4 +1,50 @@
-city -13 116 Kyoto
-city 19 111 Yokohama
-city -71 152 Castle town of Kagoshima
-city 73 30 Sapporo
+city -13 116 1.5 Kyoto
+city 19 111 1.0 Yokohama
+city -71 152 1.0 Castle town of Kagoshima
+city 73 30 1.0 Sapporo
+city 33 89 0.5 Aizuwakamatsu
+city 46 65 0.5 Akita
+city 56 54 0.5 Aomori
+city 24 109 0.5 Chiba
+city -4 104 0.5 Fukui
+city -62 131 0.5 Fukuoka
+city 38 86 0.5 Fukushima
+city -3 111 0.5 Gifu
+city 61 43 0.5 Hakodate
+city -22 117 0.5 Himeji
+city -41 122 0.5 Hiroshima
+city 2 99 0.5 Kanazawa
+city -19 119 0.5 Kobe
+city 12 109 0.5 Kofu
+city -63 139 0.5 Kumamoto
+city -38 131 0.5 Kōchi-shi
+city 20 101 0.5 Maebashi
+city -31 110 0.5 Matsue
+city -42 128 0.5 Matsuyama
+city 31 101 0.5 Mito
+city -62 148 0.5 Miyazaki
+city 55 65 0.5 Morioka
+city 15 98 0.5 Nagano
+city -3 114 0.5 Nagoya
+city -14 119 0.5 Nara
+city 29 84 0.5 Niigata
+city -29 119 0.5 Okayama
+city -2 116 0.5 Okazaki
+city -17 119 0.5 Osaka
+city -12 115 0.5 Otsu
+city -64 134 0.5 Saga
+city 22 106 0.5 Saitama
+city 44 81 0.5 Sendai
+city 7 116 0.5 Shizuoka
+city -29 122 0.5 Takamatsu
+city -27 125 0.5 Tokushima
+city 21 108 0.75 Tokyo
+city 22 108 0.5 Tokyo
+city -22 110 0.5 Tottori
+city 7 98 0.5 Toyama
+city -9 119 0.5 Tsu
+city 27 99 0.5 Utsunomiya
+city -21 124 0.5 Wakayama
+city 40 81 0.5 Yamagata
+city -50 124 0.5 Yamaguchi
+city -54 134 0.5 Ōita-shi

@@ -17,5 +17,6 @@
    2.2
   ]
  },
- "rivers": true
+ "rivers": true,
+ "cities_source": "britain"
 }
