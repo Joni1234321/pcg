@@ -69,6 +69,11 @@ constexpr f32 UPLAND_T = 0.85F;
 constexpr f32 HIGHLAND_T = 0.95F;
 constexpr Color COLOR_CITY { 40U, 40U, 40U };
 constexpr Color COLOR_CITY_SELECTED { 200U, 60U, 40U };
+constexpr Color COLOR_CITY_STAR { 240U, 200U, 40U };
+constexpr Color COLOR_CITY_STAR_EMPTY { 40U, 40U, 40U, 50U };
+constexpr u32 CITY_STAR_POINTS = 5U;
+constexpr f32 CITY_STAR_INNER_RADIUS_RATIO = 0.45F;
+constexpr f32 CITY_STAR_SCREEN_RADIUS = 10.0F;
 constexpr Color COLOR_BUTTON { colors::COLOR_LIGHT_GRAY };
 constexpr Color COLOR_BUTTON_HOVER { colors::COLOR_WHITE };
 constexpr Color COLOR_BUTTON_TEXT { colors::COLOR_BLACK };
@@ -89,6 +94,23 @@ void AppendHex(List<Vertex>& verts, const float2 screen_center, const f32 screen
         verts.EmplaceBack(screen_center, color);
         verts.EmplaceBack(screen_center + HEX_ANGLE[corner] * float2 { screen_radius }, color);
         verts.EmplaceBack(screen_center + HEX_ANGLE[(corner + 1) % HEX_CORNERS] * float2 { screen_radius }, color);
+    }
+}
+
+void AppendStar(List<Vertex>& verts, const float2 screen_center, const f32 screen_radius, const f32 fill, const Color color) {
+    const auto star_corner = [screen_center, screen_radius](const u32 corner) {
+        const f32 angle = -math::PI * 0.5F + static_cast<f32>(corner) * math::PI / static_cast<f32>(CITY_STAR_POINTS);
+        const f32 radius = corner % 2 == 0 ? screen_radius : screen_radius * CITY_STAR_INNER_RADIUS_RATIO;
+        return screen_center + float2 { math::Cos(angle), math::Sin(angle) } * float2 { radius };
+    };
+    for (u32 corner = 0; corner < CITY_STAR_POINTS * 2; corner++) {
+        const f32 wedge_fill = std::clamp(fill * static_cast<f32>(CITY_STAR_POINTS * 2) - static_cast<f32>(corner), 0.0F, 1.0F);
+        if (wedge_fill == 0.0F) { return; }
+        const float2 corner_a = star_corner(corner);
+        const float2 corner_b = star_corner((corner + 1) % (CITY_STAR_POINTS * 2));
+        verts.EmplaceBack(screen_center, color);
+        verts.EmplaceBack(corner_a, color);
+        verts.EmplaceBack(corner_a + (corner_b - corner_a) * float2 { wedge_fill }, color);
     }
 }
 
@@ -534,12 +556,21 @@ struct RailEditorSystem {
             water_labels[i].SetColor(COLOR_WATER_LABEL);
             water_labels[i].Draw(screen - float2 { 0.0F, static_cast<f32>(FontSizes::body) * 0.5F });
         }
+        verts.clear();
         for (u32 i = 0; i < cities.size() && camera.scale >= CITY_LABEL_MIN_CAMERA_SCALE; i++) {
             const float2 screen = camera.WorldToScreen(HexAxialToWorld(cities[i].axial));
             if (!on_screen(screen)) { continue; }
-            city_labels[i].SetColor(selected_city == i ? COLOR_CITY_SELECTED : COLOR_CITY);
+            const Color color = selected_city == i ? COLOR_CITY_SELECTED : COLOR_CITY;
+            city_labels[i].SetColor(color);
             city_labels[i].Draw(screen + float2 { camera.scale * 0.7F, -static_cast<f32>(FontSizes::body) * 0.5F });
+            const float2 screen_star_row = screen + float2 { camera.scale * 0.7F + CITY_STAR_SCREEN_RADIUS, static_cast<f32>(FontSizes::body) * 0.5F + CITY_STAR_SCREEN_RADIUS };
+            for (u32 star = 0; static_cast<f32>(star) < cities[i].level; star++) {
+                const float2 screen_star = screen_star_row + float2 { static_cast<f32>(star) * CITY_STAR_SCREEN_RADIUS * 2.2F, 0.0F };
+                AppendStar(verts, screen_star, CITY_STAR_SCREEN_RADIUS, 1.0F, COLOR_CITY_STAR_EMPTY);
+                AppendStar(verts, screen_star, CITY_STAR_SCREEN_RADIUS, std::min(cities[i].level - static_cast<f32>(star), 1.0F), COLOR_CITY_STAR);
+            }
         }
+        (void)SDL_RenderGeometry(renderer, nullptr, verts);
     }
 };
 } // namespace rail
