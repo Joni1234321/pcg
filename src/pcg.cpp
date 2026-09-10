@@ -15,7 +15,8 @@ b8 Start() {
     Window window { WINDOW_SIZE };
 
     Logger().Log("Starting Game");
-    hex::arcade::RunHex();
+    arcade::RunRail();
+    // arcade::RunHex();
     // pcg::arcade::RunMinimal();
     // pcg::arcade::RunHexBattle();
     // pcg::arcade::RunBattleSim();

@@ -31,9 +31,10 @@ import hex.terrain;
 import hex.scenarios;
 import hex.system;
 
-namespace hex {
 using namespace hex;
 using namespace hex::ui;
+
+namespace hex {
 namespace {
 
 void HexStateUpdateOOB(HexState& hex_state) {
@@ -72,6 +73,9 @@ void HexStateUpdateOOB(HexState& hex_state) {
     }
 }
 } // namespace
+
+
+} // namespace hex
 
 void arcade::RunHex() {
     Singleton::Get<WindowState>().clear_color = TABLE_THEME == TableStyle::TABLE_STYLE_SEA_GREEN ? Color::FromHsl(180.0F, 0.5F, 0.20F) : Color::FromHsl(42.0F, 0.12F, 0.66F);
@@ -121,4 +125,3 @@ void arcade::RunHex() {
     globalData.Get<ParticleEmitter>().clear();
     globalData.Get<NodeTree>().clear();
 }
-} // namespace hex

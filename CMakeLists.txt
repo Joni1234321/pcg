@@ -86,6 +86,7 @@ fetchcontent_declare(SDL3_image
 fetchcontent_makeavailable(SDL3 SDL3_ttf SDL3_image)
 
 add_executable(pcg src/pcg.cpp
+               src/8_rail/g_rail_game.cpp
                src/8_hex/g_hex_game.cpp
                src/1_pcs/r_ui_node.cpp
                src/1_pcs/t_debug_system.cpp)
@@ -133,6 +134,9 @@ target_sources(pcg
                src/8_hex/r_hex_render.cppm
                src/8_hex/u_counter.cppm
                src/8_hex/u_hex.cppm
+
+                # rail
+                src/8_rail/g_rail_types.cppm
 
                # app modules
 #               src/g_battlesim.cpp
