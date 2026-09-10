@@ -43,7 +43,8 @@ constexpr f32 TERRAIN_TEXTURE_MAX_CAMERA_SCALE = 6.0F;
 constexpr u32 TERRAIN_TEXTURE_HEXES_PER_DRAW = 16384U;
 constexpr float2 TERRAIN_TEXTURE_WORLD_MARGIN { HEX_SPACING.x * 0.5F, 1.0F };
 constexpr f32 MINIMAP_WIDTH = 300.0F;
-constexpr f32 CITY_LABEL_MIN_CAMERA_SCALE = 10.0F;
+constexpr f32 CITY_LABEL_MIN_CAMERA_SCALE = 4.0F;
+constexpr FontSizes CITY_LABEL_FONT_SIZE = FontSizes::h4;
 constexpr f32 MINIMAP_SCREEN_MARGIN = 10.0F;
 constexpr Color COLOR_MINIMAP_BORDER { 30U, 30U, 30U };
 constexpr Color COLOR_MINIMAP_VIEW { 255U, 255U, 255U };
@@ -99,7 +100,7 @@ void AppendHex(List<Vertex>& verts, const float2 screen_center, const f32 screen
 
 void AppendStar(List<Vertex>& verts, const float2 screen_center, const f32 screen_radius, const f32 fill, const Color color) {
     const auto star_corner = [screen_center, screen_radius](const u32 corner) {
-        const f32 angle = -math::PI * 0.5F + static_cast<f32>(corner) * math::PI / static_cast<f32>(CITY_STAR_POINTS);
+        const f32 angle = -math::PI * 0.5F - static_cast<f32>(corner) * math::PI / static_cast<f32>(CITY_STAR_POINTS);
         const f32 radius = corner % 2 == 0 ? screen_radius : screen_radius * CITY_STAR_INNER_RADIUS_RATIO;
         return screen_center + float2 { math::Cos(angle), math::Sin(angle) } * float2 { radius };
     };
@@ -398,7 +399,7 @@ struct RailEditorSystem {
 
     void RebuildCityLabels() {
         city_labels.clear();
-        TTF_Font* font = Singleton::Get<FontCollection>().GetFontNormalCourier(FontSizes::body);
+        TTF_Font* font = Singleton::Get<FontCollection>().GetFontBoldCourier(CITY_LABEL_FONT_SIZE);
         for (const City& city : Cities()) { city_labels.EmplaceBack(font, String { city.name.c_str() }); }
     }
 
@@ -562,8 +563,8 @@ struct RailEditorSystem {
             if (!on_screen(screen)) { continue; }
             const Color color = selected_city == i ? COLOR_CITY_SELECTED : COLOR_CITY;
             city_labels[i].SetColor(color);
-            city_labels[i].Draw(screen + float2 { camera.scale * 0.7F, -static_cast<f32>(FontSizes::body) * 0.5F });
-            const float2 screen_star_row = screen + float2 { camera.scale * 0.7F + CITY_STAR_SCREEN_RADIUS, static_cast<f32>(FontSizes::body) * 0.5F + CITY_STAR_SCREEN_RADIUS };
+            city_labels[i].Draw(screen + float2 { camera.scale * 0.7F, -static_cast<f32>(CITY_LABEL_FONT_SIZE) * 0.5F });
+            const float2 screen_star_row = screen + float2 { camera.scale * 0.7F + CITY_STAR_SCREEN_RADIUS, static_cast<f32>(CITY_LABEL_FONT_SIZE) * 0.5F + CITY_STAR_SCREEN_RADIUS };
             for (u32 star = 0; static_cast<f32>(star) < cities[i].level; star++) {
                 const float2 screen_star = screen_star_row + float2 { static_cast<f32>(star) * CITY_STAR_SCREEN_RADIUS * 2.2F, 0.0F };
                 AppendStar(verts, screen_star, CITY_STAR_SCREEN_RADIUS, 1.0F, COLOR_CITY_STAR_EMPTY);
