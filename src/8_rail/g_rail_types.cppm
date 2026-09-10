@@ -49,6 +49,7 @@ struct Industry {
 };
 struct City {
     int2 axial;
+    float level;
     std::string name;
 };
 struct MapLabel {
