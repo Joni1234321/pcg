@@ -4,7 +4,7 @@ module;
 
 #include "SDL3/SDL_keycode.h"
 
-export module hex.system;
+export module bcs.system;
 
 import std;
 
@@ -27,11 +27,11 @@ import pcs.animation;
 import pcs.easing;
 
 import hex.hex;
-import hex.enums;
-import hex.types;
-import hex.terrain;
-import hex.counter;
-import hex.render;
+import bcs.enums;
+import bcs.types;
+import bcs.terrain;
+import bcs.counter;
+import bcs.render;
 
 namespace hex {
 using namespace hex::ui;

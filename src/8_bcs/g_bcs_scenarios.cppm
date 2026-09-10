@@ -2,7 +2,7 @@ module;
 
 #include <cassert>
 
-export module hex.scenarios;
+export module bcs.scenarios;
 
 import std;
 
@@ -10,10 +10,10 @@ import pce.std;
 import pce.collections;
 
 import hex.hex;
-import hex.enums;
-import hex.types;
-import hex.terrain;
-import hex.terrain.generation;
+import bcs.enums;
+import bcs.types;
+import bcs.terrain;
+import bcs.terrain.generation;
 
 export namespace hex {
 UnitToe UnitGetToe(UnitIcon icon) {

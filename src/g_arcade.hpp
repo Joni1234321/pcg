@@ -6,7 +6,7 @@ void RunCosmoClick();
 void RunCommandStrike();
 void RunBattleSim();
 void RunHexBattle();
-void RunHex();
+void RunBcs();
 void RunMinimal();
 void RunRail();
 } // namespace arcade

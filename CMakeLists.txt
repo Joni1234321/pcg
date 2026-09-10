@@ -87,7 +87,7 @@ fetchcontent_makeavailable(SDL3 SDL3_ttf SDL3_image)
 
 add_executable(pcg src/pcg.cpp
                src/8_rail/g_rail_game.cpp
-               src/8_hex/g_hex_game.cpp
+               src/8_bcs/g_bcs_game.cpp
                src/1_pcs/r_ui_node.cpp
                src/1_pcs/t_debug_system.cpp)
 set_property(TARGET pcg PROPERTY CXX_MODULE_STD ON)
@@ -125,15 +125,17 @@ target_sources(pcg
                src/1_pcs/u_orchestra.cppm
 
                # hex
-               src/8_hex/g_hex_terrain.cppm
-               src/8_hex/g_hex_terrain_generation.cppm
-               src/8_hex/g_hex_scenarios.cppm
-               src/8_hex/g_hex_enums.cppm
-               src/8_hex/g_hex_types.cppm
-               src/8_hex/g_hex_system.cppm
-               src/8_hex/r_hex_render.cppm
-               src/8_hex/u_counter.cppm
-               src/8_hex/u_hex.cppm
+               src/5_hex/u_hex.cppm
+
+               # bcs
+               src/8_bcs/g_bcs_terrain.cppm
+               src/8_bcs/g_bcs_terrain_generation.cppm
+               src/8_bcs/g_bcs_scenarios.cppm
+               src/8_bcs/g_bcs_enums.cppm
+               src/8_bcs/g_bcs_types.cppm
+               src/8_bcs/g_bcs_system.cppm
+               src/8_bcs/r_bcs_render.cppm
+               src/8_bcs/u_counter.cppm
 
                 # rail
                 src/8_rail/g_rail_types.cppm

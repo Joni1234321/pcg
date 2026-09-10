@@ -1,6 +1,6 @@
 module;
 
-export module hex.enums;
+export module bcs.enums;
 
 import std;
 

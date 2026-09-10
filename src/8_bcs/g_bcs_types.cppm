@@ -1,6 +1,6 @@
 module;
 
-export module hex.types;
+export module bcs.types;
 
 import std;
 
@@ -14,7 +14,7 @@ import pce.globals;
 import pcs.animation;
 
 import hex.hex;
-import hex.enums;
+import bcs.enums;
 
 export namespace hex {
 using namespace hex;

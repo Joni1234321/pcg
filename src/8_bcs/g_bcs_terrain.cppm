@@ -1,7 +1,7 @@
 module;
 #include <cassert>
 
-export module hex.terrain;
+export module bcs.terrain;
 
 import std;
 
@@ -10,8 +10,8 @@ import pce.std;
 import pce.math;
 
 import hex.hex;
-import hex.enums;
-import hex.types;
+import bcs.enums;
+import bcs.types;
 
 export namespace hex {
 

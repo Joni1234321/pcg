@@ -1,9 +1,11 @@
+export module rail.types;
+
 import std;
 
 import pce.std;
 import pce.strong;
 
-namespace rail {
+export namespace rail {
 
 using GoodDefineId = hex::StrongType<u32, struct GoodDefineIdTag>;
 struct GoodDefine {

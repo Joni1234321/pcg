@@ -1,4 +1,4 @@
-export module hex.terrain.generation;
+export module bcs.terrain.generation;
 
 import std;
 
@@ -7,10 +7,10 @@ import pce.std;
 import pce.math;
 
 import hex.hex;
-import hex.enums;
-import hex.types;
-import hex.render;
-import hex.terrain;
+import bcs.enums;
+import bcs.types;
+import bcs.render;
+import bcs.terrain;
 
 export namespace hex {
 constexpr void HexTerrainGenerateType(HexState& hex_state, const u32 seed) {

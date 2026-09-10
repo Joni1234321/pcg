@@ -1,6 +1,6 @@
 module;
 
-export module hex.counter;
+export module bcs.counter;
 
 import std;
 
@@ -17,10 +17,10 @@ import pce.collections;
 import pce.colors;
 
 import hex.hex;
-import hex.enums;
-import hex.types;
-import hex.terrain;
-import hex.render;
+import bcs.enums;
+import bcs.types;
+import bcs.terrain;
+import bcs.render;
 
 export namespace hex {
 [[nodiscard]] constexpr String EchelonToString(const Echelon echelon) {

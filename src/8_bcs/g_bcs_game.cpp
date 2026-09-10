@@ -25,11 +25,11 @@ import pcs.animation;
 import pcs.orchestra;
 
 import hex.hex;
-import hex.enums;
-import hex.types;
-import hex.terrain;
-import hex.scenarios;
-import hex.system;
+import bcs.enums;
+import bcs.types;
+import bcs.terrain;
+import bcs.scenarios;
+import bcs.system;
 
 using namespace hex;
 using namespace hex::ui;
@@ -77,7 +77,7 @@ void HexStateUpdateOOB(HexState& hex_state) {
 
 } // namespace hex
 
-void arcade::RunHex() {
+void arcade::RunBcs() {
     Singleton::Get<WindowState>().clear_color = TABLE_THEME == TableStyle::TABLE_STYLE_SEA_GREEN ? Color::FromHsl(180.0F, 0.5F, 0.20F) : Color::FromHsl(42.0F, 0.12F, 0.66F);
 
     HexState& hex_state = Singleton::Get<HexState>();

@@ -2,7 +2,7 @@ module;
 
 #include <cassert>
 
-export module hex.render;
+export module bcs.render;
 
 import std;
 
@@ -17,8 +17,8 @@ import pce.colors;
 import pce.std;
 import pce.strong;
 import hex.hex;
-import hex.enums;
-import hex.types;
+import bcs.enums;
+import bcs.types;
 import pce.collections;
 import pce.math;
 
