@@ -51,8 +51,13 @@ struct City {
     int2 axial;
     std::string name;
 };
+struct MapLabel {
+    int2 axial;
+    std::string name;
+};
 struct River {
-    std::vector<float2> waypoints;
+    u8 size;
+    std::vector<int2> axials;
     std::string name;
 };
 struct Building {
@@ -61,6 +66,7 @@ struct Building {
 };
 struct MapDefine {
     hex::HexList<i8> elevation;
+    std::vector<MapLabel> water_labels;
     std::vector<River> rivers;
     std::vector<City> cities;
     std::vector<Industry> industries;
@@ -69,6 +75,7 @@ struct MapDefine {
 struct Map {
     float2 size;
     std::vector<i8> elevation;  // grid
+    std::vector<MapLabel> water_labels;
     std::vector<River> rivers;
     std::vector<City> cities;
     std::vector<Building> buildings;
