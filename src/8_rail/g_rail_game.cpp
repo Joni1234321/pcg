@@ -29,8 +29,11 @@ using namespace hex::ui;
 
 void arcade::RunRail() {
     Singleton::Get<WindowState>().clear_color = Color::FromHsl(42.0F, 0.12F, 0.66F);
-    Singleton::Get<CameraState>().scale = rail::EDITOR_CAMERA_SCALE;
-    Singleton::Get<CameraState>().target_scale = rail::EDITOR_CAMERA_SCALE;
+    CameraState& camera = Singleton::Get<CameraState>();
+    camera.scale = rail::EDITOR_CAMERA_SCALE;
+    camera.target_scale = rail::EDITOR_CAMERA_SCALE;
+    camera.zoom_min = rail::EDITOR_ZOOM_MIN;
+    camera.zoom_max = rail::EDITOR_ZOOM_MAX;
 
     Orchestra orchestra { };
     orchestra.Add<DebugSystem>();

@@ -1,0 +1,6 @@
+city 121 1445 London
+city 57 1297 Birmingham
+city 397 586 Aberdeen
+city 193 1339 Cambridge
+city 230 1387 Colchester
+city 91 1398 Aylesbury

@@ -36,6 +36,8 @@ constexpr const char* SCENARIOS_DIR = "rail/scenarios";
 constexpr const char* IMPORT_IMAGE = "rail/source/britain.jpg";
 constexpr uint2 IMPORT_MAP_SIZE { 136U, 240U };
 constexpr f32 EDITOR_CAMERA_SCALE = 20.0F;
+constexpr f32 EDITOR_ZOOM_MIN = 0.5F;
+constexpr f32 EDITOR_ZOOM_MAX = 200.0F;
 constexpr f32 TERRAIN_TEXTURE_HEX_RADIUS = 2.0F;
 constexpr f32 TERRAIN_TEXTURE_MAX_CAMERA_SCALE = 6.0F;
 constexpr u32 TERRAIN_TEXTURE_HEXES_PER_DRAW = 16384U;

@@ -3,17 +3,22 @@ module;
 #include <SDL3/SDL_keycode.h>
 export module pcs.camera;
 
+import std;
+
 import pce.std;
 import pce.math;
 import pce.globals;
 import pce.window_state;
 import pcs.input;
+import pcs.tick;
 
 export namespace hex {
 struct CameraState {
     float2 world_position { -100.0F, -100.0F };
     f32 scale { 140.0F };
     f32 target_scale { 140.0F };
+    f32 zoom_min { 3.0F };
+    f32 zoom_max { 800.0F };
     float2 zoom_anchor_world { 0.0F, 0.0F };
     float2 drag_last_pos { 0, 0 };
     float2 map_world_min { 0.0F, 0.0F };
@@ -25,14 +30,13 @@ struct CameraState {
 struct CameraSystem {
     static constexpr f32 PAN_SPEED = 8.0F;
     static constexpr f32 ZOOM_FACTOR = 1.2F;
-    static constexpr f32 ZOOM_KEY_FACTOR = 1.04F;
-    static constexpr f32 ZOOM_MIN = 3.0F;
-    static constexpr f32 ZOOM_MAX = 800.0F;
-    static constexpr f32 ZOOM_LERP = 0.15F;
+    static constexpr f32 ZOOM_KEY_FACTOR_PER_SECOND = 10.0F;
+    static constexpr f32 ZOOM_SMOOTHING_PER_SECOND = 12.0F;
 
     void operator()() const {
         CameraState& camera_state = Singleton::Get<CameraState>();
         InputState& input_state = Singleton::Get<InputState>();
+        const f32 delta_time = Singleton::Get<TickState>().delta_time;
 
         if (input_state.keys[SDLK_LEFT]) { camera_state.world_position.x -= PAN_SPEED; }
         if (input_state.keys[SDLK_RIGHT]) { camera_state.world_position.x += PAN_SPEED; }
@@ -48,16 +52,16 @@ struct CameraSystem {
         if (input_state.mouse_wheel_y != 0.0F) {
             camera_state.zoom_anchor_world = camera_state.ScreenToWorld(input_state.mouse_position);
             const f32 factor = input_state.mouse_wheel_y > 0.0F ? ZOOM_FACTOR : 1.0F / ZOOM_FACTOR;
-            camera_state.target_scale = math::Clamp(camera_state.target_scale * factor, ZOOM_MIN, ZOOM_MAX);
+            camera_state.target_scale = math::Clamp(camera_state.target_scale * factor, camera_state.zoom_min, camera_state.zoom_max);
         }
         if (input_state.keys[SDLK_Q] != input_state.keys[SDLK_E]) {
             camera_state.zoom_anchor_world = camera_state.ScreenToWorld(input_state.mouse_position);
-            const f32 factor = input_state.keys[SDLK_E] ? ZOOM_KEY_FACTOR : 1.0F / ZOOM_KEY_FACTOR;
-            camera_state.target_scale = math::Clamp(camera_state.target_scale * factor, ZOOM_MIN, ZOOM_MAX);
+            const f32 factor = std::pow(ZOOM_KEY_FACTOR_PER_SECOND, input_state.keys[SDLK_E] ? delta_time : -delta_time);
+            camera_state.target_scale = math::Clamp(camera_state.target_scale * factor, camera_state.zoom_min, camera_state.zoom_max);
         }
         if (const f32 diff = camera_state.target_scale - camera_state.scale; math::Abs(diff) > 0.01F) {
             const f32 old_scale = camera_state.scale;
-            camera_state.scale += diff * ZOOM_LERP;
+            camera_state.scale += diff * math::Clamp(ZOOM_SMOOTHING_PER_SECOND * delta_time, 0.0F, 1.0F);
             camera_state.world_position += camera_state.zoom_anchor_world * float2 { camera_state.scale - old_scale };
         } else {
             camera_state.scale = camera_state.target_scale;

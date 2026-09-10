@@ -1,0 +1,11 @@
+label -217 1488 Bristol Channel
+label 31 704 Inner Seas
+label -74 1130 Irish Sea
+label -141 1686 English Channel
+label -130 972 Lough Neagh
+label 224 565 Loch Ness
+label -405 1225 Lough Derg
+label -332 1134 Lough Ree
+label -296 1049 Lough Allen
+label 166 614 Loch Lochy
+label -246 1033 Upper Lough Erne
