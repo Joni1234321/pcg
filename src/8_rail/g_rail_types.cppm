@@ -36,8 +36,6 @@ struct BuildingDefine {
     std::flat_map<GoodDefineId, f32> supply;
 };
 
-
-
 struct GoodInfo {
     f32 amount;
     f32 price;

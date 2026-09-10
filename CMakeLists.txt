@@ -146,6 +146,7 @@ target_sources(pcg
 
                 # rail
                 src/8_rail/g_rail_types.cppm
+                src/8_rail/g_rail_defines.cppm
                 src/8_rail/g_rail_scenarios.cppm
                 src/8_rail/g_rail_editor.cppm
 

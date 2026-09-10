@@ -17,6 +17,11 @@ import rail.types;
 using namespace hex;
 
 export namespace rail {
+constexpr f32 CITY_RADIUS_WORLD_PER_LEVEL = 1.5F;
+constexpr u32 BUILDINGS_PER_CITY_LEVEL = 6U;
+constexpr u32 INDUSTRIES_PER_CITY_LEVEL = 1U;
+constexpr u32 PLACEMENT_ATTEMPTS = 16U;
+
 void TerrainSave(const HexList<i8>& elevation, const AssetPath& asset_path) {
     std::ofstream file { Asset(asset_path) };
     file << elevation.map_size.x << ' ' << elevation.map_size.y << '\n';
@@ -130,6 +135,31 @@ HexList<i8> ElevationFromImage(const AssetPath& asset_path, const uint2 map_size
     }
     SDL_DestroySurface(surface);
     return elevation;
+}
+
+Map MapGenerate(const MapDefine& define, const std::vector<IndustryDefine>& industry_defines, const std::vector<BuildingDefine>& building_defines) {
+    Map map { .water_labels = define.water_labels, .rivers = define.rivers, .cities = define.cities, .industries = define.industries };
+    map.size = HexAxialToWorld(HexOffsetToAxial(static_cast<int2>(define.elevation.map_size - uint2 { 1U, 1U })));
+    const auto random_land_world = [&define](const float2 world_center, const f32 world_radius_min, const f32 world_radius_max) -> Optional<float2> {
+        for (u32 attempt = 0; attempt < PLACEMENT_ATTEMPTS; attempt++) {
+            const f32 angle = RandF(0.0F, math::PI * 2.0F);
+            const float2 world = world_center + float2 { math::Cos(angle), math::Sin(angle) } * float2 { RandF(world_radius_min, world_radius_max) };
+            const int2 axial = HexWorldToAxial(world);
+            if (define.elevation.Contains(axial) && define.elevation[axial] >= 0) { return world; }
+        }
+        return std::nullopt;
+    };
+    for (const City& city : define.cities) {
+        const float2 world_city = HexAxialToWorld(city.axial);
+        const f32 world_radius = city.level * CITY_RADIUS_WORLD_PER_LEVEL;
+        for (u32 i = 0; i < static_cast<u32>(city.level * BUILDINGS_PER_CITY_LEVEL); i++) {
+            if (const Optional<float2> world = random_land_world(world_city, 0.0F, world_radius)) { map.buildings.push_back(Building { .pos = *world, .id = building_defines[Rand(static_cast<u32>(building_defines.size()))].id }); }
+        }
+        for (u32 i = 0; i < static_cast<u32>(math::Ceil(city.level * INDUSTRIES_PER_CITY_LEVEL)); i++) {
+            if (const Optional<float2> world = random_land_world(world_city, world_radius, world_radius * 2.0F)) { map.industries.push_back(Industry { .pos = *world, .id = industry_defines[Rand(static_cast<u32>(industry_defines.size()))].id }); }
+        }
+    }
+    return map;
 }
 
 std::vector<MapDefine> RailMapDefines() {

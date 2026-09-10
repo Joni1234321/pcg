@@ -26,6 +26,7 @@ import pcs.node_data;
 import hex.hex;
 import rail.types;
 import rail.scenarios;
+import rail.defines;
 
 using namespace hex;
 using namespace hex::ui;
@@ -43,7 +44,7 @@ constexpr f32 TERRAIN_TEXTURE_MAX_CAMERA_SCALE = 6.0F;
 constexpr u32 TERRAIN_TEXTURE_HEXES_PER_DRAW = 16384U;
 constexpr float2 TERRAIN_TEXTURE_WORLD_MARGIN { HEX_SPACING.x * 0.5F, 1.0F };
 constexpr f32 MINIMAP_WIDTH = 300.0F;
-constexpr f32 CITY_LABEL_MIN_CAMERA_SCALE = 4.0F;
+constexpr f32 CITY_LABEL_MIN_CAMERA_SCALE = 2.0F;
 constexpr FontSizes CITY_LABEL_FONT_SIZE = FontSizes::h4;
 constexpr f32 MINIMAP_SCREEN_MARGIN = 10.0F;
 constexpr Color COLOR_MINIMAP_BORDER { 30U, 30U, 30U };
@@ -79,6 +80,13 @@ constexpr Color COLOR_BUTTON { colors::COLOR_LIGHT_GRAY };
 constexpr Color COLOR_BUTTON_HOVER { colors::COLOR_WHITE };
 constexpr Color COLOR_BUTTON_TEXT { colors::COLOR_BLACK };
 constexpr Color COLOR_BUTTON_TEXT_INACTIVE { colors::COLOR_GRAY };
+constexpr f32 BUILDING_RADIUS_WORLD = 0.15F;
+constexpr f32 INDUSTRY_RADIUS_WORLD = 0.35F;
+constexpr Color COLOR_BUILDING { 90U, 60U, 40U };
+constexpr Array<Color, 7U> COLOR_INDUSTRIES {
+    Color { 30U, 30U, 30U }, Color { 150U, 80U, 60U }, Color { 120U, 120U, 140U }, Color { 210U, 180U, 60U }, Color { 230U, 140U, 60U }, Color { 100U, 70U, 30U }, Color { 120U, 60U, 140U },
+};
+[[nodiscard]] constexpr Color IndustryColor(const IndustryDefineId id) { return COLOR_INDUSTRIES[id.value % COLOR_INDUSTRIES.size()]; }
 
 enum class EditorTool : u8 { TOOL_TERRAIN, TOOL_CITY };
 
@@ -177,6 +185,7 @@ struct RailEditorFrame : Frame {
     Slider river_slider { B(river_group).parent, 0U, RIVER_SIZE_MAX, 1U, 0U };
     Handle<Node> file_group { B(toolbar).Node(hug).Gap(4U).Build() };
     Handle<Node> import_button { Button(B(file_group).parent, "▦ Import image") };
+    Handle<Node> generate_button { Button(B(file_group).parent, "⚙ Generate") };
     Handle<Node> save_button { Button(B(file_group).parent, "⬇ Save") };
     Handle<Node> file_panel { B(root).Node(hug).Padding(8U).Gap(4U).Direction(vertical).Fill(colors::COLOR_BEIGE).Build() };
     Handle<Node> help_label { B(file_panel).Node(hug).Text(FontSizes::small, colors::COLOR_DARK_GRAY).Build() };
@@ -197,6 +206,9 @@ struct EditorDocument {
 
 struct RailEditorSystem {
     EditorDocument document { };
+    std::vector<IndustryDefine> industry_defines { RailIndustryDefines() };
+    std::vector<BuildingDefine> building_defines { RailBuildingDefines() };
+    Optional<Map> generated { };
     u32 overlay_year { OVERLAY_YEAR_MIN };
     u32 river_size_min { 0U };
     List<Vertex> verts { };
@@ -225,6 +237,10 @@ struct RailEditorSystem {
         tree.node_properties[frame.import_button].on_click = [this](NodeReference) {
             PushHistory();
             SetDocument(EditorDocument { .elevation = ElevationFromImage(IMPORT_IMAGE, IMPORT_MAP_SIZE) });
+        };
+        tree.node_properties[frame.generate_button].on_click = [this](NodeReference) {
+            generated = MapGenerate(MapDefine { .elevation = document.elevation, .water_labels = document.water_labels, .rivers = document.rivers, .cities = Cities() }, industry_defines, building_defines);
+            SetStatus(std::format("Generated {} buildings, {} industries", generated->buildings.size(), generated->industries.size()));
         };
         tree.node_properties[frame.save_button].on_click = [this](NodeReference) {
             for (u32 number = 1U;; number++) {
@@ -319,6 +335,7 @@ struct RailEditorSystem {
     void SetOverlayYear(const u32 year) {
         overlay_year = std::clamp(year / OVERLAY_YEAR_STEP * OVERLAY_YEAR_STEP, OVERLAY_YEAR_MIN, OVERLAY_YEAR_MAX);
         frame.year_slider.SetValue(globalData[frame.tree], overlay_year, std::format("{} ({} cities)", overlay_year, Cities().size()));
+        generated.reset();
         SelectCity(std::nullopt);
         RebuildCityLabels();
     }
@@ -540,6 +557,10 @@ struct RailEditorSystem {
                 verts.EmplaceBack(inner_b, color);
                 verts.EmplaceBack(inner_a, color);
             }
+        }
+        if (generated.has_value()) {
+            for (const Building& building : generated->buildings) { AppendHex(verts, camera.WorldToScreen(building.pos), camera.scale * BUILDING_RADIUS_WORLD, COLOR_BUILDING); }
+            for (const Industry& industry : generated->industries) { AppendHex(verts, camera.WorldToScreen(industry.pos), camera.scale * INDUSTRY_RADIUS_WORLD, IndustryColor(industry.id)); }
         }
         (void)SDL_RenderGeometry(renderer, nullptr, verts);
         (void)SDL_RenderTexture(renderer, terrain_texture, nullptr, &minimap_rect);

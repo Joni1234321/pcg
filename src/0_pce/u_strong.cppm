@@ -16,6 +16,8 @@ export namespace hex {
 template <typename T, typename TagType, template <typename> class... InheritList> struct StrongType : InheritList<StrongType<T, TagType, InheritList...>>... {
     T value;
     constexpr explicit StrongType(const T& value) : value(value) { }
+    constexpr auto operator<=>(const StrongType& other) const { return value <=> other.value; }
+    constexpr b8 operator==(const StrongType& other) const { return value == other.value; }
 };
 template <typename DerivedType, template <typename> class> struct RecurringDerived {
     DerivedType& Derived() { return static_cast<DerivedType&>(*this); }
