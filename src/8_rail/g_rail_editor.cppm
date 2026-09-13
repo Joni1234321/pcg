@@ -126,6 +126,7 @@ constexpr Color COLOR_RAIL_HOVER { 255U, 230U, 80U, 150U };
 constexpr Color COLOR_RAIL_GHOST { 255U, 255U, 255U, 130U };
 constexpr FontSizes INDUSTRY_LABEL_FONT_SIZE = FontSizes::small;
 constexpr f32 BUILDING_LABEL_MIN_CAMERA_SCALE = 100.0F;
+constexpr f32 FLAVOUR_HOLE_MARGIN_WORLD = 0.15F;
 constexpr Array<Color, 6U> COLOR_BUILDINGS {
     Color { 120U, 80U, 50U }, Color { 160U, 110U, 40U }, Color { 90U, 100U, 130U }, Color { 190U, 150U, 60U }, Color { 200U, 200U, 210U }, Color { 210U, 90U, 90U },
 };
@@ -134,6 +135,15 @@ constexpr Array<Color, 10U> COLOR_INDUSTRIES {
     Color { 220U, 200U, 80U }, Color { 150U, 80U, 60U }, Color { 225U, 225U, 210U }, Color { 120U, 60U, 140U }, Color { 40U, 120U, 50U }, Color { 100U, 70U, 30U }, Color { 160U, 110U, 60U }, Color { 35U, 35U, 35U }, Color { 150U, 60U, 40U }, Color { 40U, 90U, 160U },
 };
 [[nodiscard]] constexpr Color IndustryColor(const IndustryDefineId id) { return COLOR_INDUSTRIES[id.value % COLOR_INDUSTRIES.size()]; }
+struct IndustryFlavour {
+    const char* texture;
+    f32 width_hex_widths;
+};
+constexpr Array<IndustryFlavour, 10U> INDUSTRY_FLAVOURS {
+    IndustryFlavour { "rail/textures/flavour_crops.png", 3.0F }, IndustryFlavour { nullptr, 0.0F }, IndustryFlavour { "rail/textures/flavour_sheep.png", 3.0F }, IndustryFlavour { nullptr, 0.0F }, IndustryFlavour { "rail/textures/flavour_trees.png", 3.5F },
+    IndustryFlavour { nullptr, 0.0F }, IndustryFlavour { nullptr, 0.0F }, IndustryFlavour { "rail/textures/flavour_coal.png", 2.0F }, IndustryFlavour { "rail/textures/flavour_iron.png", 2.0F }, IndustryFlavour { nullptr, 0.0F },
+};
+[[nodiscard]] constexpr const IndustryFlavour& IndustryFlavourOf(const IndustryDefineId id) { return INDUSTRY_FLAVOURS[id.value % INDUSTRY_FLAVOURS.size()]; }
 
 enum class EditorTool : u8 { TOOL_TERRAIN, TOOL_CITY, TOOL_RAIL, TOOL_RAIL_PATH, TOOL_RGO, TOOL_INDUSTRY };
 
@@ -143,7 +153,7 @@ struct RailGradeLabelDraw {
 };
 struct RailObstacle {
     float2 world;
-    f32 half_world;
+    float2 half_world;
     f32 rotation;
 };
 [[nodiscard]] b8 SegmentsCross(const float2 world_a1, const float2 world_a2, const float2 world_b1, const float2 world_b2) {
@@ -156,7 +166,7 @@ struct RailObstacle {
 [[nodiscard]] b8 ObstacleBlocksWorld(const RailObstacle& obstacle, const float2 world) {
     const float2 axis { math::Cos(obstacle.rotation), math::Sin(obstacle.rotation) };
     const float2 world_offset = world - obstacle.world;
-    return math::Abs(math::Dot(world_offset, axis)) <= obstacle.half_world && math::Abs(math::Cross(axis, world_offset)) <= obstacle.half_world;
+    return math::Abs(math::Dot(world_offset, axis)) <= obstacle.half_world.x && math::Abs(math::Cross(axis, world_offset)) <= obstacle.half_world.y;
 }
 struct RailUnits {
     float2 world_step;
@@ -220,15 +230,15 @@ void AppendHex(List<Vertex>& verts, const float2 screen_center, const f32 screen
     }
 }
 
-void AppendSquare(List<Vertex>& verts, const float2 screen_center, const f32 screen_half_size, const f32 rotation, const Color color) {
-    const float2 axis_x = float2 { math::Cos(rotation), math::Sin(rotation) } * float2 { screen_half_size };
-    const float2 axis_y { -axis_x.y, axis_x.x };
-    verts.EmplaceBack(screen_center - axis_x - axis_y, color);
-    verts.EmplaceBack(screen_center + axis_x - axis_y, color);
-    verts.EmplaceBack(screen_center + axis_x + axis_y, color);
-    verts.EmplaceBack(screen_center - axis_x - axis_y, color);
-    verts.EmplaceBack(screen_center + axis_x + axis_y, color);
-    verts.EmplaceBack(screen_center - axis_x + axis_y, color);
+void AppendRect(List<Vertex>& verts, const float2 screen_center, const float2 screen_half, const f32 rotation, const Color color) {
+    const float2 axis_x = float2 { math::Cos(rotation), math::Sin(rotation) } * float2 { screen_half.x };
+    const float2 axis_y = float2 { -math::Sin(rotation), math::Cos(rotation) } * float2 { screen_half.y };
+    verts.EmplaceBack(screen_center - axis_x - axis_y, color, float2 { 0.0F, 0.0F });
+    verts.EmplaceBack(screen_center + axis_x - axis_y, color, float2 { 1.0F, 0.0F });
+    verts.EmplaceBack(screen_center + axis_x + axis_y, color, float2 { 1.0F, 1.0F });
+    verts.EmplaceBack(screen_center - axis_x - axis_y, color, float2 { 0.0F, 0.0F });
+    verts.EmplaceBack(screen_center + axis_x + axis_y, color, float2 { 1.0F, 1.0F });
+    verts.EmplaceBack(screen_center - axis_x + axis_y, color, float2 { 0.0F, 1.0F });
 }
 
 void AppendSegment(List<Vertex>& verts, const float2 screen_a, const float2 screen_b, const f32 screen_half_width, const Color color) {
@@ -240,6 +250,24 @@ void AppendSegment(List<Vertex>& verts, const float2 screen_a, const float2 scre
     verts.EmplaceBack(screen_a - half_width, color);
     verts.EmplaceBack(screen_b + half_width, color);
     verts.EmplaceBack(screen_b - half_width, color);
+}
+
+void AppendRectFrame(List<Vertex>& verts, const float2 screen_center, const float2 screen_half, const float2 screen_hole_half, const f32 rotation, const Color color) {
+    const float2 axis_x { math::Cos(rotation), math::Sin(rotation) };
+    const float2 axis_y { -axis_x.y, axis_x.x };
+    const auto append_local_rect = [&](const float2 local_min, const float2 local_max) {
+        const auto vertex = [&](const float2 local) { verts.EmplaceBack(screen_center + axis_x * float2 { local.x } + axis_y * float2 { local.y }, color, (local + screen_half) / (screen_half * float2 { 2.0F })); };
+        vertex(local_min);
+        vertex(float2 { local_max.x, local_min.y });
+        vertex(local_max);
+        vertex(local_min);
+        vertex(local_max);
+        vertex(float2 { local_min.x, local_max.y });
+    };
+    append_local_rect(float2 { -screen_half.x, -screen_half.y }, float2 { screen_half.x, -screen_hole_half.y });
+    append_local_rect(float2 { -screen_half.x, screen_hole_half.y }, float2 { screen_half.x, screen_half.y });
+    append_local_rect(float2 { -screen_half.x, -screen_hole_half.y }, float2 { -screen_hole_half.x, screen_hole_half.y });
+    append_local_rect(float2 { screen_hole_half.x, -screen_hole_half.y }, float2 { screen_half.x, screen_hole_half.y });
 }
 
 void AppendCircle(List<Vertex>& verts, const float2 screen_center, const f32 screen_radius, const Color color) {
@@ -277,9 +305,10 @@ void AppendStar(List<Vertex>& verts, const float2 screen_center, const f32 scree
 void SetButtonTextColor(const Handle<NodeTree> tree, const Handle<Node> button, const Color color) { globalData[tree].styles[globalData[tree].children[button][0]].background_color = color; }
 
 struct Slider {
+    Handle<Node> column;
+    Handle<Node> label;
     Handle<Node> track;
     Handle<Node> knob;
-    Handle<Node> label;
     u32 min;
     u32 max;
     u32 step;
@@ -287,9 +316,10 @@ struct Slider {
     b8 dragging { false };
 
     Slider(const NodeReference parent, const u32 min, const u32 max, const u32 step, const u32 value)
-        : track { NodeBuilder(parent, Layout { uint2 { SLIDER_TRACK_WIDTH, SLIDER_HEIGHT } }).Fill(colors::COLOR_GRAY).Build() },
+        : column { NodeBuilder(parent, Layout { hug }).Direction(vertical).Gap(2U).Build() },
+          label { NodeBuilder(NodeReference { parent.tree, column }, Layout { hug }).Padding(4U).Text(FontSizes::h4, colors::COLOR_BLACK).Build() },
+          track { NodeBuilder(NodeReference { parent.tree, column }, Layout { uint2 { SLIDER_TRACK_WIDTH, SLIDER_HEIGHT } }).Fill(colors::COLOR_GRAY).Build() },
           knob { NodeBuilder(NodeReference { parent.tree, track }, Layout { uint2 { SLIDER_KNOB_WIDTH, SLIDER_HEIGHT } }).Fill(colors::COLOR_BLACK).Build() },
-          label { NodeBuilder(parent, Layout { hug }).Padding(4U).Text(FontSizes::h4, colors::COLOR_BLACK).Build() },
           min { min }, max { max }, step { step }, value { value } { }
 
     void SetValue(NodeTree& tree, const u32 new_value, String&& text) {
@@ -405,6 +435,8 @@ struct RailEditorSystem {
     std::vector<Rail> rail_drag_rails { };
     Optional<int2> rail_drag_goal_fine { };
     Handle<Texture> rail_texture { globalData.Create<Texture>(Asset(RAIL_TEXTURE)) };
+    std::vector<Optional<Handle<Texture>>> flavour_textures { };
+    std::vector<List<Vertex>> flavour_verts { };
     List<Vertex> rail_verts { };
     List<Label> rail_grade_labels { };
     List<RailGradeLabelDraw> rail_grade_label_draws { };
@@ -468,6 +500,11 @@ struct RailEditorSystem {
             }
             std::ranges::sort(asset_paths);
             for (const AssetPath& asset_path : asset_paths) { AddFileButton(asset_path); }
+        }
+        for (const IndustryDefine& industry_define : industry_defines) {
+            const IndustryFlavour& flavour = IndustryFlavourOf(industry_define.id);
+            flavour_textures.push_back(flavour.texture ? Optional<Handle<Texture>> { globalData.Create<Texture>(Asset(flavour.texture)) } : std::nullopt);
+            flavour_verts.emplace_back();
         }
         TTF_Font* industry_font = Singleton::Get<FontCollection>().GetFontBoldCourier(INDUSTRY_LABEL_FONT_SIZE);
         for (const IndustryDefine& industry_define : industry_defines) {
@@ -537,13 +574,13 @@ struct RailEditorSystem {
         tree.MarkDirty();
     }
 
-    [[nodiscard]] RailObstacle IndustryObstacle(const Industry& industry) const { return RailObstacle { .world = industry.pos, .half_world = industry_defines[industry.id.value].size_hex_widths * HEX_SPACING.x * 0.5F + RAIL_WIDTH_WORLD * 0.5F, .rotation = industry.rotation }; }
+    [[nodiscard]] RailObstacle IndustryObstacle(const Industry& industry) const { return RailObstacle { .world = industry.pos, .half_world = industry_defines[industry.id.value].size_hex_widths * float2 { HEX_SPACING.x * 0.5F } + float2 { RAIL_WIDTH_WORLD * 0.5F }, .rotation = industry.rotation }; }
 
     void RebuildRailObstacles() {
         rail_obstacles.clear();
         for (const Industry& industry : generated.has_value() ? generated->industries : document.industries) { rail_obstacles.EmplaceBack(IndustryObstacle(industry)); }
         if (!generated.has_value()) { return; }
-        for (const Building& building : generated->buildings) { rail_obstacles.EmplaceBack(building.pos, building_defines[building.id.value].size_hex_widths * HEX_SPACING.x * 0.5F + RAIL_WIDTH_WORLD * 0.5F, building.rotation); }
+        for (const Building& building : generated->buildings) { rail_obstacles.EmplaceBack(building.pos, float2 { building_defines[building.id.value].size_hex_widths * HEX_SPACING.x * 0.5F + RAIL_WIDTH_WORLD * 0.5F }, building.rotation); }
     }
 
     void SetRiverSizeMin(const u32 size) {
@@ -694,8 +731,8 @@ struct RailEditorSystem {
             }
             if (++deflections > RAIL_AVOID_DEFLECTIONS_MAX) { return {}; }
             const RailObstacle& obstacle = rail_obstacles[*hit];
-            const float2 obstacle_axis_x = float2 { math::Cos(obstacle.rotation), math::Sin(obstacle.rotation) } * float2 { obstacle.half_world + RAIL_AVOID_MARGIN_WORLD };
-            const float2 obstacle_axis_y { -obstacle_axis_x.y, obstacle_axis_x.x };
+            const float2 obstacle_axis_x = float2 { math::Cos(obstacle.rotation), math::Sin(obstacle.rotation) } * float2 { obstacle.half_world.x + RAIL_AVOID_MARGIN_WORLD };
+            const float2 obstacle_axis_y = float2 { -math::Sin(obstacle.rotation), math::Cos(obstacle.rotation) } * float2 { obstacle.half_world.y + RAIL_AVOID_MARGIN_WORLD };
             const float2 world_direction = world_to - world_from;
             const float2 direction = world_direction * float2 { 1.0F / std::sqrt(math::Dot(world_direction, world_direction)) };
             const float2 normal { -direction.y, direction.x };
@@ -784,7 +821,7 @@ struct RailEditorSystem {
         const auto fine_of = [box_min, box_size](const u32 node) { return int2 { box_min.x + static_cast<i32>(node % box_size.x), box_min.y + static_cast<i32>(node / box_size.x) }; };
         std::vector<u8> node_blocked(node_count, 0U);
         for (const RailObstacle& obstacle : rail_obstacles) {
-            const f32 world_reach = obstacle.half_world * 2.0F;
+            const f32 world_reach = math::Max(obstacle.half_world.x, obstacle.half_world.y) * 2.0F;
             int2 fine_min { std::numeric_limits<i32>::max(), std::numeric_limits<i32>::max() };
             int2 fine_max { std::numeric_limits<i32>::min(), std::numeric_limits<i32>::min() };
             for (const float2 world_corner : { obstacle.world + float2 { -world_reach, -world_reach }, obstacle.world + float2 { world_reach, -world_reach }, obstacle.world + float2 { -world_reach, world_reach }, obstacle.world + float2 { world_reach, world_reach } }) {
@@ -1270,6 +1307,18 @@ struct RailEditorSystem {
             const RgoArea& area = document.rgo_areas[i];
             AppendCircle(verts, camera.WorldToScreen(HexAxialToWorld(area.axial)), camera.scale * area.radius_hexes * HEX_SPACING.x, IndustryColor(area.id).WithAlpha(selected_rgo_area == i ? RGO_AREA_SELECTED_ALPHA : RGO_AREA_ALPHA));
         }
+        (void)SDL_RenderGeometry(renderer, nullptr, verts);
+        verts.clear();
+        for (const Industry& industry : generated.has_value() ? generated->industries : document.industries) {
+            const IndustryFlavour& flavour = IndustryFlavourOf(industry.id);
+            if (!flavour.texture) { continue; }
+            const float2 screen_hole_half = industry_defines[industry.id.value].size_hex_widths * float2 { camera.scale * HEX_SPACING.x * 0.5F } + float2 { camera.scale * FLAVOUR_HOLE_MARGIN_WORLD };
+            AppendRectFrame(flavour_verts[industry.id.value], camera.WorldToScreen(industry.pos), float2 { camera.scale * flavour.width_hex_widths * HEX_SPACING.x * 0.5F }, screen_hole_half, industry.rotation, colors::COLOR_WHITE);
+        }
+        for (u32 i = 0; i < flavour_verts.size(); i++) {
+            if (flavour_textures[i].has_value()) { (void)SDL_RenderGeometry(renderer, globalData[*flavour_textures[i]], flavour_verts[i]); }
+            flavour_verts[i].clear();
+        }
         rail_grade_label_draws.clear();
         rail_verts.clear();
         for (const Rail& rail : document.rails) { AppendRail(rail, camera, [](f32) { return colors::COLOR_WHITE; }); }
@@ -1286,9 +1335,9 @@ struct RailEditorSystem {
         }
         const std::vector<Industry>& industries_shown = generated.has_value() ? generated->industries : document.industries;
         if (generated.has_value()) {
-            for (const Building& building : generated->buildings) { AppendSquare(verts, camera.WorldToScreen(building.pos), camera.scale * building_defines[building.id.value].size_hex_widths * HEX_SPACING.x * 0.5F, building.rotation, BuildingColor(building.id)); }
+            for (const Building& building : generated->buildings) { AppendRect(verts, camera.WorldToScreen(building.pos), float2 { camera.scale * building_defines[building.id.value].size_hex_widths * HEX_SPACING.x * 0.5F }, building.rotation, BuildingColor(building.id)); }
         }
-        for (const Industry& industry : industries_shown) { AppendSquare(verts, camera.WorldToScreen(industry.pos), camera.scale * industry_defines[industry.id.value].size_hex_widths * HEX_SPACING.x * 0.5F, industry.rotation, IndustryColor(industry.id)); }
+        for (const Industry& industry : industries_shown) { AppendRect(verts, camera.WorldToScreen(industry.pos), industry_defines[industry.id.value].size_hex_widths * float2 { camera.scale * HEX_SPACING.x * 0.5F }, industry.rotation, IndustryColor(industry.id)); }
         (void)SDL_RenderGeometry(renderer, nullptr, verts);
         (void)SDL_RenderGeometry(renderer, globalData[rail_texture], rail_verts);
         (void)SDL_RenderTexture(renderer, terrain_texture, nullptr, &minimap_rect);

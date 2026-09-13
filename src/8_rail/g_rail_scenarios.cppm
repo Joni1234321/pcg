@@ -24,11 +24,11 @@ constexpr u32 RURAL_INDUSTRY_HEXES_PER = 2000U;
 constexpr u32 PLACEMENT_ATTEMPTS = 16U;
 constexpr f32 BUILDING_GAP_WORLD = 0.08F;
 
-[[nodiscard]] b8 SquaresOverlap(const float2 world_a, const f32 half_a, const f32 rotation_a, const float2 world_b, const f32 half_b, const f32 rotation_b) {
+[[nodiscard]] b8 RectanglesOverlap(const float2 world_a, const float2 half_a, const f32 rotation_a, const float2 world_b, const float2 half_b, const f32 rotation_b) {
     for (const f32 axis_rotation : { rotation_a, rotation_a + math::PI * 0.5F, rotation_b, rotation_b + math::PI * 0.5F }) {
         const float2 axis { math::Cos(axis_rotation), math::Sin(axis_rotation) };
-        const f32 extent_a = half_a * (math::Abs(math::Cos(axis_rotation - rotation_a)) + math::Abs(math::Sin(axis_rotation - rotation_a)));
-        const f32 extent_b = half_b * (math::Abs(math::Cos(axis_rotation - rotation_b)) + math::Abs(math::Sin(axis_rotation - rotation_b)));
+        const f32 extent_a = half_a.x * math::Abs(math::Cos(axis_rotation - rotation_a)) + half_a.y * math::Abs(math::Sin(axis_rotation - rotation_a));
+        const f32 extent_b = half_b.x * math::Abs(math::Cos(axis_rotation - rotation_b)) + half_b.y * math::Abs(math::Sin(axis_rotation - rotation_b));
         if (math::Abs(math::Dot(world_b - world_a, axis)) > extent_a + extent_b) { return false; }
     }
     return true;
@@ -209,7 +209,7 @@ Map MapGenerate(const MapDefine& define, const std::vector<IndustryDefine>& indu
         }
         return std::nullopt;
     };
-    const auto building_half_world = [&building_defines](const BuildingDefineId id) { return building_defines[id.value].size_hex_widths * HEX_SPACING.x * 0.5F + BUILDING_GAP_WORLD * 0.5F; };
+    const auto building_half_world = [&building_defines](const BuildingDefineId id) { return float2 { building_defines[id.value].size_hex_widths * HEX_SPACING.x * 0.5F + BUILDING_GAP_WORLD * 0.5F }; };
     for (const City& city : define.cities) {
         const float2 world_city = HexAxialToWorld(city.axial);
         const f32 world_radius = city.level * CITY_RADIUS_WORLD_PER_LEVEL;
@@ -220,21 +220,21 @@ Map MapGenerate(const MapDefine& define, const std::vector<IndustryDefine>& indu
                 const Optional<float2> world = random_land_world(world_city, 0.0F, world_radius);
                 if (!world.has_value()) { continue; }
                 const f32 rotation = RandF(0.0F, math::PI * 0.5F);
-                const auto overlaps = [&](const Building& other) { return SquaresOverlap(*world, building_half_world(id), rotation, other.pos, building_half_world(other.id), other.rotation); };
+                const auto overlaps = [&](const Building& other) { return RectanglesOverlap(*world, building_half_world(id), rotation, other.pos, building_half_world(other.id), other.rotation); };
                 if (std::any_of(map.buildings.begin() + city_buildings_first, map.buildings.end(), overlaps)) { continue; }
                 map.buildings.push_back(Building { .pos = *world, .rotation = rotation, .id = id });
                 break;
             }
         }
     }
-    const auto industry_half_world = [&industry_defines](const IndustryDefineId id) { return industry_defines[id.value].size_hex_widths * HEX_SPACING.x * 0.5F + BUILDING_GAP_WORLD * 0.5F; };
+    const auto industry_half_world = [&industry_defines](const IndustryDefineId id) { return industry_defines[id.value].size_hex_widths * float2 { HEX_SPACING.x * 0.5F } + float2 { BUILDING_GAP_WORLD * 0.5F }; };
     const auto place_industry = [&](const IndustryDefineId id, const float2 world_center, const f32 world_radius_max) {
         for (u32 attempt = 0; attempt < PLACEMENT_ATTEMPTS; attempt++) {
             const Optional<float2> world = random_land_world(world_center, 0.0F, world_radius_max);
             if (!world.has_value()) { continue; }
             const f32 rotation = RandF(0.0F, math::PI * 0.5F);
-            const auto overlaps_building = [&](const Building& other) { return SquaresOverlap(*world, industry_half_world(id), rotation, other.pos, building_half_world(other.id), other.rotation); };
-            const auto overlaps_industry = [&](const Industry& other) { return SquaresOverlap(*world, industry_half_world(id), rotation, other.pos, industry_half_world(other.id), other.rotation); };
+            const auto overlaps_building = [&](const Building& other) { return RectanglesOverlap(*world, industry_half_world(id), rotation, other.pos, building_half_world(other.id), other.rotation); };
+            const auto overlaps_industry = [&](const Industry& other) { return RectanglesOverlap(*world, industry_half_world(id), rotation, other.pos, industry_half_world(other.id), other.rotation); };
             if (std::ranges::any_of(map.buildings, overlaps_building) || std::ranges::any_of(map.industries, overlaps_industry)) { continue; }
             map.industries.push_back(Industry { .pos = *world, .rotation = rotation, .id = id });
             return;

@@ -31,7 +31,7 @@ struct IndustryDefine {
     std::vector<GoodDefineId> demand;
     std::vector<GoodDefineId> supply;
     f32 production_rate;
-    f32 size_hex_widths;
+    float2 size_hex_widths;
     b8 spawns_randomly { true };
 };
 using BuildingDefineId = hex::StrongType<u32, struct BuildingDefineIdTag>;
