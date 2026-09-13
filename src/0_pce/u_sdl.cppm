@@ -232,6 +232,7 @@ struct Vertex {
     float2 coordinate { };
     constexpr Vertex() = default;
     constexpr Vertex(const float2 position, const ColorF color) : position { position }, color { color } { }
+    constexpr Vertex(const float2 position, const ColorF color, const float2 coordinate) : position { position }, color { color }, coordinate { coordinate } { }
     [[nodiscard]] constexpr operator SDL_Vertex() const { return *reinterpret_cast<const SDL_Vertex*>(this); }
 };
 static_assert(sizeof(Vertex) == sizeof(SDL_Vertex));
