@@ -32,6 +32,7 @@ struct IndustryDefine {
     std::vector<GoodDefineId> supply;
     f32 production_rate;
     f32 size_hex_widths;
+    b8 spawns_randomly { true };
 };
 using BuildingDefineId = hex::StrongType<u32, struct BuildingDefineIdTag>;
 struct BuildingDefine {
@@ -75,12 +76,20 @@ struct Building {
     f32 rotation;
     BuildingDefineId id;
 };
+struct RgoArea {
+    int2 axial;
+    f32 radius_hexes;
+    u32 count_min;
+    u32 count_max;
+    IndustryDefineId id;
+};
 struct MapDefine {
     hex::HexList<i8> elevation;
     std::vector<MapLabel> water_labels;
     std::vector<River> rivers;
     std::vector<City> cities;
     std::vector<Industry> industries;
+    std::vector<RgoArea> rgo_areas;
 };
 
 struct Map {

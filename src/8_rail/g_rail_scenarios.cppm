@@ -19,8 +19,8 @@ using namespace hex;
 export namespace rail {
 constexpr f32 CITY_RADIUS_WORLD_PER_LEVEL = 1.5F;
 constexpr u32 BUILDINGS_PER_CITY_LEVEL = 6U;
-constexpr u32 INDUSTRIES_PER_CITY_LEVEL = 1U;
-constexpr u32 RURAL_INDUSTRY_HEXES_PER = 500U;
+constexpr f32 INDUSTRIES_PER_CITY_LEVEL = 0.75F;
+constexpr u32 RURAL_INDUSTRY_HEXES_PER = 2000U;
 constexpr u32 PLACEMENT_ATTEMPTS = 16U;
 constexpr f32 BUILDING_GAP_WORLD = 0.08F;
 
@@ -122,6 +122,54 @@ std::vector<MapLabel> WaterLabelsLoad(const AssetPath& asset_path) {
     return labels;
 }
 
+void RgoAreasSave(const std::vector<RgoArea>& areas, const std::vector<IndustryDefine>& industry_defines, const AssetPath& asset_path) {
+    std::ofstream file { Asset(asset_path) };
+    for (const RgoArea& area : areas) { file << "rgo " << area.axial.x << ' ' << area.axial.y << ' ' << area.radius_hexes << ' ' << area.count_min << ' ' << area.count_max << ' ' << industry_defines[area.id.value].name << '\n'; }
+}
+
+std::vector<RgoArea> RgoAreasLoad(const AssetPath& asset_path, const std::vector<IndustryDefine>& industry_defines) {
+    std::ifstream file { Asset(asset_path) };
+    std::vector<RgoArea> areas;
+    std::string keyword;
+    while (file >> keyword) {
+        if (keyword != "rgo") { continue; }
+        int2 axial { 0, 0 };
+        f32 radius_hexes = 0.0F;
+        u32 count_min = 0;
+        u32 count_max = 0;
+        std::string name;
+        file >> axial.x >> axial.y >> radius_hexes >> count_min >> count_max >> std::ws;
+        std::getline(file, name);
+        const auto industry_define = std::ranges::find(industry_defines, name, &IndustryDefine::name);
+        if (industry_define == industry_defines.end()) { continue; }
+        areas.push_back(RgoArea { .axial = axial, .radius_hexes = radius_hexes, .count_min = count_min, .count_max = count_max, .id = industry_define->id });
+    }
+    return areas;
+}
+
+void IndustriesSave(const std::vector<Industry>& industries, const std::vector<IndustryDefine>& industry_defines, const AssetPath& asset_path) {
+    std::ofstream file { Asset(asset_path) };
+    for (const Industry& industry : industries) { file << "industry " << industry.pos.x << ' ' << industry.pos.y << ' ' << industry.rotation << ' ' << industry_defines[industry.id.value].name << '\n'; }
+}
+
+std::vector<Industry> IndustriesLoad(const AssetPath& asset_path, const std::vector<IndustryDefine>& industry_defines) {
+    std::ifstream file { Asset(asset_path) };
+    std::vector<Industry> industries;
+    std::string keyword;
+    while (file >> keyword) {
+        if (keyword != "industry") { continue; }
+        float2 pos { 0.0F, 0.0F };
+        f32 rotation = 0.0F;
+        std::string name;
+        file >> pos.x >> pos.y >> rotation >> std::ws;
+        std::getline(file, name);
+        const auto industry_define = std::ranges::find(industry_defines, name, &IndustryDefine::name);
+        if (industry_define == industry_defines.end()) { continue; }
+        industries.push_back(Industry { .pos = pos, .rotation = rotation, .id = industry_define->id });
+    }
+    return industries;
+}
+
 HexList<i8> ElevationFromImage(const AssetPath& asset_path, const uint2 map_size) {
     HexList<i8> elevation;
     elevation.Resize(map_size);
@@ -194,9 +242,16 @@ Map MapGenerate(const MapDefine& define, const std::vector<IndustryDefine>& indu
     };
     std::vector<IndustryDefineId> rural_ids;
     std::vector<IndustryDefineId> urban_ids;
-    for (const IndustryDefine& industry_define : industry_defines) { (industry_define.demand.empty() ? rural_ids : urban_ids).push_back(industry_define.id); }
+    for (const IndustryDefine& industry_define : industry_defines) {
+        if (industry_define.spawns_randomly) { (industry_define.demand.empty() ? rural_ids : urban_ids).push_back(industry_define.id); }
+    }
     for (const City& city : define.cities) {
-        for (u32 i = 0; !urban_ids.empty() && i < static_cast<u32>(math::Ceil(city.level * INDUSTRIES_PER_CITY_LEVEL)); i++) { place_industry(urban_ids[Rand(static_cast<u32>(urban_ids.size()))], HexAxialToWorld(city.axial), city.level * CITY_RADIUS_WORLD_PER_LEVEL); }
+        const u32 urban_count = static_cast<u32>(city.level * INDUSTRIES_PER_CITY_LEVEL + RandF(0.0F, 1.0F));
+        for (u32 i = 0; !urban_ids.empty() && i < urban_count; i++) { place_industry(urban_ids[Rand(static_cast<u32>(urban_ids.size()))], HexAxialToWorld(city.axial), city.level * CITY_RADIUS_WORLD_PER_LEVEL); }
+    }
+    for (const RgoArea& area : define.rgo_areas) {
+        const u32 count = area.count_min + Rand(area.count_max - area.count_min + 1U);
+        for (u32 i = 0; i < count; i++) { place_industry(area.id, HexAxialToWorld(area.axial), area.radius_hexes * HEX_SPACING.x); }
     }
     for (u32 i = 0; !rural_ids.empty() && i < define.elevation.Size() / RURAL_INDUSTRY_HEXES_PER; i++) {
         const int2 axial = define.elevation.IndexToAxial(Rand(define.elevation.Size()));

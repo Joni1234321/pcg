@@ -111,17 +111,31 @@ constexpr f32 RAIL_GRADE_PERCENT_PER_LEVEL = 1.0F;
 constexpr f32 RAIL_GRADE_LABEL_MIN_CAMERA_SCALE = 48.0F;
 constexpr f32 RAIL_GRADE_LABEL_OFFSET_WORLD = 0.6F;
 constexpr f32 INDUSTRY_LABEL_MIN_CAMERA_SCALE = 60.0F;
+constexpr u32 RGO_RADIUS_HEXES_MIN = 4U;
+constexpr u32 RGO_RADIUS_HEXES_MAX = 40U;
+constexpr u32 RGO_RADIUS_HEXES_STEP = 4U;
+constexpr u32 RGO_RADIUS_HEXES_DEFAULT = 12U;
+constexpr u32 RGO_AREA_CIRCLE_SEGMENTS = 32U;
+constexpr f32 RGO_AREA_ALPHA = 0.25F;
+constexpr f32 RGO_AREA_SELECTED_ALPHA = 0.5F;
+constexpr u32 RGO_COUNT_MIN = 0U;
+constexpr u32 RGO_COUNT_MAX = 20U;
+constexpr u32 RGO_COUNT_STEP = 1U;
+constexpr u32 RGO_COUNT_DEFAULT = 2U;
+constexpr Color COLOR_RAIL_HOVER { 255U, 230U, 80U, 150U };
+constexpr Color COLOR_RAIL_GHOST { 255U, 255U, 255U, 130U };
 constexpr FontSizes INDUSTRY_LABEL_FONT_SIZE = FontSizes::small;
+constexpr f32 BUILDING_LABEL_MIN_CAMERA_SCALE = 100.0F;
 constexpr Array<Color, 6U> COLOR_BUILDINGS {
     Color { 120U, 80U, 50U }, Color { 160U, 110U, 40U }, Color { 90U, 100U, 130U }, Color { 190U, 150U, 60U }, Color { 200U, 200U, 210U }, Color { 210U, 90U, 90U },
 };
 [[nodiscard]] constexpr Color BuildingColor(const BuildingDefineId id) { return COLOR_BUILDINGS[id.value % COLOR_BUILDINGS.size()]; }
-constexpr Array<Color, 7U> COLOR_INDUSTRIES {
-    Color { 30U, 30U, 30U }, Color { 150U, 80U, 60U }, Color { 120U, 120U, 140U }, Color { 210U, 180U, 60U }, Color { 230U, 140U, 60U }, Color { 100U, 70U, 30U }, Color { 120U, 60U, 140U },
+constexpr Array<Color, 10U> COLOR_INDUSTRIES {
+    Color { 220U, 200U, 80U }, Color { 150U, 80U, 60U }, Color { 225U, 225U, 210U }, Color { 120U, 60U, 140U }, Color { 40U, 120U, 50U }, Color { 100U, 70U, 30U }, Color { 160U, 110U, 60U }, Color { 35U, 35U, 35U }, Color { 150U, 60U, 40U }, Color { 40U, 90U, 160U },
 };
 [[nodiscard]] constexpr Color IndustryColor(const IndustryDefineId id) { return COLOR_INDUSTRIES[id.value % COLOR_INDUSTRIES.size()]; }
 
-enum class EditorTool : u8 { TOOL_TERRAIN, TOOL_CITY, TOOL_RAIL, TOOL_RAIL_PATH };
+enum class EditorTool : u8 { TOOL_TERRAIN, TOOL_CITY, TOOL_RAIL, TOOL_RAIL_PATH, TOOL_RGO, TOOL_INDUSTRY };
 
 struct RailGradeLabelDraw {
     float2 screen;
@@ -217,6 +231,27 @@ void AppendSquare(List<Vertex>& verts, const float2 screen_center, const f32 scr
     verts.EmplaceBack(screen_center - axis_x + axis_y, color);
 }
 
+void AppendSegment(List<Vertex>& verts, const float2 screen_a, const float2 screen_b, const f32 screen_half_width, const Color color) {
+    const float2 direction = screen_b - screen_a;
+    const float2 half_width = float2 { -direction.y, direction.x } * float2 { screen_half_width / std::sqrt(math::Dot(direction, direction)) };
+    verts.EmplaceBack(screen_a - half_width, color);
+    verts.EmplaceBack(screen_a + half_width, color);
+    verts.EmplaceBack(screen_b + half_width, color);
+    verts.EmplaceBack(screen_a - half_width, color);
+    verts.EmplaceBack(screen_b + half_width, color);
+    verts.EmplaceBack(screen_b - half_width, color);
+}
+
+void AppendCircle(List<Vertex>& verts, const float2 screen_center, const f32 screen_radius, const Color color) {
+    for (u32 segment = 0; segment < RGO_AREA_CIRCLE_SEGMENTS; segment++) {
+        const f32 angle_a = static_cast<f32>(segment) * math::PI * 2.0F / static_cast<f32>(RGO_AREA_CIRCLE_SEGMENTS);
+        const f32 angle_b = static_cast<f32>(segment + 1) * math::PI * 2.0F / static_cast<f32>(RGO_AREA_CIRCLE_SEGMENTS);
+        verts.EmplaceBack(screen_center, color);
+        verts.EmplaceBack(screen_center + float2 { math::Cos(angle_a), math::Sin(angle_a) } * float2 { screen_radius }, color);
+        verts.EmplaceBack(screen_center + float2 { math::Cos(angle_b), math::Sin(angle_b) } * float2 { screen_radius }, color);
+    }
+}
+
 void AppendStar(List<Vertex>& verts, const float2 screen_center, const f32 screen_radius, const f32 fill, const Color color) {
     const auto star_corner = [screen_center, screen_radius](const u32 corner) {
         const f32 angle = -math::PI * 0.5F - static_cast<f32>(corner) * math::PI / static_cast<f32>(CITY_STAR_POINTS);
@@ -286,6 +321,13 @@ struct RailEditorFrame : Frame {
     Slider tunnel_slider { B(tunnel_group).parent, RAIL_SAVE_ELEVATION_UNITS_STEP, RAIL_SAVE_ELEVATION_UNITS_MAX, RAIL_SAVE_ELEVATION_UNITS_STEP, RAIL_SAVE_ELEVATION_UNITS_DEFAULT };
     Handle<Node> bridge_group { B(rail_toolbar).Node(hug).Gap(4U).Build() };
     Slider bridge_slider { B(bridge_group).parent, RAIL_SAVE_ELEVATION_UNITS_STEP, RAIL_SAVE_ELEVATION_UNITS_MAX, RAIL_SAVE_ELEVATION_UNITS_STEP, RAIL_SAVE_ELEVATION_UNITS_DEFAULT };
+    Handle<Node> rgo_group { B(rail_toolbar).Node(hug).Gap(4U).Build() };
+    Handle<Node> rgo_type_button { Button(B(rgo_group).parent, "RGO") };
+    Slider rgo_radius_slider { B(rgo_group).parent, RGO_RADIUS_HEXES_MIN, RGO_RADIUS_HEXES_MAX, RGO_RADIUS_HEXES_STEP, RGO_RADIUS_HEXES_DEFAULT };
+    Slider rgo_count_min_slider { B(rgo_group).parent, RGO_COUNT_MIN, RGO_COUNT_MAX, RGO_COUNT_STEP, RGO_COUNT_DEFAULT };
+    Slider rgo_count_max_slider { B(rgo_group).parent, RGO_COUNT_MIN, RGO_COUNT_MAX, RGO_COUNT_STEP, RGO_COUNT_DEFAULT };
+    Handle<Node> industry_group { B(rail_toolbar).Node(hug).Gap(4U).Build() };
+    Handle<Node> industry_type_button { Button(B(industry_group).parent, "Industry") };
     Handle<Node> toolbar { B(root).Node(fill, hug).Padding(8U).Gap(16U).Fill(colors::COLOR_BEIGE).Build() };
     Handle<Node> history_group { B(toolbar).Node(hug).Gap(4U).Build() };
     Handle<Node> undo_button { Button(B(history_group).parent, "↶") };
@@ -295,6 +337,8 @@ struct RailEditorFrame : Frame {
     Handle<Node> city_tool_button { Button(B(tool_group).parent, "● City") };
     Handle<Node> rail_tool_button { Button(B(tool_group).parent, "━ Rail") };
     Handle<Node> rail_path_tool_button { Button(B(tool_group).parent, "⚡ Rail path") };
+    Handle<Node> rgo_tool_button { Button(B(tool_group).parent, "◌ RGO") };
+    Handle<Node> industry_tool_button { Button(B(tool_group).parent, "▣ Industry") };
     Handle<Node> brush_group { B(toolbar).Node(hug).Gap(4U).Build() };
     Handle<Node> brush_smaller { Button(B(brush_group).parent, "−") };
     Handle<Node> brush_label { B(brush_group).Node(hug).Padding(4U).Text(FontSizes::h4, colors::COLOR_BLACK).Build() };
@@ -322,6 +366,8 @@ struct EditorDocument {
     std::vector<MapLabel> water_labels { };
     std::map<u32, std::vector<City>> city_overlays { };
     std::vector<Rail> rails { };
+    std::vector<RgoArea> rgo_areas { };
+    std::vector<Industry> industries { };
 };
 
 struct RailEditorSystem {
@@ -334,6 +380,16 @@ struct RailEditorSystem {
     u32 overlay_year { OVERLAY_YEAR_MIN };
     u32 river_size_min { 0U };
     u32 rail_tunnel_save_units { RAIL_SAVE_ELEVATION_UNITS_DEFAULT };
+    std::vector<IndustryDefineId> rural_ids { };
+    u32 rgo_type_index { 0U };
+    u32 rgo_radius_hexes { RGO_RADIUS_HEXES_DEFAULT };
+    u32 rgo_count_min { RGO_COUNT_DEFAULT };
+    u32 rgo_count_max { RGO_COUNT_DEFAULT };
+    List<Label> rgo_area_labels { };
+    std::vector<std::string> rgo_area_label_texts { };
+    List<Label> building_labels { };
+    Optional<u32> selected_rgo_area { };
+    u32 industry_type_index { 0U };
     u32 rail_bridge_save_units { RAIL_SAVE_ELEVATION_UNITS_DEFAULT };
     List<Vertex> verts { };
     List<Label> city_labels { };
@@ -364,6 +420,13 @@ struct RailEditorSystem {
         tree.node_properties[frame.city_tool_button].on_click = [this](NodeReference) { SetTool(EditorTool::TOOL_CITY); };
         tree.node_properties[frame.rail_tool_button].on_click = [this](NodeReference) { SetTool(EditorTool::TOOL_RAIL); };
         tree.node_properties[frame.rail_path_tool_button].on_click = [this](NodeReference) { SetTool(EditorTool::TOOL_RAIL_PATH); };
+        tree.node_properties[frame.rgo_tool_button].on_click = [this](NodeReference) { SetTool(EditorTool::TOOL_RGO); };
+        tree.node_properties[frame.rgo_type_button].on_click = [this](NodeReference) { SetRgoType(rgo_type_index + 1U); };
+        tree.node_properties[frame.industry_tool_button].on_click = [this](NodeReference) { SetTool(EditorTool::TOOL_INDUSTRY); };
+        tree.node_properties[frame.industry_type_button].on_click = [this](NodeReference) { SetIndustryType(industry_type_index + 1U); };
+        for (const IndustryDefine& industry_define : industry_defines) {
+            if (industry_define.demand.empty() && industry_define.spawns_randomly) { rural_ids.push_back(industry_define.id); }
+        }
         tree.node_properties[frame.brush_smaller].on_click = [this](NodeReference) { SetBrushRadius(brush_radius - 1U); };
         tree.node_properties[frame.brush_bigger].on_click = [this](NodeReference) { SetBrushRadius(brush_radius + 1U); };
         tree.node_properties[frame.year_previous].on_click = [this](NodeReference) { SetOverlayYear(overlay_year - OVERLAY_YEAR_STEP); };
@@ -374,10 +437,8 @@ struct RailEditorSystem {
             SetDocument(EditorDocument { .elevation = ElevationFromImage(IMPORT_IMAGE, IMPORT_MAP_SIZE) });
         };
         tree.node_properties[frame.generate_button].on_click = [this](NodeReference) {
-            generated = MapGenerate(MapDefine { .elevation = document.elevation, .water_labels = document.water_labels, .rivers = document.rivers, .cities = Cities() }, industry_defines, building_defines, RailCityGrowthSequence());
-            rail_obstacles.clear();
-            for (const Building& building : generated->buildings) { rail_obstacles.EmplaceBack(building.pos, building_defines[building.id.value].size_hex_widths * HEX_SPACING.x * 0.5F + RAIL_WIDTH_WORLD * 0.5F, building.rotation); }
-            for (const Industry& industry : generated->industries) { rail_obstacles.EmplaceBack(industry.pos, industry_defines[industry.id.value].size_hex_widths * HEX_SPACING.x * 0.5F + RAIL_WIDTH_WORLD * 0.5F, industry.rotation); }
+            generated = MapGenerate(MapDefine { .elevation = document.elevation, .water_labels = document.water_labels, .rivers = document.rivers, .cities = Cities(), .industries = document.industries, .rgo_areas = document.rgo_areas }, industry_defines, building_defines, RailCityGrowthSequence());
+            RebuildRailObstacles();
             SetStatus(std::format("Generated {} buildings, {} industries", generated->buildings.size(), generated->industries.size()));
         };
         tree.node_properties[frame.save_button].on_click = [this](NodeReference) {
@@ -388,6 +449,8 @@ struct RailEditorSystem {
                 TerrainSave(document.elevation, asset_path);
                 if (!document.rivers.empty()) { RiversSave(document.rivers, std::format("{}/map_{:03}_rivers.txt", SCENARIOS_DIR, number)); }
                 if (!document.water_labels.empty()) { WaterLabelsSave(document.water_labels, std::format("{}/map_{:03}_water_labels.txt", SCENARIOS_DIR, number)); }
+                if (!document.rgo_areas.empty()) { RgoAreasSave(document.rgo_areas, industry_defines, std::format("{}/map_{:03}_rgo.txt", SCENARIOS_DIR, number)); }
+                if (!document.industries.empty()) { IndustriesSave(document.industries, industry_defines, std::format("{}/map_{:03}_industries.txt", SCENARIOS_DIR, number)); }
                 for (const auto& [year, cities] : document.city_overlays) {
                     if (!cities.empty()) { CitiesSave(cities, std::format("{}/map_{:03}_cities_{}.txt", SCENARIOS_DIR, number, year)); }
                 }
@@ -401,7 +464,7 @@ struct RailEditorSystem {
             std::vector<AssetPath> asset_paths;
             for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(Asset(dir))) {
                 const std::string filename = entry.path().filename().string();
-                if (!filename.contains("_cities_") && !filename.ends_with("_rivers.txt") && !filename.ends_with("_water_labels.txt")) { asset_paths.push_back(AssetPath { dir } / entry.path().filename()); }
+                if (!filename.contains("_cities_") && !filename.ends_with("_rivers.txt") && !filename.ends_with("_water_labels.txt") && !filename.ends_with("_rgo.txt") && !filename.ends_with("_industries.txt")) { asset_paths.push_back(AssetPath { dir } / entry.path().filename()); }
             }
             std::ranges::sort(asset_paths);
             for (const AssetPath& asset_path : asset_paths) { AddFileButton(asset_path); }
@@ -410,6 +473,10 @@ struct RailEditorSystem {
         for (const IndustryDefine& industry_define : industry_defines) {
             industry_labels.EmplaceBack(industry_font, String { industry_define.name.c_str() });
             industry_labels.back().SetColor(colors::COLOR_WHITE);
+        }
+        for (const BuildingDefine& building_define : building_defines) {
+            building_labels.EmplaceBack(industry_font, String { building_define.name.c_str() });
+            building_labels.back().SetColor(colors::COLOR_WHITE);
         }
         TTF_Font* rail_grade_font = Singleton::Get<FontCollection>().GetFontBoldCourier(RAIL_GRADE_LABEL_FONT_SIZE);
         for (u32 level = 0; level <= RAIL_GRADE_LEVEL_MAX; level++) {
@@ -422,6 +489,10 @@ struct RailEditorSystem {
         SetRiverSizeMin(river_size_min);
         SetRailTunnelSave(rail_tunnel_save_units);
         SetRailBridgeSave(rail_bridge_save_units);
+        SetRgoType(rgo_type_index);
+        SetRgoRadius(rgo_radius_hexes);
+        SetRgoCountRange(rgo_count_min, rgo_count_max);
+        SetIndustryType(industry_type_index);
         UpdateHistoryButtons();
     }
 
@@ -433,6 +504,46 @@ struct RailEditorSystem {
     void SetRailBridgeSave(const u32 elevation_units) {
         frame.bridge_slider.SetValue(globalData[frame.tree], elevation_units, std::format("Bridge if it saves ≥ {}", elevation_units));
         rail_bridge_save_units = frame.bridge_slider.value;
+    }
+
+    void SetRgoType(const u32 index) {
+        rgo_type_index = rural_ids.empty() ? 0U : index % static_cast<u32>(rural_ids.size());
+        NodeTree& tree = globalData[frame.tree];
+        tree.node_properties[tree.children[frame.rgo_type_button][0]].text = rural_ids.empty() ? "RGO" : industry_defines[rural_ids[rgo_type_index].value].name.c_str();
+        tree.MarkDirty();
+        if (selected_rgo_area.has_value() && !rural_ids.empty()) { document.rgo_areas[*selected_rgo_area].id = rural_ids[rgo_type_index]; }
+    }
+
+    void SetRgoRadius(const u32 radius_hexes) {
+        frame.rgo_radius_slider.SetValue(globalData[frame.tree], radius_hexes, std::format("RGO radius {}", radius_hexes));
+        rgo_radius_hexes = frame.rgo_radius_slider.value;
+        if (selected_rgo_area.has_value()) { document.rgo_areas[*selected_rgo_area].radius_hexes = static_cast<f32>(rgo_radius_hexes); }
+    }
+
+    void SetRgoCountRange(const u32 count_min, const u32 count_max) {
+        frame.rgo_count_min_slider.SetValue(globalData[frame.tree], count_min, std::format("RGO spawns min {}", count_min));
+        frame.rgo_count_max_slider.SetValue(globalData[frame.tree], count_max, std::format("max {}", count_max));
+        rgo_count_min = frame.rgo_count_min_slider.value;
+        rgo_count_max = frame.rgo_count_max_slider.value;
+        if (!selected_rgo_area.has_value()) { return; }
+        document.rgo_areas[*selected_rgo_area].count_min = rgo_count_min;
+        document.rgo_areas[*selected_rgo_area].count_max = rgo_count_max;
+    }
+
+    void SetIndustryType(const u32 index) {
+        industry_type_index = index % static_cast<u32>(industry_defines.size());
+        NodeTree& tree = globalData[frame.tree];
+        tree.node_properties[tree.children[frame.industry_type_button][0]].text = industry_defines[industry_type_index].name.c_str();
+        tree.MarkDirty();
+    }
+
+    [[nodiscard]] RailObstacle IndustryObstacle(const Industry& industry) const { return RailObstacle { .world = industry.pos, .half_world = industry_defines[industry.id.value].size_hex_widths * HEX_SPACING.x * 0.5F + RAIL_WIDTH_WORLD * 0.5F, .rotation = industry.rotation }; }
+
+    void RebuildRailObstacles() {
+        rail_obstacles.clear();
+        for (const Industry& industry : generated.has_value() ? generated->industries : document.industries) { rail_obstacles.EmplaceBack(IndustryObstacle(industry)); }
+        if (!generated.has_value()) { return; }
+        for (const Building& building : generated->buildings) { rail_obstacles.EmplaceBack(building.pos, building_defines[building.id.value].size_hex_widths * HEX_SPACING.x * 0.5F + RAIL_WIDTH_WORLD * 0.5F, building.rotation); }
     }
 
     void SetRiverSizeMin(const u32 size) {
@@ -836,11 +947,13 @@ struct RailEditorSystem {
         terrain_texture_dirty_axials.clear();
     }
 
-    [[nodiscard]] static EditorDocument LoadDocument(const AssetPath& terrain_path) {
+    [[nodiscard]] EditorDocument LoadDocument(const AssetPath& terrain_path) const {
         EditorDocument loaded { .elevation = TerrainLoad(terrain_path) };
         const std::string stem = terrain_path.stem().string();
         if (std::filesystem::exists(Asset(terrain_path.parent_path() / (stem + "_rivers.txt")))) { loaded.rivers = RiversLoad(terrain_path.parent_path() / (stem + "_rivers.txt")); }
         if (std::filesystem::exists(Asset(terrain_path.parent_path() / (stem + "_water_labels.txt")))) { loaded.water_labels = WaterLabelsLoad(terrain_path.parent_path() / (stem + "_water_labels.txt")); }
+        if (std::filesystem::exists(Asset(terrain_path.parent_path() / (stem + "_rgo.txt")))) { loaded.rgo_areas = RgoAreasLoad(terrain_path.parent_path() / (stem + "_rgo.txt"), industry_defines); }
+        if (std::filesystem::exists(Asset(terrain_path.parent_path() / (stem + "_industries.txt")))) { loaded.industries = IndustriesLoad(terrain_path.parent_path() / (stem + "_industries.txt"), industry_defines); }
         const std::string overlay_prefix = stem + "_cities_";
         for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(Asset(terrain_path).parent_path())) {
             const std::string filename = entry.path().stem().string();
@@ -857,7 +970,7 @@ struct RailEditorSystem {
         overlay_year = std::clamp(year / OVERLAY_YEAR_STEP * OVERLAY_YEAR_STEP, OVERLAY_YEAR_MIN, OVERLAY_YEAR_MAX);
         frame.year_slider.SetValue(globalData[frame.tree], overlay_year, std::format("{} ({} cities)", overlay_year, Cities().size()));
         generated.reset();
-        rail_obstacles.clear();
+        RebuildRailObstacles();
         SelectCity(std::nullopt);
         RebuildCityLabels();
     }
@@ -879,16 +992,21 @@ struct RailEditorSystem {
     void SetTool(const EditorTool new_tool) {
         tool = new_tool;
         SelectCity(std::nullopt);
+        selected_rgo_area.reset();
         rail_drag_start_world.reset();
         SetButtonTextColor(frame.tree, frame.terrain_tool_button, tool == EditorTool::TOOL_TERRAIN ? COLOR_BUTTON_TEXT : COLOR_BUTTON_TEXT_INACTIVE);
         SetButtonTextColor(frame.tree, frame.city_tool_button, tool == EditorTool::TOOL_CITY ? COLOR_BUTTON_TEXT : COLOR_BUTTON_TEXT_INACTIVE);
         SetButtonTextColor(frame.tree, frame.rail_tool_button, tool == EditorTool::TOOL_RAIL ? COLOR_BUTTON_TEXT : COLOR_BUTTON_TEXT_INACTIVE);
         SetButtonTextColor(frame.tree, frame.rail_path_tool_button, tool == EditorTool::TOOL_RAIL_PATH ? COLOR_BUTTON_TEXT : COLOR_BUTTON_TEXT_INACTIVE);
+        SetButtonTextColor(frame.tree, frame.rgo_tool_button, tool == EditorTool::TOOL_RGO ? COLOR_BUTTON_TEXT : COLOR_BUTTON_TEXT_INACTIVE);
+        SetButtonTextColor(frame.tree, frame.industry_tool_button, tool == EditorTool::TOOL_INDUSTRY ? COLOR_BUTTON_TEXT : COLOR_BUTTON_TEXT_INACTIVE);
         switch (tool) {
             case EditorTool::TOOL_TERRAIN: globalData[frame.tree].node_properties[frame.help_label].text = "Left: raise   Right: lower   Ctrl+drag: pan"; break;
             case EditorTool::TOOL_CITY: globalData[frame.tree].node_properties[frame.help_label].text = "Left: add / select city   Right: remove city"; break;
             case EditorTool::TOOL_RAIL: globalData[frame.tree].node_properties[frame.help_label].text = "Left: drag rail   Right: remove rail"; break;
             case EditorTool::TOOL_RAIL_PATH: globalData[frame.tree].node_properties[frame.help_label].text = "Left: drag fastest rail path   Right: remove rail"; break;
+            case EditorTool::TOOL_RGO: globalData[frame.tree].node_properties[frame.help_label].text = "Left: place / select RGO area   Right: remove RGO area"; break;
+            case EditorTool::TOOL_INDUSTRY: globalData[frame.tree].node_properties[frame.help_label].text = "Left: place industry   Right: remove industry"; break;
         }
         globalData[frame.tree].MarkDirty();
     }
@@ -967,6 +1085,9 @@ struct RailEditorSystem {
         if (const Optional<u32> size = frame.river_slider.Drag(input, hovered, frame.tree); size.has_value() && size != river_size_min) { SetRiverSizeMin(size.value()); }
         if (const Optional<u32> units = frame.tunnel_slider.Drag(input, hovered, frame.tree); units.has_value() && units != rail_tunnel_save_units) { SetRailTunnelSave(units.value()); }
         if (const Optional<u32> units = frame.bridge_slider.Drag(input, hovered, frame.tree); units.has_value() && units != rail_bridge_save_units) { SetRailBridgeSave(units.value()); }
+        if (const Optional<u32> radius = frame.rgo_radius_slider.Drag(input, hovered, frame.tree); radius.has_value() && radius != rgo_radius_hexes) { SetRgoRadius(radius.value()); }
+        if (const Optional<u32> count = frame.rgo_count_min_slider.Drag(input, hovered, frame.tree); count.has_value() && count != rgo_count_min) { SetRgoCountRange(count.value(), math::Max(count.value(), rgo_count_max)); }
+        if (const Optional<u32> count = frame.rgo_count_max_slider.Drag(input, hovered, frame.tree); count.has_value() && count != rgo_count_max) { SetRgoCountRange(math::Min(count.value(), rgo_count_min), count.value()); }
 
         const float2 screen_size { Singleton::Get<WindowState>().screen_size };
         const float2 texture_size = TerrainTextureSize();
@@ -1035,6 +1156,45 @@ struct RailEditorSystem {
                 }
                 break;
             }
+            case EditorTool::TOOL_RGO: {
+                const auto area_hovered = [world_hover](const RgoArea& area) {
+                    const float2 world_offset = world_hover - HexAxialToWorld(area.axial);
+                    return math::Dot(world_offset, world_offset) <= area.radius_hexes * area.radius_hexes * HEX_SPACING.x * HEX_SPACING.x;
+                };
+                if (left_click && document.elevation.Contains(axial_hover) && !rural_ids.empty()) {
+                    const auto hovered_area = std::ranges::find_if(document.rgo_areas, area_hovered);
+                    if (hovered_area == document.rgo_areas.end()) {
+                        PushHistory();
+                        document.rgo_areas.push_back(RgoArea { .axial = axial_hover, .radius_hexes = static_cast<f32>(rgo_radius_hexes), .count_min = rgo_count_min, .count_max = rgo_count_max, .id = rural_ids[rgo_type_index] });
+                        selected_rgo_area = static_cast<u32>(document.rgo_areas.size() - 1U);
+                    } else {
+                        selected_rgo_area = static_cast<u32>(hovered_area - document.rgo_areas.begin());
+                        SetRgoType(static_cast<u32>(std::ranges::find(rural_ids, hovered_area->id) - rural_ids.begin()));
+                        SetRgoRadius(static_cast<u32>(hovered_area->radius_hexes));
+                        SetRgoCountRange(hovered_area->count_min, hovered_area->count_max);
+                    }
+                }
+                if (right_click && std::ranges::any_of(document.rgo_areas, area_hovered)) {
+                    PushHistory();
+                    std::erase_if(document.rgo_areas, area_hovered);
+                    selected_rgo_area.reset();
+                }
+                break;
+            }
+            case EditorTool::TOOL_INDUSTRY: {
+                if (left_click && document.elevation.Contains(axial_hover) && document.elevation[axial_hover] >= 0) {
+                    PushHistory();
+                    document.industries.push_back(Industry { .pos = world_hover, .rotation = 0.0F, .id = industry_defines[industry_type_index].id });
+                    RebuildRailObstacles();
+                }
+                const auto industry_hovered = [this, world_hover](const Industry& industry) { return ObstacleBlocksWorld(IndustryObstacle(industry), world_hover); };
+                if (right_click && std::ranges::any_of(document.industries, industry_hovered)) {
+                    PushHistory();
+                    std::erase_if(document.industries, industry_hovered);
+                    RebuildRailObstacles();
+                }
+                break;
+            }
             case EditorTool::TOOL_RAIL:
             case EditorTool::TOOL_RAIL_PATH: {
                 if (left_click && document.elevation.Contains(axial_hover)) {
@@ -1066,18 +1226,18 @@ struct RailEditorSystem {
         FlushTerrainTexture();
         SDL_Renderer* renderer = Singleton::Get<WindowState>().renderer;
         const f32 hex_screen_radius = camera.scale;
-        const u32 brush_hover_radius = tool == EditorTool::TOOL_TERRAIN && !over_ui ? brush_radius - 1U : 0U;
+        const Optional<u32> brush_hover_radius = tool == EditorTool::TOOL_TERRAIN && !over_ui ? Optional<u32> { brush_radius - 1U } : std::nullopt;
         verts.clear();
         if (camera.scale < TERRAIN_TEXTURE_MAX_CAMERA_SCALE) {
             const float2 screen_origin = camera.WorldToScreen(float2 { 0.0F, 0.0F } - TERRAIN_TEXTURE_WORLD_MARGIN);
             const float2 screen_texture_size = texture_size * float2 { camera.scale / TERRAIN_TEXTURE_HEX_RADIUS };
             const SDL_FRect destination { screen_origin.x, screen_origin.y, screen_texture_size.x, screen_texture_size.y };
             (void)SDL_RenderTexture(renderer, terrain_texture, nullptr, &destination);
-            const i32 radius = static_cast<i32>(brush_hover_radius);
+            const i32 radius = brush_hover_radius.has_value() ? static_cast<i32>(*brush_hover_radius) : -1;
             for (i32 dy = -radius; dy <= radius; dy++) {
                 for (i32 dx = -radius; dx <= radius; dx++) {
                     const int2 axial = axial_hover + int2 { dx, dy };
-                    if (HexAxialDistance(axial, axial_hover) > brush_hover_radius || !document.elevation.Contains(axial)) { continue; }
+                    if (HexAxialDistance(axial, axial_hover) > *brush_hover_radius || !document.elevation.Contains(axial)) { continue; }
                     AppendTerrainHex(camera.WorldToScreen(HexAxialToWorld(axial)), hex_screen_radius, axial, 1.2F);
                 }
             }
@@ -1093,7 +1253,7 @@ struct RailEditorSystem {
                 const i32 column_max = std::clamp(static_cast<i32>(std::ceil(world_max.x / HEX_SPACING.x - row_shift)), 0, static_cast<i32>(map_size.x) - 1);
                 for (i32 column = column_min; column <= column_max; column++) {
                     const int2 axial = HexOffsetToAxial(int2 { column, row });
-                    AppendTerrainHex(camera.WorldToScreen(HexAxialToWorld(axial)), hex_screen_radius, axial, HexAxialDistance(axial, axial_hover) <= brush_hover_radius ? 1.2F : 1.0F);
+                    AppendTerrainHex(camera.WorldToScreen(HexAxialToWorld(axial)), hex_screen_radius, axial, brush_hover_radius.has_value() && HexAxialDistance(axial, axial_hover) <= *brush_hover_radius ? 1.2F : 1.0F);
                 }
             }
         }
@@ -1106,16 +1266,29 @@ struct RailEditorSystem {
                 AppendHex(verts, screen, hex_screen_radius, color);
             }
         }
+        for (u32 i = 0; i < document.rgo_areas.size(); i++) {
+            const RgoArea& area = document.rgo_areas[i];
+            AppendCircle(verts, camera.WorldToScreen(HexAxialToWorld(area.axial)), camera.scale * area.radius_hexes * HEX_SPACING.x, IndustryColor(area.id).WithAlpha(selected_rgo_area == i ? RGO_AREA_SELECTED_ALPHA : RGO_AREA_ALPHA));
+        }
         rail_grade_label_draws.clear();
         rail_verts.clear();
         for (const Rail& rail : document.rails) { AppendRail(rail, camera, [](f32) { return colors::COLOR_WHITE; }); }
         const std::vector<Rail>& drag_rails = DragRails(world_hover);
         for (const Rail& rail : drag_rails) { AppendRail(rail, camera, RailGradeToColor); }
         if (const Optional<Rail> straight = DragRail(world_hover); drag_rails.empty() && straight.has_value()) { AppendRail(*straight, camera, [](f32) { return COLOR_RAIL_BLOCKED; }); }
+        if ((tool == EditorTool::TOOL_RAIL || tool == EditorTool::TOOL_RAIL_PATH) && !over_ui && !rail_drag_start_world.has_value()) {
+            const auto hovered_rail = std::ranges::min_element(document.rails, { }, [world_hover](const Rail& rail) { return RailDistanceWorld(rail, world_hover); });
+            if (hovered_rail != document.rails.end() && RailDistanceWorld(*hovered_rail, world_hover) <= RAIL_WIDTH_WORLD) {
+                AppendSegment(verts, camera.WorldToScreen(hovered_rail->world_a), camera.WorldToScreen(hovered_rail->world_b), camera.scale * RAIL_WIDTH_WORLD, COLOR_RAIL_HOVER);
+            } else {
+                AppendCircle(verts, camera.WorldToScreen(SnapToRail(world_hover)), camera.scale * RAIL_WIDTH_WORLD, COLOR_RAIL_GHOST);
+            }
+        }
+        const std::vector<Industry>& industries_shown = generated.has_value() ? generated->industries : document.industries;
         if (generated.has_value()) {
             for (const Building& building : generated->buildings) { AppendSquare(verts, camera.WorldToScreen(building.pos), camera.scale * building_defines[building.id.value].size_hex_widths * HEX_SPACING.x * 0.5F, building.rotation, BuildingColor(building.id)); }
-            for (const Industry& industry : generated->industries) { AppendSquare(verts, camera.WorldToScreen(industry.pos), camera.scale * industry_defines[industry.id.value].size_hex_widths * HEX_SPACING.x * 0.5F, industry.rotation, IndustryColor(industry.id)); }
         }
+        for (const Industry& industry : industries_shown) { AppendSquare(verts, camera.WorldToScreen(industry.pos), camera.scale * industry_defines[industry.id.value].size_hex_widths * HEX_SPACING.x * 0.5F, industry.rotation, IndustryColor(industry.id)); }
         (void)SDL_RenderGeometry(renderer, nullptr, verts);
         (void)SDL_RenderGeometry(renderer, globalData[rail_texture], rail_verts);
         (void)SDL_RenderTexture(renderer, terrain_texture, nullptr, &minimap_rect);
@@ -1133,13 +1306,41 @@ struct RailEditorSystem {
             water_labels[i].SetColor(COLOR_WATER_LABEL);
             water_labels[i].Draw(screen - float2 { 0.0F, static_cast<f32>(FontSizes::body) * 0.5F });
         }
-        for (u32 i = 0; generated.has_value() && camera.scale >= INDUSTRY_LABEL_MIN_CAMERA_SCALE && i < generated->industries.size(); i++) {
-            const Industry& industry = generated->industries[i];
+        for (u32 i = 0; camera.scale >= INDUSTRY_LABEL_MIN_CAMERA_SCALE && i < industries_shown.size(); i++) {
+            const Industry& industry = industries_shown[i];
             const float2 screen = camera.WorldToScreen(industry.pos);
             if (!on_screen(screen)) { continue; }
             int2 text_size { 0, 0 };
             (void)TTF_GetTextSize(industry_labels[industry.id.value], &text_size.x, &text_size.y);
+            industry_labels[industry.id.value].SetColor(colors::COLOR_WHITE);
             industry_labels[industry.id.value].Draw(screen - float2 { static_cast<f32>(text_size.x), static_cast<f32>(text_size.y) } * float2 { 0.5F });
+        }
+        for (u32 i = 0; generated.has_value() && camera.scale >= BUILDING_LABEL_MIN_CAMERA_SCALE && i < generated->buildings.size(); i++) {
+            const Building& building = generated->buildings[i];
+            const float2 screen = camera.WorldToScreen(building.pos);
+            if (!on_screen(screen)) { continue; }
+            int2 text_size { 0, 0 };
+            (void)TTF_GetTextSize(building_labels[building.id.value], &text_size.x, &text_size.y);
+            building_labels[building.id.value].Draw(screen - float2 { static_cast<f32>(text_size.x), static_cast<f32>(text_size.y) } * float2 { 0.5F });
+        }
+        TTF_Font* rgo_area_font = Singleton::Get<FontCollection>().GetFontBoldCourier(INDUSTRY_LABEL_FONT_SIZE);
+        while (rgo_area_labels.size() > document.rgo_areas.size()) { rgo_area_labels.pop_back(); }
+        rgo_area_label_texts.resize(document.rgo_areas.size());
+        for (u32 i = 0; i < document.rgo_areas.size(); i++) {
+            const RgoArea& area = document.rgo_areas[i];
+            const std::string& name = industry_defines[area.id.value].name;
+            std::string text = area.count_min == area.count_max ? std::format("{} [{}]", name, area.count_min) : std::format("{} [{}-{}]", name, area.count_min, area.count_max);
+            if (i >= rgo_area_labels.size()) { rgo_area_labels.EmplaceBack(rgo_area_font, String { text.c_str() }); }
+            if (rgo_area_label_texts[i] != text) {
+                rgo_area_labels[i].SetText(String { text.c_str() });
+                rgo_area_label_texts[i] = std::move(text);
+            }
+            rgo_area_labels[i].SetColor(COLOR_CITY);
+            const float2 screen = camera.WorldToScreen(HexAxialToWorld(area.axial));
+            if (!on_screen(screen)) { continue; }
+            int2 text_size { 0, 0 };
+            (void)TTF_GetTextSize(rgo_area_labels[i], &text_size.x, &text_size.y);
+            rgo_area_labels[i].Draw(screen - float2 { static_cast<f32>(text_size.x), static_cast<f32>(text_size.y) } * float2 { 0.5F });
         }
         for (const RailGradeLabelDraw& draw : rail_grade_label_draws) {
             if (!on_screen(draw.screen)) { continue; }

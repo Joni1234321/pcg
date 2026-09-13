@@ -1,0 +1,14 @@
+industry 538.668 867.000 0 Port
+industry 730.059 1084.500 0 Port
+industry 565.515 1090.500 0 Port
+industry 645.189 1153.500 0 Port
+industry 459.859 1213.500 0 Port
+industry 716.203 826.500 0 Port
+industry 629.600 688.500 0 Port
+industry 452.931 586.500 0 Port
+industry 317.831 874.500 0 Port
+industry 341.214 732.000 0 Port
+industry 168.875 1039.500 0 Port
+industry 525.677 1087.500 0 Port
+industry 598.424 439.500 0 Port
+industry 474.582 1071.000 0 Port

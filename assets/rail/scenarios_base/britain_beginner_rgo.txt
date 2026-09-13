@@ -1,0 +1,46 @@
+rgo 134 655 30 3 4 Farm
+rgo 114 609 22 3 4 Farm
+rgo 114 533 15 2 3 Farm
+rgo 53 647 20 3 4 Farm
+rgo 81 746 15 2 3 Farm
+rgo -20 754 18 2 3 Farm
+rgo -63 754 12 2 3 Farm
+rgo 29 594 12 2 3 Farm
+rgo 124 373 12 2 3 Farm
+rgo 197 274 14 2 3 Farm
+rgo -157 586 25 3 4 Farm
+rgo -235 663 15 2 3 Farm
+rgo -40 655 25 1 3 Sheep Farm
+rgo -29 609 12 1 2 Sheep Farm
+rgo 82 518 25 1 3 Sheep Farm
+rgo 59 495 10 1 2 Sheep Farm
+rgo 85 427 18 1 2 Sheep Farm
+rgo 96 305 40 1 3 Sheep Farm
+rgo 120 434 12 1 2 Sheep Farm
+rgo -113 785 10 1 2 Sheep Farm
+rgo -212 556 18 1 2 Sheep Farm
+rgo -292 685 12 1 2 Sheep Farm
+rgo -116 465 12 1 2 Sheep Farm
+rgo 64 586 8 1 2 Sheep Farm
+rgo 137 510 10 1 2 Sheep Farm
+rgo -59 708 10 1 2 Coal Mine
+rgo 91 571 14 1 2 Coal Mine
+rgo 132 465 10 1 2 Coal Mine
+rgo 46 567 8 1 2 Coal Mine
+rgo 33 625 7 0 1 Coal Mine
+rgo 37 609 5 0 1 Coal Mine
+rgo 77 396 8 1 2 Coal Mine
+rgo 114 369 6 0 1 Coal Mine
+rgo 100 746 4 0 1 Coal Mine
+rgo 56 632 6 0 1 Coal Mine
+rgo 45 491 4 0 1 Coal Mine
+rgo 7 598 5 0 1 Coal Mine
+rgo -38 735 4 0 1 Coal Mine
+rgo 140 495 6 1 2 Iron Mine
+rgo 44 518 5 0 1 Iron Mine
+rgo 68 655 8 1 2 Iron Mine
+rgo 121 564 5 0 1 Iron Mine
+rgo -25 701 4 0 1 Iron Mine
+rgo -56 705 5 0 1 Iron Mine
+rgo 76 392 5 0 1 Iron Mine
+rgo 25 644 5 0 1 Iron Mine
