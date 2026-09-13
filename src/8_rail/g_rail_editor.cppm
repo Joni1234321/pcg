@@ -498,7 +498,7 @@ struct RailEditorSystem {
 
         FlushTerrainTexture();
         SDL_Renderer* renderer = Singleton::Get<WindowState>().renderer;
-        const f32 hex_screen_radius = camera.scale * 0.95F;
+        const f32 hex_screen_radius = camera.scale;
         const u32 brush_hover_radius = tool == EditorTool::TOOL_TERRAIN && !over_ui ? brush_radius - 1U : 0U;
         verts.clear();
         if (camera.scale < TERRAIN_TEXTURE_MAX_CAMERA_SCALE) {

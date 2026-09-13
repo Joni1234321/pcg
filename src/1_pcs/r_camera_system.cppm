@@ -30,7 +30,7 @@ struct CameraState {
 struct CameraSystem {
     static constexpr f32 PAN_SPEED = 8.0F;
     static constexpr f32 ZOOM_FACTOR = 1.2F;
-    static constexpr f32 ZOOM_KEY_FACTOR_PER_SECOND = 10.0F;
+    static constexpr f32 ZOOM_KEY_FACTOR_PER_SECOND = 100.0F;
     static constexpr f32 ZOOM_SMOOTHING_PER_SECOND = 12.0F;
 
     void operator()() const {
@@ -38,10 +38,10 @@ struct CameraSystem {
         InputState& input_state = Singleton::Get<InputState>();
         const f32 delta_time = Singleton::Get<TickState>().delta_time;
 
-        if (input_state.keys[SDLK_LEFT]) { camera_state.world_position.x -= PAN_SPEED; }
-        if (input_state.keys[SDLK_RIGHT]) { camera_state.world_position.x += PAN_SPEED; }
-        if (input_state.keys[SDLK_UP]) { camera_state.world_position.y -= PAN_SPEED; }
-        if (input_state.keys[SDLK_DOWN]) { camera_state.world_position.y += PAN_SPEED; }
+        if (input_state.keys[SDLK_LEFT] || input_state.keys[SDLK_A]) { camera_state.world_position.x -= PAN_SPEED; }
+        if (input_state.keys[SDLK_RIGHT] || input_state.keys[SDLK_D]) { camera_state.world_position.x += PAN_SPEED; }
+        if (input_state.keys[SDLK_UP] || input_state.keys[SDLK_W]) { camera_state.world_position.y -= PAN_SPEED; }
+        if (input_state.keys[SDLK_DOWN] || input_state.keys[SDLK_S]) { camera_state.world_position.y += PAN_SPEED; }
 
         // mouse drag
         const float2 mouse_delta = input_state.mouse_position - camera_state.drag_last_pos;
@@ -54,9 +54,9 @@ struct CameraSystem {
             const f32 factor = input_state.mouse_wheel_y > 0.0F ? ZOOM_FACTOR : 1.0F / ZOOM_FACTOR;
             camera_state.target_scale = math::Clamp(camera_state.target_scale * factor, camera_state.zoom_min, camera_state.zoom_max);
         }
-        if (input_state.keys[SDLK_Q] != input_state.keys[SDLK_E]) {
+        if (input_state.keys[SDLK_F] != input_state.keys[SDLK_R]) {
             camera_state.zoom_anchor_world = camera_state.ScreenToWorld(input_state.mouse_position);
-            const f32 factor = std::pow(ZOOM_KEY_FACTOR_PER_SECOND, input_state.keys[SDLK_E] ? delta_time : -delta_time);
+            const f32 factor = std::pow(ZOOM_KEY_FACTOR_PER_SECOND, input_state.keys[SDLK_R] ? delta_time : -delta_time);
             camera_state.target_scale = math::Clamp(camera_state.target_scale * factor, camera_state.zoom_min, camera_state.zoom_max);
         }
         if (const f32 diff = camera_state.target_scale - camera_state.scale; math::Abs(diff) > 0.01F) {
