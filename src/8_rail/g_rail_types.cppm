@@ -38,6 +38,7 @@ struct BuildingDefine {
     std::string name;
     std::flat_map<GoodDefineId, f32> demand;
     std::flat_map<GoodDefineId, f32> supply;
+    f32 size_hex_widths;
 };
 
 struct GoodInfo {
@@ -69,6 +70,7 @@ struct Rail {
 };
 struct Building {
     float2 pos;
+    f32 rotation;
     BuildingDefineId id;
 };
 struct MapDefine {

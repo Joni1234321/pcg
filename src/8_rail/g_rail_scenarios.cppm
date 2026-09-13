@@ -21,6 +21,17 @@ constexpr f32 CITY_RADIUS_WORLD_PER_LEVEL = 1.5F;
 constexpr u32 BUILDINGS_PER_CITY_LEVEL = 6U;
 constexpr u32 INDUSTRIES_PER_CITY_LEVEL = 1U;
 constexpr u32 PLACEMENT_ATTEMPTS = 16U;
+constexpr f32 BUILDING_GAP_WORLD = 0.08F;
+
+[[nodiscard]] b8 SquaresOverlap(const float2 world_a, const f32 half_a, const f32 rotation_a, const float2 world_b, const f32 half_b, const f32 rotation_b) {
+    for (const f32 axis_rotation : { rotation_a, rotation_a + math::PI * 0.5F, rotation_b, rotation_b + math::PI * 0.5F }) {
+        const float2 axis { math::Cos(axis_rotation), math::Sin(axis_rotation) };
+        const f32 extent_a = half_a * (math::Abs(math::Cos(axis_rotation - rotation_a)) + math::Abs(math::Sin(axis_rotation - rotation_a)));
+        const f32 extent_b = half_b * (math::Abs(math::Cos(axis_rotation - rotation_b)) + math::Abs(math::Sin(axis_rotation - rotation_b)));
+        if (math::Abs(math::Dot(world_b - world_a, axis)) > extent_a + extent_b) { return false; }
+    }
+    return true;
+}
 
 void TerrainSave(const HexList<i8>& elevation, const AssetPath& asset_path) {
     std::ofstream file { Asset(asset_path) };
@@ -137,7 +148,7 @@ HexList<i8> ElevationFromImage(const AssetPath& asset_path, const uint2 map_size
     return elevation;
 }
 
-Map MapGenerate(const MapDefine& define, const std::vector<IndustryDefine>& industry_defines, const std::vector<BuildingDefine>& building_defines) {
+Map MapGenerate(const MapDefine& define, const std::vector<IndustryDefine>& industry_defines, const std::vector<BuildingDefine>& building_defines, const std::vector<BuildingDefineId>& city_growth) {
     Map map { .water_labels = define.water_labels, .rivers = define.rivers, .cities = define.cities, .industries = define.industries };
     map.size = HexAxialToWorld(HexOffsetToAxial(static_cast<int2>(define.elevation.map_size - uint2 { 1U, 1U })));
     const auto random_land_world = [&define](const float2 world_center, const f32 world_radius_min, const f32 world_radius_max) -> Optional<float2> {
@@ -152,8 +163,19 @@ Map MapGenerate(const MapDefine& define, const std::vector<IndustryDefine>& indu
     for (const City& city : define.cities) {
         const float2 world_city = HexAxialToWorld(city.axial);
         const f32 world_radius = city.level * CITY_RADIUS_WORLD_PER_LEVEL;
+        const auto building_half_world = [&building_defines](const BuildingDefineId id) { return building_defines[id.value].size_hex_widths * HEX_SPACING.x * 0.5F + BUILDING_GAP_WORLD * 0.5F; };
+        const u32 city_buildings_first = static_cast<u32>(map.buildings.size());
         for (u32 i = 0; i < static_cast<u32>(city.level * BUILDINGS_PER_CITY_LEVEL); i++) {
-            if (const Optional<float2> world = random_land_world(world_city, 0.0F, world_radius)) { map.buildings.push_back(Building { .pos = *world, .id = building_defines[Rand(static_cast<u32>(building_defines.size()))].id }); }
+            const BuildingDefineId id = city_growth[i % city_growth.size()];
+            for (u32 attempt = 0; attempt < PLACEMENT_ATTEMPTS; attempt++) {
+                const Optional<float2> world = random_land_world(world_city, 0.0F, world_radius);
+                if (!world.has_value()) { continue; }
+                const f32 rotation = RandF(0.0F, math::PI * 0.5F);
+                const auto overlaps = [&](const Building& other) { return SquaresOverlap(*world, building_half_world(id), rotation, other.pos, building_half_world(other.id), other.rotation); };
+                if (std::any_of(map.buildings.begin() + city_buildings_first, map.buildings.end(), overlaps)) { continue; }
+                map.buildings.push_back(Building { .pos = *world, .rotation = rotation, .id = id });
+                break;
+            }
         }
         for (u32 i = 0; i < static_cast<u32>(math::Ceil(city.level * INDUSTRIES_PER_CITY_LEVEL)); i++) {
             if (const Optional<float2> world = random_land_world(world_city, world_radius, world_radius * 2.0F)) { map.industries.push_back(Industry { .pos = *world, .id = industry_defines[Rand(static_cast<u32>(industry_defines.size()))].id }); }

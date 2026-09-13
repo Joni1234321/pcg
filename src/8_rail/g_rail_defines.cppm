@@ -25,6 +25,10 @@ constexpr IndustryDefineId INDUSTRY_FURNITURE_FACTORY { 6 };
 
 constexpr BuildingDefineId BUILDING_HOUSE { 0 };
 constexpr BuildingDefineId BUILDING_TAVERN { 1 };
+constexpr BuildingDefineId BUILDING_OFFICE { 2 };
+constexpr BuildingDefineId BUILDING_SCHOOL { 3 };
+constexpr BuildingDefineId BUILDING_CHURCH { 4 };
+constexpr BuildingDefineId BUILDING_HOSPITAL { 5 };
 
 std::vector<GoodDefine> RailGoodDefines() {
     return {
@@ -50,10 +54,18 @@ std::vector<IndustryDefine> RailIndustryDefines() {
     };
 }
 
+std::vector<BuildingDefineId> RailCityGrowthSequence() {
+    return { BUILDING_HOUSE, BUILDING_HOUSE, BUILDING_HOUSE, BUILDING_TAVERN, BUILDING_HOUSE, BUILDING_HOUSE, BUILDING_SCHOOL, BUILDING_HOUSE, BUILDING_HOUSE, BUILDING_OFFICE, BUILDING_HOUSE, BUILDING_CHURCH, BUILDING_HOUSE, BUILDING_HOUSE, BUILDING_OFFICE, BUILDING_HOSPITAL };
+}
+
 std::vector<BuildingDefine> RailBuildingDefines() {
     return {
-        BuildingDefine { .id = BUILDING_HOUSE, .name = "House", .demand = { { GOOD_CLOTHES, 0.5F }, { GOOD_FURNITURE, 0.2F } }, .supply = {} },
-        BuildingDefine { .id = BUILDING_TAVERN, .name = "Tavern", .demand = { { GOOD_ALCOHOL, 1.0F } }, .supply = {} },
+        BuildingDefine { .id = BUILDING_HOUSE, .name = "House", .demand = { { GOOD_CLOTHES, 0.5F }, { GOOD_FURNITURE, 0.2F } }, .supply = {}, .size_hex_widths = 0.25F },
+        BuildingDefine { .id = BUILDING_TAVERN, .name = "Tavern", .demand = { { GOOD_ALCOHOL, 1.0F } }, .supply = {}, .size_hex_widths = 0.3F },
+        BuildingDefine { .id = BUILDING_OFFICE, .name = "Office", .demand = { { GOOD_FURNITURE, 0.6F } }, .supply = {}, .size_hex_widths = 0.45F },
+        BuildingDefine { .id = BUILDING_SCHOOL, .name = "School", .demand = { { GOOD_FURNITURE, 0.4F } }, .supply = {}, .size_hex_widths = 0.55F },
+        BuildingDefine { .id = BUILDING_CHURCH, .name = "Church", .demand = { { GOOD_LUMBER, 0.2F } }, .supply = {}, .size_hex_widths = 0.35F },
+        BuildingDefine { .id = BUILDING_HOSPITAL, .name = "Hospital", .demand = { { GOOD_CLOTHES, 0.8F } }, .supply = {}, .size_hex_widths = 0.6F },
     };
 }
 } // namespace rail
