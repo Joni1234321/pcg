@@ -62,7 +62,7 @@ std::vector<IndustryDefine> RailIndustryDefines() {
         IndustryDefine { .id = INDUSTRY_FURNITURE_FACTORY, .name = "Furniture Factory", .cost_initial = 3000.0F, .cost_labour = 200.0F, .demand = { GOOD_LUMBER }, .supply = { GOOD_FURNITURE }, .production_rate = 1.0F, .size_hex_widths = float2 { 0.6F, 0.5F } },
         IndustryDefine { .id = INDUSTRY_COAL_MINE, .name = "Coal Mine", .cost_initial = 2500.0F, .cost_labour = 120.0F, .demand = {}, .supply = { GOOD_COAL }, .production_rate = 1.0F, .size_hex_widths = float2 { 0.5F, 0.5F } },
         IndustryDefine { .id = INDUSTRY_IRON_MINE, .name = "Iron Mine", .cost_initial = 3000.0F, .cost_labour = 140.0F, .demand = {}, .supply = { GOOD_IRON_ORE }, .production_rate = 1.0F, .size_hex_widths = float2 { 0.5F, 0.5F } },
-        IndustryDefine { .id = INDUSTRY_PORT, .name = "Port", .cost_initial = 5000.0F, .cost_labour = 200.0F, .demand = { GOOD_CLOTHES, GOOD_FURNITURE }, .supply = { GOOD_OVERSEAS_GOODS }, .production_rate = 1.0F, .size_hex_widths = float2 { 1.2F, 0.8F }, .spawns_randomly = false },
+        IndustryDefine { .id = INDUSTRY_PORT, .name = "Port", .cost_initial = 5000.0F, .cost_labour = 200.0F, .demand = { GOOD_CLOTHES, GOOD_FURNITURE }, .supply = { GOOD_OVERSEAS_GOODS }, .production_rate = 1.0F, .size_hex_widths = float2 { 1.2F, 0.8F } },
     };
 }
 

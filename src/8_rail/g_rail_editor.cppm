@@ -118,6 +118,10 @@ constexpr u32 RGO_RADIUS_HEXES_DEFAULT = 12U;
 constexpr u32 RGO_AREA_CIRCLE_SEGMENTS = 32U;
 constexpr f32 RGO_AREA_ALPHA = 0.25F;
 constexpr f32 RGO_AREA_SELECTED_ALPHA = 0.5F;
+constexpr f32 RGO_AREA_HOVER_ALPHA = 0.4F;
+constexpr f32 RGO_AREA_GHOST_ALPHA = 0.15F;
+constexpr f32 INDUSTRY_GHOST_ALPHA = 0.5F;
+constexpr f32 INDUSTRY_HOVER_MARGIN_WORLD = 0.15F;
 constexpr u32 RGO_COUNT_MIN = 0U;
 constexpr u32 RGO_COUNT_MAX = 20U;
 constexpr u32 RGO_COUNT_STEP = 1U;
@@ -346,18 +350,26 @@ struct RailEditorFrame : Frame {
     Handle<Node> help_label { B(file_panel).Node(hug).Text(FontSizes::body, colors::COLOR_DARK_GRAY).Build() };
     Handle<Node> status_label { B(file_panel).Node(hug).Text(FontSizes::body, colors::COLOR_DARK_GRAY).Build() };
     Handle<Node> file_list { B(file_panel).Node(hug).Gap(1U).Direction(vertical).Build() };
-    Handle<Node> rail_toolbar { B(root).Node(fill, hug).Padding(8U).Gap(16U).Fill(colors::COLOR_BEIGE).Build() };
-    Handle<Node> tunnel_group { B(rail_toolbar).Node(hug).Gap(4U).Build() };
+    Handle<Node> options_row { B(root).Node(fill, hug).Padding(8U).Gap(16U).Fill(colors::COLOR_BEIGE).Build() };
+    Handle<Node> tunnel_group { B(options_row).Node(hug).Gap(4U).Build() };
     Slider tunnel_slider { B(tunnel_group).parent, RAIL_SAVE_ELEVATION_UNITS_STEP, RAIL_SAVE_ELEVATION_UNITS_MAX, RAIL_SAVE_ELEVATION_UNITS_STEP, RAIL_SAVE_ELEVATION_UNITS_DEFAULT };
-    Handle<Node> bridge_group { B(rail_toolbar).Node(hug).Gap(4U).Build() };
+    Handle<Node> bridge_group { B(options_row).Node(hug).Gap(4U).Build() };
     Slider bridge_slider { B(bridge_group).parent, RAIL_SAVE_ELEVATION_UNITS_STEP, RAIL_SAVE_ELEVATION_UNITS_MAX, RAIL_SAVE_ELEVATION_UNITS_STEP, RAIL_SAVE_ELEVATION_UNITS_DEFAULT };
-    Handle<Node> rgo_group { B(rail_toolbar).Node(hug).Gap(4U).Build() };
+    Handle<Node> rgo_group { B(options_row).Node(hug).Gap(4U).Build() };
     Handle<Node> rgo_type_button { Button(B(rgo_group).parent, "RGO") };
     Slider rgo_radius_slider { B(rgo_group).parent, RGO_RADIUS_HEXES_MIN, RGO_RADIUS_HEXES_MAX, RGO_RADIUS_HEXES_STEP, RGO_RADIUS_HEXES_DEFAULT };
     Slider rgo_count_min_slider { B(rgo_group).parent, RGO_COUNT_MIN, RGO_COUNT_MAX, RGO_COUNT_STEP, RGO_COUNT_DEFAULT };
     Slider rgo_count_max_slider { B(rgo_group).parent, RGO_COUNT_MIN, RGO_COUNT_MAX, RGO_COUNT_STEP, RGO_COUNT_DEFAULT };
-    Handle<Node> industry_group { B(rail_toolbar).Node(hug).Gap(4U).Build() };
+    Handle<Node> industry_group { B(options_row).Node(hug).Gap(4U).Build() };
     Handle<Node> industry_type_button { Button(B(industry_group).parent, "Industry") };
+    Handle<Node> brush_group { B(options_row).Node(hug).Gap(4U).Build() };
+    Handle<Node> brush_smaller { Button(B(brush_group).parent, "−") };
+    Handle<Node> brush_label { B(brush_group).Node(hug).Padding(4U).Text(FontSizes::h4, colors::COLOR_BLACK).Build() };
+    Handle<Node> brush_bigger { Button(B(brush_group).parent, "+") };
+    Handle<Node> overlay_group { B(options_row).Node(hug).Gap(4U).Build() };
+    Handle<Node> year_previous { Button(B(overlay_group).parent, "◂") };
+    Slider year_slider { B(overlay_group).parent, OVERLAY_YEAR_MIN, OVERLAY_YEAR_MAX, OVERLAY_YEAR_STEP, OVERLAY_YEAR_MIN };
+    Handle<Node> year_next { Button(B(overlay_group).parent, "▸") };
     Handle<Node> toolbar { B(root).Node(fill, hug).Padding(8U).Gap(16U).Fill(colors::COLOR_BEIGE).Build() };
     Handle<Node> history_group { B(toolbar).Node(hug).Gap(4U).Build() };
     Handle<Node> undo_button { Button(B(history_group).parent, "↶") };
@@ -369,14 +381,6 @@ struct RailEditorFrame : Frame {
     Handle<Node> rail_path_tool_button { Button(B(tool_group).parent, "⚡ Rail path") };
     Handle<Node> rgo_tool_button { Button(B(tool_group).parent, "◌ RGO") };
     Handle<Node> industry_tool_button { Button(B(tool_group).parent, "▣ Industry") };
-    Handle<Node> brush_group { B(toolbar).Node(hug).Gap(4U).Build() };
-    Handle<Node> brush_smaller { Button(B(brush_group).parent, "−") };
-    Handle<Node> brush_label { B(brush_group).Node(hug).Padding(4U).Text(FontSizes::h4, colors::COLOR_BLACK).Build() };
-    Handle<Node> brush_bigger { Button(B(brush_group).parent, "+") };
-    Handle<Node> overlay_group { B(toolbar).Node(hug).Gap(4U).Build() };
-    Handle<Node> year_previous { Button(B(overlay_group).parent, "◂") };
-    Slider year_slider { B(overlay_group).parent, OVERLAY_YEAR_MIN, OVERLAY_YEAR_MAX, OVERLAY_YEAR_STEP, OVERLAY_YEAR_MIN };
-    Handle<Node> year_next { Button(B(overlay_group).parent, "▸") };
     Handle<Node> river_group { B(toolbar).Node(hug).Gap(4U).Build() };
     Slider river_slider { B(river_group).parent, 0U, RIVER_SIZE_MAX, 1U, 0U };
     Handle<Node> shading_button { Button(B(toolbar).parent, "⬡ Flat") };
@@ -457,7 +461,7 @@ struct RailEditorSystem {
         tree.node_properties[frame.industry_tool_button].on_click = [this](NodeReference) { SetTool(EditorTool::TOOL_INDUSTRY); };
         tree.node_properties[frame.industry_type_button].on_click = [this](NodeReference) { SetIndustryType(industry_type_index + 1U); };
         for (const IndustryDefine& industry_define : industry_defines) {
-            if (industry_define.demand.empty() && industry_define.spawns_randomly) { rural_ids.push_back(industry_define.id); }
+            if (industry_define.demand.empty()) { rural_ids.push_back(industry_define.id); }
         }
         tree.node_properties[frame.brush_smaller].on_click = [this](NodeReference) { SetBrushRadius(brush_radius - 1U); };
         tree.node_properties[frame.brush_bigger].on_click = [this](NodeReference) { SetBrushRadius(brush_radius + 1U); };
@@ -1031,6 +1035,19 @@ struct RailEditorSystem {
         SelectCity(std::nullopt);
         selected_rgo_area.reset();
         rail_drag_start_world.reset();
+        NodeTree& tree = globalData[frame.tree];
+        for (const Handle<Node> group : { frame.brush_group, frame.overlay_group, frame.tunnel_group, frame.bridge_group, frame.rgo_group, frame.industry_group }) { tree.DetachNode(group); }
+        switch (tool) {
+            case EditorTool::TOOL_TERRAIN: tree.AttachNode(frame.brush_group, frame.options_row); break;
+            case EditorTool::TOOL_CITY: tree.AttachNode(frame.overlay_group, frame.options_row); break;
+            case EditorTool::TOOL_RAIL:
+            case EditorTool::TOOL_RAIL_PATH:
+                tree.AttachNode(frame.tunnel_group, frame.options_row);
+                tree.AttachNode(frame.bridge_group, frame.options_row);
+                break;
+            case EditorTool::TOOL_RGO: tree.AttachNode(frame.rgo_group, frame.options_row); break;
+            case EditorTool::TOOL_INDUSTRY: tree.AttachNode(frame.industry_group, frame.options_row); break;
+        }
         SetButtonTextColor(frame.tree, frame.terrain_tool_button, tool == EditorTool::TOOL_TERRAIN ? COLOR_BUTTON_TEXT : COLOR_BUTTON_TEXT_INACTIVE);
         SetButtonTextColor(frame.tree, frame.city_tool_button, tool == EditorTool::TOOL_CITY ? COLOR_BUTTON_TEXT : COLOR_BUTTON_TEXT_INACTIVE);
         SetButtonTextColor(frame.tree, frame.rail_tool_button, tool == EditorTool::TOOL_RAIL ? COLOR_BUTTON_TEXT : COLOR_BUTTON_TEXT_INACTIVE);
@@ -1303,10 +1320,18 @@ struct RailEditorSystem {
                 AppendHex(verts, screen, hex_screen_radius, color);
             }
         }
+        const auto area_contains_hover = [world_hover](const RgoArea& area) {
+            const float2 world_offset = world_hover - HexAxialToWorld(area.axial);
+            return math::Dot(world_offset, world_offset) <= area.radius_hexes * area.radius_hexes * HEX_SPACING.x * HEX_SPACING.x;
+        };
+        const b8 rgo_hovering = tool == EditorTool::TOOL_RGO && !over_ui && document.elevation.Contains(axial_hover);
+        const auto hovered_area = rgo_hovering ? std::ranges::find_if(document.rgo_areas, area_contains_hover) : document.rgo_areas.end();
         for (u32 i = 0; i < document.rgo_areas.size(); i++) {
             const RgoArea& area = document.rgo_areas[i];
-            AppendCircle(verts, camera.WorldToScreen(HexAxialToWorld(area.axial)), camera.scale * area.radius_hexes * HEX_SPACING.x, IndustryColor(area.id).WithAlpha(selected_rgo_area == i ? RGO_AREA_SELECTED_ALPHA : RGO_AREA_ALPHA));
+            const f32 alpha = selected_rgo_area == i ? RGO_AREA_SELECTED_ALPHA : hovered_area == document.rgo_areas.begin() + i ? RGO_AREA_HOVER_ALPHA : RGO_AREA_ALPHA;
+            AppendCircle(verts, camera.WorldToScreen(HexAxialToWorld(area.axial)), camera.scale * area.radius_hexes * HEX_SPACING.x, IndustryColor(area.id).WithAlpha(alpha));
         }
+        if (rgo_hovering && hovered_area == document.rgo_areas.end() && !rural_ids.empty()) { AppendCircle(verts, camera.WorldToScreen(HexAxialToWorld(axial_hover)), camera.scale * static_cast<f32>(rgo_radius_hexes) * HEX_SPACING.x, IndustryColor(rural_ids[rgo_type_index]).WithAlpha(RGO_AREA_GHOST_ALPHA)); }
         (void)SDL_RenderGeometry(renderer, nullptr, verts);
         verts.clear();
         for (const Industry& industry : generated.has_value() ? generated->industries : document.industries) {
@@ -1338,6 +1363,16 @@ struct RailEditorSystem {
             for (const Building& building : generated->buildings) { AppendRect(verts, camera.WorldToScreen(building.pos), float2 { camera.scale * building_defines[building.id.value].size_hex_widths * HEX_SPACING.x * 0.5F }, building.rotation, BuildingColor(building.id)); }
         }
         for (const Industry& industry : industries_shown) { AppendRect(verts, camera.WorldToScreen(industry.pos), industry_defines[industry.id.value].size_hex_widths * float2 { camera.scale * HEX_SPACING.x * 0.5F }, industry.rotation, IndustryColor(industry.id)); }
+        if (tool == EditorTool::TOOL_INDUSTRY && !over_ui && document.elevation.Contains(axial_hover)) {
+            const auto hovered_industry = std::ranges::find_if(document.industries, [this, world_hover](const Industry& industry) { return ObstacleBlocksWorld(IndustryObstacle(industry), world_hover); });
+            if (hovered_industry != document.industries.end()) {
+                AppendRect(verts, camera.WorldToScreen(hovered_industry->pos), industry_defines[hovered_industry->id.value].size_hex_widths * float2 { camera.scale * HEX_SPACING.x * 0.5F } + float2 { camera.scale * INDUSTRY_HOVER_MARGIN_WORLD }, hovered_industry->rotation, COLOR_RAIL_HOVER);
+            } else {
+                const IndustryDefine& ghost_define = industry_defines[industry_type_index];
+                const Color ghost_color = document.elevation[axial_hover] >= 0 ? IndustryColor(ghost_define.id).WithAlpha(INDUSTRY_GHOST_ALPHA) : COLOR_RAIL_BLOCKED.WithAlpha(INDUSTRY_GHOST_ALPHA);
+                AppendRect(verts, camera.WorldToScreen(world_hover), ghost_define.size_hex_widths * float2 { camera.scale * HEX_SPACING.x * 0.5F }, 0.0F, ghost_color);
+            }
+        }
         (void)SDL_RenderGeometry(renderer, nullptr, verts);
         (void)SDL_RenderGeometry(renderer, globalData[rail_texture], rail_verts);
         (void)SDL_RenderTexture(renderer, terrain_texture, nullptr, &minimap_rect);
