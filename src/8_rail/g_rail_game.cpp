@@ -29,6 +29,7 @@ using namespace hex::ui;
 
 void arcade::RunRail() {
     Singleton::Get<WindowState>().clear_color = Color::FromHsl(42.0F, 0.12F, 0.66F);
+    Singleton::Get<WindowState>().ui_scale = 1.0F;
     CameraState& camera = Singleton::Get<CameraState>();
     camera.scale = rail::EDITOR_CAMERA_SCALE;
     camera.target_scale = rail::EDITOR_CAMERA_SCALE;

@@ -10,6 +10,10 @@ import hex.hex;
 export namespace rail {
 constexpr i8 ELEVATION_MIN = -128;
 constexpr i8 ELEVATION_MAX = 127;
+constexpr f32 ELEVATION_UNIT_METERS = 10.0F;
+constexpr f32 HEX_CENTER_DISTANCE_METERS = 1600.0F;
+constexpr f32 WORLD_TO_METERS = HEX_CENTER_DISTANCE_METERS / hex::HEX_SPACING.x;
+constexpr f32 RAIL_UNIT_WORLD = hex::HEX_SPACING.x / 2.0F;
 
 using GoodDefineId = hex::StrongType<u32, struct GoodDefineIdTag>;
 struct GoodDefine {
@@ -58,6 +62,10 @@ struct River {
     u8 size;
     std::vector<int2> axials;
     std::string name;
+};
+struct Rail {
+    float2 world_a;
+    float2 world_b;
 };
 struct Building {
     float2 pos;

@@ -91,15 +91,14 @@ void DebugFrame::SetInspector(const HoveredType hovered) {
 void DebugSystem::operator()() {
     InputState& input_state = Singleton::Get<InputState>();
     const b8 debug_mode = input_state.keys[SDLK_LALT];
-    const b8 detailed_mode = input_state.keys[SDLK_LCTRL];
 
     tick_frame.Update();
+    if (!input_state.keys[SDLK_F1] && !tick_frame.systems.Empty()) {
+        globalData[tick_frame.tree].MarkDirty(tick_frame.systems.parent.node);
+        tick_frame.systems.Hide();
+    }
     globalData[debug_frame.tree].SetDisplay(debug_mode);
     if (debug_mode) {
-        if (!detailed_mode && !tick_frame.systems.Empty()) {
-            globalData[tick_frame.tree].MarkDirty(tick_frame.systems.parent.node);
-            tick_frame.systems.Hide();
-        }
         if (input_state.left_mouse_down) { debug_frame.SetInspector(Singleton::Get<HoveredType>()); }
         u32 key_count = std::min(globalData.Get<NodeTree>().size(), 10U);
         auto rng = std::views::iota(0U, key_count);
