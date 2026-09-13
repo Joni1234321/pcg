@@ -1,0 +1,89 @@
+label 99 51 James Bay
+label 205 45 Gulf of Saint Lawrence
+label 171 85 Bay of Fundy
+label 148 105 Gulf of Maine
+label 227 5 Strait of Belle Isle
+label 135 123 Massachusetts Bay
+label 86 188 Albemarle Sound
+label 83 195 Pamlico Sound
+label 10 67 Lake Winnipeg
+label 65 145 Lake Erie
+label 96 122 Lake Ontario
+label 58 144 Lake Saint Clair
+label 10 16 Wollaston Lake
+label 9 25 Reindeer Lake
+label 12 94 Lake of the Woods
+label 46 86 Lake Nipigon
+label -1 78 Lake Manitoba
+label -2 67 Lake Winnipegosis
+label 130 57 Lake Mistassini
+label 103 126 Oneida Lake
+label 28 137 Lake Winnebago
+label 122 109 Lake Champlain
+label 94 134 Keuka Lake
+label 95 133 Seneca Lake
+label 97 132 Cayuga Lake
+label -6 21 Cree Lake
+label 134 12 Lac-à-l'Eau-Claire
+label 84 107 Lake Nipissing
+label 117 41 Lake Sakami
+label 18 100 Rainy Lake
+label 32 33 Split Lake
+label 38 77 Lake St. Joseph
+label 140 19 Lake Bienville
+label 93 132 Canandaigua Lake
+label 98 130 Owasco Lake
+label 99 130 Skaneateles Lake
+label 5 113 Leech Lake
+label 32 96 Lac des Mille Lacs
+label 172 92 Lake Rossignol
+label 168 80 Grand Lake
+label 7 7 Black Lake
+label 221 29 Grand Lake
+label 52 52 Big Trout Lake
+label 26 77 Trout Lake
+label 30 54 Island Lake
+label 149 33 Lake Naococane
+label -10 42 Lac la Ronge
+label 5 122 Mille Lacs Lake
+label 5 106 Lower Red Lake
+label 6 105 Upper Red Lake
+label 132 113 Lake Winnipesaukee
+label 84 121 Lake Simcoe
+label 34 46 Gods Lake
+label 158 86 Chiputneticook Lakes
+label 5 111 Cass Lake
+label 7 111 Lake Winnibigoshish
+label 28 96 Marmion Lake
+label 10 85 Lac du Bonnet
+label 35 60 Sandy Lake
+label -14 127 Lake Traverse
+label 138 109 Sebago Lake
+label 146 91 Moosehead Lake
+label 55 86 Long Lake
+label 35 85 Sturgeon Lake
+label 28 87 Minnitaki Lake
+label 133 4 Lac Minto
+label 45 61 North Caribou Lake
+label 150 42 Lake Plétipi
+label 92 99 Lake Kipawa
+label 104 113 Big Rideau Lake
+label 148 88 Chesuncook Lake
+label 44 104 Lake Superior
+label 40 130 Lake Michigan
+label 70 119 Lake Huron
+label 58 109 Whitefish Bay
+label 57 132 Saginaw Bay
+label 67 113 North Channel
+label 79 116 Georgian Bay
+label -13 57 Tobin Lake
+label 2 59 Cedar Lake
+label 51 77 Ogoki Reservoir
+label 107 91 Cabonga Reservoir
+label 136 72 Lac Saint-Jean
+label 142 58 Lake Péribonca
+label 125 35 Réservoir de La Grande 3
+label 120 78 Réservoir Gouin
+label 155 20 Réservoir de Caniapiscau
+label 6 200 Lake Barkley
+label 60 111 St. Marys River

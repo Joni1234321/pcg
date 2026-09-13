@@ -20,7 +20,7 @@ Run from the repo root:
 
 A definition may set "cities_source": "<other name>" to share another map's cities file.
 
-The elevation heuristic mirrors ElevationFromImage in src/8_rail/g_rail_scenarios.cppm.
+The elevation heuristic mirrors ElevationFromImage in src/8_rail/g_rail_scenarios.cppm, applied to the box-averaged image pixels under each hex.
 Images are Wikimedia Commons relief location maps (CC BY-SA); the projections mirror
 the matching Wikipedia Module:Location map/data pages. Rivers, seas and lakes come from
 Natural Earth 10m GeoJSON (public domain) stored next to the images.
@@ -197,6 +197,7 @@ def convert(name, definition):
     world_width = width * SQRT3
     height = round(world_width * cropped.height / cropped.width / 1.5) + 1
     world_height = (height - 1) * 1.5
+    hex_cells = cropped.resize((width, height), Image.BOX)
 
     def image_fraction(world_x, world_y):
         u = min(max(world_x / world_width, 0.0), 1.0)
@@ -210,7 +211,7 @@ def convert(name, definition):
             if any(inside_polygon(fx, fy, polygon) for polygon in sea_polygons):
                 elevation.append(ELEVATION_MIN)
                 continue
-            elevation.append(pixel_to_elevation(*image.getpixel((int(fx * (image.width - 1)), int(fy * (image.height - 1))))))
+            elevation.append(pixel_to_elevation(*hex_cells.getpixel((x_offset, y))))
     BASE_DIR.mkdir(parents=True, exist_ok=True)
     rows = [" ".join(str(value) for value in elevation[y * width:(y + 1) * width]) for y in range(height)]
     projection = definition["projection"]

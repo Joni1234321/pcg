@@ -1,12 +1,12 @@
 {
- "image": "https://upload.wikimedia.org/wikipedia/commons/7/7e/Japan_natural_location_map_with_side_map_of_the_Ryukyu_Islands.jpg",
- "image_file": "japan.jpg",
+ "image": "https://upload.wikimedia.org/wikipedia/commons/8/87/Japan_ChuShikoku_topographic_map.webp",
+ "image_file": "chushikoku.jpg",
  "columns": 512,
  "crop": [
-  0.19,
-  0.69,
-  0.335,
-  0.84
+  0.357,
+  0.3868,
+  1.0,
+  1.0
  ],
  "countries": [
   "Q17"
@@ -15,10 +15,10 @@
  "projection": {
   "type": "equirect",
   "params": [
-   45.86,
-   30.02,
-   128.24,
-   149.27
+   36.4,
+   32.6,
+   130.7,
+   135.0
   ]
  },
  "cities_source": "shikoku"

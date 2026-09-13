@@ -1,0 +1,59 @@
+city 440 574 3.0 New York City
+city 102 621 3.0 Chicago
+city 327 514 2.0 Toronto
+city 486 406 2.0 Montreal
+city 403 611 2.0 Philadelphia
+city 529 491 2.0 Boston
+city 344 662 2.0 Washington, D.C.
+city 222 583 2.0 Detroit
+city 359 645 1.5 Baltimore
+city 280 630 1.5 Pittsburgh
+city 247 605 1.5 Cleveland
+city 434 426 1.5 Ottawa
+city 552 341 1.5 Quebec City
+city 333 537 1.5 Buffalo
+city 146 705 1.5 Cincinnati
+city -8 747 1.5 St. Louis
+city 11 529 1.5 Minneapolis
+city 110 582 1.5 Milwaukee
+city 112 690 1.5 Indianapolis
+city 196 666 1.5 Columbus
+city -112 741 1.5 Kansas City
+city -351 719 1.5 Denver
+city 320 713 1.0 Richmond
+city 345 727 1.0 Norfolk
+city 269 783 1.0 Raleigh
+city 201 819 1.0 Charlotte
+city 49 820 1.0 Nashville
+city 103 741 1.0 Louisville
+city -54 870 1.0 Memphis
+city 461 506 1.0 Albany
+city 483 526 1.0 Hartford
+city 516 513 1.0 Providence
+city 557 439 1.0 Portland
+city 729 335 1.0 Halifax
+city 670 342 1.0 Saint John
+city 6 359 1.0 Winnipeg
+city -111 667 1.0 Omaha
+city -246 875 1.0 Oklahoma City
+city -50 651 0.75 Des Moines
+city 360 613 0.75 Harrisburg
+city 403 512 0.75 Syracuse
+city 367 519 0.75 Rochester
+city 202 610 0.75 Toledo
+city 74 586 0.75 Madison
+city 22 704 0.75 Springfield
+city 64 462 0.75 Duluth
+city 316 425 0.75 Sudbury
+city 405 473 0.75 Kingston
+city 124 812 0.75 Knoxville
+city 134 742 0.75 Lexington
+city 402 564 0.75 Scranton
+city 238 440 0.5 Sault Ste. Marie
+city 150 397 0.5 Thunder Bay
+city 489 438 0.5 Burlington
+city 600 386 0.5 Bangor
+city 658 325 0.5 Fredericton
+city 704 301 0.5 Moncton
+city 564 285 0.5 Saguenay
+city 744 278 0.5 Charlottetown

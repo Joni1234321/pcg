@@ -1,0 +1,29 @@
+{
+ "image": "https://upload.wikimedia.org/wikipedia/commons/4/49/North_America_laea_relief_location_map.jpg",
+ "image_file": "us_northeast_canada.jpg",
+ "columns": 256,
+ "crop": [
+  0.45,
+  0.35,
+  0.85,
+  0.65
+ ],
+ "countries": [
+  "Q30",
+  "Q16"
+ ],
+ "population_min": 20000,
+ "projection": {
+  "type": "laea",
+  "params": [
+   47.5,
+   -100.0,
+   69.398,
+   68.9773,
+   50.0,
+   50.0
+  ]
+ },
+ "rivers": true,
+ "cities_source": "us_northeast_canada"
+}

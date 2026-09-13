@@ -1,0 +1,93 @@
+label 395 206 James Bay
+label 820 180 Gulf of Saint Lawrence
+label 684 340 Bay of Fundy
+label 592 421 Gulf of Maine
+label 906 22 Strait of Belle Isle
+label 541 493 Massachusetts Bay
+label 464 557 Long Island Sound
+label 344 751 Albemarle Sound
+label 330 782 Pamlico Sound
+label 40 266 Lake Winnipeg
+label 260 580 Lake Erie
+label 385 489 Lake Ontario
+label 231 576 Lake Saint Clair
+label 40 65 Wollaston Lake
+label 37 99 Reindeer Lake
+label 49 374 Lake of the Woods
+label 184 344 Lake Nipigon
+label -6 313 Lake Manitoba
+label -9 268 Lake Winnipegosis
+label 521 226 Lake Mistassini
+label 411 504 Oneida Lake
+label 111 548 Lake Winnebago
+label 486 437 Lake Champlain
+label 374 537 Keuka Lake
+label 380 532 Seneca Lake
+label 387 528 Cayuga Lake
+label -25 85 Cree Lake
+label 536 50 Lac-à-l'Eau-Claire
+label 338 427 Lake Nipissing
+label 470 164 Lake Sakami
+label 72 398 Rainy Lake
+label 127 134 Split Lake
+label 151 307 Lake St. Joseph
+label 559 76 Lake Bienville
+label 371 530 Canandaigua Lake
+label 392 521 Owasco Lake
+label 396 519 Skaneateles Lake
+label 19 453 Leech Lake
+label 129 384 Lac des Mille Lacs
+label 690 367 Lake Rossignol
+label 673 318 Grand Lake
+label 27 27 Black Lake
+label 883 117 Grand Lake
+label 207 207 Big Trout Lake
+label 105 307 Trout Lake
+label 120 215 Island Lake
+label 595 133 Lake Naococane
+label -42 168 Lac la Ronge
+label 21 486 Mille Lacs Lake
+label 19 425 Lower Red Lake
+label 24 420 Upper Red Lake
+label 529 450 Lake Winnipesaukee
+label 335 485 Lake Simcoe
+label 137 185 Gods Lake
+label 632 345 Chiputneticook Lakes
+label 20 444 Cass Lake
+label 28 443 Lake Winnibigoshish
+label 110 385 Marmion Lake
+label 39 341 Lac du Bonnet
+label 140 241 Sandy Lake
+label -56 509 Lake Traverse
+label 551 435 Sebago Lake
+label 583 365 Moosehead Lake
+label 220 345 Long Lake
+label 142 340 Sturgeon Lake
+label 114 347 Minnitaki Lake
+label 534 14 Lac Minto
+label 179 245 North Caribou Lake
+label 601 166 Lake Plétipi
+label 368 396 Lake Kipawa
+label 415 453 Big Rideau Lake
+label 592 352 Chesuncook Lake
+label 176 417 Lake Superior
+label 162 519 Lake Michigan
+label 281 476 Lake Huron
+label 233 437 Whitefish Bay
+label 228 528 Saginaw Bay
+label 269 452 North Channel
+label 316 465 Georgian Bay
+label 9 237 Cedar Lake
+label 202 309 Ogoki Reservoir
+label 428 365 Cabonga Reservoir
+label 415 366 Dozois Reservoir
+label 543 288 Lac Saint-Jean
+label 473 145 Réservoir de La Grande 2
+label 500 140 Réservoir de La Grande 3
+label 478 313 Réservoir Gouin
+label 585 241 Réservoir Pipmuacan
+label 619 82 Réservoir de Caniapiscau
+label 721 65 Ossokmanuan Lake
+label 25 800 Lake Barkley
+label 616 210 Réservoir Outardes Quatre
+label 240 444 St. Marys River
