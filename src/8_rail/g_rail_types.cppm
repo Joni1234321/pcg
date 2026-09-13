@@ -31,6 +31,7 @@ struct IndustryDefine {
     std::vector<GoodDefineId> demand;
     std::vector<GoodDefineId> supply;
     f32 production_rate;
+    f32 size_hex_widths;
 };
 using BuildingDefineId = hex::StrongType<u32, struct BuildingDefineIdTag>;
 struct BuildingDefine {
@@ -48,6 +49,7 @@ struct GoodInfo {
 
 struct Industry {
     float2 pos;
+    f32 rotation;
     IndustryDefineId id;
 };
 struct City {

@@ -20,6 +20,7 @@ export namespace rail {
 constexpr f32 CITY_RADIUS_WORLD_PER_LEVEL = 1.5F;
 constexpr u32 BUILDINGS_PER_CITY_LEVEL = 6U;
 constexpr u32 INDUSTRIES_PER_CITY_LEVEL = 1U;
+constexpr u32 RURAL_INDUSTRY_HEXES_PER = 500U;
 constexpr u32 PLACEMENT_ATTEMPTS = 16U;
 constexpr f32 BUILDING_GAP_WORLD = 0.08F;
 
@@ -160,10 +161,10 @@ Map MapGenerate(const MapDefine& define, const std::vector<IndustryDefine>& indu
         }
         return std::nullopt;
     };
+    const auto building_half_world = [&building_defines](const BuildingDefineId id) { return building_defines[id.value].size_hex_widths * HEX_SPACING.x * 0.5F + BUILDING_GAP_WORLD * 0.5F; };
     for (const City& city : define.cities) {
         const float2 world_city = HexAxialToWorld(city.axial);
         const f32 world_radius = city.level * CITY_RADIUS_WORLD_PER_LEVEL;
-        const auto building_half_world = [&building_defines](const BuildingDefineId id) { return building_defines[id.value].size_hex_widths * HEX_SPACING.x * 0.5F + BUILDING_GAP_WORLD * 0.5F; };
         const u32 city_buildings_first = static_cast<u32>(map.buildings.size());
         for (u32 i = 0; i < static_cast<u32>(city.level * BUILDINGS_PER_CITY_LEVEL); i++) {
             const BuildingDefineId id = city_growth[i % city_growth.size()];
@@ -177,9 +178,30 @@ Map MapGenerate(const MapDefine& define, const std::vector<IndustryDefine>& indu
                 break;
             }
         }
-        for (u32 i = 0; i < static_cast<u32>(math::Ceil(city.level * INDUSTRIES_PER_CITY_LEVEL)); i++) {
-            if (const Optional<float2> world = random_land_world(world_city, world_radius, world_radius * 2.0F)) { map.industries.push_back(Industry { .pos = *world, .id = industry_defines[Rand(static_cast<u32>(industry_defines.size()))].id }); }
+    }
+    const auto industry_half_world = [&industry_defines](const IndustryDefineId id) { return industry_defines[id.value].size_hex_widths * HEX_SPACING.x * 0.5F + BUILDING_GAP_WORLD * 0.5F; };
+    const auto place_industry = [&](const IndustryDefineId id, const float2 world_center, const f32 world_radius_max) {
+        for (u32 attempt = 0; attempt < PLACEMENT_ATTEMPTS; attempt++) {
+            const Optional<float2> world = random_land_world(world_center, 0.0F, world_radius_max);
+            if (!world.has_value()) { continue; }
+            const f32 rotation = RandF(0.0F, math::PI * 0.5F);
+            const auto overlaps_building = [&](const Building& other) { return SquaresOverlap(*world, industry_half_world(id), rotation, other.pos, building_half_world(other.id), other.rotation); };
+            const auto overlaps_industry = [&](const Industry& other) { return SquaresOverlap(*world, industry_half_world(id), rotation, other.pos, industry_half_world(other.id), other.rotation); };
+            if (std::ranges::any_of(map.buildings, overlaps_building) || std::ranges::any_of(map.industries, overlaps_industry)) { continue; }
+            map.industries.push_back(Industry { .pos = *world, .rotation = rotation, .id = id });
+            return;
         }
+    };
+    std::vector<IndustryDefineId> rural_ids;
+    std::vector<IndustryDefineId> urban_ids;
+    for (const IndustryDefine& industry_define : industry_defines) { (industry_define.demand.empty() ? rural_ids : urban_ids).push_back(industry_define.id); }
+    for (const City& city : define.cities) {
+        for (u32 i = 0; !urban_ids.empty() && i < static_cast<u32>(math::Ceil(city.level * INDUSTRIES_PER_CITY_LEVEL)); i++) { place_industry(urban_ids[Rand(static_cast<u32>(urban_ids.size()))], HexAxialToWorld(city.axial), city.level * CITY_RADIUS_WORLD_PER_LEVEL); }
+    }
+    for (u32 i = 0; !rural_ids.empty() && i < define.elevation.Size() / RURAL_INDUSTRY_HEXES_PER; i++) {
+        const int2 axial = define.elevation.IndexToAxial(Rand(define.elevation.Size()));
+        if (define.elevation[axial] < 0) { continue; }
+        place_industry(rural_ids[Rand(static_cast<u32>(rural_ids.size()))], HexAxialToWorld(axial), HEX_SPACING.x);
     }
     return map;
 }

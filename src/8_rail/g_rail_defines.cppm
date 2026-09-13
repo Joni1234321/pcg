@@ -44,13 +44,13 @@ std::vector<GoodDefine> RailGoodDefines() {
 
 std::vector<IndustryDefine> RailIndustryDefines() {
     return {
-        IndustryDefine { .id = INDUSTRY_FARM, .name = "Farm", .cost_initial = 500.0F, .cost_labour = 50.0F, .demand = {}, .supply = { GOOD_GRAIN }, .production_rate = 1.0F },
-        IndustryDefine { .id = INDUSTRY_BREWERY, .name = "Brewery", .cost_initial = 2000.0F, .cost_labour = 150.0F, .demand = { GOOD_GRAIN }, .supply = { GOOD_ALCOHOL }, .production_rate = 1.0F },
-        IndustryDefine { .id = INDUSTRY_SHEEP_FARM, .name = "Sheep Farm", .cost_initial = 500.0F, .cost_labour = 50.0F, .demand = {}, .supply = { GOOD_WOOL }, .production_rate = 1.0F },
-        IndustryDefine { .id = INDUSTRY_TEXTILE_MILL, .name = "Textile Mill", .cost_initial = 3000.0F, .cost_labour = 200.0F, .demand = { GOOD_WOOL }, .supply = { GOOD_CLOTHES }, .production_rate = 1.0F },
-        IndustryDefine { .id = INDUSTRY_FOREST, .name = "Forest", .cost_initial = 300.0F, .cost_labour = 40.0F, .demand = {}, .supply = { GOOD_WOOD }, .production_rate = 1.0F },
-        IndustryDefine { .id = INDUSTRY_SAWMILL, .name = "Sawmill", .cost_initial = 1500.0F, .cost_labour = 100.0F, .demand = { GOOD_WOOD }, .supply = { GOOD_LUMBER }, .production_rate = 1.0F },
-        IndustryDefine { .id = INDUSTRY_FURNITURE_FACTORY, .name = "Furniture Factory", .cost_initial = 3000.0F, .cost_labour = 200.0F, .demand = { GOOD_LUMBER }, .supply = { GOOD_FURNITURE }, .production_rate = 1.0F },
+        IndustryDefine { .id = INDUSTRY_FARM, .name = "Farm", .cost_initial = 500.0F, .cost_labour = 50.0F, .demand = {}, .supply = { GOOD_GRAIN }, .production_rate = 1.0F, .size_hex_widths = 0.8F },
+        IndustryDefine { .id = INDUSTRY_BREWERY, .name = "Brewery", .cost_initial = 2000.0F, .cost_labour = 150.0F, .demand = { GOOD_GRAIN }, .supply = { GOOD_ALCOHOL }, .production_rate = 1.0F, .size_hex_widths = 0.5F },
+        IndustryDefine { .id = INDUSTRY_SHEEP_FARM, .name = "Sheep Farm", .cost_initial = 500.0F, .cost_labour = 50.0F, .demand = {}, .supply = { GOOD_WOOL }, .production_rate = 1.0F, .size_hex_widths = 0.8F },
+        IndustryDefine { .id = INDUSTRY_TEXTILE_MILL, .name = "Textile Mill", .cost_initial = 3000.0F, .cost_labour = 200.0F, .demand = { GOOD_WOOL }, .supply = { GOOD_CLOTHES }, .production_rate = 1.0F, .size_hex_widths = 0.6F },
+        IndustryDefine { .id = INDUSTRY_FOREST, .name = "Forest", .cost_initial = 300.0F, .cost_labour = 40.0F, .demand = {}, .supply = { GOOD_WOOD }, .production_rate = 1.0F, .size_hex_widths = 1.0F },
+        IndustryDefine { .id = INDUSTRY_SAWMILL, .name = "Sawmill", .cost_initial = 1500.0F, .cost_labour = 100.0F, .demand = { GOOD_WOOD }, .supply = { GOOD_LUMBER }, .production_rate = 1.0F, .size_hex_widths = 0.5F },
+        IndustryDefine { .id = INDUSTRY_FURNITURE_FACTORY, .name = "Furniture Factory", .cost_initial = 3000.0F, .cost_labour = 200.0F, .demand = { GOOD_LUMBER }, .supply = { GOOD_FURNITURE }, .production_rate = 1.0F, .size_hex_widths = 0.6F },
     };
 }
 

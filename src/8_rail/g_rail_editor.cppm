@@ -84,7 +84,11 @@ constexpr Color COLOR_BUTTON_TEXT { colors::COLOR_BLACK };
 constexpr Color COLOR_BUTTON_TEXT_INACTIVE { colors::COLOR_GRAY };
 constexpr f32 RAIL_WIDTH_WORLD = 0.4F;
 constexpr f32 RAIL_SNAP_RADIUS_WORLD = 1.0F;
-constexpr u32 RAIL_SAVE_ELEVATION_UNITS_DEFAULT = 10U;
+constexpr u32 RAIL_BLOCK_SAMPLES_PER_UNIT = 4U;
+constexpr f32 RAIL_AVOID_MARGIN_WORLD = 0.2F;
+constexpr u32 RAIL_AVOID_DEFLECTIONS_MAX = 64U;
+constexpr Color COLOR_RAIL_BLOCKED { 230U, 40U, 30U };
+constexpr u32 RAIL_SAVE_ELEVATION_UNITS_DEFAULT = 50U;
 constexpr u32 RAIL_SAVE_ELEVATION_UNITS_MAX = 100U;
 constexpr u32 RAIL_SAVE_ELEVATION_UNITS_STEP = 10U;
 constexpr f32 RAIL_BRIDGE_CLEARANCE_MIN_ELEVATION_UNITS = 1.5F;
@@ -106,7 +110,8 @@ constexpr u32 RAIL_GRADE_LEVEL_MAX = 10U;
 constexpr f32 RAIL_GRADE_PERCENT_PER_LEVEL = 1.0F;
 constexpr f32 RAIL_GRADE_LABEL_MIN_CAMERA_SCALE = 48.0F;
 constexpr f32 RAIL_GRADE_LABEL_OFFSET_WORLD = 0.6F;
-constexpr f32 INDUSTRY_RADIUS_WORLD = 0.35F;
+constexpr f32 INDUSTRY_LABEL_MIN_CAMERA_SCALE = 60.0F;
+constexpr FontSizes INDUSTRY_LABEL_FONT_SIZE = FontSizes::small;
 constexpr Array<Color, 6U> COLOR_BUILDINGS {
     Color { 120U, 80U, 50U }, Color { 160U, 110U, 40U }, Color { 90U, 100U, 130U }, Color { 190U, 150U, 60U }, Color { 200U, 200U, 210U }, Color { 210U, 90U, 90U },
 };
@@ -122,6 +127,23 @@ struct RailGradeLabelDraw {
     float2 screen;
     u32 level;
 };
+struct RailObstacle {
+    float2 world;
+    f32 half_world;
+    f32 rotation;
+};
+[[nodiscard]] b8 SegmentsCross(const float2 world_a1, const float2 world_a2, const float2 world_b1, const float2 world_b2) {
+    const f32 side_b1 = math::Cross(world_a2 - world_a1, world_b1 - world_a1);
+    const f32 side_b2 = math::Cross(world_a2 - world_a1, world_b2 - world_a1);
+    const f32 side_a1 = math::Cross(world_b2 - world_b1, world_a1 - world_b1);
+    const f32 side_a2 = math::Cross(world_b2 - world_b1, world_a2 - world_b1);
+    return side_b1 * side_b2 < 0.0F && side_a1 * side_a2 < 0.0F;
+}
+[[nodiscard]] b8 ObstacleBlocksWorld(const RailObstacle& obstacle, const float2 world) {
+    const float2 axis { math::Cos(obstacle.rotation), math::Sin(obstacle.rotation) };
+    const float2 world_offset = world - obstacle.world;
+    return math::Abs(math::Dot(world_offset, axis)) <= obstacle.half_world && math::Abs(math::Cross(axis, world_offset)) <= obstacle.half_world;
+}
 struct RailUnits {
     float2 world_step;
     f32 length_meters;
@@ -307,6 +329,8 @@ struct RailEditorSystem {
     std::vector<IndustryDefine> industry_defines { RailIndustryDefines() };
     std::vector<BuildingDefine> building_defines { RailBuildingDefines() };
     Optional<Map> generated { };
+    List<RailObstacle> rail_obstacles { };
+    List<Label> industry_labels { };
     u32 overlay_year { OVERLAY_YEAR_MIN };
     u32 river_size_min { 0U };
     u32 rail_tunnel_save_units { RAIL_SAVE_ELEVATION_UNITS_DEFAULT };
@@ -322,6 +346,8 @@ struct RailEditorSystem {
     Optional<int2> last_painted_axial { };
     Optional<u32> selected_city { };
     Optional<float2> rail_drag_start_world { };
+    std::vector<Rail> rail_drag_rails { };
+    Optional<int2> rail_drag_goal_fine { };
     Handle<Texture> rail_texture { globalData.Create<Texture>(Asset(RAIL_TEXTURE)) };
     List<Vertex> rail_verts { };
     List<Label> rail_grade_labels { };
@@ -349,6 +375,9 @@ struct RailEditorSystem {
         };
         tree.node_properties[frame.generate_button].on_click = [this](NodeReference) {
             generated = MapGenerate(MapDefine { .elevation = document.elevation, .water_labels = document.water_labels, .rivers = document.rivers, .cities = Cities() }, industry_defines, building_defines, RailCityGrowthSequence());
+            rail_obstacles.clear();
+            for (const Building& building : generated->buildings) { rail_obstacles.EmplaceBack(building.pos, building_defines[building.id.value].size_hex_widths * HEX_SPACING.x * 0.5F + RAIL_WIDTH_WORLD * 0.5F, building.rotation); }
+            for (const Industry& industry : generated->industries) { rail_obstacles.EmplaceBack(industry.pos, industry_defines[industry.id.value].size_hex_widths * HEX_SPACING.x * 0.5F + RAIL_WIDTH_WORLD * 0.5F, industry.rotation); }
             SetStatus(std::format("Generated {} buildings, {} industries", generated->buildings.size(), generated->industries.size()));
         };
         tree.node_properties[frame.save_button].on_click = [this](NodeReference) {
@@ -376,6 +405,11 @@ struct RailEditorSystem {
             }
             std::ranges::sort(asset_paths);
             for (const AssetPath& asset_path : asset_paths) { AddFileButton(asset_path); }
+        }
+        TTF_Font* industry_font = Singleton::Get<FontCollection>().GetFontBoldCourier(INDUSTRY_LABEL_FONT_SIZE);
+        for (const IndustryDefine& industry_define : industry_defines) {
+            industry_labels.EmplaceBack(industry_font, String { industry_define.name.c_str() });
+            industry_labels.back().SetColor(colors::COLOR_WHITE);
         }
         TTF_Font* rail_grade_font = Singleton::Get<FontCollection>().GetFontBoldCourier(RAIL_GRADE_LABEL_FONT_SIZE);
         for (u32 level = 0; level <= RAIL_GRADE_LEVEL_MAX; level++) {
@@ -469,7 +503,116 @@ struct RailEditorSystem {
         return (1.0F - weight_a - weight_b) * static_cast<f32>(document.elevation[axial]) + weight_a * CornerElevation(axial, corner) + weight_b * CornerElevation(axial, (corner + 1) % HEX_CORNERS);
     }
 
-    [[nodiscard]] float2 SnapToRailEnd(const float2 world) const {
+    [[nodiscard]] b8 RailBlocked(const Rail& rail) const {
+        const RailUnits units = RailUnitsOf(rail);
+        const float2 world_shrink = units.world_step * float2 { RAIL_WIDTH_WORLD / std::sqrt(math::Dot(units.world_step, units.world_step)) };
+        for (const Rail& other : document.rails) {
+            if (SegmentsCross(rail.world_a + world_shrink, rail.world_b - world_shrink, other.world_a, other.world_b)) { return true; }
+        }
+        const u32 sample_count = units.count * RAIL_BLOCK_SAMPLES_PER_UNIT;
+        for (u32 sample = 0; sample <= sample_count; sample++) {
+            const float2 world = rail.world_a + units.world_step * float2 { static_cast<f32>(sample) / static_cast<f32>(RAIL_BLOCK_SAMPLES_PER_UNIT) };
+            for (const RailObstacle& obstacle : rail_obstacles) {
+                if (ObstacleBlocksWorld(obstacle, world)) { return true; }
+            }
+        }
+        return false;
+    }
+
+    [[nodiscard]] std::vector<Rail> RailsPlaceable(const float2 world_a, const float2 world_b) const {
+        const Rail straight { .world_a = world_a, .world_b = world_b };
+        std::vector<Rail> rails = RailBlocked(straight) ? RailAroundObstacles(world_a, world_b) : std::vector<Rail> { straight };
+        if (std::ranges::any_of(rails, [this](const Rail& rail) { return RailBlocked(rail); })) { rails.clear(); }
+        return rails;
+    }
+
+    [[nodiscard]] const std::vector<Rail>& DragRails(const float2 world_hover) {
+        const Optional<Rail> straight = DragRail(world_hover);
+        if (!straight.has_value()) {
+            rail_drag_rails.clear();
+            rail_drag_goal_fine.reset();
+            return rail_drag_rails;
+        }
+        if (tool == EditorTool::TOOL_RAIL) {
+            rail_drag_goal_fine.reset();
+            rail_drag_rails = RailsPlaceable(straight->world_a, straight->world_b);
+            if (rail_drag_rails.empty()) {
+                const RailUnits units = RailUnitsOf(*straight);
+                u32 units_placeable = 0;
+                u32 units_blocked = units.count;
+                while (units_blocked - units_placeable > 1) {
+                    const u32 units_middle = (units_placeable + units_blocked) / 2;
+                    (RailsPlaceable(straight->world_a, straight->world_a + units.world_step * float2 { static_cast<f32>(units_middle) }).empty() ? units_blocked : units_placeable) = units_middle;
+                }
+                if (units_placeable > 0) { rail_drag_rails = RailsPlaceable(straight->world_a, straight->world_a + units.world_step * float2 { static_cast<f32>(units_placeable) }); }
+            }
+            return rail_drag_rails;
+        }
+        const float2 world_goal = SnapToRail(world_hover);
+        const int2 goal_fine = HexWorldToAxial(world_goal * float2 { 2.0F });
+        if (rail_drag_goal_fine != goal_fine) {
+            rail_drag_rails = RailPath(straight->world_a, world_goal);
+            rail_drag_goal_fine = goal_fine;
+        }
+        return rail_drag_rails;
+    }
+
+    [[nodiscard]] Optional<u32> FirstObstacleOnSegment(const float2 world_a, const float2 world_b) const {
+        const float2 world_direction = world_b - world_a;
+        const u32 sample_count = math::Max(1U, static_cast<u32>(math::Ceil(std::sqrt(math::Dot(world_direction, world_direction)) * static_cast<f32>(RAIL_BLOCK_SAMPLES_PER_UNIT) / RAIL_UNIT_WORLD)));
+        for (u32 sample = 0; sample <= sample_count; sample++) {
+            const float2 world = world_a + world_direction * float2 { static_cast<f32>(sample) / static_cast<f32>(sample_count) };
+            for (u32 i = 0; i < rail_obstacles.size(); i++) {
+                if (ObstacleBlocksWorld(rail_obstacles[i], world)) { return i; }
+            }
+        }
+        return std::nullopt;
+    }
+
+    [[nodiscard]] std::vector<Rail> RailAroundObstacles(const float2 world_start, const float2 world_goal) const {
+        std::vector<float2> waypoints { world_start };
+        std::vector<float2> pending { world_goal };
+        for (u32 deflections = 0; !pending.empty();) {
+            const float2 world_from = waypoints.back();
+            const float2 world_to = pending.back();
+            const Optional<u32> hit = FirstObstacleOnSegment(world_from, world_to);
+            if (!hit.has_value()) {
+                waypoints.push_back(world_to);
+                pending.pop_back();
+                continue;
+            }
+            if (++deflections > RAIL_AVOID_DEFLECTIONS_MAX) { return {}; }
+            const RailObstacle& obstacle = rail_obstacles[*hit];
+            const float2 obstacle_axis_x = float2 { math::Cos(obstacle.rotation), math::Sin(obstacle.rotation) } * float2 { obstacle.half_world + RAIL_AVOID_MARGIN_WORLD };
+            const float2 obstacle_axis_y { -obstacle_axis_x.y, obstacle_axis_x.x };
+            const float2 world_direction = world_to - world_from;
+            const float2 direction = world_direction * float2 { 1.0F / std::sqrt(math::Dot(world_direction, world_direction)) };
+            const float2 normal { -direction.y, direction.x };
+            std::vector<std::pair<f32, float2>> left;
+            std::vector<std::pair<f32, float2>> right;
+            f32 left_offset_max = 0.0F;
+            f32 right_offset_max = 0.0F;
+            for (const float2 world_corner : { obstacle.world - obstacle_axis_x - obstacle_axis_y, obstacle.world + obstacle_axis_x - obstacle_axis_y, obstacle.world + obstacle_axis_x + obstacle_axis_y, obstacle.world - obstacle_axis_x + obstacle_axis_y }) {
+                const f32 offset = math::Dot(world_corner - world_from, normal);
+                const f32 along = math::Dot(world_corner - world_from, direction);
+                if (offset >= 0.0F) {
+                    left.emplace_back(along, world_corner);
+                    left_offset_max = math::Max(left_offset_max, offset);
+                } else {
+                    right.emplace_back(along, world_corner);
+                    right_offset_max = math::Max(right_offset_max, -offset);
+                }
+            }
+            std::vector<std::pair<f32, float2>>& side = right.empty() || (!left.empty() && left_offset_max <= right_offset_max) ? left : right;
+            std::ranges::sort(side, { }, &std::pair<f32, float2>::first);
+            for (const auto& [along, world_corner] : side | std::views::reverse) { pending.push_back(world_corner); }
+        }
+        std::vector<Rail> rails;
+        for (u32 i = 1; i < waypoints.size(); i++) { rails.push_back(Rail { .world_a = waypoints[i - 1], .world_b = waypoints[i] }); }
+        return rails;
+    }
+
+    [[nodiscard]] float2 SnapToRail(const float2 world) const {
         float2 world_snapped = world;
         f32 distance_best = RAIL_SNAP_RADIUS_WORLD;
         for (const Rail& rail : document.rails) {
@@ -481,12 +624,19 @@ struct RailEditorSystem {
                 world_snapped = world_end;
             }
         }
+        if (world_snapped != world) { return world_snapped; }
+        for (const Rail& rail : document.rails) {
+            const f32 distance = RailDistanceWorld(rail, world);
+            if (distance >= distance_best) { continue; }
+            distance_best = distance;
+            world_snapped = RailClosestWorld(rail, world);
+        }
         return world_snapped;
     }
 
     [[nodiscard]] Optional<Rail> DragRail(const float2 world_hover) const {
         if (!rail_drag_start_world.has_value()) { return std::nullopt; }
-        const float2 world_end = SnapToRailEnd(world_hover);
+        const float2 world_end = SnapToRail(world_hover);
         const float2 world_direction = world_end - *rail_drag_start_world;
         const f32 length_world = std::sqrt(math::Dot(world_direction, world_direction));
         if (length_world == 0.0F) { return std::nullopt; }
@@ -496,10 +646,14 @@ struct RailEditorSystem {
         return rail;
     }
 
-    [[nodiscard]] static f32 RailDistanceWorld(const Rail& rail, const float2 world) {
+    [[nodiscard]] static float2 RailClosestWorld(const Rail& rail, const float2 world) {
         const float2 world_direction = rail.world_b - rail.world_a;
         const f32 t = math::Clamp(math::Dot(world - rail.world_a, world_direction) / math::Dot(world_direction, world_direction), 0.0F, 1.0F);
-        const float2 world_offset = world - (rail.world_a + world_direction * float2 { t });
+        return rail.world_a + world_direction * float2 { t };
+    }
+
+    [[nodiscard]] static f32 RailDistanceWorld(const Rail& rail, const float2 world) {
+        const float2 world_offset = world - RailClosestWorld(rail, world);
         return std::sqrt(math::Dot(world_offset, world_offset));
     }
 
@@ -517,6 +671,39 @@ struct RailEditorSystem {
             return static_cast<u32>(fine.y - box_min.y) * box_size.x + static_cast<u32>(fine.x - box_min.x);
         };
         const auto fine_of = [box_min, box_size](const u32 node) { return int2 { box_min.x + static_cast<i32>(node % box_size.x), box_min.y + static_cast<i32>(node / box_size.x) }; };
+        std::vector<u8> node_blocked(node_count, 0U);
+        for (const RailObstacle& obstacle : rail_obstacles) {
+            const f32 world_reach = obstacle.half_world * 2.0F;
+            int2 fine_min { std::numeric_limits<i32>::max(), std::numeric_limits<i32>::max() };
+            int2 fine_max { std::numeric_limits<i32>::min(), std::numeric_limits<i32>::min() };
+            for (const float2 world_corner : { obstacle.world + float2 { -world_reach, -world_reach }, obstacle.world + float2 { world_reach, -world_reach }, obstacle.world + float2 { -world_reach, world_reach }, obstacle.world + float2 { world_reach, world_reach } }) {
+                const int2 fine = HexWorldToAxial(world_corner * float2 { 2.0F });
+                fine_min = int2 { std::min(fine_min.x, fine.x), std::min(fine_min.y, fine.y) };
+                fine_max = int2 { std::max(fine_max.x, fine.x), std::max(fine_max.y, fine.y) };
+            }
+            for (i32 y = fine_min.y; y <= fine_max.y; y++) {
+                for (i32 x = fine_min.x; x <= fine_max.x; x++) {
+                    const Optional<u32> node = node_of(int2 { x, y });
+                    if (node.has_value() && ObstacleBlocksWorld(obstacle, fine_to_world(int2 { x, y }))) { node_blocked[*node] = 1U; }
+                }
+            }
+        }
+        const auto mark_around_world = [&](const float2 world, const f32 radius_world, const u8 blocked) {
+            const int2 fine_center = HexWorldToAxial(world * float2 { 2.0F });
+            for (const int2 fine_offset : { int2 { 0, 0 }, HEX_AXIAL_NEIGHBOURS[0], HEX_AXIAL_NEIGHBOURS[1], HEX_AXIAL_NEIGHBOURS[2], HEX_AXIAL_NEIGHBOURS[3], HEX_AXIAL_NEIGHBOURS[4], HEX_AXIAL_NEIGHBOURS[5] }) {
+                const Optional<u32> node = node_of(fine_center + fine_offset);
+                if (!node.has_value()) { continue; }
+                const float2 world_offset = fine_to_world(fine_center + fine_offset) - world;
+                if (math::Dot(world_offset, world_offset) <= radius_world * radius_world) { node_blocked[*node] = blocked; }
+            }
+        };
+        for (const Rail& rail : document.rails) {
+            const RailUnits units = RailUnitsOf(rail);
+            const u32 sample_count = units.count * RAIL_BLOCK_SAMPLES_PER_UNIT;
+            for (u32 sample = 0; sample <= sample_count; sample++) { mark_around_world(rail.world_a + units.world_step * float2 { static_cast<f32>(sample) / static_cast<f32>(RAIL_BLOCK_SAMPLES_PER_UNIT) }, RAIL_UNIT_WORLD * 0.6F, 1U); }
+        }
+        mark_around_world(world_start, RAIL_UNIT_WORLD * 1.1F, 0U);
+        mark_around_world(world_goal, RAIL_UNIT_WORLD * 1.1F, 0U);
         std::vector<f32> node_elevation(node_count, std::numeric_limits<f32>::quiet_NaN());
         const auto elevation_of = [this, &node_elevation, fine_to_world](const u32 node, const int2 fine) {
             if (std::isnan(node_elevation[node])) { node_elevation[node] = ElevationAtWorld(fine_to_world(fine)); }
@@ -558,7 +745,7 @@ struct RailEditorSystem {
                 const int2 next_fine = fine + HEX_AXIAL_NEIGHBOURS[next_direction];
                 const Optional<u32> next_node = node_of(next_fine);
                 const int2 next_axial = HexWorldToAxial(fine_to_world(next_fine));
-                if (!next_node.has_value() || !document.elevation.Contains(next_axial)) { continue; }
+                if (!next_node.has_value() || node_blocked[*next_node] || !document.elevation.Contains(next_axial)) { continue; }
                 const f32 next_elevation = elevation_of(*next_node, next_fine);
                 const f32 grade = (math::Max(next_elevation, 0.0F) - math::Max(elevation_of(node, fine), 0.0F)) * ELEVATION_UNIT_METERS / (RAIL_UNIT_WORLD * WORLD_TO_METERS);
                 const f32 cost = state_cost[state] + RailUnitTravelTime(grade) + (next_elevation < 0.0F ? RAIL_PATH_WATER_COST_UNITS : 0.0F) + (next_direction == direction ? 0.0F : RAIL_PATH_TURN_COST_UNITS);
@@ -670,6 +857,7 @@ struct RailEditorSystem {
         overlay_year = std::clamp(year / OVERLAY_YEAR_STEP * OVERLAY_YEAR_STEP, OVERLAY_YEAR_MIN, OVERLAY_YEAR_MAX);
         frame.year_slider.SetValue(globalData[frame.tree], overlay_year, std::format("{} ({} cities)", overlay_year, Cities().size()));
         generated.reset();
+        rail_obstacles.clear();
         SelectCity(std::nullopt);
         RebuildCityLabels();
     }
@@ -753,7 +941,10 @@ struct RailEditorSystem {
         camera.map_world_min = { 0.0F, 0.0F };
         camera.map_world_max = map_world_max;
         const float2 screen_size { Singleton::Get<WindowState>().screen_size };
-        camera.world_position = (camera.map_world_min + camera.map_world_max) * float2 { 0.5F * camera.scale } - screen_size * float2 { 0.5F };
+        const std::vector<City>& cities = Cities();
+        const auto biggest_city = std::ranges::max_element(cities, { }, &City::level);
+        const float2 world_focus = biggest_city != cities.end() ? HexAxialToWorld(biggest_city->axial) : (camera.map_world_min + camera.map_world_max) * float2 { 0.5F };
+        camera.world_position = world_focus * float2 { camera.scale } - screen_size * float2 { 0.5F };
     }
 
     void SelectCity(const Optional<u32> city_index) { selected_city = city_index; }
@@ -846,20 +1037,22 @@ struct RailEditorSystem {
             }
             case EditorTool::TOOL_RAIL:
             case EditorTool::TOOL_RAIL_PATH: {
-                if (left_click && document.elevation.Contains(axial_hover)) { rail_drag_start_world = SnapToRailEnd(world_hover); }
+                if (left_click && document.elevation.Contains(axial_hover)) {
+                    rail_drag_start_world = SnapToRail(world_hover);
+                    rail_drag_goal_fine.reset();
+                }
                 if (!input.left_mouse && rail_drag_start_world.has_value()) {
-                    if (tool == EditorTool::TOOL_RAIL_PATH && document.elevation.Contains(axial_hover)) {
-                        const std::vector<Rail> rails = RailPath(*rail_drag_start_world, SnapToRailEnd(world_hover));
-                        if (!rails.empty()) {
-                            PushHistory();
-                            document.rails.append_range(rails);
-                        }
-                        SetStatus(rails.empty() ? String { "Rail path: no route" } : String { std::format("Rail path: {} rails", rails.size()).c_str() });
-                    } else if (const Optional<Rail> rail = DragRail(world_hover); tool == EditorTool::TOOL_RAIL && rail.has_value()) {
+                    const std::vector<Rail>& rails = DragRails(world_hover);
+                    if (!rails.empty()) {
                         PushHistory();
-                        document.rails.push_back(*rail);
+                        document.rails.append_range(rails);
+                        SetStatus(std::format("Laid {} rails", rails.size()));
+                    } else if (DragRail(world_hover).has_value()) {
+                        SetStatus("No rail route");
                     }
                     rail_drag_start_world.reset();
+                    rail_drag_rails.clear();
+                    rail_drag_goal_fine.reset();
                 }
                 const auto rail_hovered = [world_hover](const Rail& rail) { return RailDistanceWorld(rail, world_hover) <= RAIL_WIDTH_WORLD; };
                 if (right_click && std::ranges::any_of(document.rails, rail_hovered)) {
@@ -916,10 +1109,12 @@ struct RailEditorSystem {
         rail_grade_label_draws.clear();
         rail_verts.clear();
         for (const Rail& rail : document.rails) { AppendRail(rail, camera, [](f32) { return colors::COLOR_WHITE; }); }
-        if (const Optional<Rail> rail_drag = DragRail(world_hover)) { AppendRail(*rail_drag, camera, RailGradeToColor); }
+        const std::vector<Rail>& drag_rails = DragRails(world_hover);
+        for (const Rail& rail : drag_rails) { AppendRail(rail, camera, RailGradeToColor); }
+        if (const Optional<Rail> straight = DragRail(world_hover); drag_rails.empty() && straight.has_value()) { AppendRail(*straight, camera, [](f32) { return COLOR_RAIL_BLOCKED; }); }
         if (generated.has_value()) {
             for (const Building& building : generated->buildings) { AppendSquare(verts, camera.WorldToScreen(building.pos), camera.scale * building_defines[building.id.value].size_hex_widths * HEX_SPACING.x * 0.5F, building.rotation, BuildingColor(building.id)); }
-            for (const Industry& industry : generated->industries) { AppendHex(verts, camera.WorldToScreen(industry.pos), camera.scale * INDUSTRY_RADIUS_WORLD, IndustryColor(industry.id)); }
+            for (const Industry& industry : generated->industries) { AppendSquare(verts, camera.WorldToScreen(industry.pos), camera.scale * industry_defines[industry.id.value].size_hex_widths * HEX_SPACING.x * 0.5F, industry.rotation, IndustryColor(industry.id)); }
         }
         (void)SDL_RenderGeometry(renderer, nullptr, verts);
         (void)SDL_RenderGeometry(renderer, globalData[rail_texture], rail_verts);
@@ -937,6 +1132,14 @@ struct RailEditorSystem {
             if (!on_screen(screen)) { continue; }
             water_labels[i].SetColor(COLOR_WATER_LABEL);
             water_labels[i].Draw(screen - float2 { 0.0F, static_cast<f32>(FontSizes::body) * 0.5F });
+        }
+        for (u32 i = 0; generated.has_value() && camera.scale >= INDUSTRY_LABEL_MIN_CAMERA_SCALE && i < generated->industries.size(); i++) {
+            const Industry& industry = generated->industries[i];
+            const float2 screen = camera.WorldToScreen(industry.pos);
+            if (!on_screen(screen)) { continue; }
+            int2 text_size { 0, 0 };
+            (void)TTF_GetTextSize(industry_labels[industry.id.value], &text_size.x, &text_size.y);
+            industry_labels[industry.id.value].Draw(screen - float2 { static_cast<f32>(text_size.x), static_cast<f32>(text_size.y) } * float2 { 0.5F });
         }
         for (const RailGradeLabelDraw& draw : rail_grade_label_draws) {
             if (!on_screen(draw.screen)) { continue; }
