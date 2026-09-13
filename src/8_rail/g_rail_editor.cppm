@@ -123,7 +123,7 @@ void AppendStar(List<Vertex>& verts, const float2 screen_center, const f32 scree
     }
 }
 
-[[nodiscard]] Handle<Node> Button(const NodeReference parent, const String& text, const FontSizes font_size = FontSizes::body, const u32 padding = 4U) {
+[[nodiscard]] Handle<Node> Button(const NodeReference parent, const String& text, const FontSizes font_size = FontSizes::h4, const u32 padding = 4U) {
     const Handle<Node> button = NodeBuilder(parent, Layout { hug }).Padding(padding).Fill(COLOR_BUTTON).FillHover(COLOR_BUTTON_HOVER).Build();
     (void)NodeBuilder(NodeReference { parent.tree, button }, Layout { hug }).Text(text, font_size, COLOR_BUTTON_TEXT).Build();
     return button;
@@ -143,7 +143,7 @@ struct Slider {
     Slider(const NodeReference parent, const u32 min, const u32 max, const u32 step, const u32 value)
         : track { NodeBuilder(parent, Layout { uint2 { SLIDER_TRACK_WIDTH, SLIDER_HEIGHT } }).Fill(colors::COLOR_GRAY).Build() },
           knob { NodeBuilder(NodeReference { parent.tree, track }, Layout { uint2 { SLIDER_KNOB_WIDTH, SLIDER_HEIGHT } }).Fill(colors::COLOR_BLACK).Build() },
-          label { NodeBuilder(parent, Layout { hug }).Padding(4U).Text(FontSizes::body, colors::COLOR_BLACK).Build() },
+          label { NodeBuilder(parent, Layout { hug }).Padding(4U).Text(FontSizes::h4, colors::COLOR_BLACK).Build() },
           min { min }, max { max }, step { step }, value { value } { }
 
     void SetValue(NodeTree& tree, const u32 new_value, String&& text) {
@@ -175,7 +175,7 @@ struct RailEditorFrame : Frame {
     Handle<Node> city_tool_button { Button(B(tool_group).parent, "● City") };
     Handle<Node> brush_group { B(toolbar).Node(hug).Gap(4U).Build() };
     Handle<Node> brush_smaller { Button(B(brush_group).parent, "−") };
-    Handle<Node> brush_label { B(brush_group).Node(hug).Padding(4U).Text(FontSizes::body, colors::COLOR_BLACK).Build() };
+    Handle<Node> brush_label { B(brush_group).Node(hug).Padding(4U).Text(FontSizes::h4, colors::COLOR_BLACK).Build() };
     Handle<Node> brush_bigger { Button(B(brush_group).parent, "+") };
     Handle<Node> overlay_group { B(toolbar).Node(hug).Gap(4U).Build() };
     Handle<Node> year_previous { Button(B(overlay_group).parent, "◂") };
@@ -188,8 +188,8 @@ struct RailEditorFrame : Frame {
     Handle<Node> generate_button { Button(B(file_group).parent, "⚙ Generate") };
     Handle<Node> save_button { Button(B(file_group).parent, "⬇ Save") };
     Handle<Node> file_panel { B(root).Node(hug).Padding(8U).Gap(4U).Direction(vertical).Fill(colors::COLOR_BEIGE).Build() };
-    Handle<Node> help_label { B(file_panel).Node(hug).Text(FontSizes::small, colors::COLOR_DARK_GRAY).Build() };
-    Handle<Node> status_label { B(file_panel).Node(hug).Text(FontSizes::small, colors::COLOR_DARK_GRAY).Build() };
+    Handle<Node> help_label { B(file_panel).Node(hug).Text(FontSizes::body, colors::COLOR_DARK_GRAY).Build() };
+    Handle<Node> status_label { B(file_panel).Node(hug).Text(FontSizes::body, colors::COLOR_DARK_GRAY).Build() };
     Handle<Node> file_list { B(file_panel).Node(hug).Gap(1U).Direction(vertical).Build() };
     RailEditorFrame() {
         globalData[tree].styles[frame].alignment = top_right;
@@ -270,7 +270,7 @@ struct RailEditorSystem {
         }
         SetBrushRadius(brush_radius);
         SetTool(tool);
-        SetDocument(LoadDocument(AssetPath { SCENARIOS_BASE_DIR } / "britain.txt"));
+        SetDocument(LoadDocument(AssetPath { SCENARIOS_BASE_DIR } / "britain_beginner.txt"));
         SetOverlayYear(overlay_year);
         SetRiverSizeMin(river_size_min);
         UpdateHistoryButtons();
@@ -341,7 +341,7 @@ struct RailEditorSystem {
     }
 
     void AddFileButton(const AssetPath& asset_path) {
-        const Handle<Node> button = Button(NodeReference { frame.tree, frame.file_list }, std::format("▸ {}/{}", asset_path.parent_path().filename().string(), asset_path.stem().string()), FontSizes::small, 2U);
+        const Handle<Node> button = Button(NodeReference { frame.tree, frame.file_list }, std::format("▸ {}/{}", asset_path.parent_path().filename().string(), asset_path.stem().string()), FontSizes::body, 2U);
         globalData[frame.tree].node_properties[button].on_click = [this, asset_path](NodeReference) {
             PushHistory();
             SetDocument(LoadDocument(asset_path));
